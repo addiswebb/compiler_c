@@ -1,4 +1,4 @@
-#include "tokenizer.c"
+#include "parser.c"
 #include <stdlib.h>
 
 int main(int argc, char* argv[]){
@@ -60,7 +60,10 @@ int main(int argc, char* argv[]){
     t_init(src, size);
 
     t_tokenize();
-    t_print_tokens();
+    // t_print_tokens();
+    p_init();
+    p_parse_translation_unit();
+    print_nodes();
 
     t_free();
     return 0;

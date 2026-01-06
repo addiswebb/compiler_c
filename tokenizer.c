@@ -6,18 +6,47 @@
 #include "buffer.c"
 #include "util.c"
 
+/*
+    Adding a Keyword Checklist
+    1. add to TokenType,
+    2. KEYWORDS_N ++
+    3. add to KEYWORDS array
+    4. Update print_token_type
+*/
 typedef enum{
+    // Keywords
     TK_EXIT,
-    TK_INT_LITERAL,
-    TK_FLT_LITERAL,
-    TK_EXPR,
+    TK_INT,
+    TK_FLOAT,
+    TK_RETURN,
+    TK_VOID,
+    // Special Characters
+    TK_EQ,
     TK_SEMI,
     TK_PLUS,
     TK_MINUS,
     TK_MULTIPLY,
     TK_DIVIDE,
-    TK_OTHER,
+    TK_OPEN_PAREN,
+    TK_CLOSE_PAREN,
+    TK_OPEN_CURLY,
+    TK_CLOSE_CURLY,
+    TK_COMMA,
+    // Other
+    TK_INT_LITERAL,
+    TK_FLT_LITERAL,
+    TK_EXPR,
+    TK_IDENTIFIER,
 } TokenType;
+
+#define KEYWORDS_N 5
+const char* KEYWORDS[KEYWORDS_N] = {
+    "exit",
+    "int",
+    "float",
+    "return",
+    "void",
+};
 
 typedef struct {
     TokenType type;
@@ -41,9 +70,12 @@ int ta_push(TokenArray* arr, Token tk){
         // Resize array
         int new_capacity = arr->capacity * 2;
         Token* new_data = realloc(arr->data, sizeof(Token) * new_capacity);
-        if(!new_data) return 0;
-        arr->data = new_data;
+        if(!new_data) {
+            printf("Failed to reallocate token array\n");
+            exit(1);
+        }
         arr->capacity = new_capacity;
+        arr->data = new_data;
     }
     arr->data[arr->size++] = tk;
     return 1;
@@ -60,7 +92,7 @@ void ta_free(TokenArray* arr){
 }
 
 typedef struct {
-    char* src;
+    const char* src;
     int index;
     int size;
     TokenArray tokens;
@@ -74,17 +106,16 @@ typedef struct{
 
 static Tokenizer tokenizer;
 
-void t_print_token(Token* token){
-    printf("Token { Type: ");
-    switch(token->type){
+void print_token_type(TokenType type){
+    switch(type){
         case TK_EXIT:
             printf("Exit");
             break;
         case TK_INT_LITERAL:
-            printf("Integer");
+            printf("Integer Literal");
             break;
         case TK_FLT_LITERAL:
-            printf("Float");
+            printf("Float Literal");
             break;
         case TK_SEMI:
             printf("Semi-colon");
@@ -104,13 +135,51 @@ void t_print_token(Token* token){
         case TK_EXPR:
             printf("Expr");
             break;
-        case TK_OTHER:
+        case TK_EQ:
+            printf("Equal");
+            break;
+        case TK_INT:
+            printf("Integer");
+            break;
+        case TK_FLOAT:
+            printf("Float");
+            break;
+        case TK_VOID:
+            printf("Void");
+            break;
+        case TK_OPEN_PAREN:
+            printf("Open Parenthesis");
+            break;
+        case TK_CLOSE_PAREN:
+            printf("Close Parenthesis");
+            break;
+        case TK_OPEN_CURLY:
+            printf("Open Curly");
+            break;
+        case TK_CLOSE_CURLY:
+            printf("Close Curly");
+            break;
+        case TK_COMMA:
+            printf("Comma");
+            break;
+        case TK_RETURN:
+            printf("Return");
+            break;
+        case TK_IDENTIFIER:
+            printf("Identifier");
+            break;
         default:
-            printf("Other");
+            printf("Undefined");
             break;
     }
+}
+
+void print_token(Token* token){
+    printf("Token { Type: ");
+
+    print_token_type(token->type);
+
     if(token->value != NULL){
-        // printf(", value: %s ", token->value);
         printf(", value: ");
         if (token->value[0] == '\0'){
             printf("\\0");
@@ -124,7 +193,7 @@ void t_print_token(Token* token){
 
 void t_print_tokens(){
     for(int i = 0; i < tokenizer.tokens.size; i++){
-        t_print_token(&tokenizer.tokens.data[i]);
+        print_token(&tokenizer.tokens.data[i]);
     }
 }
 void t_init(char* src, int size){
@@ -135,7 +204,7 @@ void t_init(char* src, int size){
 }
 
 void t_free(){
-    free(tokenizer.src);
+    free((void*)tokenizer.src);
     tokenizer.src = NULL;
     tokenizer.index = 0;
     tokenizer.size = 0;
@@ -145,23 +214,23 @@ void t_free(){
 /*
 Is End of file?
 */
-bool t_is_eof(){
+static bool t_is_eof(){
     return tokenizer.index >= tokenizer.size;
 }
 
 /*
     peek at the current char
 */
-char t_peek(){
-    if(t_is_eof()){
+static char t_peek(){
+    if(!t_is_eof()){
+        return tokenizer.src[tokenizer.index];
+    }else{
         printf("T_peek Tried peeking past eof\n");
         return '\0';
-    }else{
-        return tokenizer.src[tokenizer.index];
     }
 }
 
-char t_peek_next(){
+static char t_peek_next(){
     if (tokenizer.index + 1 > tokenizer.size){
         printf("T_peek_Next Tried peeking past eof\n");
         return '\0';
@@ -173,14 +242,14 @@ char t_peek_next(){
 /*
     Append the current char to buffer and step forward
 */
-void t_consume(){
+static void t_consume(){
     if (!t_is_eof()){
         tokenizer.buf.buf[tokenizer.buf.size++] = tokenizer.src[tokenizer.index++];
     }else{
         printf("T_Consume Reached the end of the file");
     }
 }
-void t_skip(){
+static void t_skip(){
     if(!t_is_eof()){
         tokenizer.index++;
     }else{
@@ -188,11 +257,11 @@ void t_skip(){
     }
 }
 
-void t_buffer_reset(){
+static void t_buffer_reset(){
     tokenizer.buf.size = 0;
     memset(tokenizer.buf.buf, 0, sizeof(tokenizer.buf.buf));
 }
-void t_push_buffer(TokenType type){
+static void t_push_buffer(TokenType type){
     if (tokenizer.buf.size == 0){
         printf("EMPTY BUFFER");
         return;
@@ -203,23 +272,30 @@ void t_push_buffer(TokenType type){
     t_buffer_reset();
     ta_push(&tokenizer.tokens, token);
 }
-void t_parse_and_push_buffer(){
+
+static void t_parse_and_push_buffer(){
     if (tokenizer.buf.size == 0){
         return;
     }
     Token token;
     token.value = NULL;
 
-    bool is_int;
-    if (strcmp(tokenizer.buf.buf, "exit") == 0){
-        token.type = TK_EXIT;
-    }else{
-        token.type = TK_OTHER;
+    bool is_keyword = false;
+    for(int i = 0; i < KEYWORDS_N; i++){
+        if(strcmp(tokenizer.buf.buf, KEYWORDS[i]) == 0){
+            token.type = (TokenType) i;
+            is_keyword = true;
+            break;
+        }
+    }
+    if(!is_keyword){
+        token.type = TK_IDENTIFIER;
         token.value = strdup(tokenizer.buf.buf);
     }
     ta_push(&tokenizer.tokens, token);
     return;
 }
+
 
 TokenType char_to_token_type(char c){
     switch (c){
@@ -233,8 +309,20 @@ TokenType char_to_token_type(char c){
             return TK_MULTIPLY;
         case '/':
             return TK_DIVIDE;
+        case '=':
+            return TK_EQ;
+        case '(':
+            return TK_OPEN_PAREN;
+        case ')':
+            return TK_CLOSE_PAREN;
+        case '{':
+            return TK_OPEN_CURLY;
+        case '}':
+            return TK_CLOSE_CURLY;
+        case ',':
+            return TK_COMMA;
         default:
-            return TK_OTHER;
+            return TK_IDENTIFIER;
     }
 }
 

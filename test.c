@@ -1,3 +1,4 @@
-exit
-           1   something    ;
-10 + 12.5
+int main(int argc, char* argv[]){
+    int a = 10;
+    return 0;
+}
