@@ -23,7 +23,7 @@ void p_init(){
 /*
 Is End of token array?
 */
-bool p_is_eota(){
+bool p_is_last_token(){
     return parser.index >= parser.size;
 }
 
@@ -61,7 +61,7 @@ Token* p_consume(){
     Error on type mismatch
 */
 void p_expect(TokenType expected_type){
-    if (!p_is_eota()){
+    if (!p_is_last_token()){
         TokenType token_type = parser.src->data[parser.index].type;
         if(token_type != expected_type){
             printf("Expected \'");
@@ -192,7 +192,7 @@ Node *p_parse_statement(){
             node->literal.i = 69;
             break;
     }
-    while(p_peek()->type != TK_SEMI && !p_is_eota()){
+    while(p_peek()->type != TK_SEMI && !p_is_last_token()){
         p_consume();
     }
     p_expect(TK_SEMI);
@@ -204,7 +204,7 @@ Node *p_parse_compound(){
     Node* node = new_compound_node();
     p_expect(TK_OPEN_CURLY);
     p_consume();
-    while(p_peek()->type != TK_CLOSE_CURLY && !p_is_eota()){
+    while(p_peek()->type != TK_CLOSE_CURLY && !p_is_last_token()){
         p_append_statement(node, p_parse_statement());
     }
     p_expect(TK_CLOSE_CURLY);
@@ -229,7 +229,7 @@ Node *p_parse_function(){
         3. Consume ')'
     */
     p_consume();
-    while(p_peek()->type != TK_CLOSE_PAREN && !p_is_eota()){
+    while(p_peek()->type != TK_CLOSE_PAREN && !p_is_last_token()){
         p_consume();
     }
     p_consume();
@@ -273,7 +273,7 @@ Node* p_parse_translation_unit(){
         exit(1);
     }
 
-    while(!p_is_eota()){
+    while(!p_is_last_token()){
         p_append_declaration(root, p_parse_declaration());
     }
     return root;
