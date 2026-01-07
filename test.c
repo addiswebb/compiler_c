@@ -1,4 +1,4 @@
-int main(int argc, char* argv[]){
-    int c = 3 + 3;
-    return 0;
+int main(){
+    int x = 10 + 6 + 1;
+    return x;
 }

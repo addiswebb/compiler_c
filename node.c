@@ -140,7 +140,7 @@ void print_node_type(NodeType type){
     }
 }
 
-void print_node(Node* node){
+void print_node_flat(Node* node){
     printf("Node {\n");
     printf("\ttype: ");
     print_node_type(node->type);
@@ -203,4 +203,71 @@ void print_node(Node* node){
             break;
     }
     printf("\n}\n");
+}
+
+void print_indent(int depth){
+    for(int i = 0; i < depth; i++){
+        printf("  ");
+    }
+}
+
+void print_node(Node* node, int depth){
+    print_indent(depth);
+    print_node_type(node->type);
+    switch(node->type){
+        case N_TRANSLATION_UNIT:
+            printf("\n");
+            for(int i = 0; i < node->translation_unit.count; i++){
+                print_node(node->translation_unit.declarations[i], depth + 1);
+            }
+            break;
+        case N_COMPOUND:
+            printf("\n");
+            for(int i = 0; i < node->compound.count; i++){
+                print_node(node->compound.statements[i], depth + 1);
+            }
+            break;
+        case N_BINARY:
+            printf(": [op= ");
+            print_token_type(node->binary.op);
+            printf("]\n");
+            print_node(node->binary.lhs, depth + 1);
+            print_node(node->binary.rhs, depth + 1);
+            break;
+        case N_LITERAL:
+            printf(": [type= ");
+            print_token_type(node->literal.type);
+                switch(node->literal.type){
+                    case TK_INT_LITERAL:
+                        printf(", value: %d]\n",node->literal.i);
+                        break;
+                    case TK_FLT_LITERAL:
+                        printf(", value: %g]\n",node->literal.f);
+                        break;
+                    default:
+                        break;
+                }
+            break;
+        case N_FUNCTION:
+            printf(": [name= %s, params= %d, return_type= ",node->function.name, node->function.param_count);
+            print_token_type(node->function.return_type);
+            printf("]\n");
+            print_node(node->function.body, depth + 1);
+            break;
+        case N_VAR_DECL:
+            printf(": [type= ");
+            print_token_type(node->var_decl.type);
+            printf(", name= %s]\n", node->var_decl.name);
+            print_node(node->var_decl.expr, depth + 1);
+            break;
+        case N_RETURN:
+            printf("\n");
+            print_node(node->_return.expr, depth + 1);
+            break;
+        case N_IDENTIFIER:
+            printf(": [name: %s]\n", node->identifer.name);
+            break;
+        default:
+            break;
+    }
 }

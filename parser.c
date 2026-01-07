@@ -52,6 +52,7 @@ Token* p_consume_n(int n){
     }else{
         Token* token = &parser.src->data[parser.index];
         parser.index+=n;
+        // print_token(token);
         return token;
     }
 }
@@ -114,6 +115,7 @@ Node* new_compound_node(){
 }
 
 Node *p_parse_expression(){
+    // printf("! Parse expression\n");
     Node* primary = NULL;
     switch(p_peek()->type){
         case TK_INT_LITERAL:
@@ -136,10 +138,12 @@ Node *p_parse_expression(){
             printf("\'\n");
             exit(1);
     }
+    // printf("! Got lhs, checking binary op\n");
     while(
         is_arithmetic(p_peek()->type) &&
        !p_is_last_token()             //&&
     ){
+        // printf("! Got binary op, finding rhs\n");
         Node* binary = new_node(N_BINARY);
         binary->binary.lhs = primary;
         binary->binary.op = p_consume()->type; // Arithmetic operator
@@ -159,6 +163,7 @@ Node *p_parse_expression(){
         }
         primary = binary;
     }
+    // printf("! Finished parsing expression\n");
 
     return primary;
 }
@@ -332,6 +337,6 @@ Node* p_parse_translation_unit(){
 
 void print_nodes(){
     for(int i = 0; i < node_manager.count; i ++){
-        print_node(&node_manager.nodes[i]);
+        print_node_flat(&node_manager.nodes[i]);
     }
 }

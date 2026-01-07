@@ -112,7 +112,7 @@ void print_token_type(TokenType type){
             printf("Exit");
             break;
         case TK_INT_LITERAL:
-            printf("Integer Literal");
+            printf("Int Literal");
             break;
         case TK_FLT_LITERAL:
             printf("Float Literal");
@@ -311,30 +311,18 @@ static void t_parse_and_push_buffer(){
 
 TokenType char_to_token_type(char c){
     switch (c){
-        case ';':
-            return TK_SEMI;
-        case '+':
-            return TK_PLUS;
-        case '-':
-            return TK_MINUS;
-        case '*':
-            return TK_MULTIPLY;
-        case '/':
-            return TK_DIVIDE;
-        case '=':
-            return TK_EQ;
-        case '(':
-            return TK_OPEN_PAREN;
-        case ')':
-            return TK_CLOSE_PAREN;
-        case '{':
-            return TK_OPEN_CURLY;
-        case '}':
-            return TK_CLOSE_CURLY;
-        case ',':
-            return TK_COMMA;
-        default:
-            return TK_IDENTIFIER;
+        case ';': return TK_SEMI;
+        case '+': return TK_PLUS;
+        case '-': return TK_MINUS;
+        case '*': return TK_MULTIPLY;
+        case '/': return TK_DIVIDE;
+        case '=': return TK_EQ;
+        case '(': return TK_OPEN_PAREN;
+        case ')': return TK_CLOSE_PAREN;
+        case '{': return TK_OPEN_CURLY;
+        case '}': return TK_CLOSE_CURLY;
+        case ',': return TK_COMMA;
+        default: return TK_IDENTIFIER;
     }
 }
 
