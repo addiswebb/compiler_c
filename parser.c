@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 
 #include "node.c"
@@ -26,7 +27,7 @@ bool p_is_eota(){
     return parser.index >= parser.size;
 }
 
-Token* p_peak_n(int n){
+Token* p_peek_n(int n){
     if (parser.index + n > parser.src->size){
         printf("P_peek_n Tried peeking past eota\n");
         return NULL;
@@ -34,11 +35,11 @@ Token* p_peak_n(int n){
         return &parser.src->data[parser.index+n];
     }
 }
-Token* p_peak(){
-    return p_peak_n(0);
+Token* p_peek(){
+    return p_peek_n(0);
 }
-Token* p_peak_next(){
-    return p_peak_n(1);
+Token* p_peek_next(){
+    return p_peek_n(1);
 }
 
 Token* p_consume_n(int n){
@@ -95,6 +96,29 @@ Node* new_compound_node(){
     node->compound.count = 0;
     return node;
 }
+
+Node *p_parse_expression(){
+    Node* node = NULL;
+    switch(p_peek()->type){
+        case TK_INT_LITERAL:
+            node = new_node(N_LITERAL);
+            node->literal.type = p_peek()->type;
+            node->literal.i = atoi(p_consume()->value);
+            return node;
+        case TK_FLT_LITERAL:
+            node = new_node(N_LITERAL);
+            node->literal.type = p_peek()->type;
+            node->literal.f = atof(p_consume()->value);
+            return node;
+        case TK_IDENTIFIER:
+            node = new_node(N_IDENTIFIER);
+            node->identifer.name = p_consume()->value;
+            return node;
+        default:
+            return node;
+    }
+}
+
 Node *p_parse_var_declaration(){
     Node* node = new_node(N_VAR_DECL);
     // Consume the type (int only rn)
@@ -104,10 +128,7 @@ Node *p_parse_var_declaration(){
     node->var_decl.name = p_consume()->value;
     p_expect(TK_EQ);
     p_consume();
-    p_expect(TK_INT_LITERAL);
-    Node* literal = new_node(N_LITERAL);
-    literal->literal.value = atoi(p_consume()->value);
-    node->var_decl.literal = literal;
+    node->var_decl.expr = p_parse_expression();
     p_expect(TK_SEMI);
     p_consume();
     return node;
@@ -138,27 +159,40 @@ void p_append_statement(Node* root, Node* stmt){
         root->compound.capacity = new_capacity;
         root->compound.statements= new_decls;
     }
-
-    root->compound.statements[root->compound.count++] = stmt;
+    if (stmt != NULL){
+        root->compound.statements[root->compound.count++] = stmt;
+    }else{
+        printf("Skipping empty node");
+    }
 }
 
 Node *p_parse_statement(){
-    Node* node;
-    switch(p_peak()->type){
+    Node* node = NULL;
+    switch(p_peek()->type){
+        // Declaration if it starts with a variable type,
         case TK_INT:
         case TK_FLOAT:
             return p_parse_var_declaration();
+        /* TK_IDENTIFIER => expression or function call,
+            if     p_peek_n(2) == TK_OPEN_PAREN => function call
+            else                                => var declaration
+        */
+        /* TK_OPEN_CURLY => parse_compound */
         case TK_RETURN:
             node = new_node(N_RETURN);
             p_consume();
             node->_return.value = atoi(p_consume()->value);
             break;
+        case TK_SEMI:
+            p_consume();
+            return node;
         default:
             node = new_node(N_LITERAL);
-            node->literal.value = 69;
+            node->literal.type = TK_INT_LITERAL;
+            node->literal.i = 69;
             break;
     }
-    while(p_peak()->type != TK_SEMI && !p_is_eota()){
+    while(p_peek()->type != TK_SEMI && !p_is_eota()){
         p_consume();
     }
     p_expect(TK_SEMI);
@@ -170,7 +204,7 @@ Node *p_parse_compound(){
     Node* node = new_compound_node();
     p_expect(TK_OPEN_CURLY);
     p_consume();
-    while(p_peak()->type != TK_CLOSE_CURLY && !p_is_eota()){
+    while(p_peek()->type != TK_CLOSE_CURLY && !p_is_eota()){
         p_append_statement(node, p_parse_statement());
     }
     p_expect(TK_CLOSE_CURLY);
@@ -195,7 +229,7 @@ Node *p_parse_function(){
         3. Consume ')'
     */
     p_consume();
-    while(p_peak()->type != TK_CLOSE_PAREN && !p_is_eota()){
+    while(p_peek()->type != TK_CLOSE_PAREN && !p_is_eota()){
         p_consume();
     }
     p_consume();
@@ -215,9 +249,9 @@ Node *p_parse_function(){
 
 bool is_function_ahead(){
     return (
-        (p_peak()->type == TK_INT || p_peak()->type == TK_FLOAT) &&
-        p_peak_n(1)->type == TK_IDENTIFIER &&
-        p_peak_n(2)->type == TK_OPEN_PAREN
+        (p_peek()->type == TK_INT || p_peek()->type == TK_FLOAT) &&
+        p_peek_n(1)->type == TK_IDENTIFIER &&
+        p_peek_n(2)->type == TK_OPEN_PAREN
     );
 }
 

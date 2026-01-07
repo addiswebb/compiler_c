@@ -44,14 +44,19 @@ struct Node{
             int value;
         } _return;
         struct{
-            int value;
+            TokenType type;
+            union{
+                int i;
+                float f;
+            };
         }literal;
-        // All variables will be integers for now
+        struct{
+            char* name;
+        }identifer;
         struct{
             char* name;
             TokenType type;
-            // Can be null if no initial value
-            struct Node *literal;
+            struct Node *expr;
         } var_decl;
     };
 };
@@ -145,10 +150,28 @@ void print_node(Node* node){
             printf("\tvar_type: ");
             print_token_type(node->var_decl.type);
             printf(",\n");
-            printf("\tvalue: %d",node->var_decl.literal->literal.value);
+            switch(node->var_decl.expr->literal.type){
+                case TK_INT_LITERAL:
+                    printf("\tvalue: %d",node->var_decl.expr->literal.i);
+                    break;
+                case TK_FLT_LITERAL:
+                    printf("\tvalue: %g",node->var_decl.expr->literal.f);
+                    break;
+                default:
+                    break;
+            }
             break;
         case N_LITERAL:
-            printf("\tvalue: %d", node->literal.value);
+            switch(node->literal.type){
+                case TK_INT_LITERAL:
+                    printf("\tvalue: %d",node->literal.i);
+                    break;
+                case TK_FLT_LITERAL:
+                    printf("\tvalue: %g",node->literal.f);
+                    break;
+                default:
+                    break;
+            }
             break;
         case N_COMPOUND:
             printf("\tn_statements: %d,\n", node->compound.count);
