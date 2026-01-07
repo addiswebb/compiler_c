@@ -1,4 +1,4 @@
 int main(){
-    int x = 10 + 6 + 1;
+    int x = 1 + 2 ^ 3* (4 + 5);
     return x;
 }

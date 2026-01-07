@@ -36,8 +36,13 @@ typedef enum{
     TK_INT_LITERAL,
     TK_FLT_LITERAL,
     TK_EXPR,
+    TK_EXP,
     TK_IDENTIFIER,
 } TokenType;
+
+#define MIN_BINARY_OP_PRECEDENCE 0
+#define LEFT_ASSOCIATIVITY 1
+#define RIGHT_ASSOCIATIVITY 0
 
 #define KEYWORDS_N 5
 const char* KEYWORDS[KEYWORDS_N] = {
@@ -127,10 +132,13 @@ void print_token_type(TokenType type){
             printf("\'-\'");
             break;
         case TK_MULTIPLY:
-            printf("Multiply");
+            printf("\'*\'");
             break;
         case TK_DIVIDE:
-            printf("Divide");
+            printf("\'/\'");
+            break;
+        case TK_EXP:
+            printf("\'^\'");
             break;
         case TK_EXPR:
             printf("Expr");
@@ -145,22 +153,22 @@ void print_token_type(TokenType type){
             printf("Float");
             break;
         case TK_VOID:
-            printf("Void");
+            printf("void");
             break;
         case TK_OPEN_PAREN:
-            printf("Open Parenthesis");
+            printf("\'(\'");
             break;
         case TK_CLOSE_PAREN:
-            printf("Close Parenthesis");
+            printf("\')\'");
             break;
         case TK_OPEN_CURLY:
-            printf("Open Curly");
+            printf("\'{\'");
             break;
         case TK_CLOSE_CURLY:
-            printf("Close Curly");
+            printf("\'}\'");
             break;
         case TK_COMMA:
-            printf("Comma");
+            printf("\',\'");
             break;
         case TK_RETURN:
             printf("Return");
@@ -176,9 +184,7 @@ void print_token_type(TokenType type){
 
 void print_token(Token* token){
     printf("Token { Type: ");
-
     print_token_type(token->type);
-
     if(token->value != NULL){
         printf(", value: ");
         if (token->value[0] == '\0'){
@@ -191,15 +197,48 @@ void print_token(Token* token){
     printf("}\n");
 }
 
-bool is_arithmetic(TokenType type){
+bool is_binary_operator(TokenType type){
     switch (type){
         case TK_PLUS:
         case TK_MINUS:
         case TK_MULTIPLY:
         case TK_DIVIDE:
+        case TK_EXP:
             return true;
         default:
             return false;
+    }
+}
+
+int associativity(TokenType type){
+    switch(type){
+        case TK_PLUS:
+        case TK_MINUS:
+        case TK_MULTIPLY:
+        case TK_DIVIDE:
+            return LEFT_ASSOCIATIVITY;
+        case TK_EXP:
+            return RIGHT_ASSOCIATIVITY;
+        default:
+            printf("Tried to get the associativity of a token which is not a binary operator");
+            exit(1);
+    }
+}
+
+int precidence(TokenType type){
+    switch(type){
+        case TK_PLUS:
+        case TK_MINUS:
+            return 0;
+        case TK_MULTIPLY:
+        case TK_DIVIDE:
+            return 1;
+        case TK_EXP:
+            return 2;
+        default:
+            print_token_type(type);
+            printf("Tried to get the precidence of a token which is not a binary operator");
+            exit(1);
     }
 }
 
@@ -316,6 +355,7 @@ TokenType char_to_token_type(char c){
         case '-': return TK_MINUS;
         case '*': return TK_MULTIPLY;
         case '/': return TK_DIVIDE;
+        case '^': return TK_EXP;
         case '=': return TK_EQ;
         case '(': return TK_OPEN_PAREN;
         case ')': return TK_CLOSE_PAREN;

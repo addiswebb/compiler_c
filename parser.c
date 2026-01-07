@@ -3,7 +3,8 @@
 
 #include "node.c"
 
-#define MAX_STATEMENTS_PER_BLOCK 4
+#define DEFAULT_STATEMENTS_PER_BLOCK 8
+
 typedef struct{
     int index;
     int size;
@@ -76,11 +77,11 @@ void p_expect(TokenType expected_type){
     if (!p_is_last_token()){
         TokenType token_type = parser.src->data[parser.index].type;
         if(token_type != expected_type){
-            printf("Expected \'");
+            printf("Expected ");
             print_token_type(expected_type);
-            printf("\' got \'");
+            printf(" got ");
             print_token_type(token_type);
-            printf("\'\n");
+            printf("\n");
             exit(1);
         }
     }
@@ -90,82 +91,99 @@ Token* p_consume_a(TokenType type){
     p_expect(type);
     return p_consume();
 }
+/*
+    Creates the root translation unit node
+    And allocates an array for its declarations
+*/
 Node* init_translation_unit(){
     Node* node = new_node(N_TRANSLATION_UNIT);
-    node->translation_unit.declarations = malloc(sizeof(*node->translation_unit.declarations) * MAX_STATEMENTS_PER_BLOCK);
+    node->translation_unit.declarations = malloc(sizeof(*node->translation_unit.declarations) * DEFAULT_STATEMENTS_PER_BLOCK);
     if (node->translation_unit.declarations == NULL){
         printf("Failed to initialize translation unit");
         exit(1);
     }
-    node->translation_unit.capacity = MAX_STATEMENTS_PER_BLOCK;
+    node->translation_unit.capacity = DEFAULT_STATEMENTS_PER_BLOCK;
     node->translation_unit.count = 0;
     return node;
 }
 
+/*
+    Creates a new compound node
+    And allocates an array for its statements
+*/
 Node* new_compound_node(){
     Node* node = new_node(N_COMPOUND);
-    node->compound.statements = malloc(sizeof(*node->compound.statements) * MAX_STATEMENTS_PER_BLOCK);
+    node->compound.statements = malloc(sizeof(*node->compound.statements) * DEFAULT_STATEMENTS_PER_BLOCK);
     if (node->translation_unit.declarations == NULL){
         printf("Failed to create new compound node");
         exit(1);
     }
-    node->compound.capacity = MAX_STATEMENTS_PER_BLOCK;
+    node->compound.capacity = DEFAULT_STATEMENTS_PER_BLOCK;
     node->compound.count = 0;
     return node;
 }
 
-Node *p_parse_expression(){
-    // printf("! Parse expression\n");
-    Node* primary = NULL;
+Node *p_parse_expression(int min_prec);
+
+/*
+    Consumes
+    `literal`
+    `identifier`
+    `(expr)`
+*/
+Node *p_parse_term(){
+    Node* node = NULL;
     switch(p_peek()->type){
         case TK_INT_LITERAL:
-            primary = new_node(N_LITERAL);
-            primary->literal.type = p_peek()->type;
-            primary->literal.i = atoi(p_consume()->value);
+            node = new_node(N_LITERAL);
+            node->literal.type = p_peek()->type;
+            node->literal.i = atoi(p_consume()->value);
             break;
         case TK_FLT_LITERAL:
-            primary = new_node(N_LITERAL);
-            primary->literal.type = p_peek()->type;
-            primary->literal.f = atof(p_consume()->value);
+            node = new_node(N_LITERAL);
+            node->literal.type = p_peek()->type;
+            node->literal.f = atof(p_consume()->value);
             break;
         case TK_IDENTIFIER:
-            primary = new_node(N_IDENTIFIER);
-            primary->identifer.name = p_consume()->value;
+            node = new_node(N_IDENTIFIER);
+            node->identifer.name = p_consume()->value;
+            break;
+        case TK_OPEN_PAREN:
+            p_consume_a(TK_OPEN_PAREN);
+            node = p_parse_expression(MIN_BINARY_OP_PRECEDENCE);
+            p_consume_a(TK_CLOSE_PAREN);
             break;
         default:
-            printf("Expected expression got \'");
+            printf("Expected expression got ");
             print_token_type(p_peek()->type);
-            printf("\'\n");
+            printf("\n");
             exit(1);
     }
-    // printf("! Got lhs, checking binary op\n");
-    while(
-        is_arithmetic(p_peek()->type) &&
-       !p_is_last_token()             //&&
-    ){
-        // printf("! Got binary op, finding rhs\n");
-        Node* binary = new_node(N_BINARY);
-        binary->binary.lhs = primary;
-        binary->binary.op = p_consume()->type; // Arithmetic operator
-        binary->binary.rhs = NULL;
-        switch(p_peek()->type){
-            case TK_INT_LITERAL:
-            case TK_FLT_LITERAL:
-            case TK_IDENTIFIER:
-                binary->binary.rhs = p_parse_expression();
-                break;
-            default:
-                printf("Expected expression after ");
-                print_token_type(binary->binary.op);
-                printf(", found ");
-                print_token_type(p_peek()->type);
-                exit(1);
-        }
-        primary = binary;
-    }
-    // printf("! Finished parsing expression\n");
+    return node;
+}
 
-    return primary;
+/*
+    Consumes
+    `[term]+`
+    Where `term` is any `literal`, `identifier` or `(expr)`
+*/
+Node *p_parse_expression(int min_prec){
+    Node* lhs = p_parse_term();
+
+    while(
+        is_binary_operator(p_peek()->type) &&
+        !p_is_last_token() &&
+        precidence(p_peek()->type) >= min_prec
+    ){
+        int prec = precidence(p_peek()->type);
+        int assoc = associativity(p_peek()->type);
+        Node* binary = new_node(N_BINARY);
+        binary->binary.op = p_consume()->type;
+        binary->binary.rhs = p_parse_expression(prec + assoc);
+        binary->binary.lhs = lhs;
+        lhs = binary;
+    }
+    return lhs;
 }
 
 /*
@@ -180,7 +198,7 @@ Node *p_parse_var_declaration(){
     node->var_decl.name = p_consume()->value;
     if (p_peek()->type == TK_EQ){
         p_consume();
-        node->var_decl.expr = p_parse_expression();
+        node->var_decl.expr = p_parse_expression(MIN_BINARY_OP_PRECEDENCE);
     }else{
         node->var_decl.expr = NULL;
     }
@@ -237,7 +255,7 @@ void p_append_statement(Node* root, Node* stmt){
 Node *p_parse_return(){
     Node* node = new_node(N_RETURN);
     p_consume(); // -> return
-    node->_return.expr = p_parse_expression();
+    node->_return.expr = p_parse_expression(MIN_BINARY_OP_PRECEDENCE);
     p_consume_a(TK_SEMI);
     return node;
 }
@@ -259,7 +277,7 @@ Node *p_parse_statement(){
         case TK_RETURN:
             return p_parse_return();
         default:
-            return p_parse_expression();
+            return p_parse_expression(MIN_BINARY_OP_PRECEDENCE);
     }
     return node;
 }
