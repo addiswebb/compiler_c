@@ -1,4 +1,4 @@
 int main(int argc, char* argv[]){
-    float a = 7.1;
+    int c = 3 + 3;
     return 0;
 }

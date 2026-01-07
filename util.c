@@ -1,5 +1,4 @@
 #include <stdbool.h>
-#include <stdio.h>
 
 bool is_alpha(char c){
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -63,26 +62,4 @@ bool is_whitespace(char c){
         default:
             return false;
     }
-}
-static void printchar(unsigned char theChar) {
-
-    switch (theChar) {
-
-        case '\n':
-            printf("\\n\n");
-            break;
-        case '\r':
-            printf("\\r");
-            break;
-        case '\t':
-            printf("\\t");
-            break;
-        default:
-            if ((theChar < 0x20) || (theChar > 0x7f)) {
-                printf("\\%03o", (unsigned char)theChar);
-            } else {
-                printf("%c", theChar);
-            }
-        break;
-   }
 }

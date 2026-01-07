@@ -118,13 +118,13 @@ void print_token_type(TokenType type){
             printf("Float Literal");
             break;
         case TK_SEMI:
-            printf("Semi-colon");
+            printf("\';\'");
             break;
         case TK_PLUS:
-            printf("Plus");
+            printf("\'+\'");
             break;
         case TK_MINUS:
-            printf("Minus");
+            printf("\'-\'");
             break;
         case TK_MULTIPLY:
             printf("Multiply");
@@ -139,7 +139,7 @@ void print_token_type(TokenType type){
             printf("Equal");
             break;
         case TK_INT:
-            printf("Integer");
+            printf("Int");
             break;
         case TK_FLOAT:
             printf("Float");
@@ -169,7 +169,7 @@ void print_token_type(TokenType type){
             printf("Identifier");
             break;
         default:
-            printf("Undefined");
+            printf("Undefined: %d", type);
             break;
     }
 }
@@ -189,6 +189,18 @@ void print_token(Token* token){
         printf("%s ", token->value);
     }
     printf("}\n");
+}
+
+bool is_arithmetic(TokenType type){
+    switch (type){
+        case TK_PLUS:
+        case TK_MINUS:
+        case TK_MULTIPLY:
+        case TK_DIVIDE:
+            return true;
+        default:
+            return false;
+    }
 }
 
 void t_print_tokens(){

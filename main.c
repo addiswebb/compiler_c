@@ -63,8 +63,9 @@ int main(int argc, char* argv[]){
     // t_print_tokens();
     p_init();
     p_parse_translation_unit();
-    print_nodes();
+    // print_nodes();
 
     t_free();
+    p_free();
     return 0;
 }

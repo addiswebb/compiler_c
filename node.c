@@ -40,8 +40,7 @@ struct Node{
             TokenType op;
         }binary;
         struct {
-            // struct Node *value;
-            int value;
+            struct Node *expr;
         } _return;
         struct{
             TokenType type;
@@ -74,6 +73,20 @@ void init_node_manager(){
     node_manager.capacity = 8;
     node_manager.count = 0;
 }
+
+void free_node_manager(){
+    for(int i = 0 ; i < node_manager.count; i ++){
+        Node* node = &node_manager.nodes[i];
+        if (node->type == N_TRANSLATION_UNIT){
+            free(node->translation_unit.declarations);
+        } else if (node->type == N_COMPOUND){
+            free(node->compound.statements);
+        } else if (node->type == N_FUNCTION){
+            free(node->function.params);
+        }
+    }
+    free(node_manager.nodes);
+}
 /*
     Handles creating a Node, pushing it to the global node array
 */
@@ -81,7 +94,7 @@ Node* new_node(NodeType type){
     if(node_manager.count >= node_manager.capacity){
         // Resize Node Manager Array
         int new_capacity = node_manager.capacity * 2;
-        Node* new_nodes = realloc(node_manager.nodes, sizeof(Token) * new_capacity);
+        Node* new_nodes = realloc(node_manager.nodes, sizeof(Node) * new_capacity);
         if(!new_nodes) {
             printf("Failed to reallocate token array\n");
             exit(1);
@@ -149,16 +162,18 @@ void print_node(Node* node){
             printf("\tname: %s,\n", node->var_decl.name);
             printf("\tvar_type: ");
             print_token_type(node->var_decl.type);
-            printf(",\n");
-            switch(node->var_decl.expr->literal.type){
-                case TK_INT_LITERAL:
-                    printf("\tvalue: %d",node->var_decl.expr->literal.i);
-                    break;
-                case TK_FLT_LITERAL:
-                    printf("\tvalue: %g",node->var_decl.expr->literal.f);
-                    break;
-                default:
-                    break;
+            if (node->var_decl.expr != NULL){
+                printf(",\n");
+                switch(node->var_decl.expr->literal.type){
+                    case TK_INT_LITERAL:
+                        printf("\tvalue: %d",node->var_decl.expr->literal.i);
+                        break;
+                    case TK_FLT_LITERAL:
+                        printf("\tvalue: %g",node->var_decl.expr->literal.f);
+                        break;
+                    default:
+                        break;
+                }
             }
             break;
         case N_LITERAL:
@@ -173,11 +188,14 @@ void print_node(Node* node){
                     break;
             }
             break;
+        case N_BINARY:
+            printf("\top: ");
+            print_token_type(node->binary.op);
+            break;
         case N_COMPOUND:
             printf("\tn_statements: %d,\n", node->compound.count);
             break;
         case N_RETURN:
-            printf("\tvalue: %d", node->_return.value);
             break;
         default:
             printf("\t");
