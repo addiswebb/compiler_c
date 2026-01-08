@@ -252,8 +252,7 @@ void print_node(Node *node, int depth) {
         }
         break;
     case N_FUNCTION:
-        printf(": [name= %s, params= %d, return_type= ", node->function.name,
-               node->function.param_count);
+        printf(": [name= %s, params= %d, return_type= ", node->function.name, node->function.param_count);
         print_token_type(node->function.return_type);
         printf("]\n");
         print_node(node->function.body, depth + 1);

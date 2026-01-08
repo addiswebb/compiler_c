@@ -140,7 +140,7 @@ void print_token_type(TokenType type) {
         printf("Expr");
         break;
     case TK_EQ:
-        printf("Equal");
+        printf("\'=\'");
         break;
     case TK_INT:
         printf("Int");

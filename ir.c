@@ -186,6 +186,14 @@ int ir_gen_expression(IR_Function *func, Node *expr) {
     exit(1);
 }
 
+void ir_gen_statement(IR_Function *func, Node *stmt);
+
+void ir_gen_compound(IR_Function *func, Node *comp) {
+    for (int i = 0; i < comp->compound.count; i++) {
+        ir_gen_statement(func, comp->compound.statements[i]);
+    }
+}
+
 void ir_gen_statement(IR_Function *func, Node *stmt) {
     switch (stmt->type) {
     case N_VAR_DECL:
@@ -203,6 +211,21 @@ void ir_gen_statement(IR_Function *func, Node *stmt) {
         IR_Instruction ret_instr = {IR_RET, ret_reg, 0, 0};
         ir_append_instruction(func, &ret_instr);
         return;
+    case N_BINARY:
+        if (stmt->binary.op == TK_EQ && stmt->binary.lhs->type == N_IDENTIFIER) {
+            int var_reg = ir_get_var_reg(func, stmt->binary.lhs->identifer.name);
+            int expr_reg = ir_gen_expression(func, stmt->binary.rhs);
+            IR_Instruction assign_instr = {IR_STORE, var_reg, expr_reg, 0};
+            ir_append_instruction(func, &assign_instr);
+            return;
+        } else {
+            printf("Given binary op statement that is not an assignment\n");
+            exit(1);
+        }
+    case N_COMPOUND:
+        // No scopes currently
+        ir_gen_compound(func, stmt);
+        return;
     default:
         // given invalid statement? probably an expression
         printf("Dont know what to do with the given statemnet: ir_gen_statement\n");
@@ -219,10 +242,7 @@ IR_Function *ir_gen_function(Node *func) {
     IR_Function *fn = ir_new_function(func->function.name);
     switch (func->function.body->type) {
     case N_COMPOUND:
-        Node *comp = func->function.body;
-        for (int i = 0; i < comp->compound.count; i++) {
-            ir_gen_statement(fn, comp->compound.statements[i]);
-        }
+        ir_gen_compound(fn, func->function.body);
         break;
     default:
         printf("Function body is not a compound, gg\n");

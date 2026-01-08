@@ -123,21 +123,21 @@ Node *p_parse_term() {
         node = new_node(N_LITERAL);
         node->literal.type = p_peek()->type;
         node->literal.i = atoi(p_consume()->value);
-        break;
+        return node;
     case TK_FLT_LITERAL:
         node = new_node(N_LITERAL);
         node->literal.type = p_peek()->type;
         node->literal.f = atof(p_consume()->value);
-        break;
+        return node;
     case TK_IDENTIFIER:
         node = new_node(N_IDENTIFIER);
         node->identifer.name = p_consume()->value;
-        break;
+        return node;
     case TK_OPEN_PAREN:
         p_consume_a(TK_OPEN_PAREN);
         node = p_parse_expression(MIN_BINARY_OP_PRECEDENCE);
         p_consume_a(TK_CLOSE_PAREN);
-        break;
+        return node;
     default:
         printf("Expected expression got ");
         print_token_type(p_peek()->type);
@@ -219,7 +219,7 @@ void p_append_statement(Node *root, Node *stmt) {
     if (stmt != NULL) {
         root->compound.statements[root->compound.count++] = stmt;
     } else {
-        printf("Skipping empty node");
+        printf("Skipping empty node\n");
     }
 }
 
@@ -236,6 +236,16 @@ Node *p_parse_return() {
     return node;
 }
 
+Node *p_parse_var_assign() {
+    Node *node = new_node(N_BINARY);
+    node->binary.lhs = p_parse_term();
+    node->binary.op = p_consume_a(TK_EQ)->type;
+    node->binary.rhs = p_parse_expression(MIN_BINARY_OP_PRECEDENCE);
+    p_consume_a(TK_SEMI);
+    return node;
+}
+
+Node *p_parse_compound();
 /*
     Consumes any of,
     `(type) identifier = [= expr]?;`
@@ -252,8 +262,9 @@ Node *p_parse_statement() {
     case TK_RETURN:
         return p_parse_return();
     case TK_IDENTIFIER:
-    
-        break;
+        return p_parse_var_assign();
+    case TK_OPEN_CURLY:
+        return p_parse_compound();
     default:
         return p_parse_expression(MIN_BINARY_OP_PRECEDENCE);
     }
