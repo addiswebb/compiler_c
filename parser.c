@@ -82,8 +82,7 @@ Token *p_consume_a(TokenType type) {
 */
 Node *init_translation_unit() {
     Node *node = new_node(N_TRANSLATION_UNIT);
-    node->translation_unit.declarations =
-        malloc(sizeof(*node->translation_unit.declarations) * DEFAULT_STATEMENTS_PER_BLOCK);
+    node->translation_unit.declarations = malloc(sizeof(*node->translation_unit.declarations) * DEFAULT_STATEMENTS_PER_BLOCK);
     if (node->translation_unit.declarations == NULL) {
         printf("Failed to initialize translation unit");
         exit(1);
@@ -99,8 +98,7 @@ Node *init_translation_unit() {
 */
 Node *new_compound_node() {
     Node *node = new_node(N_COMPOUND);
-    node->compound.statements =
-        malloc(sizeof(*node->compound.statements) * DEFAULT_STATEMENTS_PER_BLOCK);
+    node->compound.statements = malloc(sizeof(*node->compound.statements) * DEFAULT_STATEMENTS_PER_BLOCK);
     if (node->translation_unit.declarations == NULL) {
         printf("Failed to create new compound node");
         exit(1);
@@ -157,8 +155,7 @@ Node *p_parse_term() {
 Node *p_parse_expression(int min_prec) {
     Node *lhs = p_parse_term();
 
-    while (is_binary_operator(p_peek()->type) && !p_is_last_token() &&
-           precidence(p_peek()->type) >= min_prec) {
+    while (is_binary_operator(p_peek()->type) && !p_is_last_token() && precidence(p_peek()->type) >= min_prec) {
         int prec = precidence(p_peek()->type);
         int assoc = associativity(p_peek()->type);
         Node *binary = new_node(N_BINARY);
@@ -197,8 +194,7 @@ Node *p_parse_var_declaration() {
 void p_append_declaration(Node *root, Node *decl) {
     if (root->translation_unit.count >= root->translation_unit.capacity) {
         root->translation_unit.capacity *= 2;
-        root->translation_unit.declarations = realloc(
-            root->translation_unit.declarations, sizeof(Node) * root->translation_unit.capacity);
+        root->translation_unit.declarations = realloc(root->translation_unit.declarations, sizeof(Node) * root->translation_unit.capacity);
         if (root->translation_unit.declarations == NULL) {
             printf("Failed to append declaration");
             exit(1);
@@ -214,8 +210,7 @@ void p_append_declaration(Node *root, Node *decl) {
 void p_append_statement(Node *root, Node *stmt) {
     if (root->compound.count >= root->compound.capacity) {
         root->compound.capacity *= 2;
-        root->compound.statements =
-            realloc(root->compound.statements, sizeof(Node) * root->compound.capacity);
+        root->compound.statements = realloc(root->compound.statements, sizeof(Node) * root->compound.capacity);
         if (root->compound.statements == NULL) {
             printf("Failed to append declaration");
             exit(1);
@@ -250,17 +245,19 @@ Node *p_parse_return() {
     Never conumes `;`, other functions must consume it.
 */
 Node *p_parse_statement() {
-    Node *node = NULL;
     switch (p_peek()->type) {
     case TK_INT:
     case TK_FLOAT:
         return p_parse_var_declaration();
     case TK_RETURN:
         return p_parse_return();
+    case TK_IDENTIFIER:
+    
+        break;
     default:
         return p_parse_expression(MIN_BINARY_OP_PRECEDENCE);
     }
-    return node;
+    return NULL;
 }
 
 /*
@@ -302,8 +299,8 @@ Node *p_parse_function() {
 }
 
 bool is_function_ahead() {
-    return ((p_peek()->type == TK_INT || p_peek()->type == TK_FLOAT) &&
-            p_peek_n(1)->type == TK_IDENTIFIER && p_peek_n(2)->type == TK_OPEN_PAREN);
+    return ((p_peek()->type == TK_INT || p_peek()->type == TK_FLOAT) && p_peek_n(1)->type == TK_IDENTIFIER &&
+            p_peek_n(2)->type == TK_OPEN_PAREN);
 }
 
 Node *p_parse_declaration() {

@@ -1,5 +1,6 @@
 #include "x86.c"
 
+#include <stdio.h>
 #include <stdlib.h>
 
 typedef struct {
@@ -79,9 +80,11 @@ int compile(Compiler *compiler) {
     IR_Module *module = ir_gen_translation_unit(&node_manager.nodes[0]);
     if (compiler->flags & COMP_FLAG_IR)
         print_ir_module(module);
-    if (compiler->flags & COMP_FLAG_ASM)
-        x86_gen_module(module);
-
+    if (compiler->flags & COMP_FLAG_ASM) {
+        FILE *fp = fopen(compiler->output_file, "w");
+        x86_gen_module(fp, module);
+        fclose(fp);
+    }
     ir_free_module(module);
     return 1;
 }
@@ -106,7 +109,7 @@ Compiler init_compiler(int argc, char *argv[]) {
     compiler.flags = 0;
     compiler.input_file = argv[1];
     compiler.output_file = strdup(argv[1]);
-    compiler.output_file[strlen(argv[1]) - 1] = 'o';
+    compiler.output_file[strlen(argv[1]) - 1] = 's';
 
     // Loop and try find -o, -t, -d
     for (int i = 1; i < argc; i++) {
