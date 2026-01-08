@@ -1,6 +1,6 @@
 #define BUFFER_SIZE 1024
 
-typedef struct{
+typedef struct {
     char buf[BUFFER_SIZE];
     int size;
 } Buffer;

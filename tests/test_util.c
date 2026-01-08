@@ -1,25 +1,25 @@
-#include <stdio.h>
 #include "../util.c"
+#include <stdio.h>
 
-void test_num_str(char* str){
-    if(is_num_str(str)){
+void test_num_str(char *str) {
+    if (is_num_str(str)) {
         printf("true");
-    }else{
+    } else {
         printf("false");
     }
-    printf(": %s",str);
+    printf(": %s", str);
     printf("\n");
 }
-void test_num(char c){
-    if(is_digit(c)){
+void test_num(char c) {
+    if (is_digit(c)) {
         printf("true");
-    }else{
+    } else {
         printf("false");
     }
-    printf(": %c",c);
+    printf(": %c", c);
     printf("\n");
 }
-int main(void){
+int main(void) {
     test_num_str("12");
     test_num_str("1");
     test_num_str("123456789123456789");
