@@ -279,7 +279,7 @@ static char t_peek() {
 
 static char t_peek_next() {
     if (tokenizer.index + 1 > tokenizer.size) {
-        printf("T_peek_Next Tried peeking past eof\n");
+        printf("t_peek_next Tried peeking past eof\n");
         return '\0';
     } else {
         return tokenizer.src[tokenizer.index + 1];
@@ -402,6 +402,13 @@ void t_tokenize() {
             t_buffer_reset();
         } else if (is_whitespace(c)) {
             t_skip();
+        } else if (t_peek() == '/' && t_peek_next() == '/') {
+            t_skip(); // '/'
+            t_skip(); // '/'
+            while (t_peek() != '\n') {
+                t_skip();
+            }
+            t_skip(); // '\n'
         } else {
             // Handle special cases
             t_consume();
