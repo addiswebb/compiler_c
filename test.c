@@ -1,11 +1,14 @@
 int main() {
+    int i = 10;
     int x = 0;
 
-    if (x) {
-        return 5;
-    } else {
-        return 10;
+    while (i) {
+        if (x) {
+            return i;
+        } else {
+            x = x + 1;
+        }
+        i = i - 1;
     }
-
-    return x;
+    return i;
 }

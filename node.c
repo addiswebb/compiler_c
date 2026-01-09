@@ -7,6 +7,7 @@ typedef enum {
     N_COMPOUND,
     N_VAR_DECL,
     N_IF,
+    N_WHILE,
     N_RETURN,
     N_BINARY,
     N_LITERAL,
@@ -48,6 +49,10 @@ struct Node {
             struct Node *if_true;
             struct Node *if_false;
         } _if;
+        struct {
+            struct Node *cond;
+            struct Node *block;
+        } _while;
         struct {
             TokenType type;
             union {
@@ -142,6 +147,9 @@ void print_node_type(NodeType type) {
         break;
     case N_IF:
         printf("If");
+        break;
+    case N_WHILE:
+        printf("While");
         break;
     default:
         printf("Undefined");
@@ -286,6 +294,11 @@ void print_node(Node *node, int depth) {
         if (node->_if.if_false != NULL) {
             print_node(node->_if.if_false, depth + 1);
         }
+        break;
+    case N_WHILE:
+        printf(": [cond, true]\n");
+        print_node(node->_while.cond, depth + 1);
+        print_node(node->_while.block, depth + 1);
         break;
     default:
         break;

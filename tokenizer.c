@@ -22,6 +22,7 @@ typedef enum {
     TK_FLOAT,
     TK_RETURN,
     TK_VOID,
+    TK_WHILE,
     // Special Characters
     TK_EQ,
     TK_SEMI,
@@ -46,10 +47,8 @@ typedef enum {
 #define LEFT_ASSOCIATIVITY 1
 #define RIGHT_ASSOCIATIVITY 0
 
-#define KEYWORDS_N 7
-const char *KEYWORDS[KEYWORDS_N] = {
-    "else", "exit", "if", "int", "float", "return", "void",
-};
+#define KEYWORDS_N 8
+const char *KEYWORDS[KEYWORDS_N] = {"else", "exit", "if", "int", "float", "return", "void", "while"};
 
 typedef struct {
     TokenType type;
@@ -179,6 +178,9 @@ void print_token_type(TokenType type) {
         break;
     case TK_ELSE:
         printf("Else");
+        break;
+    case TK_WHILE:
+        printf("While");
         break;
     default:
         printf("Undefined: %d", type);
@@ -390,9 +392,9 @@ void t_skip_comments() {
         while (t_peek() != '\n') {
             t_skip();
         }
-        t_skip(); // '\n'
-    } else if (t_peek() == '*') {
-        t_skip(); // '*'
+        t_skip();                 // '\n'
+    } else if (t_peek() == '*') { // Multi-line comments
+        t_skip();                 // '*'
         while (t_peek() != '*' && t_peek_next() != '/') {
             t_skip();
         }

@@ -100,7 +100,7 @@ IR_Module *ir_new_module() {
     return module;
 }
 
-void ir_append_block(IR_Function *func, IR_Block *block);
+int ir_append_block(IR_Function *func, IR_Block *block);
 
 IR_Block *ir_new_block() {
     IR_Block *block = malloc(sizeof(*block));
@@ -161,7 +161,7 @@ IR_Function *ir_new_function(const char *name) {
     return func;
 }
 
-void ir_append_block(IR_Function *func, IR_Block *block) {
+int ir_append_block(IR_Function *func, IR_Block *block) {
     if (func->block_count >= func->block_capacity) {
         func->block_capacity *= 2;
         func->blocks = realloc(func->blocks, sizeof(IR_Block) * func->block_capacity);
@@ -172,6 +172,7 @@ void ir_append_block(IR_Function *func, IR_Block *block) {
     }
     func->blocks[func->block_count++] = *block;
     free(block);
+    return func->block_count - 1;
 }
 
 void ir_append_instruction(IR_Block *block, IR_Instruction *instruction) {
@@ -212,8 +213,9 @@ int ir_get_var_reg(IR_Function *func, const char *name) {
                 exit(1);
             }
             if (strcmp(func->locals[sp].name, name) == 0) {
-                return func->locals[sp--].reg;
+                return func->locals[sp].reg;
             }
+            sp--;
         }
     }
     return -1;
@@ -294,6 +296,20 @@ void ir_gen_compound(IR_Function *func, Node *comp) {
     ir_end_scope(func);
 }
 
+void ir_gen_while_statement(IR_Function *func, Node *_while) {
+    int cond_id = ir_append_block(func, ir_new_block()); // cond:
+    int cond_reg = ir_gen_expression(func, _while->_while.cond);
+    int block_id = cond_id + 1;
+    int end_id = cond_id + 2;
+    IR_Instruction br_eq_instr = {IR_BR_EQ, cond_reg, block_id, end_id};
+    ir_append_instruction(current_block(func), &br_eq_instr);
+    ir_append_block(func, ir_new_block()); // block:
+    ir_gen_compound(func, _while->_while.block);
+    IR_Instruction br_instr = {IR_BR, cond_id, 0, 0};
+    ir_append_instruction(current_block(func), &br_instr);
+    ir_append_block(func, ir_new_block()); // end:
+}
+
 void ir_gen_if_statement(IR_Function *func, Node *_if) {
     int cond_reg = ir_gen_expression(func, _if->_if.cond);
     int if_true_id = func->block_count;
@@ -308,14 +324,21 @@ void ir_gen_if_statement(IR_Function *func, Node *_if) {
         ir_append_block(func, ir_new_block()); // IF else or endblock
         return;
     } else {
-        int end_id = if_false_id + 1;
-        IR_Instruction br_instr = {IR_BR, end_id, 0, 0};
-        ir_append_instruction(current_block(func), &br_instr);
-        ir_append_block(func, ir_new_block()); // IF else or endblock
-        ir_gen_compound(func, _if->_if.if_false);
-        IR_Instruction br_end_instr = {IR_BR, end_id, 0, 0};
-        ir_append_instruction(current_block(func), &br_end_instr);
-        ir_append_block(func, ir_new_block()); // end
+        if (_if->_if.if_false->type == N_IF) {
+            IR_Instruction br_instr = {IR_BR, if_false_id, 0, 0};
+            ir_append_instruction(current_block(func), &br_instr);
+            ir_append_block(func, ir_new_block()); // IF else or endblock
+            ir_gen_if_statement(func, _if->_if.if_false);
+        } else {
+            int end_id = if_false_id + 1;
+            IR_Instruction br_instr = {IR_BR, end_id, 0, 0};
+            ir_append_instruction(current_block(func), &br_instr);
+            ir_append_block(func, ir_new_block()); // IF else or endblock
+            ir_gen_compound(func, _if->_if.if_false);
+            IR_Instruction br_end_instr = {IR_BR, end_id, 0, 0};
+            ir_append_instruction(current_block(func), &br_end_instr);
+            ir_append_block(func, ir_new_block()); // end
+        }
     }
 
     return;
@@ -354,6 +377,9 @@ void ir_gen_statement(IR_Function *func, Node *stmt) {
         return;
     case N_IF:
         ir_gen_if_statement(func, stmt);
+        return;
+    case N_WHILE:
+        ir_gen_while_statement(func, stmt);
         return;
     default:
         // given invalid statement? probably an expression

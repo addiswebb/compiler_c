@@ -247,6 +247,21 @@ Node *p_parse_if_statement() {
     }
     return node;
 }
+
+/*
+    Consumes
+    while ([cond]) {[compound]}
+*/
+Node *p_parse_while_statement() {
+    Node *node = new_node(N_WHILE);
+    p_consume_a(TK_WHILE);
+    p_consume_a(TK_OPEN_PAREN);
+    node->_while.cond = p_parse_expression(MIN_BINARY_OP_PRECEDENCE);
+    p_consume_a(TK_CLOSE_PAREN);
+    node->_while.block = p_parse_compound();
+    return node;
+}
+
 /*
     Consumes
     `return [expr]?;
@@ -286,6 +301,8 @@ Node *p_parse_statement() {
         return p_parse_var_declaration();
     case TK_IF:
         return p_parse_if_statement();
+    case TK_WHILE:
+        return p_parse_while_statement();
     case TK_RETURN:
         return p_parse_return();
     case TK_IDENTIFIER:

@@ -67,12 +67,12 @@ void x86_gen_function(FILE *fp, IR_Function *func) {
     fprintf(fp, "%s:\n", func->name);
     fprintf(fp, "    push %%rbp\n");
     fprintf(fp, "    mov %%rsp, %%rbp\n");
-    fprintf(fp, "    subq $%d, %%rsp\n\n", stack_size);
+    fprintf(fp, "    subq $%d, %%rsp\n", stack_size);
     for (int i = 0; i < func->block_count; i++) {
         fprintf(fp, "block_%d:\n", i);
         x86_gen_block(fp, &func->blocks[i]);
     }
-    fprintf(fp, "\nreturn:\n");
+    fprintf(fp, "return:\n");
     fprintf(fp, "    mov %%rbp, %%rsp\n");
     fprintf(fp, "    pop %%rbp\n");
     fprintf(fp, "    ret\n");
