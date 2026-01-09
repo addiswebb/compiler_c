@@ -39,8 +39,24 @@ void x86_gen_instruction(FILE *fp, IR_Instruction *instr) {
         break;
     case IR_RET:
         fprintf(fp, "    movl -%d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    jmp return\n");
         break;
+    case IR_BR:
+        fprintf(fp, "    jmp block_%d\n", instr->dst);
         break;
+    case IR_BR_EQ:
+        fprintf(fp, "    movl -%d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    testl %%eax, %%eax\n");
+        fprintf(fp, "    jz block_%d\n", instr->b);
+        break;
+    default:
+        break;
+    }
+}
+
+void x86_gen_block(FILE *fp, IR_Block *block) {
+    for (int i = 0; i < block->count; i++) {
+        x86_gen_instruction(fp, &block->instructions[i]);
     }
 }
 
@@ -52,12 +68,15 @@ void x86_gen_function(FILE *fp, IR_Function *func) {
     fprintf(fp, "    push %%rbp\n");
     fprintf(fp, "    mov %%rsp, %%rbp\n");
     fprintf(fp, "    subq $%d, %%rsp\n\n", stack_size);
-    for (int i = 0; i < func->count; i++) {
-        x86_gen_instruction(fp, &func->instructions[i]);
+    for (int i = 0; i < func->block_count; i++) {
+        fprintf(fp, "block_%d:\n", i);
+        x86_gen_block(fp, &func->blocks[i]);
     }
-    fprintf(fp, "\n    mov %%rbp, %%rsp\n");
+    fprintf(fp, "\nreturn:\n");
+    fprintf(fp, "    mov %%rbp, %%rsp\n");
     fprintf(fp, "    pop %%rbp\n");
     fprintf(fp, "    ret\n");
+    fprintf(fp, ".section .note.GNU-stack,\"\",@progbits\n");
 }
 
 void x86_gen_module(FILE *fp, IR_Module *module) {

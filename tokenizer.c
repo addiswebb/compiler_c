@@ -15,7 +15,9 @@
 */
 typedef enum {
     // Keywords
+    TK_ELSE,
     TK_EXIT,
+    TK_IF,
     TK_INT,
     TK_FLOAT,
     TK_RETURN,
@@ -44,9 +46,9 @@ typedef enum {
 #define LEFT_ASSOCIATIVITY 1
 #define RIGHT_ASSOCIATIVITY 0
 
-#define KEYWORDS_N 5
+#define KEYWORDS_N 7
 const char *KEYWORDS[KEYWORDS_N] = {
-    "exit", "int", "float", "return", "void",
+    "else", "exit", "if", "int", "float", "return", "void",
 };
 
 typedef struct {
@@ -171,6 +173,12 @@ void print_token_type(TokenType type) {
         break;
     case TK_IDENTIFIER:
         printf("Identifier");
+        break;
+    case TK_IF:
+        printf("If");
+        break;
+    case TK_ELSE:
+        printf("Else");
         break;
     default:
         printf("Undefined: %d", type);
@@ -374,6 +382,25 @@ TokenType char_to_token_type(char c) {
     }
 }
 
+void t_skip_comments() {
+    t_skip(); // '/'
+    // Single line comment
+    if (t_peek() == '/') {
+        t_skip(); // '/'
+        while (t_peek() != '\n') {
+            t_skip();
+        }
+        t_skip(); // '\n'
+    } else if (t_peek() == '*') {
+        t_skip(); // '*'
+        while (t_peek() != '*' && t_peek_next() != '/') {
+            t_skip();
+        }
+        t_skip();
+        t_skip();
+    }
+}
+
 // Change to Token* [Array of tokens]
 void t_tokenize() {
     // Loop until eof
@@ -402,13 +429,8 @@ void t_tokenize() {
             t_buffer_reset();
         } else if (is_whitespace(c)) {
             t_skip();
-        } else if (t_peek() == '/' && t_peek_next() == '/') {
-            t_skip(); // '/'
-            t_skip(); // '/'
-            while (t_peek() != '\n') {
-                t_skip();
-            }
-            t_skip(); // '\n'
+        } else if (t_peek() == '/') {
+            t_skip_comments();
         } else {
             // Handle special cases
             t_consume();

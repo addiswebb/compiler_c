@@ -6,6 +6,7 @@ typedef enum {
     N_FUNCTION,
     N_COMPOUND,
     N_VAR_DECL,
+    N_IF,
     N_RETURN,
     N_BINARY,
     N_LITERAL,
@@ -42,6 +43,11 @@ struct Node {
         struct {
             struct Node *expr;
         } _return;
+        struct {
+            struct Node *cond;
+            struct Node *if_true;
+            struct Node *if_false;
+        } _if;
         struct {
             TokenType type;
             union {
@@ -133,6 +139,9 @@ void print_node_type(NodeType type) {
         break;
     case N_IDENTIFIER:
         printf("Identifier");
+        break;
+    case N_IF:
+        printf("If");
         break;
     default:
         printf("Undefined");
@@ -269,6 +278,14 @@ void print_node(Node *node, int depth) {
         break;
     case N_IDENTIFIER:
         printf(": [name: %s]\n", node->identifer.name);
+        break;
+    case N_IF:
+        printf(": [cond, true, false]\n");
+        print_node(node->_if.cond, depth + 1);
+        print_node(node->_if.if_true, depth + 1);
+        if (node->_if.if_false != NULL) {
+            print_node(node->_if.if_false, depth + 1);
+        }
         break;
     default:
         break;

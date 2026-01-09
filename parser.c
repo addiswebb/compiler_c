@@ -223,6 +223,30 @@ void p_append_statement(Node *root, Node *stmt) {
     }
 }
 
+Node *p_parse_compound();
+/*
+    Consumes
+    `if ([cond]) {[compound]} [else [ifstatment]? {[compound]}]? ;
+*/
+Node *p_parse_if_statement() {
+    Node *node = new_node(N_IF);
+    p_consume_a(TK_IF); // -> if
+    p_consume_a(TK_OPEN_PAREN);
+    node->_if.cond = p_parse_expression(MIN_BINARY_OP_PRECEDENCE);
+    p_consume_a(TK_CLOSE_PAREN);
+    node->_if.if_true = p_parse_compound(); //{[compound]} (in the future, can be a function call)
+    if (p_peek()->type == TK_ELSE) {        // If there is an if, it can be a
+        p_consume();                        // -> else
+        if (p_peek()->type == TK_IF) {
+            node->_if.if_false = p_parse_if_statement();
+        } else {
+            node->_if.if_false = p_parse_compound();
+        }
+    } else {
+        node->_if.if_false = NULL;
+    }
+    return node;
+}
 /*
     Consumes
     `return [expr]?;
@@ -249,6 +273,7 @@ Node *p_parse_compound();
 /*
     Consumes any of,
     `(type) identifier = [= expr]?;`
+    `[ifstatement]`
     `return [expr]?`
     `[expr];`
 
@@ -259,6 +284,8 @@ Node *p_parse_statement() {
     case TK_INT:
     case TK_FLOAT:
         return p_parse_var_declaration();
+    case TK_IF:
+        return p_parse_if_statement();
     case TK_RETURN:
         return p_parse_return();
     case TK_IDENTIFIER:

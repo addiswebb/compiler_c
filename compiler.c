@@ -78,8 +78,10 @@ int compile(Compiler *compiler) {
         print_ast();
 
     IR_Module *module = ir_gen_translation_unit(&node_manager.nodes[0]);
-    if (compiler->flags & COMP_FLAG_IR)
+    if (compiler->flags & COMP_FLAG_IR) {
         print_ir_module(module);
+    }
+
     if (compiler->flags & COMP_FLAG_ASM) {
         FILE *fp = fopen(compiler->output_file, "w");
         x86_gen_module(fp, module);
