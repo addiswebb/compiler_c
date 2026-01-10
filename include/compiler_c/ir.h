@@ -84,7 +84,8 @@ IR_Block *current_block(const IR_Function *func);
 
 int ir_gen_expression(IR_Function *func,const Node *expr);
 void ir_gen_compound(IR_Function *func, const Node *comp);
-void ir_gen_while_statement(IR_Function *func,const Node *_while);
+void ir_gen_while_loop(IR_Function *func,const Node *_while);
+void ir_gen_for_loop(IR_Function *func,const Node *_for);
 void ir_gen_if_statement(IR_Function *func, const Node *_if);
 void ir_gen_statement(IR_Function *func,const Node *stmt);
 IR_Function *ir_gen_function(const Node *func);

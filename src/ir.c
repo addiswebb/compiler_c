@@ -153,7 +153,7 @@ void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
     if (block->count >= block->capacity) {
         block->capacity *= 2;
 
-        IR_Instruction* new_instructions= realloc(block->instructions, sizeof(IR_Instruction) * block->capacity);
+        IR_Instruction *new_instructions = realloc(block->instructions, sizeof(IR_Instruction) * block->capacity);
         if (!new_instructions) {
             printf("Failed to reallocate for new Ir instr");
             exit(1);
@@ -201,7 +201,7 @@ int ir_get_var_reg(const IR_Function *func, const char *name) {
 void ir_append_function(IR_Module *module, IR_Function *func) {
     if (module->count >= module->capacity) {
         module->capacity *= 2;
-        IR_Function** new_functions = realloc(module->functions, sizeof(IR_Function *) * module->capacity);
+        IR_Function **new_functions = realloc(module->functions, sizeof(IR_Function *) * module->capacity);
         if (!new_functions) {
             printf("Failed to allocate for new Ir Module");
             exit(1);
@@ -228,7 +228,7 @@ void ir_free_module(IR_Module *module) {
 
 IR_Block *current_block(const IR_Function *func) { return &func->blocks[func->block_count - 1]; }
 
-int ir_gen_expression(IR_Function *func,const Node *expr) {
+int ir_gen_expression(IR_Function *func, const Node *expr) {
     switch (expr->type) {
     case N_LITERAL:
         switch (expr->literal.type) {
@@ -244,7 +244,7 @@ int ir_gen_expression(IR_Function *func,const Node *expr) {
             exit(1);
         }
     case N_IDENTIFIER:
-        int var_reg = ir_get_var_reg(func, expr->identifier.name);
+        const int var_reg = ir_get_var_reg(func, expr->identifier.name);
         if (var_reg == -1) {
             printf("Undefined local variable \'%s\' \n", expr->identifier.name);
             exit(1);
@@ -254,6 +254,12 @@ int ir_gen_expression(IR_Function *func,const Node *expr) {
         const int a = ir_gen_expression(func, expr->binary.lhs);
         const int b = ir_gen_expression(func, expr->binary.rhs);
         const int dst = func->next_reg++;
+        // TODO: Make this more consistent, two case N_BINARY which is necessary
+        if (expr->binary.op == TK_EQ) {
+            const IR_Instruction assign_instr = {IR_STORE, a, b, 0};
+            ir_append_instruction(current_block(func), &assign_instr);
+            return a;
+        }
         const IR_OP op = token_to_ir_op(expr->binary.op);
         ir_append_instruction(current_block(func), &(IR_Instruction){op, dst, a, b});
         return dst;
@@ -272,7 +278,7 @@ void ir_gen_compound(IR_Function *func, const Node *comp) {
     ir_end_scope(func);
 }
 
-void ir_gen_while_statement(IR_Function *func, const Node *_while) {
+void ir_gen_while_loop(IR_Function *func, const Node *_while) {
     const int cond_id = ir_append_block(func, ir_new_block()); // cond:
     const int cond_reg = ir_gen_expression(func, _while->_while.cond);
     const int block_id = cond_id + 1;
@@ -283,6 +289,24 @@ void ir_gen_while_statement(IR_Function *func, const Node *_while) {
     ir_gen_compound(func, _while->_while.block);
     const IR_Instruction br_instr = {IR_BR, cond_id, 0, 0};
     ir_append_instruction(current_block(func), &br_instr);
+    ir_append_block(func, ir_new_block()); // end:
+}
+void ir_gen_for_loop(IR_Function *func, const Node *_for) {
+    ir_gen_statement(func, _for->_for.init);
+
+    const int cond_id = ir_append_block(func, ir_new_block()); // cond:
+    const int block_id = cond_id + 1;
+    const int end_id = cond_id + 2;
+    const int cond_reg = ir_gen_expression(func, _for->_for.cond);
+    const IR_Instruction br_eq_instr = {IR_BR_EQ, cond_reg, block_id, end_id};
+    ir_append_instruction(current_block(func), &br_eq_instr);
+
+    ir_append_block(func, ir_new_block()); // block:
+    ir_gen_compound(func, _for->_for.block);
+    ir_gen_expression(func, _for->_for.iter);
+    const IR_Instruction br_to_cond = {IR_BR, cond_id, 0, 0};
+    ir_append_instruction(current_block(func), &br_to_cond);
+
     ir_append_block(func, ir_new_block()); // end:
 }
 
@@ -317,7 +341,7 @@ void ir_gen_if_statement(IR_Function *func, const Node *_if) {
     }
 }
 
-void ir_gen_statement(IR_Function *func,const Node *stmt) {
+void ir_gen_statement(IR_Function *func, const Node *stmt) {
     switch (stmt->type) {
     case N_VAR_DECL: {
         if (stmt->var_decl.type == TK_FLOAT) {
@@ -353,7 +377,10 @@ void ir_gen_statement(IR_Function *func,const Node *stmt) {
         ir_gen_if_statement(func, stmt);
         return;
     case N_WHILE:
-        ir_gen_while_statement(func, stmt);
+        ir_gen_while_loop(func, stmt);
+        return;
+    case N_FOR:
+        ir_gen_for_loop(func, stmt);
         return;
     default:
         // given invalid statement? probably an expression

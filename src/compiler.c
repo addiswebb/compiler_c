@@ -66,17 +66,17 @@ int compile(Compiler *compiler) {
     if (compiler->flags & COMP_FLAG_AST)
         print_ast(&compiler->nm);
 
-    // IR_Module *module = ir_gen_translation_unit(&compiler->nm.nodes[0]);
-    // if (compiler->flags & COMP_FLAG_IR) {
-    //     print_ir_module(module);
-    // }
+    IR_Module *module = ir_gen_translation_unit(&compiler->nm.nodes[0]);
+    if (compiler->flags & COMP_FLAG_IR) {
+        print_ir_module(module);
+    }
 
-    // if (compiler->flags & COMP_FLAG_ASM) {
-    //     FILE *fp = fopen(compiler->output_file, "w");
-    //     x86_gen_module(fp, module);
-    //     fclose(fp);
-    // }
-    // ir_free_module(module);
+    if (compiler->flags & COMP_FLAG_ASM) {
+        FILE *fp = fopen(compiler->output_file, "w");
+        x86_gen_module(fp, module);
+        fclose(fp);
+    }
+    ir_free_module(module);
     return 1;
 }
 

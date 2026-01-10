@@ -44,8 +44,6 @@ Token *p_consume_n(Parser *p, const int n) {
     }
     Token *token = &p->src->data[p->index];
     p->index += n;
-    print_token_type(token->type);
-    printf("\n");
     return token;
 }
 
