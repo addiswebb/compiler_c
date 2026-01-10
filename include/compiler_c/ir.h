@@ -25,6 +25,7 @@ typedef struct {
 
 typedef struct {
     int var_count;
+    int reg_count;
 } IR_Scope;
 
 typedef struct {
@@ -33,6 +34,7 @@ typedef struct {
     int block_count;
     int block_capacity;
     int next_reg;
+    int max_reg;
     IR_Var *locals;
     int local_count;
     int local_capacity;
@@ -59,6 +61,8 @@ void ir_begin_scope(IR_Function *func);
     Pops variables declared within the scope from the IR virtual stack.
 */
 void ir_end_scope(IR_Function *func);
+
+int ir_next_reg(IR_Function *func);
 
 /*
     Allocates for a new IR Module,

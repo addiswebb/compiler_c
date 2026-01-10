@@ -47,8 +47,17 @@ void ir_begin_scope(IR_Function *func) {
 void ir_end_scope(IR_Function *func) {
     if (func->scope_count > 0) {
         func->scope_count -= 1;
+        if (func->next_reg >= func->max_reg) {
+            func->max_reg = func->next_reg;
+        }
         func->local_count -= func->scopes[func->scope_count].var_count;
+        func->next_reg -= func->scopes[func->scope_count].reg_count;
     }
+}
+
+int ir_next_reg(IR_Function *func) {
+    func->scopes[func->scope_count - 1].reg_count++;
+    return func->next_reg++;
 }
 
 /*
@@ -100,6 +109,7 @@ IR_Function *ir_new_function(const char *name) {
     }
     func->name = name;
     func->next_reg = 0;
+    func->max_reg = 0;
     func->block_capacity = 4;
     func->block_count = 0;
     func->blocks = malloc(sizeof(IR_Block) * func->block_capacity);
@@ -173,7 +183,7 @@ int ir_new_var(IR_Function *func, const char *name) {
         }
         func->locals = new_locals;
     }
-    const int next_reg = func->next_reg++;
+    const int next_reg = ir_next_reg(func);
     func->locals[func->local_count++] = (IR_Var){name, next_reg};
     if (func->scope_count > 0) {
         func->scopes[func->scope_count - 1].var_count++;
@@ -233,7 +243,7 @@ int ir_gen_expression(IR_Function *func, const Node *expr) {
     case N_LITERAL:
         switch (expr->literal.type) {
         case TK_INT_LITERAL:
-            const int dst = func->next_reg++;
+            const int dst = ir_next_reg(func);
             ir_append_instruction(&func->blocks[func->block_count - 1], &(IR_Instruction){IR_LOAD, dst, expr->literal.i, 0});
             return dst;
         case TK_FLT_LITERAL:
@@ -253,13 +263,13 @@ int ir_gen_expression(IR_Function *func, const Node *expr) {
     case N_BINARY:
         const int a = ir_gen_expression(func, expr->binary.lhs);
         const int b = ir_gen_expression(func, expr->binary.rhs);
-        const int dst = func->next_reg++;
         // TODO: Make this more consistent, two case N_BINARY which is necessary
         if (expr->binary.op == TK_EQ) {
             const IR_Instruction assign_instr = {IR_STORE, a, b, 0};
             ir_append_instruction(current_block(func), &assign_instr);
             return a;
         }
+        const int dst = ir_next_reg(func);
         const IR_OP op = token_to_ir_op(expr->binary.op);
         ir_append_instruction(current_block(func), &(IR_Instruction){op, dst, a, b});
         return dst;

@@ -56,7 +56,7 @@ void x86_gen_block(FILE *fp, const IR_Block *block) {
 }
 
 void x86_gen_function(FILE *fp, const IR_Function *func) {
-    const int locals_size = func->local_count * 8;
+    const int locals_size = func->max_reg * 8;
     const int stack_size = locals_size + 15 & ~15;
     fprintf(fp, ".global %s\n", func->name);
     fprintf(fp, "%s:\n", func->name);
