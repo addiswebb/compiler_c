@@ -1,4 +1,4 @@
-#include "node.h"
+#include <compiler_c/node.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,7 +42,7 @@ void free_node_manager(const NodeManager *nm) {
 /*
     Handles creating a Node, pushing it to the global node array
 */
-Node *new_node(NodeManager *nm,const NodeType type) {
+Node *new_node(NodeManager *nm, const NodeType type) {
     if (nm->count >= nm->capacity) {
         // In the future, create a new arena for more nodes and link them.
         printf("Node Arena overflow");
@@ -85,6 +85,9 @@ void print_node_type(const NodeType type) {
         break;
     case N_WHILE:
         printf("While");
+        break;
+    case N_FOR:
+        printf("For");
         break;
     default:
         printf("\nTried to print an unknown node type\n");
@@ -166,7 +169,7 @@ void print_indent(const int depth) {
     }
 }
 
-void print_node(const Node *node,const int depth) {
+void print_node(const Node *node, const int depth) {
     print_indent(depth);
     print_node_type(node->type);
     switch (node->type) {
@@ -235,10 +238,16 @@ void print_node(const Node *node,const int depth) {
         print_node(node->_while.cond, depth + 1);
         print_node(node->_while.block, depth + 1);
         break;
-    default:
-        printf("Tried to print an known node type\n");
-        exit(1);
+    case N_FOR:
+        printf(": [(init, cond, iter), block]\n");
+        print_node(node->_for.init, depth + 1);
+        print_node(node->_for.cond, depth + 1);
+        print_node(node->_for.iter, depth + 1);
+        print_node(node->_for.block, depth + 1);
         break;
+    default:
+        printf("Tried to print an unknown node type\n");
+        exit(1);
     }
 }
 

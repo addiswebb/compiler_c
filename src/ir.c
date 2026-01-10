@@ -1,10 +1,10 @@
-#include "ir.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "node.h"
+#include <compiler_c/ir.h>
+#include <compiler_c/node.h>
 
 IR_OP token_to_ir_op(const TokenType type) {
     switch (type) {
@@ -31,11 +31,12 @@ IR_OP token_to_ir_op(const TokenType type) {
 void ir_begin_scope(IR_Function *func) {
     if (func->scope_count >= func->scope_capacity) {
         func->scope_capacity *= 2;
-        func->scopes = realloc(func->scopes, sizeof(IR_Scope) * func->scope_capacity);
-        if (!func->scopes) {
+        IR_Scope *new_scopes = realloc(func->scopes, sizeof(IR_Scope) * func->scope_capacity);
+        if (!new_scopes) {
             printf("Failed to realloc for func scopes\n");
             exit(1);
         }
+        func->scopes = new_scopes;
     }
     func->scopes[func->scope_count++] = (IR_Scope){0};
 }
@@ -70,8 +71,6 @@ IR_Module *ir_new_module() {
     }
     return module;
 }
-
-int ir_append_block(IR_Function *func, IR_Block *block);
 
 /*
     Allocates for a new IR_Block
@@ -138,25 +137,28 @@ IR_Function *ir_new_function(const char *name) {
 int ir_append_block(IR_Function *func, IR_Block *block) {
     if (func->block_count >= func->block_capacity) {
         func->block_capacity *= 2;
-        func->blocks = realloc(func->blocks, sizeof(IR_Block) * func->block_capacity);
-        if (func->blocks == NULL) {
+        IR_Block *new_blocks = realloc(func->blocks, sizeof(IR_Block) * func->block_capacity);
+        if (!new_blocks) {
             printf("Failed to reallocate for new Ir block");
             exit(1);
         }
+        func->blocks = new_blocks;
     }
     func->blocks[func->block_count++] = *block;
     free(block);
     return func->block_count - 1;
 }
 
-void ir_append_instruction(IR_Block *block, IR_Instruction *instruction) {
+void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
     if (block->count >= block->capacity) {
         block->capacity *= 2;
-        block->instructions = realloc(block->instructions, sizeof(IR_Instruction) * block->capacity);
-        if (block->instructions == NULL) {
+
+        IR_Instruction* new_instructions= realloc(block->instructions, sizeof(IR_Instruction) * block->capacity);
+        if (!new_instructions) {
             printf("Failed to reallocate for new Ir instr");
             exit(1);
         }
+        block->instructions = new_instructions;
     }
     block->instructions[block->count++] = *instruction;
 }
@@ -164,11 +166,12 @@ void ir_append_instruction(IR_Block *block, IR_Instruction *instruction) {
 int ir_new_var(IR_Function *func, const char *name) {
     if (func->local_count >= func->local_capacity) {
         func->local_capacity *= 2;
-        func->locals = realloc(func->locals, sizeof(IR_Var) * func->local_capacity);
-        if (func->locals == NULL) {
+        IR_Var *new_locals = realloc(func->locals, sizeof(IR_Var) * func->local_capacity);
+        if (!new_locals) {
             printf("Failed to allocated for new local variable");
             exit(1);
         }
+        func->locals = new_locals;
     }
     const int next_reg = func->next_reg++;
     func->locals[func->local_count++] = (IR_Var){name, next_reg};
@@ -178,7 +181,7 @@ int ir_new_var(IR_Function *func, const char *name) {
     return next_reg;
 }
 
-int ir_get_var_reg(IR_Function *func, const char *name) {
+int ir_get_var_reg(const IR_Function *func, const char *name) {
     int sp = func->local_count - 1;
     for (int i = func->scope_count - 1; i >= 0; i--) {
         for (int j = 0; j < func->scopes[i].var_count; j++) {
@@ -198,11 +201,12 @@ int ir_get_var_reg(IR_Function *func, const char *name) {
 void ir_append_function(IR_Module *module, IR_Function *func) {
     if (module->count >= module->capacity) {
         module->capacity *= 2;
-        module->functions = realloc(module->functions, sizeof(IR_Function *) * module->capacity);
-        if (module->functions == NULL) {
+        IR_Function** new_functions = realloc(module->functions, sizeof(IR_Function *) * module->capacity);
+        if (!new_functions) {
             printf("Failed to allocate for new Ir Module");
             exit(1);
         }
+        module->functions = new_functions;
     }
     module->functions[module->count++] = func;
 }
@@ -224,7 +228,7 @@ void ir_free_module(IR_Module *module) {
 
 IR_Block *current_block(const IR_Function *func) { return &func->blocks[func->block_count - 1]; }
 
-int ir_gen_expression(IR_Function *func, Node *expr) {
+int ir_gen_expression(IR_Function *func,const Node *expr) {
     switch (expr->type) {
     case N_LITERAL:
         switch (expr->literal.type) {
@@ -250,7 +254,7 @@ int ir_gen_expression(IR_Function *func, Node *expr) {
         const int a = ir_gen_expression(func, expr->binary.lhs);
         const int b = ir_gen_expression(func, expr->binary.rhs);
         const int dst = func->next_reg++;
-        IR_OP op = token_to_ir_op(expr->binary.op);
+        const IR_OP op = token_to_ir_op(expr->binary.op);
         ir_append_instruction(current_block(func), &(IR_Instruction){op, dst, a, b});
         return dst;
     default:
@@ -268,16 +272,16 @@ void ir_gen_compound(IR_Function *func, const Node *comp) {
     ir_end_scope(func);
 }
 
-void ir_gen_while_statement(IR_Function *func, Node *_while) {
+void ir_gen_while_statement(IR_Function *func, const Node *_while) {
     const int cond_id = ir_append_block(func, ir_new_block()); // cond:
     const int cond_reg = ir_gen_expression(func, _while->_while.cond);
     const int block_id = cond_id + 1;
     const int end_id = cond_id + 2;
-    IR_Instruction br_eq_instr = {IR_BR_EQ, cond_reg, block_id, end_id};
+    const IR_Instruction br_eq_instr = {IR_BR_EQ, cond_reg, block_id, end_id};
     ir_append_instruction(current_block(func), &br_eq_instr);
     ir_append_block(func, ir_new_block()); // block:
     ir_gen_compound(func, _while->_while.block);
-    IR_Instruction br_instr = {IR_BR, cond_id, 0, 0};
+    const IR_Instruction br_instr = {IR_BR, cond_id, 0, 0};
     ir_append_instruction(current_block(func), &br_instr);
     ir_append_block(func, ir_new_block()); // end:
 }
@@ -286,34 +290,34 @@ void ir_gen_if_statement(IR_Function *func, const Node *_if) {
     const int cond_reg = ir_gen_expression(func, _if->_if.cond);
     const int if_true_id = func->block_count;
     const int if_false_id = if_true_id + 1; // if no else, then this is the end block
-    IR_Instruction br_eq_instr = {IR_BR_EQ, cond_reg, if_true_id, if_false_id};
+    const IR_Instruction br_eq_instr = {IR_BR_EQ, cond_reg, if_true_id, if_false_id};
     ir_append_instruction(current_block(func), &br_eq_instr);
     ir_append_block(func, ir_new_block()); // IF true block
     ir_gen_compound(func, _if->_if.if_true);
     if (_if->_if.if_false == NULL) { // No else, means branch to the end after compound
-        IR_Instruction br_instr = {IR_BR, if_false_id, 0, 0};
+        const IR_Instruction br_instr = {IR_BR, if_false_id, 0, 0};
         ir_append_instruction(current_block(func), &br_instr);
         ir_append_block(func, ir_new_block()); // IF else or endblock
     } else {
         if (_if->_if.if_false->type == N_IF) {
-            IR_Instruction br_instr = {IR_BR, if_false_id, 0, 0};
+            const IR_Instruction br_instr = {IR_BR, if_false_id, 0, 0};
             ir_append_instruction(current_block(func), &br_instr);
             ir_append_block(func, ir_new_block()); // IF else or endblock
             ir_gen_if_statement(func, _if->_if.if_false);
         } else {
             const int end_id = if_false_id + 1;
-            IR_Instruction br_instr = {IR_BR, end_id, 0, 0};
+            const IR_Instruction br_instr = {IR_BR, end_id, 0, 0};
             ir_append_instruction(current_block(func), &br_instr);
             ir_append_block(func, ir_new_block()); // IF else or endblock
             ir_gen_compound(func, _if->_if.if_false);
-            IR_Instruction br_end_instr = {IR_BR, end_id, 0, 0};
+            const IR_Instruction br_end_instr = {IR_BR, end_id, 0, 0};
             ir_append_instruction(current_block(func), &br_end_instr);
             ir_append_block(func, ir_new_block()); // end
         }
     }
 }
 
-void ir_gen_statement(IR_Function *func, Node *stmt) {
+void ir_gen_statement(IR_Function *func,const Node *stmt) {
     switch (stmt->type) {
     case N_VAR_DECL: {
         if (stmt->var_decl.type == TK_FLOAT) {
@@ -322,13 +326,13 @@ void ir_gen_statement(IR_Function *func, Node *stmt) {
         }
         const int var_reg = ir_new_var(func, stmt->var_decl.name);
         const int expr_reg = ir_gen_expression(func, stmt->var_decl.expr);
-        IR_Instruction var_decl_instr = {IR_STORE, var_reg, expr_reg, 0};
+        const IR_Instruction var_decl_instr = {IR_STORE, var_reg, expr_reg, 0};
         ir_append_instruction(current_block(func), &var_decl_instr);
         return;
     }
     case N_RETURN: {
         const int ret_reg = ir_gen_expression(func, stmt->_return.expr);
-        IR_Instruction ret_instr = {IR_RET, ret_reg, 0, 0};
+        const IR_Instruction ret_instr = {IR_RET, ret_reg, 0, 0};
         ir_append_instruction(current_block(func), &ret_instr);
         return;
     }
@@ -336,13 +340,12 @@ void ir_gen_statement(IR_Function *func, Node *stmt) {
         if (stmt->binary.op == TK_EQ && stmt->binary.lhs->type == N_IDENTIFIER) {
             const int var_reg = ir_get_var_reg(func, stmt->binary.lhs->identifier.name);
             const int expr_reg = ir_gen_expression(func, stmt->binary.rhs);
-            IR_Instruction assign_instr = {IR_STORE, var_reg, expr_reg, 0};
+            const IR_Instruction assign_instr = {IR_STORE, var_reg, expr_reg, 0};
             ir_append_instruction(current_block(func), &assign_instr);
             return;
-        } else {
-            printf("Given binary op statement that is not an assignment\n");
-            exit(1);
         }
+        printf("Given binary op statement that is not an assignment\n");
+        exit(1);
     case N_COMPOUND:
         ir_gen_compound(func, stmt);
         return;

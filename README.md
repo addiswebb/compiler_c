@@ -22,7 +22,7 @@ Rules:
 This will later include modifiers and any typedef'd types
 
 >### 2. `ident` / `identifier` 
-"any alpha-starting alpha numeric string which may contain '_'/underscores"
+"any alpha-starting alpha-numeric string which may contain '_'/underscores"
 
 >### 3. `expr`
 "anything that can be evaluated"

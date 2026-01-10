@@ -1,6 +1,5 @@
-#include "x86.h"
-
-#include "ir.h"
+#include <compiler_c/ir.h>
+#include <compiler_c/x86.h>
 
 static int ir_reg_to_rbp(const int a) { return a * 8 + 8; }
 
@@ -58,7 +57,7 @@ void x86_gen_block(FILE *fp, const IR_Block *block) {
 
 void x86_gen_function(FILE *fp, const IR_Function *func) {
     const int locals_size = func->local_count * 8;
-    const int stack_size = (locals_size + 15) & ~15;
+    const int stack_size = locals_size + 15 & ~15;
     fprintf(fp, ".global %s\n", func->name);
     fprintf(fp, "%s:\n", func->name);
     fprintf(fp, "    push %%rbp\n");
@@ -72,7 +71,7 @@ void x86_gen_function(FILE *fp, const IR_Function *func) {
     fprintf(fp, "    mov %%rbp, %%rsp\n");
     fprintf(fp, "    pop %%rbp\n");
     fprintf(fp, "    ret\n");
-    fprintf(fp, ".section .note.GNU-stack,\"\",@progbits\n");
+    // fprintf(fp, ".section .note.GNU-stack,\"\",@progbits\n"); FOR LINUX COMPILER
 }
 
 void x86_gen_module(FILE *fp, const IR_Module *module) {

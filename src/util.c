@@ -1,8 +1,8 @@
-#include "util.h"
+#include <compiler_c/util.h>
 
 bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
 
-bool is_digit(const char c) { return (c >= '0' && c <= '9'); }
+bool is_digit(const char c) { return c >= '0' && c <= '9'; }
 
 bool is_alpha_num(const char c) { return is_alpha(c) || is_digit(c); }
 

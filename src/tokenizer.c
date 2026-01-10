@@ -1,14 +1,17 @@
-#include "tokenizer.h"
+#include <compiler_c/tokenizer.h>
+#include <compiler_c/util.h>
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "util.h"
+const char *KEYWORDS[KEYWORDS_N] = {"else", "exit", "if", "int", "for", "float", "return", "void", "while"};
 
-const char* KEYWORDS[KEYWORDS_N] = {"else", "exit", "if", "int", "float", "return", "void", "while"};
-
+static void t_buffer_reset(Tokenizer *tk) {
+    tk->buf.size = 0;
+    memset(tk->buf.buf, 0, sizeof(tk->buf.buf));
+}
 void ta_init(TokenArray *arr) {
     arr->capacity = 16;
     arr->data = malloc(sizeof(Token) * arr->capacity);
@@ -44,7 +47,6 @@ static void ta_free(TokenArray *arr) {
     arr->size = 0;
     arr->capacity = 0;
 }
-
 
 void print_token_type(const TokenType type) {
     switch (type) {
@@ -120,6 +122,9 @@ void print_token_type(const TokenType type) {
     case TK_WHILE:
         printf("While");
         break;
+    case TK_FOR:
+        printf("For");
+        break;
     default:
         printf("Undefined: %d", type);
         break;
@@ -189,16 +194,17 @@ int precedence(const TokenType type) {
 }
 
 void t_print_tokens(const Tokenizer *tk) {
-    printf("tokenizer tokens size:%d", tk->tokens.size);
     for (int i = 0; i < tk->tokens.size; i++) {
         print_token(&tk->tokens.data[i]);
     }
 }
-Tokenizer t_new_tokenizer(const char *src, const int src_size){
+Tokenizer t_new_tokenizer(const char *src, const int src_size) {
     Tokenizer tokenizer;
     tokenizer.index = 0;
     tokenizer.size = src_size;
     tokenizer.src = src;
+
+    t_buffer_reset(&tokenizer);
     tokenizer.buf.size = 0;
     ta_init(&tokenizer.tokens);
     return tokenizer;
@@ -219,7 +225,7 @@ static bool t_is_eof(const Tokenizer *tk) { return tk->index >= tk->size; }
 /*
     peek at the current char
 */
-static char t_peek(const Tokenizer*tk) {
+static char t_peek(const Tokenizer *tk) {
     if (!t_is_eof(tk)) {
         return tk->src[tk->index];
     }
@@ -253,11 +259,7 @@ static void t_skip(Tokenizer *tk) {
     }
 }
 
-static void t_buffer_reset(Tokenizer *tk) {
-    tk->buf.size = 0;
-    memset(tk->buf.buf, 0, sizeof(tk->buf.buf));
-}
-static void t_push_buffer(Tokenizer *tk,const TokenType type) {
+static void t_push_buffer(Tokenizer *tk, const TokenType type) {
     if (tk->buf.size == 0) {
         printf("EMPTY BUFFER");
         return;
@@ -353,9 +355,9 @@ void t_tokenize(Tokenizer *tk) {
                 while (is_digit(t_peek(tk))) {
                     t_consume(tk);
                 }
-                t_push_buffer(tk,TK_FLT_LITERAL);
+                t_push_buffer(tk, TK_FLT_LITERAL);
             } else {
-                t_push_buffer(tk,TK_INT_LITERAL);
+                t_push_buffer(tk, TK_INT_LITERAL);
             }
         } else if (is_alpha(c)) {
             t_consume(tk);
@@ -371,7 +373,7 @@ void t_tokenize(Tokenizer *tk) {
         } else {
             // Handle special cases
             t_consume(tk);
-            t_push_buffer(tk,char_to_token_type(c));
+            t_push_buffer(tk, char_to_token_type(c));
         }
     }
 }

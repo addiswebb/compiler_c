@@ -2,3 +2,4 @@
 .clangd
 /CMakeLists.txt
 /build
+/.cache

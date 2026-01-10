@@ -10,6 +10,7 @@ typedef enum {
     N_VAR_DECL,
     N_IF,
     N_WHILE,
+    N_FOR,
     N_RETURN,
     N_BINARY,
     N_LITERAL,
@@ -38,23 +39,34 @@ struct Node {
             int capacity;
             int count;
         } compound;
+        // lhs op rhs
         struct {
             Node *lhs;
             Node *rhs;
             TokenType op;
         } binary;
+        // return expr;
         struct {
             Node *expr;
         } _return;
+        // if (cond) {if_true} else {if_else}
         struct {
             Node *cond;
             Node *if_true;
             Node *if_false;
         } _if;
+        // while (cond) {block}
         struct {
             Node *cond;
             Node *block;
         } _while;
+        // for (init; cond; end) {block}
+        struct {
+            Node *init;
+            Node *cond;
+            Node *iter;
+            Node *block;
+        } _for;
         struct {
             TokenType type;
             union {
@@ -65,6 +77,7 @@ struct Node {
         struct {
             char *name;
         } identifier;
+        // type name = expr;
         struct {
             char *name;
             TokenType type;

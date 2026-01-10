@@ -1,0 +1,17 @@
+// Project-local debug tasks
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+    {
+        "adapter": "CodeLLDB",
+        "label": "Debug Compiler_C",
+        "request": "launch",
+        "program": "./build/compiler_c",
+        "args": ["./tests/test.c", "-a"],
+        "build": {
+            "command": "cmake",
+            "args": ["--build", "build"],
+        },
+    },
+]

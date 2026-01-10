@@ -12,6 +12,7 @@ typedef struct {
     int index;
     int size;
     TokenArray *src;
+    bool expect_semi;
 } Parser;
 
 Parser new_parser();
@@ -38,6 +39,7 @@ void p_skip(Parser *p);
 void p_expect(Parser *p, TokenType expected_type);
 
 Token *p_consume_a(Parser *p,TokenType type);
+Token *p_consume_semi(Parser *p);
 /*
     Creates the root translation unit node
     And allocates an array for its declarations
@@ -92,10 +94,15 @@ Node *p_parse_if_statement(Parser *p, NodeManager *nm);
 
 /*
     Consumes
-    while ([cond]) {[compound]}
+    `while ([cond]) {[compound]}`
 */
-Node *p_parse_while_statement(Parser *p, NodeManager *nm);
+Node *p_parse_while_loop(Parser *p, NodeManager *nm);
 
+/*
+    Consumes
+    `for ([init];[cond]; [end]) {[compound]}`
+*/
+Node *p_parse_for_loop(Parser *p, NodeManager *nm);
 /*
     Consumes
     `return [expr]?;

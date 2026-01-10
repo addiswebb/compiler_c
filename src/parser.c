@@ -1,6 +1,7 @@
-#include "parser.h"
 
-#include "node.h"
+#include "compiler_c/tokenizer.h"
+#include <compiler_c/node.h>
+#include <compiler_c/parser.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +20,7 @@ void init_parser(Parser *p, TokenArray *src, const int size) {
     p->size = size;
     p->src = src;
     p->index = 0;
+    p->expect_semi = true;
 }
 
 /*
@@ -30,9 +32,8 @@ Token *p_peek_n(const Parser *p, const int n) {
     if (p->index + n > p->src->size) {
         printf("P_peek_n Tried peeking past eota\n");
         return NULL;
-    } else {
-        return &p->src->data[p->index + n];
     }
+    return &p->src->data[p->index + n];
 }
 Token *p_peek(Parser *p) { return p_peek_n(p, 0); }
 Token *p_peek_next(Parser *p) { return p_peek_n(p, 1); }
@@ -43,6 +44,8 @@ Token *p_consume_n(Parser *p, const int n) {
     }
     Token *token = &p->src->data[p->index];
     p->index += n;
+    print_token_type(token->type);
+    printf("\n");
     return token;
 }
 
@@ -71,6 +74,13 @@ void p_expect(Parser *p, const TokenType expected_type) {
 Token *p_consume_a(Parser *p, const TokenType type) {
     p_expect(p, type);
     return p_consume(p);
+}
+
+Token *p_consume_semi(Parser *p) {
+    if (p->expect_semi) {
+        return p_consume_a(p, TK_SEMI);
+    }
+    return NULL;
 }
 /*
     Creates the root translation unit node
@@ -140,11 +150,6 @@ Node *p_parse_term(Parser *p, NodeManager *nm) {
     }
 }
 
-/*
-    Consumes
-    `[term]+`
-    Where `term` is any `literal`, `identifier` or `(expr)`
-*/
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     Node *lhs = p_parse_term(p, nm);
 
@@ -176,7 +181,7 @@ Node *p_parse_var_declaration(Parser *p, NodeManager *nm) {
     } else {
         node->var_decl.expr = NULL;
     }
-    p_consume_a(p, TK_SEMI);
+    p_consume_semi(p);
     return node;
 }
 
@@ -240,11 +245,7 @@ Node *p_parse_if_statement(Parser *p, NodeManager *nm) {
     return node;
 }
 
-/*
-    Consumes
-    while ([cond]) {[compound]}
-*/
-Node *p_parse_while_statement(Parser *p, NodeManager *nm) {
+Node *p_parse_while_loop(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_WHILE);
     p_consume_a(p, TK_WHILE);
     p_consume_a(p, TK_OPEN_PAREN);
@@ -254,16 +255,28 @@ Node *p_parse_while_statement(Parser *p, NodeManager *nm) {
     return node;
 }
 
-/*
-    Consumes
-    `return [expr]?;
-    Where [expr] is optional.
-*/
+Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_FOR);
+    p_consume_a(p, TK_FOR);
+    p_consume_a(p, TK_OPEN_PAREN);
+    // Manually consume semi colons
+    p->expect_semi = false;
+    node->_for.init = p_parse_statement(p, nm);
+    p_consume_a(p, TK_SEMI);
+    node->_for.cond = p_parse_statement(p, nm);
+    p_consume_a(p, TK_SEMI);
+    node->_for.iter = p_parse_statement(p, nm);
+    p->expect_semi = true;
+    p_consume_a(p, TK_CLOSE_PAREN);
+    node->_for.block = p_parse_compound(p, nm);
+    return node;
+}
+
 Node *p_parse_return(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_RETURN);
     p_consume(p); // -> return
     node->_return.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-    p_consume_a(p, TK_SEMI);
+    p_consume_semi(p);
     return node;
 }
 
@@ -272,7 +285,7 @@ Node *p_parse_var_assign(Parser *p, NodeManager *nm) {
     node->binary.lhs = p_parse_term(p, nm);
     node->binary.op = p_consume_a(p, TK_EQ)->type;
     node->binary.rhs = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-    p_consume_a(p, TK_SEMI);
+    p_consume_semi(p);
     return node;
 }
 
@@ -293,13 +306,24 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
     case TK_IF:
         return p_parse_if_statement(p, nm);
     case TK_WHILE:
-        return p_parse_while_statement(p, nm);
+        return p_parse_while_loop(p, nm);
+    case TK_FOR:
+        return p_parse_for_loop(p, nm);
     case TK_RETURN:
         return p_parse_return(p, nm);
     case TK_IDENTIFIER:
-        return p_parse_var_assign(p, nm);
+        if (p_peek_next(p)->type == TK_EQ) {
+            return p_parse_var_assign(p, nm);
+        } else {
+            Node *n = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+            p_consume_semi(p);
+            return n;
+        }
     case TK_OPEN_CURLY:
         return p_parse_compound(p, nm);
+    case TK_SEMI:
+        printf("Null statement is currently unsupported ';'\n");
+        exit(1);
     default:
         return p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
     }
@@ -343,16 +367,15 @@ Node *p_parse_function(Parser *p, NodeManager *nm) {
 }
 
 bool is_function_ahead(Parser *p) {
-    return ((p_peek(p)->type == TK_INT || p_peek(p)->type == TK_FLOAT) && p_peek_n(p, 1)->type == TK_IDENTIFIER &&
-            p_peek_n(p, 2)->type == TK_OPEN_PAREN);
+    return (p_peek(p)->type == TK_INT || p_peek(p)->type == TK_FLOAT) && p_peek_n(p, 1)->type == TK_IDENTIFIER &&
+           p_peek_n(p, 2)->type == TK_OPEN_PAREN;
 }
 
 Node *p_parse_declaration(Parser *p, NodeManager *nm) {
     if (is_function_ahead(p)) {
         return p_parse_function(p, nm);
-    } else {
-        return p_parse_var_declaration(p, nm);
     }
+    return p_parse_var_declaration(p, nm);
 }
 
 Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {

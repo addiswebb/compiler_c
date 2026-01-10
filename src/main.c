@@ -1,4 +1,4 @@
-#include "compiler.h"
+#include <compiler_c/compiler.h>
 
 int main(const int argc, char *argv[]) {
     Compiler compiler = init_compiler(argc, argv);

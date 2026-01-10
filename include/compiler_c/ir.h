@@ -76,17 +76,17 @@ void ir_free_module(IR_Module *module);
 
 void ir_append_function(IR_Module *module, IR_Function *func);
 int ir_append_block(IR_Function *func, IR_Block *block);
-void ir_append_instruction(IR_Block *block, IR_Instruction *instruction);
+void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction);
 
-int ir_get_var_reg(IR_Function *func, const char *name);
+int ir_get_var_reg(const IR_Function *func, const char *name);
 
 IR_Block *current_block(const IR_Function *func);
 
-int ir_gen_expression(IR_Function *func, Node *expr);
+int ir_gen_expression(IR_Function *func,const Node *expr);
 void ir_gen_compound(IR_Function *func, const Node *comp);
-void ir_gen_while_statement(IR_Function *func, Node *_while);
+void ir_gen_while_statement(IR_Function *func,const Node *_while);
 void ir_gen_if_statement(IR_Function *func, const Node *_if);
-void ir_gen_statement(IR_Function *func, Node *stmt);
+void ir_gen_statement(IR_Function *func,const Node *stmt);
 IR_Function *ir_gen_function(const Node *func);
 IR_Module *ir_gen_translation_unit(const Node *tu);
 
