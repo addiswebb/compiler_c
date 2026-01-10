@@ -1,76 +1,28 @@
+#include "tokenizer.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "buffer.c"
-#include "util.c"
+#include "util.h"
 
-/*
-    Adding a Keyword Checklist
-    1. add to TokenType,
-    2. KEYWORDS_N ++
-    3. add to KEYWORDS array
-    4. Update print_token_type
-*/
-typedef enum {
-    // Keywords
-    TK_ELSE,
-    TK_EXIT,
-    TK_IF,
-    TK_INT,
-    TK_FLOAT,
-    TK_RETURN,
-    TK_VOID,
-    TK_WHILE,
-    // Special Characters
-    TK_EQ,
-    TK_SEMI,
-    TK_PLUS,
-    TK_MINUS,
-    TK_MULTIPLY,
-    TK_DIVIDE,
-    TK_OPEN_PAREN,
-    TK_CLOSE_PAREN,
-    TK_OPEN_CURLY,
-    TK_CLOSE_CURLY,
-    TK_COMMA,
-    // Other
-    TK_INT_LITERAL,
-    TK_FLT_LITERAL,
-    TK_EXPR,
-    TK_EXP,
-    TK_IDENTIFIER,
-} TokenType;
-
-#define MIN_BINARY_OP_PRECEDENCE 0
-#define LEFT_ASSOCIATIVITY 1
-#define RIGHT_ASSOCIATIVITY 0
-
-#define KEYWORDS_N 8
-const char *KEYWORDS[KEYWORDS_N] = {"else", "exit", "if", "int", "float", "return", "void", "while"};
-
-typedef struct {
-    TokenType type;
-    char *value;
-} Token;
-
-typedef struct {
-    Token *data;
-    int size;
-    int capacity;
-} TokenArray;
+const char* KEYWORDS[KEYWORDS_N] = {"else", "exit", "if", "int", "float", "return", "void", "while"};
 
 void ta_init(TokenArray *arr) {
     arr->capacity = 16;
     arr->data = malloc(sizeof(Token) * arr->capacity);
+    if (!arr->data) {
+        printf("Failed to allocate token array\n");
+        exit(1);
+    }
     arr->size = 0;
 }
 
-int ta_push(TokenArray *arr, Token tk) {
+static int ta_push(TokenArray *arr, const Token tk) {
     if (arr->size >= arr->capacity) {
         // Resize array
-        int new_capacity = arr->capacity * 2;
+        const int new_capacity = arr->capacity * 2;
         Token *new_data = realloc(arr->data, sizeof(Token) * new_capacity);
         if (!new_data) {
             printf("Failed to reallocate token array\n");
@@ -83,7 +35,7 @@ int ta_push(TokenArray *arr, Token tk) {
     return 1;
 }
 
-void ta_free(TokenArray *arr) {
+static void ta_free(TokenArray *arr) {
     for (int i = 0; i < arr->size; i++) {
         free(arr->data[i].value);
     }
@@ -93,22 +45,8 @@ void ta_free(TokenArray *arr) {
     arr->capacity = 0;
 }
 
-typedef struct {
-    const char *src;
-    int index;
-    int size;
-    TokenArray tokens;
-    Buffer buf;
-} Tokenizer;
 
-typedef struct {
-    char c;
-    bool is_some;
-} peekResult;
-
-static Tokenizer tokenizer;
-
-void print_token_type(TokenType type) {
+void print_token_type(const TokenType type) {
     switch (type) {
     case TK_EXIT:
         printf("Exit");
@@ -188,7 +126,7 @@ void print_token_type(TokenType type) {
     }
 }
 
-void print_token(Token *token) {
+void print_token(const Token *token) {
     printf("Token { Type: ");
     print_token_type(token->type);
     if (token->value != NULL) {
@@ -203,7 +141,7 @@ void print_token(Token *token) {
     printf("}\n");
 }
 
-bool is_binary_operator(TokenType type) {
+bool is_binary_operator(const TokenType type) {
     switch (type) {
     case TK_PLUS:
     case TK_MINUS:
@@ -216,7 +154,7 @@ bool is_binary_operator(TokenType type) {
     }
 }
 
-int associativity(TokenType type) {
+int associativity(const TokenType type) {
     switch (type) {
     case TK_PLUS:
     case TK_MINUS:
@@ -232,7 +170,7 @@ int associativity(TokenType type) {
     }
 }
 
-int precidence(TokenType type) {
+int precedence(const TokenType type) {
     switch (type) {
     case TK_PLUS:
     case TK_MINUS:
@@ -244,102 +182,100 @@ int precidence(TokenType type) {
         return 2;
     default:
         print_token_type(type);
-        printf("Tried to get the precidence of a token which is not a binary "
+        printf("Tried to get the precedence of a token which is not a binary "
                "operator");
         exit(1);
     }
 }
 
-void t_print_tokens() {
-    for (int i = 0; i < tokenizer.tokens.size; i++) {
-        print_token(&tokenizer.tokens.data[i]);
+void t_print_tokens(const Tokenizer *tk) {
+    printf("tokenizer tokens size:%d", tk->tokens.size);
+    for (int i = 0; i < tk->tokens.size; i++) {
+        print_token(&tk->tokens.data[i]);
     }
 }
-void t_init(char *src, int size) {
-    tokenizer.src = src;
+Tokenizer t_new_tokenizer(const char *src, const int src_size){
+    Tokenizer tokenizer;
     tokenizer.index = 0;
-    tokenizer.size = size;
+    tokenizer.size = src_size;
+    tokenizer.src = src;
+    tokenizer.buf.size = 0;
     ta_init(&tokenizer.tokens);
+    return tokenizer;
 }
 
-void t_free() {
-    free((void *)tokenizer.src);
-    tokenizer.src = NULL;
-    tokenizer.index = 0;
-    tokenizer.size = 0;
-    ta_free(&tokenizer.tokens);
+void t_free(Tokenizer *tokenizer) {
+    tokenizer->src = NULL;
+    tokenizer->index = 0;
+    tokenizer->size = 0;
+    ta_free(&tokenizer->tokens);
 }
 
 /*
 Is End of file?
 */
-static bool t_is_eof() { return tokenizer.index >= tokenizer.size; }
+static bool t_is_eof(const Tokenizer *tk) { return tk->index >= tk->size; }
 
 /*
     peek at the current char
 */
-static char t_peek() {
-    if (!t_is_eof()) {
-        return tokenizer.src[tokenizer.index];
-    } else {
-        printf("T_peek Tried peeking past eof\n");
-        return '\0';
+static char t_peek(const Tokenizer*tk) {
+    if (!t_is_eof(tk)) {
+        return tk->src[tk->index];
     }
+    printf("T_peek Tried peeking past eof\n");
+    return '\0';
 }
 
-static char t_peek_next() {
-    if (tokenizer.index + 1 > tokenizer.size) {
+static char t_peek_next(const Tokenizer *tk) {
+    if (tk->index + 1 > tk->size) {
         printf("t_peek_next Tried peeking past eof\n");
         return '\0';
-    } else {
-        return tokenizer.src[tokenizer.index + 1];
     }
+    return tk->src[tk->index + 1];
 }
 
 /*
     Append the current char to buffer and step forward
 */
-static void t_consume() {
-    if (!t_is_eof()) {
-        tokenizer.buf.buf[tokenizer.buf.size++] = tokenizer.src[tokenizer.index++];
+static void t_consume(Tokenizer *tk) {
+    if (!t_is_eof(tk)) {
+        tk->buf.buf[tk->buf.size++] = tk->src[tk->index++];
     } else {
         printf("T_Consume Reached the end of the file");
     }
 }
-static void t_skip() {
-    if (!t_is_eof()) {
-        tokenizer.index++;
+static void t_skip(Tokenizer *tk) {
+    if (!t_is_eof(tk)) {
+        tk->index++;
     } else {
         printf("T_Skip Reached end of the file");
     }
 }
 
-static void t_buffer_reset() {
-    tokenizer.buf.size = 0;
-    memset(tokenizer.buf.buf, 0, sizeof(tokenizer.buf.buf));
+static void t_buffer_reset(Tokenizer *tk) {
+    tk->buf.size = 0;
+    memset(tk->buf.buf, 0, sizeof(tk->buf.buf));
 }
-static void t_push_buffer(TokenType type) {
-    if (tokenizer.buf.size == 0) {
+static void t_push_buffer(Tokenizer *tk,const TokenType type) {
+    if (tk->buf.size == 0) {
         printf("EMPTY BUFFER");
         return;
     }
-    Token token;
-    token.type = type;
-    token.value = strdup(tokenizer.buf.buf);
-    t_buffer_reset();
-    ta_push(&tokenizer.tokens, token);
+    const Token token = {type, strdup(tk->buf.buf)};
+    t_buffer_reset(tk);
+    ta_push(&tk->tokens, token);
 }
 
-static void t_parse_and_push_buffer() {
-    if (tokenizer.buf.size == 0) {
+static void t_parse_and_push_buffer(Tokenizer *tk) {
+    if (tk->buf.size == 0) {
         return;
     }
-    Token token;
-    token.value = NULL;
+    Token token = {TK_VOID, NULL};
 
     bool is_keyword = false;
     for (int i = 0; i < KEYWORDS_N; i++) {
-        if (strcmp(tokenizer.buf.buf, KEYWORDS[i]) == 0) {
+        if (strcmp(tk->buf.buf, KEYWORDS[i]) == 0) {
             token.type = (TokenType)i;
             is_keyword = true;
             break;
@@ -347,13 +283,12 @@ static void t_parse_and_push_buffer() {
     }
     if (!is_keyword) {
         token.type = TK_IDENTIFIER;
-        token.value = strdup(tokenizer.buf.buf);
+        token.value = strdup(tk->buf.buf);
     }
-    ta_push(&tokenizer.tokens, token);
-    return;
+    ta_push(&tk->tokens, token);
 }
 
-TokenType char_to_token_type(char c) {
+TokenType char_to_token_type(const char c) {
     switch (c) {
     case ';':
         return TK_SEMI;
@@ -384,59 +319,59 @@ TokenType char_to_token_type(char c) {
     }
 }
 
-void t_skip_comments() {
-    t_skip(); // '/'
+static void t_skip_comments(Tokenizer *tk) {
+    t_skip(tk); // '/'
     // Single line comment
-    if (t_peek() == '/') {
-        t_skip(); // '/'
-        while (t_peek() != '\n') {
-            t_skip();
+    if (t_peek(tk) == '/') {
+        t_skip(tk); // '/'
+        while (t_peek(tk) != '\n') {
+            t_skip(tk);
         }
-        t_skip();                 // '\n'
-    } else if (t_peek() == '*') { // Multi-line comments
-        t_skip();                 // '*'
-        while (t_peek() != '*' && t_peek_next() != '/') {
-            t_skip();
+        t_skip(tk);                 // '\n'
+    } else if (t_peek(tk) == '*') { // Multi-line comments
+        t_skip(tk);                 // '*'
+        while (t_peek(tk) != '*' && t_peek_next(tk) != '/') {
+            t_skip(tk);
         }
-        t_skip();
-        t_skip();
+        t_skip(tk);
+        t_skip(tk);
     }
 }
 
 // Change to Token* [Array of tokens]
-void t_tokenize() {
+void t_tokenize(Tokenizer *tk) {
     // Loop until eof
-    while (!t_is_eof()) {
-        char c = t_peek();
+    while (!t_is_eof(tk)) {
+        const char c = t_peek(tk);
         if (is_digit(c)) {
-            t_consume();
-            while (is_digit(t_peek())) {
-                t_consume();
+            t_consume(tk);
+            while (is_digit(t_peek(tk))) {
+                t_consume(tk);
             }
-            if (t_peek() == '.' && is_digit(t_peek_next())) {
-                t_consume();
-                while (is_digit(t_peek())) {
-                    t_consume();
+            if (t_peek(tk) == '.' && is_digit(t_peek_next(tk))) {
+                t_consume(tk);
+                while (is_digit(t_peek(tk))) {
+                    t_consume(tk);
                 }
-                t_push_buffer(TK_FLT_LITERAL);
+                t_push_buffer(tk,TK_FLT_LITERAL);
             } else {
-                t_push_buffer(TK_INT_LITERAL);
+                t_push_buffer(tk,TK_INT_LITERAL);
             }
         } else if (is_alpha(c)) {
-            t_consume();
-            while (is_alpha_num(t_peek())) {
-                t_consume();
+            t_consume(tk);
+            while (is_alpha_num(t_peek(tk))) {
+                t_consume(tk);
             }
-            t_parse_and_push_buffer();
-            t_buffer_reset();
+            t_parse_and_push_buffer(tk);
+            t_buffer_reset(tk);
         } else if (is_whitespace(c)) {
-            t_skip();
-        } else if (t_peek() == '/') {
-            t_skip_comments();
+            t_skip(tk);
+        } else if (t_peek(tk) == '/') {
+            t_skip_comments(tk);
         } else {
             // Handle special cases
-            t_consume();
-            t_push_buffer(char_to_token_type(c));
+            t_consume(tk);
+            t_push_buffer(tk,char_to_token_type(c));
         }
     }
 }

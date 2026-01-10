@@ -1,24 +1,15 @@
-#include "x86.c"
+#include "compiler.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-typedef struct {
-    char *input_file;
-    char *output_file;
-    unsigned int flags;
-    char *src;
-    int src_size;
-} Compiler;
+#include "ir.h"
+#include "x86.h"
+#include "parser.h"
+#include "tokenizer.h"
 
-#define COMP_FLAG_DEBUG (1u << 0)  // -d
-#define COMP_FLAG_AST (1u << 1)    // -t
-#define COMP_FLAG_TOKENS (1u << 2) // -tk
-#define COMP_FLAG_NODES (1u << 3)  // -n
-#define COMP_FLAG_IR (1u << 4)     // -ir
-#define COMP_FLAG_ASM (1u << 5)    // -a
-
-static int load_src(Compiler *compiler) {
+static int load_src_file(Compiler *compiler) {
     FILE *fp = fopen(compiler->input_file, "rb");
 
     if (fp == NULL) {
@@ -32,7 +23,7 @@ static int load_src(Compiler *compiler) {
         exit(1);
     }
 
-    long size = ftell(fp);
+    const long size = ftell(fp);
     if (size < 0) {
         fclose(fp);
         printf("Failed to read file size (TELL)");
@@ -47,7 +38,7 @@ static int load_src(Compiler *compiler) {
         exit(1);
     }
 
-    size_t read = fread(src, 1, (size_t)size, fp);
+    const size_t read = fread(src, 1, (size_t)size, fp);
     fclose(fp);
     if (read != (size_t)size) {
         free(src);
@@ -64,20 +55,20 @@ static int load_src(Compiler *compiler) {
 }
 
 int compile(Compiler *compiler) {
-    t_init(compiler->src, compiler->src_size);
-    t_tokenize();
+    t_tokenize(&compiler->tk);
+
     if (compiler->flags & COMP_FLAG_TOKENS) {
-        t_print_tokens();
+        t_print_tokens(&compiler->tk);
     }
-    p_init();
-    p_parse_translation_unit();
+    init_parser(&compiler->p, &compiler->tk.tokens, compiler->tk.tokens.size);
+    p_parse_translation_unit(&compiler->p, &compiler->nm);
 
     if (compiler->flags & COMP_FLAG_NODES)
-        print_nodes();
+        print_nodes(&compiler->nm);
     if (compiler->flags & COMP_FLAG_AST)
-        print_ast();
+        print_ast(&compiler->nm);
 
-    IR_Module *module = ir_gen_translation_unit(&node_manager.nodes[0]);
+    IR_Module *module = ir_gen_translation_unit(&compiler->nm.nodes[0]);
     if (compiler->flags & COMP_FLAG_IR) {
         print_ir_module(module);
     }
@@ -91,13 +82,12 @@ int compile(Compiler *compiler) {
     return 1;
 }
 
-Compiler init_compiler(int argc, char *argv[]) {
+Compiler init_compiler(const int argc, char *argv[]) {
     if (argc < 2) {
         printf("Improper Usage,\n  compiler [input]\n");
         exit(1);
     }
 
-    // compiler -h
     if (argc == 2 && strcmp(argv[1], "-h") == 0) {
         printf("compiler [input]\n");
         printf("\t-o [output] : Set output file path\n");
@@ -113,7 +103,7 @@ Compiler init_compiler(int argc, char *argv[]) {
     compiler.output_file = strdup(argv[1]);
     compiler.output_file[strlen(argv[1]) - 1] = 's';
 
-    // Loop and try find -o, -t, -d
+    // Loop and try find compile flags: [-o, -t, -d]
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0) {
             if (argv[i + 1] != NULL) {
@@ -142,7 +132,11 @@ Compiler init_compiler(int argc, char *argv[]) {
         }
     }
 
-    load_src(&compiler);
+    load_src_file(&compiler);
+
+    compiler.tk = t_new_tokenizer(compiler.src, compiler.src_size);
+    compiler.nm = new_node_manager();
+    compiler.p = new_parser();
 
     printf("Compiling %s to %s ", compiler.input_file, compiler.output_file);
     if (compiler.flags != 0) {
@@ -172,7 +166,11 @@ Compiler init_compiler(int argc, char *argv[]) {
 }
 
 void free_compiler(Compiler *compiler) {
+    t_free(&compiler->tk);
+    free_node_manager(&compiler->nm);
     free(compiler->output_file);
-    t_free();
-    p_free();
+    free(compiler->src);
+    compiler->src = NULL;
+    compiler->output_file = NULL;
+    compiler->src = NULL;
 }

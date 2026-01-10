@@ -1,12 +1,12 @@
-#include <stdbool.h>
+#include "util.h"
 
-bool is_alpha(char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
+bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
 
-bool is_digit(char c) { return (c >= '0' && c <= '9'); }
+bool is_digit(const char c) { return (c >= '0' && c <= '9'); }
 
-bool is_alpha_num(char c) { return is_alpha(c) || is_digit(c); }
+bool is_alpha_num(const char c) { return is_alpha(c) || is_digit(c); }
 
-bool is_alpha_str(char *c) {
+bool is_alpha_str(const char *c) {
     int i = 0;
     while (c[i++] != '\0') {
         if (!is_alpha(c[i])) {
@@ -16,12 +16,11 @@ bool is_alpha_str(char *c) {
     return true;
 }
 
-bool is_int_or_float(char *c, bool *is_int) {
+bool is_int_or_float(const char *c, bool *is_int) {
     int i = 0;
     bool found_decimal = false;
     while (c[i] != '\0') {
         // Number cannot contain more than one decimal
-        bool accept = true;
         if (c[i] == '.' && !found_decimal) {
             // Decimal cannot be first or last character,
             if (i == 0 || c[i + 1] == '\0') {
@@ -40,9 +39,9 @@ bool is_int_or_float(char *c, bool *is_int) {
     // Weeds out any empty string or "\0"
     return i > 0;
 }
-bool is_num_str(char *c) { return is_int_or_float(c, ((void *)0)); }
+bool is_num_str(const char *c) { return is_int_or_float(c, 0); }
 
-bool is_whitespace(char c) {
+bool is_whitespace(const char c) {
     switch (c) {
     case '\n':
     case '\t':

@@ -1,14 +1,10 @@
-#include "ir.c"
+#include "x86.h"
 
-/*
-    x86-64 Assembly
-    AT&T dialect
-    System V AMD 64
-*/
+#include "ir.h"
 
-static int ir_reg_to_rbp(int a) { return a * 8 + 8; }
+static int ir_reg_to_rbp(const int a) { return a * 8 + 8; }
 
-void x86_gen_instruction(FILE *fp, IR_Instruction *instr) {
+void x86_gen_instruction(FILE *fp, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_ADD:
         fprintf(fp, "    movl -%d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->a));
@@ -54,15 +50,15 @@ void x86_gen_instruction(FILE *fp, IR_Instruction *instr) {
     }
 }
 
-void x86_gen_block(FILE *fp, IR_Block *block) {
+void x86_gen_block(FILE *fp, const IR_Block *block) {
     for (int i = 0; i < block->count; i++) {
         x86_gen_instruction(fp, &block->instructions[i]);
     }
 }
 
-void x86_gen_function(FILE *fp, IR_Function *func) {
-    int locals_size = func->local_count * 8;
-    int stack_size = (locals_size + 15) & ~15;
+void x86_gen_function(FILE *fp, const IR_Function *func) {
+    const int locals_size = func->local_count * 8;
+    const int stack_size = (locals_size + 15) & ~15;
     fprintf(fp, ".global %s\n", func->name);
     fprintf(fp, "%s:\n", func->name);
     fprintf(fp, "    push %%rbp\n");
@@ -79,8 +75,8 @@ void x86_gen_function(FILE *fp, IR_Function *func) {
     fprintf(fp, ".section .note.GNU-stack,\"\",@progbits\n");
 }
 
-void x86_gen_module(FILE *fp, IR_Module *module) {
+void x86_gen_module(FILE *fp, const IR_Module *module) {
     for (int i = 0; i < module->count; i++) {
         x86_gen_function(fp, module->functions[i]);
     }
-};
+}

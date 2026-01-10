@@ -1,125 +1,60 @@
-#include "tokenizer.c"
+#include "node.h"
+
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-typedef enum {
-    N_TRANSLATION_UNIT,
-    N_FUNCTION,
-    N_COMPOUND,
-    N_VAR_DECL,
-    N_IF,
-    N_WHILE,
-    N_RETURN,
-    N_BINARY,
-    N_LITERAL,
-    N_IDENTIFIER,
-} NodeType;
-
-typedef struct Node Node;
-
-struct Node {
-    NodeType type;
-    union {
-        struct {
-            struct Node **declarations;
-            int capacity;
-            int count;
-        } translation_unit;
-        struct {
-            const char *name;
-            int param_count;
-            struct Node **params;
-            TokenType return_type;
-            struct Node *body;
-        } function;
-        struct {
-            struct Node **statements;
-            int capacity;
-            int count;
-        } compound;
-        struct {
-            struct Node *lhs;
-            struct Node *rhs;
-            TokenType op;
-        } binary;
-        struct {
-            struct Node *expr;
-        } _return;
-        struct {
-            struct Node *cond;
-            struct Node *if_true;
-            struct Node *if_false;
-        } _if;
-        struct {
-            struct Node *cond;
-            struct Node *block;
-        } _while;
-        struct {
-            TokenType type;
-            union {
-                int i;
-                float f;
-            };
-        } literal;
-        struct {
-            char *name;
-        } identifer;
-        struct {
-            char *name;
-            TokenType type;
-            struct Node *expr;
-        } var_decl;
-    };
-};
-
-typedef struct {
-    int count;
-    int capacity;
-    Node *nodes;
-} NodeManager;
-
-static NodeManager node_manager;
-
-#define NODE_ARRAY_SIZE
-
-void init_node_manager() {
-    node_manager.capacity = 1024;
-    node_manager.nodes = malloc(sizeof(Node) * node_manager.capacity);
-    if (node_manager.nodes == NULL) {
+NodeManager new_node_manager() {
+    NodeManager nm;
+    nm.capacity = NODE_ARENA_SIZE;
+    nm.nodes = malloc(sizeof(Node) * nm.capacity);
+    if (nm.nodes == NULL) {
         printf("Failed to allocate node manager array");
         exit(1);
     }
-    node_manager.count = 0;
+    nm.count = 0;
+    return nm;
 }
 
-void free_node_manager() {
-    for (int i = 0; i < node_manager.count; i++) {
-        Node *node = &node_manager.nodes[i];
+void free_node_manager(const NodeManager *nm) {
+    for (int i = 0; i < nm->count; i++) {
+        const Node *node = &nm->nodes[i];
         if (node->type == N_TRANSLATION_UNIT) {
+            for (int j = 0; j < node->translation_unit.count; j++) {
+                free(node->translation_unit.declarations[j]);
+            }
             free(node->translation_unit.declarations);
         } else if (node->type == N_COMPOUND) {
+            for (int j = 0; j < node->compound.count; j++) {
+                free(node->compound.statements[j]);
+            }
             free(node->compound.statements);
-        } else if (node->type == N_FUNCTION) {
-            free(node->function.params);
+        } else if (node->type == N_FUNCTION && node->function.body->type == N_COMPOUND) {
+            for (int j = 0; j < node->function.body->compound.count; j++) {
+                free(node->function.body->compound.statements[j]);
+            }
+            free(node->function.body->compound.statements);
         }
     }
-    free(node_manager.nodes);
+    free(nm->nodes);
 }
+
 /*
     Handles creating a Node, pushing it to the global node array
 */
-Node *new_node(NodeType type) {
-    if (node_manager.count >= node_manager.capacity) {
+Node *new_node(NodeManager *nm,const NodeType type) {
+    if (nm->count >= nm->capacity) {
         // In the future, create a new arena for more nodes and link them.
         printf("Node Arena overflow");
         exit(1);
     }
-    Node *node = &node_manager.nodes[node_manager.count++];
+    Node *node = &nm->nodes[nm->count++];
     memset(node, 0, sizeof(Node));
     node->type = type;
     return node;
 }
 
-void print_node_type(NodeType type) {
+void print_node_type(const NodeType type) {
     switch (type) {
     case N_TRANSLATION_UNIT:
         printf("Translation Unit");
@@ -152,12 +87,12 @@ void print_node_type(NodeType type) {
         printf("While");
         break;
     default:
-        printf("Undefined");
-        break;
+        printf("\nTried to print an unknown node type\n");
+        exit(1);
     }
 }
-
-void print_node_flat(Node *node) {
+// Prints a single node
+void print_node_flat(const Node *node) {
     printf("Node {\n");
     printf("\ttype: ");
     print_node_type(node->type);
@@ -215,7 +150,7 @@ void print_node_flat(Node *node) {
     case N_RETURN:
         break;
     case N_IDENTIFIER:
-        printf("\tname: %s\n", node->identifer.name);
+        printf("\tname: %s\n", node->identifier.name);
         break;
     default:
         printf("\t");
@@ -225,13 +160,13 @@ void print_node_flat(Node *node) {
     printf("\n}\n");
 }
 
-void print_indent(int depth) {
+void print_indent(const int depth) {
     for (int i = 0; i < depth; i++) {
         printf("    ");
     }
 }
 
-void print_node(Node *node, int depth) {
+void print_node(const Node *node,const int depth) {
     print_indent(depth);
     print_node_type(node->type);
     switch (node->type) {
@@ -285,7 +220,7 @@ void print_node(Node *node, int depth) {
         print_node(node->_return.expr, depth + 1);
         break;
     case N_IDENTIFIER:
-        printf(": [name: %s]\n", node->identifer.name);
+        printf(": [name: %s]\n", node->identifier.name);
         break;
     case N_IF:
         printf(": [cond, true, false]\n");
@@ -301,8 +236,18 @@ void print_node(Node *node, int depth) {
         print_node(node->_while.block, depth + 1);
         break;
     default:
+        printf("Tried to print an known node type\n");
+        exit(1);
         break;
     }
 }
 
-void print_ast() { print_node(&node_manager.nodes[0], 0); }
+void print_nodes(NodeManager *nm) {
+    for (int i = 0; i < nm->count; i++) {
+        print_node_flat(&nm->nodes[i]);
+    }
+}
+/*
+    Recursively prints the parse tree starting with the translation unit
+*/
+void print_ast(const NodeManager *nm) { print_node(&nm->nodes[0], 0); }

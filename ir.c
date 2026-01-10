@@ -1,53 +1,12 @@
-#include "parser.c"
+#include "ir.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-typedef enum { IR_ADD, IR_SUB, IR_MUL, IR_DIV, IR_LOAD, IR_STORE, IR_RET, IR_BR, IR_BR_EQ } IR_OP;
+#include "node.h"
 
-typedef struct {
-    const char *name;
-    int reg;
-} IR_Var;
-
-typedef struct {
-    IR_OP op;
-    int dst;
-    int a;
-    int b;
-} IR_Instruction;
-
-typedef struct {
-    IR_Instruction *instructions;
-    int count;
-    int capacity;
-} IR_Block;
-
-typedef struct {
-    int var_count;
-} IR_Scope;
-
-typedef struct {
-    const char *name;
-    IR_Block *blocks;
-    int block_count;
-    int block_capacity;
-    int next_reg;
-    IR_Var *locals;
-    int local_count;
-    int local_capacity;
-    IR_Scope *scopes;
-    int scope_count;
-    int scope_capacity;
-} IR_Function;
-
-typedef struct {
-    IR_Function **functions;
-    int count;
-    int capacity;
-} IR_Module;
-
-IR_OP token_to_ir_op(TokenType type) {
+IR_OP token_to_ir_op(const TokenType type) {
     switch (type) {
     case TK_PLUS:
         return IR_ADD;
@@ -58,18 +17,22 @@ IR_OP token_to_ir_op(TokenType type) {
     case TK_DIVIDE:
         return IR_DIV;
     default:
-        printf("Given an unsupported operator for binary op: ");
+        printf("Given an unsupported token to convert to IR_Op: ");
         print_token_type(type);
         printf("\n");
         exit(1);
     }
 }
 
+/*
+    Begin an IR Scope,
+    Tracks any variables added afterwards, and pops them from the IR virtual stack when `ir_end_scope()` is called.
+*/
 void ir_begin_scope(IR_Function *func) {
     if (func->scope_count >= func->scope_capacity) {
         func->scope_capacity *= 2;
         func->scopes = realloc(func->scopes, sizeof(IR_Scope) * func->scope_capacity);
-        if (func->scopes == NULL) {
+        if (!func->scopes) {
             printf("Failed to realloc for func scopes\n");
             exit(1);
         }
@@ -77,6 +40,9 @@ void ir_begin_scope(IR_Function *func) {
     func->scopes[func->scope_count++] = (IR_Scope){0};
 }
 
+/*
+    Pops variables declared within the scope from the IR virtual stack.
+*/
 void ir_end_scope(IR_Function *func) {
     if (func->scope_count > 0) {
         func->scope_count -= 1;
@@ -84,9 +50,13 @@ void ir_end_scope(IR_Function *func) {
     }
 }
 
+/*
+    Allocates for a new IR Module,
+    Also initializes/allocates for its functions array
+*/
 IR_Module *ir_new_module() {
-    IR_Module *module = malloc(sizeof(*module));
-    if (module == NULL) {
+    IR_Module *module = malloc(sizeof(IR_Module));
+    if (!module) {
         printf("Failed to allocate new IR module\n");
         exit(1);
     }
@@ -95,6 +65,7 @@ IR_Module *ir_new_module() {
     module->functions = malloc(sizeof(IR_Function *) * module->capacity);
     if (module->functions == NULL) {
         printf("Failed to allocate IR module functions\n");
+        free(module);
         exit(1);
     }
     return module;
@@ -102,8 +73,11 @@ IR_Module *ir_new_module() {
 
 int ir_append_block(IR_Function *func, IR_Block *block);
 
+/*
+    Allocates for a new IR_Block
+*/
 IR_Block *ir_new_block() {
-    IR_Block *block = malloc(sizeof(*block));
+    IR_Block *block = malloc(sizeof(IR_Block));
     if (!block) {
         printf("Failed to allocate new block\n");
         exit(1);
@@ -196,7 +170,7 @@ int ir_new_var(IR_Function *func, const char *name) {
             exit(1);
         }
     }
-    int next_reg = func->next_reg++;
+    const int next_reg = func->next_reg++;
     func->locals[func->local_count++] = (IR_Var){name, next_reg};
     if (func->scope_count > 0) {
         func->scopes[func->scope_count - 1].var_count++;
@@ -248,14 +222,14 @@ void ir_free_module(IR_Module *module) {
     free(module);
 }
 
-IR_Block *current_block(IR_Function *func) { return &func->blocks[func->block_count - 1]; }
+IR_Block *current_block(const IR_Function *func) { return &func->blocks[func->block_count - 1]; }
 
 int ir_gen_expression(IR_Function *func, Node *expr) {
     switch (expr->type) {
     case N_LITERAL:
         switch (expr->literal.type) {
         case TK_INT_LITERAL:
-            int dst = func->next_reg++;
+            const int dst = func->next_reg++;
             ir_append_instruction(&func->blocks[func->block_count - 1], &(IR_Instruction){IR_LOAD, dst, expr->literal.i, 0});
             return dst;
         case TK_FLT_LITERAL:
@@ -266,16 +240,16 @@ int ir_gen_expression(IR_Function *func, Node *expr) {
             exit(1);
         }
     case N_IDENTIFIER:
-        int var_reg = ir_get_var_reg(func, expr->identifer.name);
+        int var_reg = ir_get_var_reg(func, expr->identifier.name);
         if (var_reg == -1) {
-            printf("Undefined local variable \'%s\' \n", expr->identifer.name);
+            printf("Undefined local variable \'%s\' \n", expr->identifier.name);
             exit(1);
         }
         return var_reg;
     case N_BINARY:
-        int a = ir_gen_expression(func, expr->binary.lhs);
-        int b = ir_gen_expression(func, expr->binary.rhs);
-        int dst = func->next_reg++;
+        const int a = ir_gen_expression(func, expr->binary.lhs);
+        const int b = ir_gen_expression(func, expr->binary.rhs);
+        const int dst = func->next_reg++;
         IR_OP op = token_to_ir_op(expr->binary.op);
         ir_append_instruction(current_block(func), &(IR_Instruction){op, dst, a, b});
         return dst;
@@ -286,9 +260,7 @@ int ir_gen_expression(IR_Function *func, Node *expr) {
     exit(1);
 }
 
-void ir_gen_statement(IR_Function *func, Node *stmt);
-
-void ir_gen_compound(IR_Function *func, Node *comp) {
+void ir_gen_compound(IR_Function *func, const Node *comp) {
     ir_begin_scope(func);
     for (int i = 0; i < comp->compound.count; i++) {
         ir_gen_statement(func, comp->compound.statements[i]);
@@ -297,10 +269,10 @@ void ir_gen_compound(IR_Function *func, Node *comp) {
 }
 
 void ir_gen_while_statement(IR_Function *func, Node *_while) {
-    int cond_id = ir_append_block(func, ir_new_block()); // cond:
-    int cond_reg = ir_gen_expression(func, _while->_while.cond);
-    int block_id = cond_id + 1;
-    int end_id = cond_id + 2;
+    const int cond_id = ir_append_block(func, ir_new_block()); // cond:
+    const int cond_reg = ir_gen_expression(func, _while->_while.cond);
+    const int block_id = cond_id + 1;
+    const int end_id = cond_id + 2;
     IR_Instruction br_eq_instr = {IR_BR_EQ, cond_reg, block_id, end_id};
     ir_append_instruction(current_block(func), &br_eq_instr);
     ir_append_block(func, ir_new_block()); // block:
@@ -310,10 +282,10 @@ void ir_gen_while_statement(IR_Function *func, Node *_while) {
     ir_append_block(func, ir_new_block()); // end:
 }
 
-void ir_gen_if_statement(IR_Function *func, Node *_if) {
-    int cond_reg = ir_gen_expression(func, _if->_if.cond);
-    int if_true_id = func->block_count;
-    int if_false_id = if_true_id + 1; // if no else, then this is the end block
+void ir_gen_if_statement(IR_Function *func, const Node *_if) {
+    const int cond_reg = ir_gen_expression(func, _if->_if.cond);
+    const int if_true_id = func->block_count;
+    const int if_false_id = if_true_id + 1; // if no else, then this is the end block
     IR_Instruction br_eq_instr = {IR_BR_EQ, cond_reg, if_true_id, if_false_id};
     ir_append_instruction(current_block(func), &br_eq_instr);
     ir_append_block(func, ir_new_block()); // IF true block
@@ -322,7 +294,6 @@ void ir_gen_if_statement(IR_Function *func, Node *_if) {
         IR_Instruction br_instr = {IR_BR, if_false_id, 0, 0};
         ir_append_instruction(current_block(func), &br_instr);
         ir_append_block(func, ir_new_block()); // IF else or endblock
-        return;
     } else {
         if (_if->_if.if_false->type == N_IF) {
             IR_Instruction br_instr = {IR_BR, if_false_id, 0, 0};
@@ -330,7 +301,7 @@ void ir_gen_if_statement(IR_Function *func, Node *_if) {
             ir_append_block(func, ir_new_block()); // IF else or endblock
             ir_gen_if_statement(func, _if->_if.if_false);
         } else {
-            int end_id = if_false_id + 1;
+            const int end_id = if_false_id + 1;
             IR_Instruction br_instr = {IR_BR, end_id, 0, 0};
             ir_append_instruction(current_block(func), &br_instr);
             ir_append_block(func, ir_new_block()); // IF else or endblock
@@ -340,31 +311,31 @@ void ir_gen_if_statement(IR_Function *func, Node *_if) {
             ir_append_block(func, ir_new_block()); // end
         }
     }
-
-    return;
 }
 
 void ir_gen_statement(IR_Function *func, Node *stmt) {
     switch (stmt->type) {
-    case N_VAR_DECL:
+    case N_VAR_DECL: {
         if (stmt->var_decl.type == TK_FLOAT) {
             printf("Soz cant handle floats yet, only integers\n");
             exit(1);
         }
-        int var_reg = ir_new_var(func, stmt->var_decl.name);
-        int expr_reg = ir_gen_expression(func, stmt->var_decl.expr);
+        const int var_reg = ir_new_var(func, stmt->var_decl.name);
+        const int expr_reg = ir_gen_expression(func, stmt->var_decl.expr);
         IR_Instruction var_decl_instr = {IR_STORE, var_reg, expr_reg, 0};
         ir_append_instruction(current_block(func), &var_decl_instr);
         return;
-    case N_RETURN:
-        int ret_reg = ir_gen_expression(func, stmt->_return.expr);
+    }
+    case N_RETURN: {
+        const int ret_reg = ir_gen_expression(func, stmt->_return.expr);
         IR_Instruction ret_instr = {IR_RET, ret_reg, 0, 0};
         ir_append_instruction(current_block(func), &ret_instr);
         return;
+    }
     case N_BINARY:
         if (stmt->binary.op == TK_EQ && stmt->binary.lhs->type == N_IDENTIFIER) {
-            int var_reg = ir_get_var_reg(func, stmt->binary.lhs->identifer.name);
-            int expr_reg = ir_gen_expression(func, stmt->binary.rhs);
+            const int var_reg = ir_get_var_reg(func, stmt->binary.lhs->identifier.name);
+            const int expr_reg = ir_gen_expression(func, stmt->binary.rhs);
             IR_Instruction assign_instr = {IR_STORE, var_reg, expr_reg, 0};
             ir_append_instruction(current_block(func), &assign_instr);
             return;
@@ -388,7 +359,7 @@ void ir_gen_statement(IR_Function *func, Node *stmt) {
     }
 }
 
-IR_Function *ir_gen_function(Node *func) {
+IR_Function *ir_gen_function(const Node *func) {
     if (func->type != N_FUNCTION) {
         printf("Tried ir_gen_translation_unit on a node which is not a translation unit!\n");
         exit(1);
@@ -407,7 +378,7 @@ IR_Function *ir_gen_function(Node *func) {
     return fn;
 }
 
-IR_Module *ir_gen_translation_unit(Node *tu) {
+IR_Module *ir_gen_translation_unit(const Node *tu) {
     if (tu->type != N_TRANSLATION_UNIT) {
         printf("Tried ir_gen_translation_unit on a node which is not a translation unit!\n");
         exit(1);
@@ -421,7 +392,7 @@ IR_Module *ir_gen_translation_unit(Node *tu) {
     return module;
 }
 
-void print_ir_op(IR_OP op) {
+void print_ir_op(const IR_OP op) {
     switch (op) {
     case IR_ADD:
         printf("ADD   ");
@@ -446,29 +417,28 @@ void print_ir_op(IR_OP op) {
         return;
     case IR_BR:
         printf("BR    ");
-        break;
+        return;
     case IR_BR_EQ:
         printf("BREQ  ");
-        break;
+        return;
     default:
         printf("!!!   ");
-        return;
     }
 }
 
-void print_ir_instruction(IR_Instruction *instr) {
+void print_ir_instruction(const IR_Instruction *instr) {
     printf("    ");
     print_ir_op(instr->op);
     printf(" %d  %d  %d\n", instr->dst, instr->a, instr->b);
 }
 
-void print_ir_block(IR_Block *block) {
+void print_ir_block(const IR_Block *block) {
     for (int i = 0; i < block->count; i++) {
         print_ir_instruction(&block->instructions[i]);
     }
 }
 
-void print_ir_function(IR_Function *func) {
+void print_ir_function(const IR_Function *func) {
     printf("%s:\n", func->name);
     for (int i = 0; i < func->block_count; i++) {
         printf("block_%d:\n", i);
@@ -476,7 +446,7 @@ void print_ir_function(IR_Function *func) {
     }
 }
 
-void print_ir_module(IR_Module *module) {
+void print_ir_module(const IR_Module *module) {
     for (int i = 0; i < module->count; i++) {
         print_ir_function(module->functions[i]);
     }
