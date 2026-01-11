@@ -7,79 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int load_src_file(Compiler *compiler) {
-    FILE *fp = fopen(compiler->input_file, "rb");
-
-    if (fp == NULL) {
-        printf("Failed to open %s", compiler->input_file);
-        exit(1);
-    }
-
-    if (fseek(fp, 0, SEEK_END) != 0) {
-        fclose(fp);
-        printf("Failed to read file size (SEEK)");
-        exit(1);
-    }
-
-    const long size = ftell(fp);
-    if (size < 0) {
-        fclose(fp);
-        printf("Failed to read file size (TELL)");
-        exit(1);
-    }
-
-    rewind(fp);
-    char *src = malloc((size_t)size + 1);
-    if (src == NULL) {
-        fclose(fp);
-        printf("Failed to write to src buffer");
-        exit(1);
-    }
-
-    const size_t read = fread(src, 1, (size_t)size, fp);
-    fclose(fp);
-    if (read != (size_t)size) {
-        free(src);
-        printf("Inconsistent file sizes");
-        exit(1);
-    }
-
-    src[size] = '\0';
-
-    compiler->src = src;
-    compiler->src_size = size;
-
-    return 0;
-}
-
-int compile(Compiler *compiler) {
-    t_tokenize(&compiler->tk);
-
-    if (compiler->flags & COMP_FLAG_TOKENS) {
-        t_print_tokens(&compiler->tk);
-    }
-    init_parser(&compiler->p, &compiler->tk.tokens, compiler->tk.tokens.size);
-    p_parse_translation_unit(&compiler->p, &compiler->nm);
-
-    if (compiler->flags & COMP_FLAG_NODES)
-        print_nodes(&compiler->nm);
-    if (compiler->flags & COMP_FLAG_AST)
-        print_ast(&compiler->nm);
-
-    IR_Module *module = ir_gen_translation_unit(&compiler->nm.nodes[0]);
-    if (compiler->flags & COMP_FLAG_IR) {
-        print_ir_module(module);
-    }
-
-    if (compiler->flags & COMP_FLAG_ASM) {
-        FILE *fp = fopen(compiler->output_file, "w");
-        x86_gen_module(fp, module);
-        fclose(fp);
-    }
-    ir_free_module(module);
-    return 1;
-}
-
 Compiler init_compiler(const int argc, char *argv[]) {
     if (argc < 2) {
         printf("Improper Usage,\n  compiler [input]\n");
@@ -171,4 +98,77 @@ void free_compiler(Compiler *compiler) {
     compiler->src = NULL;
     compiler->output_file = NULL;
     compiler->src = NULL;
+}
+
+int compile(Compiler *compiler) {
+    t_tokenize(&compiler->tk);
+
+    if (compiler->flags & COMP_FLAG_TOKENS) {
+        t_print_tokens(&compiler->tk);
+    }
+    init_parser(&compiler->p, &compiler->tk.tokens, compiler->tk.tokens.size);
+    p_parse_translation_unit(&compiler->p, &compiler->nm);
+
+    if (compiler->flags & COMP_FLAG_NODES)
+        print_nodes(&compiler->nm);
+    if (compiler->flags & COMP_FLAG_AST)
+        print_ast(&compiler->nm);
+
+    IR_Module *module = ir_gen_translation_unit(&compiler->nm.nodes[0]);
+    if (compiler->flags & COMP_FLAG_IR) {
+        print_ir_module(module);
+    }
+
+    if (compiler->flags & COMP_FLAG_ASM) {
+        FILE *fp = fopen(compiler->output_file, "w");
+        x86_gen_module(fp, module);
+        fclose(fp);
+    }
+    ir_free_module(module);
+    return 1;
+}
+
+static int load_src_file(Compiler *compiler) {
+    FILE *fp = fopen(compiler->input_file, "rb");
+
+    if (fp == NULL) {
+        printf("Failed to open %s", compiler->input_file);
+        exit(1);
+    }
+
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        fclose(fp);
+        printf("Failed to read file size (SEEK)");
+        exit(1);
+    }
+
+    const long size = ftell(fp);
+    if (size < 0) {
+        fclose(fp);
+        printf("Failed to read file size (TELL)");
+        exit(1);
+    }
+
+    rewind(fp);
+    char *src = malloc((size_t)size + 1);
+    if (src == NULL) {
+        fclose(fp);
+        printf("Failed to write to src buffer");
+        exit(1);
+    }
+
+    const size_t read = fread(src, 1, (size_t)size, fp);
+    fclose(fp);
+    if (read != (size_t)size) {
+        free(src);
+        printf("Inconsistent file sizes");
+        exit(1);
+    }
+
+    src[size] = '\0';
+
+    compiler->src = src;
+    compiler->src_size = size;
+
+    return 0;
 }

@@ -26,4 +26,6 @@ int compile(Compiler *compiler);
 Compiler init_compiler(int argc, char *argv[]);
 void free_compiler(Compiler *compiler);
 
+static int load_src_file(Compiler *compiler);
+
 #endif // COMPILER_C_COMPILER_H
