@@ -70,11 +70,12 @@ IR_Module *ir_new_module() {
         printf("Failed to allocate new IR module\n");
         exit(1);
     }
-    module->capacity = 4;
-    module->count = 0;
-    module->functions = malloc(sizeof(IR_Function *) * module->capacity);
+    module->func_capacity = 4;
+    module->func_count = 0;
+    module->functions = malloc(sizeof(IR_Function *) * module->func_capacity);
     if (module->functions == NULL) {
         printf("Failed to allocate IR module functions\n");
+        free(module->functions);
         free(module);
         exit(1);
     }
@@ -209,20 +210,20 @@ int ir_get_var_reg(const IR_Function *func, const char *name) {
 }
 
 void ir_append_function(IR_Module *module, IR_Function *func) {
-    if (module->count >= module->capacity) {
-        module->capacity *= 2;
-        IR_Function **new_functions = realloc(module->functions, sizeof(IR_Function *) * module->capacity);
+    if (module->func_count >= module->func_capacity) {
+        module->func_capacity *= 2;
+        IR_Function **new_functions = realloc(module->functions, sizeof(IR_Function *) * module->func_capacity);
         if (!new_functions) {
             printf("Failed to allocate for new Ir Module");
             exit(1);
         }
         module->functions = new_functions;
     }
-    module->functions[module->count++] = func;
+    module->functions[module->func_count++] = func;
 }
 
 void ir_free_module(IR_Module *module) {
-    for (int i = 0; i < module->count; i++) {
+    for (int i = 0; i < module->func_count; i++) {
         IR_Function *func = module->functions[i];
         for (int j = 0; j < func->block_count; j++) {
             free(func->blocks[j].instructions);
@@ -401,7 +402,7 @@ void ir_gen_statement(IR_Function *func, const Node *stmt) {
 
 IR_Function *ir_gen_function(const Node *func) {
     if (func->type != N_FUNCTION) {
-        printf("Tried ir_gen_translation_unit on a node which is not a translation unit!\n");
+        printf("Tried ir_gen_function but given node is not a function!\n");
         exit(1);
     }
 
@@ -420,13 +421,22 @@ IR_Function *ir_gen_function(const Node *func) {
 
 IR_Module *ir_gen_translation_unit(const Node *tu) {
     if (tu->type != N_TRANSLATION_UNIT) {
-        printf("Tried ir_gen_translation_unit on a node which is not a translation unit!\n");
+        printf("Tried ir_gen_function but given node is not a translation unit!\n");
         exit(1);
     }
 
     IR_Module *module = ir_new_module();
     for (int i = 0; i < tu->translation_unit.count; i++) {
-        ir_append_function(module, ir_gen_function(tu->translation_unit.declarations[i]));
+        switch (tu->translation_unit.declarations[i]->type) {
+        case N_FUNCTION:
+            ir_append_function(module, ir_gen_function(tu->translation_unit.declarations[i]));
+            break;
+        case N_VAR_DECL:
+            // Add support for globals eventually
+        default:
+            printf("Globals and other bs are not supported yet.\n");
+            exit(1);
+        }
     }
 
     return module;
@@ -487,7 +497,7 @@ void print_ir_function(const IR_Function *func) {
 }
 
 void print_ir_module(const IR_Module *module) {
-    for (int i = 0; i < module->count; i++) {
+    for (int i = 0; i < module->func_count; i++) {
         print_ir_function(module->functions[i]);
     }
 }

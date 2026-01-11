@@ -45,8 +45,8 @@ typedef struct {
 
 typedef struct {
     IR_Function **functions;
-    int count;
-    int capacity;
+    int func_count;
+    int func_capacity;
 } IR_Module;
 
 IR_OP token_to_ir_op(TokenType type);

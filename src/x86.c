@@ -75,7 +75,7 @@ void x86_gen_function(FILE *fp, const IR_Function *func) {
 }
 
 void x86_gen_module(FILE *fp, const IR_Module *module) {
-    for (int i = 0; i < module->count; i++) {
+    for (int i = 0; i < module->func_count; i++) {
         x86_gen_function(fp, module->functions[i]);
     }
 }
