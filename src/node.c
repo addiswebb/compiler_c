@@ -26,14 +26,14 @@ void free_node_manager(const NodeManager *nm) {
             free(node->translation_unit.declarations);
         } else if (node->type == N_COMPOUND) {
             for (int j = 0; j < node->compound.count; j++) {
-                free(node->compound.statements[j]);
+                free(node->compound.items[j]);
             }
-            free(node->compound.statements);
+            free(node->compound.items);
         } else if (node->type == N_FUNCTION && node->function.body->type == N_COMPOUND) {
             for (int j = 0; j < node->function.body->compound.count; j++) {
-                free(node->function.body->compound.statements[j]);
+                free(node->function.body->compound.items[j]);
             }
-            free(node->function.body->compound.statements);
+            free(node->function.body->compound.items);
         }
     }
     free(nm->nodes);
@@ -88,6 +88,9 @@ void print_node_type(const NodeType type) {
         break;
     case N_FOR:
         printf("For");
+        break;
+    case N_FUNCTION_CALL:
+        printf("Func Call");
         break;
     default:
         printf("\nTried to print an unknown node type\n");
@@ -155,6 +158,10 @@ void print_node_flat(const Node *node) {
     case N_IDENTIFIER:
         printf("\tname: %s\n", node->identifier.name);
         break;
+    case N_FUNCTION_CALL:
+        printf("\tname: %s\n", node->function_call.identifier->identifier.name);
+        printf("\tparam count: %d\n", node->function_call.param_count);
+        break;
     default:
         printf("\t");
         printf("[Unimplemented]");
@@ -182,7 +189,7 @@ void print_node(const Node *node, const int depth) {
     case N_COMPOUND:
         printf("\n");
         for (int i = 0; i < node->compound.count; i++) {
-            print_node(node->compound.statements[i], depth + 1);
+            print_node(node->compound.items[i], depth + 1);
         }
         break;
     case N_BINARY:
@@ -244,6 +251,9 @@ void print_node(const Node *node, const int depth) {
         print_node(node->_for.cond, depth + 1);
         print_node(node->_for.iter, depth + 1);
         print_node(node->_for.block, depth + 1);
+        break;
+    case N_FUNCTION_CALL:
+        printf(": [name: %s, param_count: %d]\n", node->function_call.identifier->identifier.name, node->function_call.param_count);
         break;
     default:
         printf("Tried to print an unknown node type\n");

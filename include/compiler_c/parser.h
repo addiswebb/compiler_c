@@ -58,7 +58,7 @@ Node *new_compound_node(NodeManager *nm);
     `identifier`
     `(expr)`
 */
-Node *p_parse_term(Parser *p, NodeManager *nm);
+Node *p_parse_primary_expression(Parser *p, NodeManager *nm);
 
 /*
     Consumes
@@ -66,6 +66,8 @@ Node *p_parse_term(Parser *p, NodeManager *nm);
     Where `term` is any `literal`, `identifier` or `(expr)`
 */
 Node *p_parse_expression(Parser *p,NodeManager *nm,int min_prec);
+
+Node *p_parse_block_item(Parser *p, NodeManager *nm);
 
 /*
     Consumes
@@ -84,7 +86,7 @@ void p_append_declaration(Node *root, Node *decl);
     Appends a statement to the given compound node,
     Resizes its statement array if necessary.
 */
-void p_append_statement(Node *root, Node *stmt);
+void p_append_block_item(Node *root, Node *stmt);
 
 /*
     Consumes

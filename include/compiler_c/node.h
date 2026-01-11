@@ -15,6 +15,7 @@ typedef enum {
     N_BINARY,
     N_LITERAL,
     N_IDENTIFIER,
+    N_FUNCTION_CALL,
 } NodeType;
 
 typedef struct Node Node;
@@ -35,7 +36,7 @@ struct Node {
             Node *body;
         } function;
         struct {
-            Node **statements;
+            Node **items;
             int capacity;
             int count;
         } compound;
@@ -83,6 +84,12 @@ struct Node {
             TokenType type;
             Node *expr;
         } var_decl;
+        // identifier(params*)
+        struct {
+            Node *identifier;
+            int param_count;
+            Node **params;
+        } function_call;
     };
 };
 

@@ -153,6 +153,7 @@ bool is_binary_operator(const TokenType type) {
     case TK_MULTIPLY:
     case TK_DIVIDE:
     case TK_EXP:
+    case TK_EQ:
         return true;
     default:
         return false;
@@ -166,6 +167,7 @@ int associativity(const TokenType type) {
     case TK_MULTIPLY:
     case TK_DIVIDE:
         return LEFT_ASSOCIATIVITY;
+    case TK_EQ:
     case TK_EXP:
         return RIGHT_ASSOCIATIVITY;
     default:
@@ -185,6 +187,8 @@ int precedence(const TokenType type) {
         return 1;
     case TK_EXP:
         return 2;
+    case TK_EQ:
+        return 14;
     default:
         print_token_type(type);
         printf("Tried to get the precedence of a token which is not a binary "

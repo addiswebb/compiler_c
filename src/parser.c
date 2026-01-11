@@ -102,7 +102,7 @@ Node *init_translation_unit(NodeManager *nm) {
 */
 Node *new_compound_node(NodeManager *nm) {
     Node *node = new_node(nm, N_COMPOUND);
-    node->compound.statements = malloc(sizeof(*node->compound.statements) * DEFAULT_STATEMENTS_PER_BLOCK);
+    node->compound.items = malloc(sizeof(*node->compound.items) * DEFAULT_STATEMENTS_PER_BLOCK);
     if (node->translation_unit.declarations == NULL) {
         printf("Failed to create new compound node");
         exit(1);
@@ -118,7 +118,7 @@ Node *new_compound_node(NodeManager *nm) {
     `identifier`
     `(expr)`
 */
-Node *p_parse_term(Parser *p, NodeManager *nm) {
+Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     Node *node = NULL;
     switch (p_peek(p)->type) {
     case TK_INT_LITERAL:
@@ -141,7 +141,7 @@ Node *p_parse_term(Parser *p, NodeManager *nm) {
         p_consume_a(p, TK_CLOSE_PAREN);
         return node;
     default:
-        printf("Expected expression got ");
+        printf("Expected term got ");
         print_token_type(p_peek(p)->type);
         printf("\n");
         exit(1);
@@ -149,7 +149,19 @@ Node *p_parse_term(Parser *p, NodeManager *nm) {
 }
 
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
-    Node *lhs = p_parse_term(p, nm);
+    Node *lhs = p_parse_primary_expression(p, nm);
+    if (p_peek(p)->type == TK_OPEN_PAREN) {
+        Node *func_call = new_node(nm, N_FUNCTION_CALL);
+        func_call->function_call.identifier = lhs;
+        func_call->function_call.param_count = 0;
+        func_call->function_call.params = NULL;
+        p_consume(p);
+        while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
+            p_consume(p);
+        }
+        p_consume(p);
+        lhs = func_call;
+    }
 
     while (is_binary_operator(p_peek(p)->type) && !p_is_last_token(p) && precedence(p_peek(p)->type) >= min_prec) {
         const int prec = precedence(p_peek(p)->type);
@@ -163,6 +175,23 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     return lhs;
 }
 
+/*
+    Consumes either,
+    var decl
+    or
+    statement
+*/
+Node *p_parse_block_item(Parser *p, NodeManager *nm) {
+    switch (p_peek(p)->type) {
+    case TK_INT:
+    case TK_FLOAT:
+        return p_parse_var_declaration(p, nm);
+        break;
+    default:
+        return p_parse_statement(p, nm);
+        break;
+    }
+}
 /*
     Consumes
     `(type) identifier = [= expr]?;`
@@ -203,17 +232,17 @@ void p_append_declaration(Node *root, Node *decl) {
     Appends a statement to the given compound node,
     Resizes its statement array if necessary.
 */
-void p_append_statement(Node *root, Node *stmt) {
+void p_append_block_item(Node *root, Node *item) {
     if (root->compound.count >= root->compound.capacity) {
         root->compound.capacity *= 2;
-        root->compound.statements = realloc(root->compound.statements, sizeof(Node) * root->compound.capacity);
-        if (root->compound.statements == NULL) {
+        root->compound.items = realloc(root->compound.items, sizeof(Node) * root->compound.capacity);
+        if (!root->compound.items) {
             printf("Failed to append declaration");
             exit(1);
         }
     }
-    if (stmt != NULL) {
-        root->compound.statements[root->compound.count++] = stmt;
+    if (item != NULL) {
+        root->compound.items[root->compound.count++] = item;
     } else {
         printf("Skipping empty node\n");
     }
@@ -235,7 +264,7 @@ Node *p_parse_if_statement(Parser *p, NodeManager *nm) {
         if (p_peek(p)->type == TK_IF) {
             node->_if.if_false = p_parse_if_statement(p, nm);
         } else {
-            node->_if.if_false = p_parse_compound(p, nm);
+            node->_if.if_false = p_parse_statement(p, nm);
         }
     } else {
         node->_if.if_false = NULL;
@@ -249,7 +278,7 @@ Node *p_parse_while_loop(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_OPEN_PAREN);
     node->_while.cond = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
     p_consume_a(p, TK_CLOSE_PAREN);
-    node->_while.block = p_parse_compound(p, nm);
+    node->_while.block = p_parse_statement(p, nm);
     return node;
 }
 
@@ -259,14 +288,14 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_OPEN_PAREN);
     // Manually consume semi colons
     p->expect_semi = false;
-    node->_for.init = p_parse_statement(p, nm);
+    node->_for.init = p_parse_block_item(p, nm);
     p_consume_a(p, TK_SEMI);
-    node->_for.cond = p_parse_statement(p, nm);
+    node->_for.cond = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
     p_consume_a(p, TK_SEMI);
-    node->_for.iter = p_parse_statement(p, nm);
+    node->_for.iter = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
     p->expect_semi = true;
     p_consume_a(p, TK_CLOSE_PAREN);
-    node->_for.block = p_parse_compound(p, nm);
+    node->_for.block = p_parse_statement(p, nm);
     return node;
 }
 
@@ -280,7 +309,7 @@ Node *p_parse_return(Parser *p, NodeManager *nm) {
 
 Node *p_parse_var_assign(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_BINARY);
-    node->binary.lhs = p_parse_term(p, nm);
+    node->binary.lhs = p_parse_primary_expression(p, nm);
     node->binary.op = p_consume_a(p, TK_EQ)->type;
     node->binary.rhs = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
     p_consume_semi(p);
@@ -298,9 +327,6 @@ Node *p_parse_var_assign(Parser *p, NodeManager *nm) {
 */
 Node *p_parse_statement(Parser *p, NodeManager *nm) {
     switch (p_peek(p)->type) {
-    case TK_INT:
-    case TK_FLOAT:
-        return p_parse_var_declaration(p, nm);
     case TK_IF:
         return p_parse_if_statement(p, nm);
     case TK_WHILE:
@@ -310,13 +336,9 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
     case TK_RETURN:
         return p_parse_return(p, nm);
     case TK_IDENTIFIER:
-        if (p_peek_next(p)->type == TK_EQ) {
-            return p_parse_var_assign(p, nm);
-        } else {
-            Node *n = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-            p_consume_semi(p);
-            return n;
-        }
+        Node *n = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+        p_consume_semi(p);
+        return n;
     case TK_OPEN_CURLY:
         return p_parse_compound(p, nm);
     case TK_SEMI:
@@ -336,7 +358,7 @@ Node *p_parse_compound(Parser *p, NodeManager *nm) {
     Node *node = new_compound_node(nm);
     p_consume_a(p, TK_OPEN_CURLY);
     while (p_peek(p)->type != TK_CLOSE_CURLY && !p_is_last_token(p)) {
-        p_append_statement(node, p_parse_statement(p, nm));
+        p_append_block_item(node, p_parse_block_item(p, nm));
     }
     p_consume_a(p, TK_CLOSE_CURLY);
     return node;

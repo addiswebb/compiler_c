@@ -91,7 +91,9 @@ void ir_gen_compound(IR_Function *func, const Node *comp);
 void ir_gen_while_loop(IR_Function *func,const Node *_while);
 void ir_gen_for_loop(IR_Function *func,const Node *_for);
 void ir_gen_if_statement(IR_Function *func, const Node *_if);
+void ir_gen_var_decl(IR_Function *func, const Node *var_decl);
 void ir_gen_statement(IR_Function *func,const Node *stmt);
+void ir_gen_return(IR_Function *func, const Node *_return);
 IR_Function *ir_gen_function(const Node *func);
 IR_Module *ir_gen_translation_unit(const Node *tu);
 

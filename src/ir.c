@@ -281,10 +281,18 @@ int ir_gen_expression(IR_Function *func, const Node *expr) {
     exit(1);
 }
 
+void ir_gen_block_item(IR_Function *func, const Node *item) {
+    if (item->type == N_VAR_DECL) {
+        ir_gen_var_decl(func, item);
+    } else {
+        ir_gen_statement(func, item);
+    }
+}
+
 void ir_gen_compound(IR_Function *func, const Node *comp) {
     ir_begin_scope(func);
     for (int i = 0; i < comp->compound.count; i++) {
-        ir_gen_statement(func, comp->compound.statements[i]);
+        ir_gen_block_item(func, comp->compound.items[i]);
     }
     ir_end_scope(func);
 }
@@ -297,13 +305,13 @@ void ir_gen_while_loop(IR_Function *func, const Node *_while) {
     const IR_Instruction br_eq_instr = {IR_BR_EQ, cond_reg, block_id, end_id};
     ir_append_instruction(current_block(func), &br_eq_instr);
     ir_append_block(func, ir_new_block()); // block:
-    ir_gen_compound(func, _while->_while.block);
+    ir_gen_statement(func, _while->_while.block);
     const IR_Instruction br_instr = {IR_BR, cond_id, 0, 0};
     ir_append_instruction(current_block(func), &br_instr);
     ir_append_block(func, ir_new_block()); // end:
 }
 void ir_gen_for_loop(IR_Function *func, const Node *_for) {
-    ir_gen_statement(func, _for->_for.init);
+    ir_gen_block_item(func, _for->_for.init);
 
     const int cond_id = ir_append_block(func, ir_new_block()); // cond:
     const int block_id = cond_id + 1;
@@ -313,11 +321,10 @@ void ir_gen_for_loop(IR_Function *func, const Node *_for) {
     ir_append_instruction(current_block(func), &br_eq_instr);
 
     ir_append_block(func, ir_new_block()); // block:
-    ir_gen_compound(func, _for->_for.block);
+    ir_gen_statement(func, _for->_for.block);
     ir_gen_expression(func, _for->_for.iter);
     const IR_Instruction br_to_cond = {IR_BR, cond_id, 0, 0};
     ir_append_instruction(current_block(func), &br_to_cond);
-
     ir_append_block(func, ir_new_block()); // end:
 }
 
@@ -328,7 +335,7 @@ void ir_gen_if_statement(IR_Function *func, const Node *_if) {
     const IR_Instruction br_eq_instr = {IR_BR_EQ, cond_reg, if_true_id, if_false_id};
     ir_append_instruction(current_block(func), &br_eq_instr);
     ir_append_block(func, ir_new_block()); // IF true block
-    ir_gen_compound(func, _if->_if.if_true);
+    ir_gen_statement(func, _if->_if.if_true);
     if (_if->_if.if_false == NULL) { // No else, means branch to the end after compound
         const IR_Instruction br_instr = {IR_BR, if_false_id, 0, 0};
         ir_append_instruction(current_block(func), &br_instr);
@@ -344,7 +351,7 @@ void ir_gen_if_statement(IR_Function *func, const Node *_if) {
             const IR_Instruction br_instr = {IR_BR, end_id, 0, 0};
             ir_append_instruction(current_block(func), &br_instr);
             ir_append_block(func, ir_new_block()); // IF else or endblock
-            ir_gen_compound(func, _if->_if.if_false);
+            ir_gen_statement(func, _if->_if.if_false);
             const IR_Instruction br_end_instr = {IR_BR, end_id, 0, 0};
             ir_append_instruction(current_block(func), &br_end_instr);
             ir_append_block(func, ir_new_block()); // end
@@ -352,35 +359,26 @@ void ir_gen_if_statement(IR_Function *func, const Node *_if) {
     }
 }
 
+void ir_gen_var_decl(IR_Function *func, const Node *var_decl) {
+    if (var_decl->var_decl.type == TK_FLOAT) {
+        printf("Soz cant handle floats yet, only integers\n");
+        exit(1);
+    }
+    const int var_reg = ir_new_var(func, var_decl->var_decl.name);
+    const int expr_reg = ir_gen_expression(func, var_decl->var_decl.expr);
+    const IR_Instruction var_decl_instr = {IR_STORE, var_reg, expr_reg, 0};
+    ir_append_instruction(current_block(func), &var_decl_instr);
+    return;
+}
+
 void ir_gen_statement(IR_Function *func, const Node *stmt) {
     switch (stmt->type) {
-    case N_VAR_DECL: {
-        if (stmt->var_decl.type == TK_FLOAT) {
-            printf("Soz cant handle floats yet, only integers\n");
-            exit(1);
-        }
-        const int var_reg = ir_new_var(func, stmt->var_decl.name);
-        const int expr_reg = ir_gen_expression(func, stmt->var_decl.expr);
-        const IR_Instruction var_decl_instr = {IR_STORE, var_reg, expr_reg, 0};
-        ir_append_instruction(current_block(func), &var_decl_instr);
+    case N_RETURN:
+        ir_gen_return(func, stmt);
         return;
-    }
-    case N_RETURN: {
-        const int ret_reg = ir_gen_expression(func, stmt->_return.expr);
-        const IR_Instruction ret_instr = {IR_RET, ret_reg, 0, 0};
-        ir_append_instruction(current_block(func), &ret_instr);
-        return;
-    }
     case N_BINARY:
-        if (stmt->binary.op == TK_EQ && stmt->binary.lhs->type == N_IDENTIFIER) {
-            const int var_reg = ir_get_var_reg(func, stmt->binary.lhs->identifier.name);
-            const int expr_reg = ir_gen_expression(func, stmt->binary.rhs);
-            const IR_Instruction assign_instr = {IR_STORE, var_reg, expr_reg, 0};
-            ir_append_instruction(current_block(func), &assign_instr);
-            return;
-        }
-        printf("Given binary op statement that is not an assignment\n");
-        exit(1);
+        ir_gen_expression(func, stmt);
+        return;
     case N_COMPOUND:
         ir_gen_compound(func, stmt);
         return;
@@ -395,9 +393,17 @@ void ir_gen_statement(IR_Function *func, const Node *stmt) {
         return;
     default:
         // given invalid statement? probably an expression
-        printf("Dont know what to do with the given statemnet: ir_gen_statement\n");
+        printf("Dont know what to do with the given statemnet: ir_gen_statement: ");
+        print_node_type(stmt->type);
+        printf("\n");
         exit(1);
     }
+}
+
+void ir_gen_return(IR_Function *func, const Node *_return) {
+    const int ret_reg = ir_gen_expression(func, _return->_return.expr);
+    const IR_Instruction ret_instr = {IR_RET, ret_reg, 0, 0};
+    ir_append_instruction(current_block(func), &ret_instr);
 }
 
 IR_Function *ir_gen_function(const Node *func) {
