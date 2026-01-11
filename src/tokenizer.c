@@ -179,6 +179,7 @@ int associativity(const TokenType type) {
 
 int precedence(const TokenType type) {
     switch (type) {
+    case TK_EQ:
     case TK_PLUS:
     case TK_MINUS:
         return 0;
@@ -187,8 +188,6 @@ int precedence(const TokenType type) {
         return 1;
     case TK_EXP:
         return 2;
-    case TK_EQ:
-        return 14;
     default:
         print_token_type(type);
         printf("Tried to get the precedence of a token which is not a binary "

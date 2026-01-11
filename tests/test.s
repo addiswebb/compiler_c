@@ -37,12 +37,12 @@ block_2:
     movl %eax, -24(%rbp)
     movl -96(%rbp), %eax
     movl %eax, -40(%rbp)
-    movl -56(%rbp), %eax
-    movl %eax, -56(%rbp)
     movl $1, -96(%rbp)
     movl -56(%rbp), %eax
     addl -96(%rbp), %eax
     movl %eax, -104(%rbp)
+    movl -104(%rbp), %eax
+    movl %eax, -56(%rbp)
     jmp block_1
 block_3:
     movl -40(%rbp), %eax

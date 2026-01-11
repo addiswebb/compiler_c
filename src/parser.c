@@ -149,10 +149,10 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
 }
 
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
-    Node *lhs = p_parse_primary_expression(p, nm);
+    Node *primary = p_parse_primary_expression(p, nm);
     if (p_peek(p)->type == TK_OPEN_PAREN) {
         Node *func_call = new_node(nm, N_FUNCTION_CALL);
-        func_call->function_call.identifier = lhs;
+        func_call->function_call.identifier = primary;
         func_call->function_call.param_count = 0;
         func_call->function_call.params = NULL;
         p_consume(p);
@@ -160,7 +160,7 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
             p_consume(p);
         }
         p_consume(p);
-        lhs = func_call;
+        primary = func_call;
     }
 
     while (is_binary_operator(p_peek(p)->type) && !p_is_last_token(p) && precedence(p_peek(p)->type) >= min_prec) {
@@ -169,10 +169,10 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
         Node *binary = new_node(nm, N_BINARY);
         binary->binary.op = p_consume(p)->type;
         binary->binary.rhs = p_parse_expression(p, nm, prec + assoc);
-        binary->binary.lhs = lhs;
-        lhs = binary;
+        binary->binary.lhs = primary;
+        primary = binary;
     }
-    return lhs;
+    return primary;
 }
 
 /*

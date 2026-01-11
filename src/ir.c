@@ -264,7 +264,6 @@ int ir_gen_expression(IR_Function *func, const Node *expr) {
     case N_BINARY:
         const int a = ir_gen_expression(func, expr->binary.lhs);
         const int b = ir_gen_expression(func, expr->binary.rhs);
-        // TODO: Make this more consistent, two case N_BINARY which is necessary
         if (expr->binary.op == TK_EQ) {
             const IR_Instruction assign_instr = {IR_STORE, a, b, 0};
             ir_append_instruction(current_block(func), &assign_instr);
@@ -325,6 +324,7 @@ void ir_gen_for_loop(IR_Function *func, const Node *_for) {
     ir_gen_expression(func, _for->_for.iter);
     const IR_Instruction br_to_cond = {IR_BR, cond_id, 0, 0};
     ir_append_instruction(current_block(func), &br_to_cond);
+
     ir_append_block(func, ir_new_block()); // end:
 }
 
