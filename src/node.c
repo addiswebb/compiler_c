@@ -29,11 +29,11 @@ void free_node_manager(const NodeManager *nm) {
                 free(node->compound.items[j]);
             }
             free(node->compound.items);
-        } else if (node->type == N_FUNCTION && node->function.body->type == N_COMPOUND) {
-            for (int j = 0; j < node->function.body->compound.count; j++) {
-                free(node->function.body->compound.items[j]);
+        } else if (node->type == N_FUNCTION && node->func.body->type == N_COMPOUND) {
+            for (int j = 0; j < node->func.body->compound.count; j++) {
+                free(node->func.body->compound.items[j]);
             }
-            free(node->function.body->compound.items);
+            free(node->func.body->compound.items);
         }
     }
     free(nm->nodes);
@@ -109,10 +109,10 @@ void print_node_flat(const Node *node) {
         printf("count: %d", node->translation_unit.count);
         break;
     case N_FUNCTION:
-        printf("\tname: %s,\n", node->function.name);
-        printf("\tn_params: %d,\n", node->function.param_count);
+        printf("\tname: %s,\n", node->func.name);
+        printf("\tn_params: %d,\n", node->func.param_count);
         printf("\treturn type: ");
-        print_token_type(node->function.return_type);
+        print_token_type(node->func.return_type);
         printf(",\n");
         printf("\tbody: {}");
         break;
@@ -159,8 +159,8 @@ void print_node_flat(const Node *node) {
         printf("\tname: %s\n", node->identifier.name);
         break;
     case N_FUNCTION_CALL:
-        printf("\tname: %s\n", node->function_call.identifier->identifier.name);
-        printf("\tparam count: %d\n", node->function_call.param_count);
+        printf("\tname: %s\n", node->func_call.identifier->identifier.name);
+        printf("\tparam count: %d\n", node->func_call.param_count);
         break;
     default:
         printf("\t");
@@ -214,10 +214,18 @@ void print_node(const Node *node, const int depth) {
         }
         break;
     case N_FUNCTION:
-        printf(": [name= %s, params= %d, return_type= ", node->function.name, node->function.param_count);
-        print_token_type(node->function.return_type);
-        printf("]\n");
-        print_node(node->function.body, depth + 1);
+        printf(": [name= %s, param_count= %d, return_type= ", node->func.name, node->func.param_count);
+        print_token_type(node->func.return_type);
+        printf("]");
+        if (node->func.param_count > 0) {
+            printf(" { ");
+            for (int i = 0; i < node->func.param_count; i++) {
+                printf("int %s ", node->func.params[i]->var_decl.name);
+            }
+            printf("}");
+        }
+        printf("\n");
+        print_node(node->func.body, depth + 1);
         break;
     case N_VAR_DECL:
         printf(": [type= ");
@@ -253,7 +261,10 @@ void print_node(const Node *node, const int depth) {
         print_node(node->_for.block, depth + 1);
         break;
     case N_FUNCTION_CALL:
-        printf(": [name: %s, param_count: %d]\n", node->function_call.identifier->identifier.name, node->function_call.param_count);
+        printf(": [name: %s, param_count: %d]\n", node->func_call.identifier->identifier.name, node->func_call.param_count);
+        for (int i = 0; i < node->func_call.param_count; i++) {
+            print_node(node->func_call.params[i], depth + 1);
+        }
         break;
     default:
         printf("Tried to print an unknown node type\n");

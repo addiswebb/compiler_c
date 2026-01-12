@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define DEFAULT_STATEMENTS_PER_BLOCK 8
 
@@ -13,6 +14,9 @@ Parser new_parser() {
     parser.size = 0;
     parser.index = 0;
     parser.src = NULL;
+    parser.func_def_capacity = 0;
+    parser.func_def_count = 0;
+    parser.func_defs = NULL;
     return parser;
 }
 
@@ -21,6 +25,12 @@ void init_parser(Parser *p, TokenArray *src, const int size) {
     p->src = src;
     p->index = 0;
     p->expect_semi = true;
+    p->func_def_capacity = 4;
+    p->func_defs = malloc(sizeof(P_Func_Def) * p->func_def_capacity);
+    if (!p->func_defs) {
+        printf("Failed to allocate for func_defs\n");
+        exit(1);
+    }
 }
 
 /*
@@ -148,18 +158,50 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     }
 }
 
+Node *new_function_node(NodeManager *nm) {
+    Node *node = new_node(nm, N_FUNCTION);
+    node->func.body = NULL;
+    node->func.param_count = 0;
+    node->func.param_capacity = 4;
+    node->func.params = malloc(sizeof(Node) * node->func.param_capacity);
+    if (!node->func.params) {
+        printf("Failed to create new function node\n");
+        exit(1);
+    }
+    return node;
+}
+Node *new_function_call_node(NodeManager *nm, Node *identifier, int param_count) {
+    Node *node = new_node(nm, N_FUNCTION_CALL);
+    node->func_call.identifier = identifier;
+    node->func_call.param_capacity = param_count;
+    node->func_call.param_count = 0;
+    node->func_call.params = malloc(sizeof(Node) * param_count);
+    if (!node->func_call.params) {
+        printf("Failed to create new function call node\n");
+        exit(1);
+    }
+    return node;
+}
+
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     Node *primary = p_parse_primary_expression(p, nm);
     if (p_peek(p)->type == TK_OPEN_PAREN) {
-        Node *func_call = new_node(nm, N_FUNCTION_CALL);
-        func_call->function_call.identifier = primary;
-        func_call->function_call.param_count = 0;
-        func_call->function_call.params = NULL;
-        p_consume(p);
-        while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
-            p_consume(p);
+        p_consume(p); // '('
+        if (primary->type != N_IDENTIFIER) {
+            print_node_type(primary->type);
+            printf(" is not a function\n");
+            exit(1);
         }
-        p_consume(p);
+        Node *func_def = p_get_func_def(p, primary->identifier.name);
+        Node *func_call = new_function_call_node(nm, primary, func_def->func.param_count);
+
+        for (int i = 0; i < func_def->func.param_count; i++) {
+            p_add_call_param(func_call, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
+            if (i != func_def->func.param_count - 1) {
+                p_consume_a(p, TK_COMMA);
+            }
+        }
+        p_consume_a(p, TK_CLOSE_PAREN);
         primary = func_call;
     }
 
@@ -199,9 +241,8 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm) {
 */
 Node *p_parse_var_declaration(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_VAR_DECL);
-    node->var_decl.type = p_consume(p)->type;
-    p_expect(p, TK_IDENTIFIER);
-    node->var_decl.name = p_consume(p)->value;
+    node->var_decl.type = p_consume_a(p, TK_INT)->type;
+    node->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
     if (p_peek(p)->type == TK_EQ) {
         p_consume(p);
         node->var_decl.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
@@ -246,6 +287,52 @@ void p_append_block_item(Node *root, Node *item) {
     } else {
         printf("Skipping empty node\n");
     }
+}
+
+void p_append_param(Node *func, Node *param) {
+    if (func->func.param_count >= func->func.param_capacity) {
+        func->func.param_capacity *= 2;
+        func->func.params = realloc(func->func.params, sizeof(Node *) * func->func.param_capacity);
+        if (!func->func.params) {
+            printf("Failed to append params");
+            exit(1);
+        }
+    }
+    if (param != NULL) {
+        func->func.params[func->func.param_count++] = param;
+    }
+}
+
+void p_add_call_param(Node *func, Node *param) {
+    if (func->func_call.param_count >= func->func_call.param_capacity) {
+        printf("Tried adding too many call params to a function\n");
+        exit(1);
+    }
+    if (param != NULL) {
+        func->func_call.params[func->func_call.param_count++] = param;
+    }
+}
+
+void p_append_func_def(Parser *p, Node *func) {
+    if (p->func_def_count >= p->func_def_capacity) {
+        p->func_def_capacity *= 2;
+        p->func_defs = realloc(p->func_defs, sizeof(P_Func_Def) * p->func_def_capacity);
+        if (!p->func_defs) {
+            printf("Failed to realloc for func defs");
+            exit(1);
+        }
+    }
+    p->func_defs[p->func_def_count++] = (P_Func_Def){func->func.name, func};
+}
+
+Node *p_get_func_def(Parser *p, const char *name) {
+    for (int i = 0; i < p->func_def_count; i++) {
+        if (strcmp(p->func_defs[i].name, name) == 0) {
+            return p->func_defs[i].def;
+        }
+    }
+    printf("Tried to call %s which does not exist\n", name);
+    exit(1);
 }
 
 /*
@@ -363,26 +450,32 @@ Node *p_parse_compound(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_CLOSE_CURLY);
     return node;
 }
+
 /*
     Consumes
-    `(type) identifier ([var decl]*) {[statement]*}`
+    `(type) identifier ([var decl],*) {[statement]*}`
 
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
 Node *p_parse_function(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_FUNCTION);
-    node->function.return_type = p_consume(p)->type;
-    node->function.name = p_consume(p)->value;
+    Node *node = new_function_node(nm);
+    node->func.return_type = p_consume(p)->type;
+    node->func.name = p_consume(p)->value;
+
     p_consume_a(p, TK_OPEN_PAREN);
-    while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
-        // Skip all params for now...
-        p_skip(p);
+    while (p_peek(p)->type == TK_INT && p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
+        Node *param = new_node(nm, N_VAR_DECL);
+        param->var_decl.type = p_consume_a(p, TK_INT)->type;
+        param->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
+        param->var_decl.expr = NULL;
+        p_append_param(node, param);
+        if (p_peek(p)->type == TK_COMMA) p_consume(p);
+        else break;
     }
     p_consume_a(p, TK_CLOSE_PAREN);
-    node->function.param_count = 0;
-    node->function.params = NULL;
-    node->function.body = p_parse_compound(p, nm);
+    node->func.body = p_parse_compound(p, nm);
+    p_append_func_def(p, node);
     return node;
 }
 

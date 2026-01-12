@@ -109,10 +109,8 @@ int compile(Compiler *compiler) {
     init_parser(&compiler->p, &compiler->tk.tokens, compiler->tk.tokens.size);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
 
-    if (compiler->flags & COMP_FLAG_NODES)
-        print_nodes(&compiler->nm);
-    if (compiler->flags & COMP_FLAG_AST)
-        print_ast(&compiler->nm);
+    if (compiler->flags & COMP_FLAG_NODES) print_nodes(&compiler->nm);
+    if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 
     IR_Module *module = ir_gen_translation_unit(&compiler->nm.nodes[0]);
     if (compiler->flags & COMP_FLAG_IR) {
@@ -121,7 +119,8 @@ int compile(Compiler *compiler) {
 
     if (compiler->flags & COMP_FLAG_ASM) {
         FILE *fp = fopen(compiler->output_file, "w");
-        x86_gen_module(fp, module);
+        IR_Context ctx = {module, NULL, NULL};
+        x86_gen_module(fp, &ctx);
         fclose(fp);
     }
     ir_free_module(module);

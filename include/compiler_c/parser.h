@@ -8,11 +8,19 @@
 
 #define DEFAULT_STATEMENTS_PER_BLOCK 8
 
+typedef struct{
+    const char *name;
+    Node *def;
+} P_Func_Def;
+
 typedef struct {
     int index;
     int size;
     TokenArray *src;
     bool expect_semi;
+    P_Func_Def *func_defs;
+    int func_def_count;
+    int func_def_capacity;
 } Parser;
 
 Parser new_parser();
@@ -51,6 +59,8 @@ Node *init_translation_unit(NodeManager *nm);
     And allocates an array for its statements
 */
 Node *new_compound_node(NodeManager *nm);
+Node *new_function_node(NodeManager *nm);
+Node *new_function_call_node(NodeManager *nm, Node *identifier, int param_count);
 
 /*
     Consumes
@@ -82,8 +92,14 @@ Node *p_parse_var_declaration(Parser *p, NodeManager *nm);
 */
 void p_append_declaration(Node *root, Node *decl);
 
+void p_append_param(Node *func, Node *param);
+void p_add_call_param(Node *func, Node *param);
+
+void p_append_func_def(Parser *p, Node *func);
+Node *p_get_func_def(Parser *p, const char* name);
+
 /*
-    Appends a statement to the given compound node,
+    Appends a block item to the given compound node,
     Resizes its statement array if necessary.
 */
 void p_append_block_item(Node *root, Node *stmt);

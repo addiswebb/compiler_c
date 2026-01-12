@@ -31,10 +31,11 @@ struct Node {
         struct {
             const char *name;
             int param_count;
+            int param_capacity;
             Node **params;
             TokenType return_type;
             Node *body;
-        } function;
+        } func;
         struct {
             Node **items;
             int capacity;
@@ -88,8 +89,9 @@ struct Node {
         struct {
             Node *identifier;
             int param_count;
+            int param_capacity;
             Node **params;
-        } function_call;
+        } func_call;
     };
 };
 

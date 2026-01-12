@@ -11,9 +11,9 @@
     System V AMD 64
 */
 
-void x86_gen_instruction(FILE *fp, const IR_Instruction *instr);
-void x86_gen_block(FILE *fp, const IR_Block *block);
-void x86_gen_function(FILE *fp, const IR_Function *func);
-void x86_gen_module(FILE *fp, const IR_Module *module);
+void x86_gen_instruction(FILE *fp,IR_Context *ctx, const IR_Instruction *instr);
+void x86_gen_block(FILE *fp, IR_Context *ctx);
+void x86_gen_function(FILE *fp, IR_Context *ctx);
+void x86_gen_module(FILE *fp, IR_Context *ctx);
 
 #endif // COMPILER_C_X86_H
