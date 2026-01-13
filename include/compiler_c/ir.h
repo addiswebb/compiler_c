@@ -9,19 +9,27 @@ typedef enum{
     GT, // >
     GE, // >=
     EQ, // ==
-    NE, // !=
-} IR_BR_OP;
+    NEQ, // !=
+} IR_CMP_OP;
+
+typedef enum{
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    MOD,
+    AND,
+    OR,
+    XOR,
+    SHR,
+    SHL,
+} IR_BINOP_OP;
 
 typedef enum {
-    // Arithmetic
-    IR_ADD, IR_SUB, IR_MUL, IR_DIV, IR_MOD,
-    // Ops
-    IR_LOAD, IR_STORE, IR_RET, IR_CALL,IR_PUSH, IR_POP,
-    // Conditional
-    IR_BR, IR_BR_EQ,
-    // Bitwise
-    IR_AND, IR_OR, IR_XOR, IR_SHL, IR_SAR,
-    // Comparisons
+    IR_CONST,
+    IR_BINOP,
+    IR_LOAD, IR_STORE, IR_RET, IR_CALL,
+    IR_BR, IR_BR_COND,
     IR_CMP,
 } IR_OP;
 
@@ -33,8 +41,18 @@ typedef struct {
 typedef struct {
     IR_OP op;
     int dst;
-    int a;
-    int b;
+    union {
+        struct {int value;} iconst;
+        struct {int src;} mov;
+        struct {int addr; } load;
+        struct {int addr; } store;
+        struct {IR_BINOP_OP op; int lhs, rhs;} binop;
+        struct {IR_CMP_OP op; int lhs, rhs; } cmp;
+        struct {int callee; int *args; int arg_count;} call;
+        struct {int value;} ret;
+        struct {int label;} br;
+        struct {int cond, t_label, f_label;} br_cond;
+    };
 } IR_Instruction;
 
 typedef struct {
@@ -81,7 +99,8 @@ typedef struct{
     IR_Block *block;
 } IR_Context;
 
-IR_OP token_to_ir_op(TokenType type);
+IR_CMP_OP ir_cmp_op(const TokenType type);
+IR_BINOP_OP ir_bin_op(const TokenType type);
 
 /*
     Begin an IR Scope,
@@ -130,12 +149,14 @@ void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl);
 void ir_gen_statement(IR_Context *ctx,const Node *stmt);
 void ir_gen_return(IR_Context *ctx, const Node *_return);
 IR_Function *ir_gen_function(IR_Context *ctx, const Node *func);
-IR_Module *ir_gen_translation_unit(const Node *tu);
+IR_Module *ir_gen_translation_unit(IR_Context *ctx,const Node *tu);
 
+void print_bin_op(IR_BINOP_OP op);
+void print_cmp_op(IR_CMP_OP op);
 void print_ir_op(IR_OP op);
-void print_ir_instruction(const IR_Instruction *instr);
-void print_ir_block(const IR_Block *block);
-void print_ir_function(const IR_Function *func);
-void print_ir_module(const IR_Module *module);
+void print_ir_instruction(IR_Context *ctx,const IR_Instruction *instr);
+void print_ir_block(IR_Context *ctx, const IR_Block *block);
+void print_ir_function(IR_Context *ctx, const IR_Function *func);
+void print_ir_module(IR_Context *ctx,const IR_Module *module);
 
 #endif // COMPILER_C_IR_H

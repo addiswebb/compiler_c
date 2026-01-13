@@ -112,14 +112,14 @@ int compile(Compiler *compiler) {
     if (compiler->flags & COMP_FLAG_NODES) print_nodes(&compiler->nm);
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 
-    IR_Module *module = ir_gen_translation_unit(&compiler->nm.nodes[0]);
+    IR_Context ctx = {NULL, NULL, NULL};
+    IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
     if (compiler->flags & COMP_FLAG_IR) {
-        print_ir_module(module);
+        print_ir_module(&ctx,module);
     }
 
     if (compiler->flags & COMP_FLAG_ASM) {
         FILE *fp = fopen(compiler->output_file, "w");
-        IR_Context ctx = {module, NULL, NULL};
         x86_gen_module(fp, &ctx);
         fclose(fp);
     }

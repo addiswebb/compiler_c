@@ -289,49 +289,98 @@ int associativity(const TokenType type) {
     }
 }
 
+// int precedence(const TokenType type) {
+//     switch (type) {
+//     case TK_MULTIPLY:
+//     case TK_DIVIDE:
+//     case TK_MOD:
+//         return 0;
+//     case TK_PLUS:
+//     case TK_MINUS:
+//         return 1;
+//     case TK_SHR:
+//     case TK_SHL:
+//         return 2;
+//     case TK_LT:
+//     case TK_LE:
+//     case TK_GT:
+//     case TK_GE:
+//         return 3;
+//     case TK_EQ_EQ:
+//     case TK_NEQ:
+//         return 4;
+//     case TK_AND:
+//         return 5;
+//     case TK_XOR:
+//         return 6;
+//     case TK_OR:
+//         return 7;
+//     case TK_AND_AND:
+//         return 8;
+//     case TK_OR_OR:
+//         return 9;
+//     case TK_SHR_EQ:
+//     case TK_SHL_EQ:
+//     case TK_AND_EQ:
+//     case TK_XOR_EQ:
+//     case TK_OR_EQ:
+//         return 10;
+//     case TK_EQ:
+//     case TK_PLUS_EQ:
+//     case TK_MINUS_EQ:
+//     case TK_MULTIPLY_EQ:
+//     case TK_DIVIDE_EQ:
+//     case TK_MOD_EQ:
+//         return 11;
+//     default:
+//         printf("Tried to get the precedence of a token which is not a binary operator");
+//         print_token_type(type);
+//         exit(1);
+//     }
+// }
 int precedence(const TokenType type) {
     switch (type) {
     case TK_MULTIPLY:
     case TK_DIVIDE:
     case TK_MOD:
-        return 0;
+        return 11;
     case TK_PLUS:
     case TK_MINUS:
-        return 1;
+        return 10;
     case TK_SHR:
     case TK_SHL:
-        return 2;
+        return 9;
     case TK_LT:
     case TK_LE:
     case TK_GT:
     case TK_GE:
-        return 3;
+        return 8;
     case TK_EQ_EQ:
     case TK_NEQ:
-        return 4;
-    case TK_AND:
-        return 5;
-    case TK_XOR:
-        return 6;
-    case TK_OR:
         return 7;
+    case TK_AND:
+        return 6;
+    case TK_XOR:
+        return 5;
+    case TK_OR:
+        return 4;
     case TK_AND_AND:
-        return 8;
+        return 3;
     case TK_OR_OR:
-        return 9;
+        return 2;
     case TK_SHR_EQ:
     case TK_SHL_EQ:
     case TK_AND_EQ:
     case TK_XOR_EQ:
     case TK_OR_EQ:
-        return 10;
+        return 1;
     case TK_EQ:
     case TK_PLUS_EQ:
     case TK_MINUS_EQ:
     case TK_MULTIPLY_EQ:
     case TK_DIVIDE_EQ:
     case TK_MOD_EQ:
-        return 11;
+        return 0;
     default:
         printf("Tried to get the precedence of a token which is not a binary operator");
         print_token_type(type);
@@ -533,9 +582,7 @@ static TokenMatch t_match_operator(Tokenizer *tk) {
 
 static void t_consume_operator(Tokenizer *tk) {
     TokenMatch m = t_match_operator(tk);
-    printf("consume n: %d\n", m.n_chars);
     t_consume_n(tk, m.n_chars);
-    printf("buf: %s\n", tk->buf.buf);
     t_push_buffer(tk, m.type);
 }
 
