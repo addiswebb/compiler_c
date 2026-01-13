@@ -1,9 +1,9 @@
 #include <compiler_c/ir.h>
 #include <compiler_c/x86.h>
 
-static int ir_reg_to_rbp(const int a) {
+static int offset(const int a) {
     if (a < 0) {
-        return -ir_reg_to_rbp(a * -1);
+        return -offset(a * -1);
     }
     return -(a * 8 + 8);
 }
@@ -11,34 +11,68 @@ static int ir_reg_to_rbp(const int a) {
 void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_ADD:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->a));
-        fprintf(fp, "    addl %d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->b));
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    addl %d(%%rbp), %%eax\n", offset(instr->b));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
         break;
     case IR_SUB:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->a));
-        fprintf(fp, "    subl %d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->b));
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    subl %d(%%rbp), %%eax\n", offset(instr->b));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
         break;
     case IR_MUL:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->a));
-        fprintf(fp, "    imull %d(%%rbp)\n", ir_reg_to_rbp(instr->b));
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    imull %d(%%rbp)\n", offset(instr->b));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
         break;
     case IR_DIV:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->a));
-        fprintf(fp, "    idivl %d(%%rbp)\n", ir_reg_to_rbp(instr->b));
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    cltd\n");
+        fprintf(fp, "    idivl %d(%%rbp)\n", offset(instr->b));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        break;
+    case IR_MOD:
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    cltd\n");
+        fprintf(fp, "    idivl %d(%%rbp)\n", offset(instr->b));
+        fprintf(fp, "    movl %%edx, %d(%%rbp)\n", offset(instr->dst));
+        break;
+    case IR_AND:
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    andl %d(%%rbp)\n", offset(instr->b));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        break;
+    case IR_OR:
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    orl %d(%%rbp)\n", offset(instr->b));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        break;
+    case IR_XOR:
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    xorl %d(%%rbp)\n", offset(instr->b));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        break;
+    case IR_SHL:
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    movl %d(%%rbp), %%ecx\n", offset(instr->b));
+        fprintf(fp, "    shll %%cl %%eax\n");
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        break;
+    case IR_SAR:
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    movl %d(%%rbp), %%ecx\n", offset(instr->b));
+        fprintf(fp, "    sarl %%cl %%eax\n");
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
         break;
     case IR_LOAD:
-        fprintf(fp, "    movl $%d, %d(%%rbp)\n", instr->a, ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    movl $%d, %d(%%rbp)\n", instr->a, offset(instr->dst));
         break;
     case IR_STORE:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->a));
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->a));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
         break;
     case IR_RET:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->dst));
         fprintf(fp, "    mov %%rbp, %%rsp\n");
         fprintf(fp, "    pop %%rbp\n");
         fprintf(fp, "    ret\n");
@@ -47,17 +81,17 @@ void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr)
         fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->dst);
         break;
     case IR_BR_EQ:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->dst));
         fprintf(fp, "    testl %%eax, %%eax\n");
         fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->b);
         break;
     case IR_CALL:
         fprintf(fp, "    call %s\n", ctx->module->defs[instr->dst].name);
         fprintf(fp, "    add $%d, %%rsp\n", instr->b * 8);
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", ir_reg_to_rbp(instr->a));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->a));
         break;
     case IR_PUSH:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", ir_reg_to_rbp(instr->dst));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->dst));
         fprintf(fp, "    push %%rax\n");
         break;
     default:

@@ -36,13 +36,20 @@ typedef enum {
     TK_RETURN,
     TK_VOID,
     TK_WHILE,
-    // Special Characters
+    // Binary Operators
     TK_EQ,
     TK_SEMI,
     TK_PLUS,
     TK_MINUS,
     TK_MULTIPLY,
     TK_DIVIDE,
+    TK_MOD,
+    TK_AND,
+    TK_OR,
+    TK_XOR,
+    TK_SHL,
+    TK_SAR,
+    // Semantics
     TK_OPEN_PAREN,
     TK_CLOSE_PAREN,
     TK_OPEN_CURLY,
@@ -52,7 +59,6 @@ typedef enum {
     TK_INT_LITERAL,
     TK_FLT_LITERAL,
     TK_EXPR,
-    TK_EXP,
     TK_IDENTIFIER,
 } TokenType;
 

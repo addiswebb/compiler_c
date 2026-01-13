@@ -4,9 +4,9 @@ bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <=
 
 bool is_digit(const char c) { return c >= '0' && c <= '9'; }
 
-bool is_alpha_num(const char c) { return is_alpha(c) || is_digit(c); }
+bool is_alpha_num(const char c) { return is_alpha(c) || is_digit(c) || c == '_'; }
 
-bool is_alpha_str(const char *c) {
+bool is_alpha_numeric_str(const char *c) {
     int i = 0;
     while (c[i++] != '\0') {
         if (!is_alpha(c[i])) {

@@ -74,7 +74,7 @@ void print_token_type(const TokenType type) {
     case TK_DIVIDE:
         printf("\'/\'");
         break;
-    case TK_EXP:
+    case TK_XOR:
         printf("\'^\'");
         break;
     case TK_EXPR:
@@ -152,7 +152,7 @@ bool is_binary_operator(const TokenType type) {
     case TK_MINUS:
     case TK_MULTIPLY:
     case TK_DIVIDE:
-    case TK_EXP:
+    case TK_XOR:
     case TK_EQ:
         return true;
     default:
@@ -168,7 +168,7 @@ int associativity(const TokenType type) {
     case TK_DIVIDE:
         return LEFT_ASSOCIATIVITY;
     case TK_EQ:
-    case TK_EXP:
+    case TK_XOR:
         return RIGHT_ASSOCIATIVITY;
     default:
         printf("Tried to get the associativity of a token which is not a binary "
@@ -186,7 +186,7 @@ int precedence(const TokenType type) {
     case TK_MULTIPLY:
     case TK_DIVIDE:
         return 1;
-    case TK_EXP:
+    case TK_XOR:
         return 2;
     default:
         print_token_type(type);
@@ -306,7 +306,7 @@ TokenType char_to_token_type(const char c) {
     case '/':
         return TK_DIVIDE;
     case '^':
-        return TK_EXP;
+        return TK_XOR;
     case '=':
         return TK_EQ;
     case '(':

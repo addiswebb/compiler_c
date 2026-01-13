@@ -36,11 +36,11 @@ mul_0:
     mov %rbp, %rsp
     pop %rbp
     ret
-sumToN:
+sum_to_n:
     push %rbp
     mov %rsp, %rbp
     subq $96, %rsp
-sumToN_0:
+sum_to_n_0:
     movl 16(%rbp), %eax
     movl %eax, -8(%rbp)
     movl $0, -24(%rbp)
@@ -52,7 +52,7 @@ sumToN_0:
     movl $1, -48(%rbp)
     movl -48(%rbp), %eax
     movl %eax, -32(%rbp)
-sumToN_1:
+sum_to_n_1:
     movl -8(%rbp), %eax
     subl -32(%rbp), %eax
     movl %eax, -56(%rbp)
@@ -62,8 +62,8 @@ sumToN_1:
     movl %eax, -72(%rbp)
     movl -72(%rbp), %eax
     testl %eax, %eax
-    jz sumToN_3
-sumToN_2:
+    jz sum_to_n_3
+sum_to_n_2:
     movl -16(%rbp), %eax
     addl -32(%rbp), %eax
     movl %eax, -80(%rbp)
@@ -75,8 +75,8 @@ sumToN_2:
     movl %eax, -88(%rbp)
     movl -88(%rbp), %eax
     movl %eax, -32(%rbp)
-    jmp sumToN_1
-sumToN_3:
+    jmp sum_to_n_1
+sum_to_n_3:
     movl -16(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp
@@ -160,7 +160,7 @@ main_0:
     movl $10, -96(%rbp)
     movl -96(%rbp), %eax
     push %rax
-    call sumToN
+    call sum_to_n
     add $8, %rsp
     movl %eax, -104(%rbp)
     movl -104(%rbp), %eax

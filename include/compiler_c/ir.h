@@ -3,7 +3,27 @@
 
 #include "node.h"
 
-typedef enum { IR_ADD, IR_SUB, IR_MUL, IR_DIV, IR_LOAD, IR_STORE, IR_RET, IR_BR, IR_BR_EQ, IR_CALL, IR_PUSH, IR_POP } IR_OP;
+typedef enum{
+    LT, // <
+    LE, // <=
+    GT, // >
+    GE, // >=
+    EQ, // ==
+    NE, // !=
+} IR_BR_OP;
+
+typedef enum {
+    // Arithmetic
+    IR_ADD, IR_SUB, IR_MUL, IR_DIV, IR_MOD,
+    // Ops
+    IR_LOAD, IR_STORE, IR_RET, IR_CALL,IR_PUSH, IR_POP,
+    // Conditional
+    IR_BR, IR_BR_EQ,
+    // Bitwise
+    IR_AND, IR_OR, IR_XOR, IR_SHL, IR_SAR,
+    // Comparisons
+    IR_CMP,
+} IR_OP;
 
 typedef struct {
     const char *name;

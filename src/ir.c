@@ -1,4 +1,5 @@
 
+#include "compiler_c/tokenizer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +17,16 @@ IR_OP token_to_ir_op(const TokenType type) {
         return IR_MUL;
     case TK_DIVIDE:
         return IR_DIV;
+    case TK_AND:
+        return IR_AND;
+    case TK_OR:
+        return IR_OR;
+    case TK_XOR:
+        return IR_XOR;
+    case TK_SHL:
+        return IR_SHL;
+    case TK_SAR:
+        return IR_SAR;
     default:
         printf("Given an unsupported token to convert to IR_Op: ");
         print_token_type(type);
@@ -524,6 +535,9 @@ void print_ir_op(const IR_OP op) {
     case IR_DIV:
         printf("DIV   ");
         return;
+    case IR_MOD:
+        printf("DIV   ");
+        return;
     case IR_LOAD:
         printf("LOAD  ");
         return;
@@ -548,8 +562,21 @@ void print_ir_op(const IR_OP op) {
     case IR_POP:
         printf("POP   ");
         return;
-    default:
-        printf("!!!   ");
+    case IR_AND:
+        printf("AND   ");
+        return;
+    case IR_OR:
+        printf("OR    ");
+        return;
+    case IR_XOR:
+        printf("XOR   ");
+        return;
+    case IR_SHL:
+        printf("SHL   ");
+        return;
+    case IR_SAR:
+        printf("SAR   ");
+        return;
     }
 }
 

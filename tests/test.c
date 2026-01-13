@@ -8,7 +8,7 @@ int mul(int x, int y) {
     return r;
 }
 
-int sumToN(int n) {
+int sum_to_n(int n) {
     int sum = 0;
     int i = 0;
 
@@ -39,7 +39,7 @@ int main() {
     int s = add(a, b);
     int p = mul(s, c);
 
-    int t = sumToN(10);
+    int t = sum_to_n(10);
     int m = mixed(a, b, c);
 
     int result = p + t + m;
