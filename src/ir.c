@@ -369,7 +369,7 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
         }
         func_call.dst = ir_next_reg(ctx->func);
         ir_append_instruction(ctx->block, &func_call);
-        return func_call.call.callee;
+        return func_call.dst;
     default:
         break;
     }
@@ -683,7 +683,7 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
         printf("    RET r%d", instr->ret.value);
         break;
     case IR_CALL:
-        printf("    r%d = CALL %s, r%d:", instr->dst, ctx->module->defs[instr->call.callee].name, instr->call.arg_count);
+        printf("    r%d = CALL %s, %d:", instr->dst, ctx->module->defs[instr->call.callee].name, instr->call.arg_count);
         printf("[ ");
         for (int i = 0; i < instr->call.arg_count; i++) {
             printf("r%d", instr->call.args[i]);

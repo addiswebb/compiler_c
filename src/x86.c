@@ -71,29 +71,24 @@ void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr)
     case IR_LOAD:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->load.addr));
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-        fprintf(fp, ";; load\n");
         break;
     case IR_STORE:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->store.addr));
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-        fprintf(fp, ";; store\n");
         break;
     case IR_RET:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->ret.value));
         fprintf(fp, "    mov %%rbp, %%rsp\n");
         fprintf(fp, "    pop %%rbp\n");
         fprintf(fp, "    ret\n");
-        fprintf(fp, ";; ret\n");
         break;
     case IR_BR:
         fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.label);
-        fprintf(fp, ";; br\n");
         break;
     case IR_CMP:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->br_cond.cond));
         fprintf(fp, "    testl %%eax, %%eax\n");
         fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_label);
-        fprintf(fp, ";; cmp\n");
         break;
     case IR_CALL:
         for (int i = 0; i < instr->call.arg_count; i++) {
@@ -103,18 +98,15 @@ void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr)
         fprintf(fp, "    call %s\n", ctx->module->defs[instr->call.callee].name);
         fprintf(fp, "    add $%d, %%rsp\n", instr->call.arg_count * 8);
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-        fprintf(fp, ";; call\n");
         break;
     case IR_CONST:
         fprintf(fp, "    movl $%d, %%eax\n", instr->iconst.value);
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-        fprintf(fp, ";; const\n");
         break;
     case IR_BR_COND:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->br_cond.cond));
         fprintf(fp, "    testl %%eax, %%eax\n");
         fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_label);
-        fprintf(fp, ";; brcond\n");
         break;
     }
 }
