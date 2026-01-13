@@ -125,8 +125,74 @@ void print_token_type(const TokenType type) {
     case TK_FOR:
         printf("For");
         break;
-    default:
-        printf("Undefined: %d", type);
+    case TK_MOD:
+        printf("\'%%\'");
+        break;
+    case TK_EQ_EQ:
+        printf("\'==\'");
+        break;
+    case TK_PLUS_EQ:
+        printf("\'+=\'");
+        break;
+    case TK_MINUS_EQ:
+        printf("\'-=\'");
+        break;
+    case TK_MULTIPLY_EQ:
+        printf("\'*=\'");
+        break;
+    case TK_DIVIDE_EQ:
+        printf("\'/=\'");
+        break;
+    case TK_MOD_EQ:
+        printf("\'%%=\'");
+        break;
+    case TK_NEQ:
+        printf("\'!=\'");
+        break;
+    case TK_LT:
+        printf("\'<\'");
+        break;
+    case TK_LE:
+        printf("\'<=\'");
+        break;
+    case TK_GT:
+        printf("\'>\'");
+        break;
+    case TK_GE:
+        printf("\'>=\'");
+        break;
+    case TK_SHL:
+        printf("\'<<\'");
+        break;
+    case TK_SHR:
+        printf("\'>>\'");
+        break;
+    case TK_SHL_EQ:
+        printf("\'<<=\'");
+        break;
+    case TK_SHR_EQ:
+        printf("\'>>=\'");
+        break;
+    case TK_AND:
+        printf("\'&\'");
+        break;
+    case TK_AND_AND:
+        printf("\'&&\'");
+        break;
+    case TK_AND_EQ:
+        printf("\'&=\'");
+        break;
+    case TK_OR:
+        printf("\'|\'");
+        break;
+    case TK_OR_OR:
+        printf("\'||\'");
+        break;
+    case TK_OR_EQ:
+        printf("\'|=\'");
+        break;
+    case TK_XOR_EQ:
+        printf("\'^=\'");
         break;
     }
 }
@@ -154,6 +220,29 @@ bool is_binary_operator(const TokenType type) {
     case TK_DIVIDE:
     case TK_XOR:
     case TK_EQ:
+    case TK_AND_AND:
+    case TK_AND_EQ:
+    case TK_EQ_EQ:
+    case TK_GE:
+    case TK_GT:
+    case TK_LE:
+    case TK_LT:
+    case TK_DIVIDE_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_OR_EQ:
+    case TK_OR_OR:
+    case TK_NEQ:
+    case TK_PLUS_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+    case TK_XOR_EQ:
+    case TK_SHL:
+    case TK_SHR:
+    case TK_OR:
+    case TK_AND:
+    case TK_MOD:
+    case TK_MOD_EQ:
         return true;
     default:
         return false;
@@ -162,13 +251,36 @@ bool is_binary_operator(const TokenType type) {
 
 int associativity(const TokenType type) {
     switch (type) {
-    case TK_PLUS:
-    case TK_MINUS:
     case TK_MULTIPLY:
     case TK_DIVIDE:
-        return LEFT_ASSOCIATIVITY;
-    case TK_EQ:
+    case TK_MOD:
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_SHR:
+    case TK_SHL:
+    case TK_LT:
+    case TK_LE:
+    case TK_GT:
+    case TK_GE:
+    case TK_EQ_EQ:
+    case TK_NEQ:
+    case TK_AND:
     case TK_XOR:
+    case TK_OR:
+    case TK_AND_AND:
+    case TK_OR_OR:
+        return LEFT_ASSOCIATIVITY;
+    case TK_SHR_EQ:
+    case TK_SHL_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_OR_EQ:
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
         return RIGHT_ASSOCIATIVITY;
     default:
         printf("Tried to get the associativity of a token which is not a binary "
@@ -179,19 +291,50 @@ int associativity(const TokenType type) {
 
 int precedence(const TokenType type) {
     switch (type) {
-    case TK_EQ:
-    case TK_PLUS:
-    case TK_MINUS:
-        return 0;
     case TK_MULTIPLY:
     case TK_DIVIDE:
+    case TK_MOD:
+        return 0;
+    case TK_PLUS:
+    case TK_MINUS:
         return 1;
-    case TK_XOR:
+    case TK_SHR:
+    case TK_SHL:
         return 2;
+    case TK_LT:
+    case TK_LE:
+    case TK_GT:
+    case TK_GE:
+        return 3;
+    case TK_EQ_EQ:
+    case TK_NEQ:
+        return 4;
+    case TK_AND:
+        return 5;
+    case TK_XOR:
+        return 6;
+    case TK_OR:
+        return 7;
+    case TK_AND_AND:
+        return 8;
+    case TK_OR_OR:
+        return 9;
+    case TK_SHR_EQ:
+    case TK_SHL_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_OR_EQ:
+        return 10;
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+        return 11;
     default:
+        printf("Tried to get the precedence of a token which is not a binary operator");
         print_token_type(type);
-        printf("Tried to get the precedence of a token which is not a binary "
-               "operator");
         exit(1);
     }
 }
@@ -244,23 +387,39 @@ static char t_peek_next(const Tokenizer *tk) {
     return tk->src[tk->index + 1];
 }
 
+static char t_peek_n(const Tokenizer *tk, int n) {
+    if (tk->index + n > tk->size) {
+        printf("t_peek_n Tried peeking past eof\n");
+        return '\0';
+    }
+    return tk->src[tk->index + n];
+}
+
+static void t_consume_n(Tokenizer *tk, int n) {
+    if (tk->index + n > tk->size) {
+        printf("T_Consume Reached the end of the file");
+        exit(1);
+    } else {
+
+        for (int i = 0; i < n; i++) {
+            tk->buf.buf[tk->buf.size++] = tk->src[tk->index++];
+        }
+    }
+}
 /*
     Append the current char to buffer and step forward
 */
-static void t_consume(Tokenizer *tk) {
-    if (!t_is_eof(tk)) {
-        tk->buf.buf[tk->buf.size++] = tk->src[tk->index++];
-    } else {
-        printf("T_Consume Reached the end of the file");
-    }
-}
-static void t_skip(Tokenizer *tk) {
-    if (!t_is_eof(tk)) {
-        tk->index++;
-    } else {
+static void t_consume(Tokenizer *tk) { t_consume_n(tk, 1); }
+
+static void t_skip_n(Tokenizer *tk, int n) {
+    if (tk->index + n > tk->size) {
         printf("T_Skip Reached end of the file");
+        exit(1);
+    } else {
+        tk->index += n;
     }
 }
+static void t_skip(Tokenizer *tk) { t_skip_n(tk, 1); }
 
 static void t_push_buffer(Tokenizer *tk, const TokenType type) {
     if (tk->buf.size == 0) {
@@ -293,37 +452,6 @@ static void t_parse_and_push_buffer(Tokenizer *tk) {
     ta_push(&tk->tokens, token);
 }
 
-TokenType char_to_token_type(const char c) {
-    switch (c) {
-    case ';':
-        return TK_SEMI;
-    case '+':
-        return TK_PLUS;
-    case '-':
-        return TK_MINUS;
-    case '*':
-        return TK_MULTIPLY;
-    case '/':
-        return TK_DIVIDE;
-    case '^':
-        return TK_XOR;
-    case '=':
-        return TK_EQ;
-    case '(':
-        return TK_OPEN_PAREN;
-    case ')':
-        return TK_CLOSE_PAREN;
-    case '{':
-        return TK_OPEN_CURLY;
-    case '}':
-        return TK_CLOSE_CURLY;
-    case ',':
-        return TK_COMMA;
-    default:
-        return TK_IDENTIFIER;
-    }
-}
-
 static void t_skip_comments(Tokenizer *tk) {
     t_skip(tk); // '/'
     // Single line comment
@@ -343,9 +471,105 @@ static void t_skip_comments(Tokenizer *tk) {
     }
 }
 
-// Change to Token* [Array of tokens]
+static int is_op_start(char c) {
+    switch (c) {
+    case '+':
+    case '-':
+    case '*':
+    case '/':
+    case '%':
+    case '=':
+    case '!':
+    case '<':
+    case '>':
+    case '|':
+    case '&':
+    case '^':
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+static TokenMatch t_match_operator(Tokenizer *tk) {
+    const char next = t_peek_next(tk);
+    const int eq = next == '=';
+    switch (t_peek(tk)) {
+    case '+':
+        return eq ? (TokenMatch){TK_PLUS_EQ, 2} : (TokenMatch){TK_PLUS, 1};
+    case '-':
+        return eq ? (TokenMatch){TK_MINUS_EQ, 2} : (TokenMatch){TK_MINUS, 1};
+    case '*':
+        return eq ? (TokenMatch){TK_MULTIPLY_EQ, 2} : (TokenMatch){TK_MULTIPLY, 1};
+    case '/':
+        return eq ? (TokenMatch){TK_DIVIDE_EQ, 2} : (TokenMatch){TK_DIVIDE, 1};
+    case '=':
+        return eq ? (TokenMatch){TK_EQ_EQ, 2} : (TokenMatch){TK_EQ, 1};
+    case '^':
+        return eq ? (TokenMatch){TK_XOR_EQ, 2} : (TokenMatch){TK_XOR, 1};
+    case '!':
+        if (eq) return (TokenMatch){TK_NEQ, 2};
+        printf("Unexpected \'!\'");
+        exit(1);
+    case '&':
+        return next == '&' ? (TokenMatch){TK_AND_AND, 2} : (eq) ? (TokenMatch){TK_AND_EQ, 2} : (TokenMatch){TK_AND, 1};
+    case '|':
+        return next == '|' ? (TokenMatch){TK_OR_OR, 2} : (eq) ? (TokenMatch){TK_OR_EQ, 2} : (TokenMatch){TK_OR, 1};
+    case '<':
+        if (next == '<') {
+            return t_peek_n(tk, 2) == '=' ? (TokenMatch){TK_SHL_EQ, 3} : (TokenMatch){TK_SHL, 2};
+        }
+        return eq ? (TokenMatch){TK_LE, 2} : (TokenMatch){TK_LT, 1};
+    case '>':
+        if (next == '>') {
+            return t_peek_n(tk, 2) == '=' ? (TokenMatch){TK_SHR_EQ, 3} : (TokenMatch){TK_SHR, 2};
+        }
+        return eq ? (TokenMatch){TK_GE, 2} : (TokenMatch){TK_GT, 1};
+    default:
+        printf("Unknown operator");
+        exit(1);
+    }
+}
+
+static void t_consume_operator(Tokenizer *tk) {
+    TokenMatch m = t_match_operator(tk);
+    printf("consume n: %d\n", m.n_chars);
+    t_consume_n(tk, m.n_chars);
+    printf("buf: %s\n", tk->buf.buf);
+    t_push_buffer(tk, m.type);
+}
+
+static void t_consume_special_char(Tokenizer *tk) {
+    TokenType type;
+    switch (t_peek(tk)) {
+    case '(':
+        type = TK_OPEN_PAREN;
+        break;
+    case ')':
+        type = TK_CLOSE_PAREN;
+        break;
+    case '{':
+        type = TK_OPEN_CURLY;
+        break;
+    case '}':
+        type = TK_CLOSE_CURLY;
+        break;
+    case ';':
+        type = TK_SEMI;
+        break;
+    case ',':
+        type = TK_COMMA;
+        break;
+    default:
+        printf("Unexpected \'%c\'\n", t_peek(tk));
+        exit(1);
+        return;
+    }
+    t_consume(tk);
+    t_push_buffer(tk, type);
+}
+
 void t_tokenize(Tokenizer *tk) {
-    // Loop until eof
     while (!t_is_eof(tk)) {
         const char c = t_peek(tk);
         if (is_digit(c)) {
@@ -374,9 +598,11 @@ void t_tokenize(Tokenizer *tk) {
         } else if (t_peek(tk) == '/') {
             t_skip_comments(tk);
         } else {
-            // Handle special cases
-            t_consume(tk);
-            t_push_buffer(tk, char_to_token_type(c));
+            if (is_op_start(c)) {
+                t_consume_operator(tk);
+            } else {
+                t_consume_special_char(tk);
+            }
         }
     }
 }

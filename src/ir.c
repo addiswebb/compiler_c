@@ -1,11 +1,11 @@
 
-#include "compiler_c/tokenizer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <compiler_c/ir.h>
 #include <compiler_c/node.h>
+#include "compiler_c/tokenizer.h"
 
 IR_OP token_to_ir_op(const TokenType type) {
     switch (type) {
@@ -25,8 +25,31 @@ IR_OP token_to_ir_op(const TokenType type) {
         return IR_XOR;
     case TK_SHL:
         return IR_SHL;
-    case TK_SAR:
+    case TK_SHR:
         return IR_SAR;
+    case TK_MOD:
+        return IR_MOD;
+    case TK_LT:
+    case TK_LE:
+    case TK_GT:
+    case TK_GE:
+        return IR_CMP;
+    case TK_EQ_EQ:
+    case TK_NEQ:
+    case TK_AND_AND:
+    case TK_OR_OR:
+    case TK_SHR_EQ:
+    case TK_SHL_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_OR_EQ:
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+        return IR_STORE;
     default:
         printf("Given an unsupported token to convert to IR_Op: ");
         print_token_type(type);
@@ -577,6 +600,9 @@ void print_ir_op(const IR_OP op) {
     case IR_SAR:
         printf("SAR   ");
         return;
+    case IR_CMP:
+        printf("CMP   ");
+        break;
     }
 }
 

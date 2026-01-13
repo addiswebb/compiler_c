@@ -37,27 +37,22 @@ typedef enum {
     TK_VOID,
     TK_WHILE,
     // Binary Operators
-    TK_EQ,
-    TK_SEMI,
-    TK_PLUS,
-    TK_MINUS,
-    TK_MULTIPLY,
-    TK_DIVIDE,
-    TK_MOD,
-    TK_AND,
-    TK_OR,
-    TK_XOR,
-    TK_SHL,
-    TK_SAR,
+    TK_EQ, TK_PLUS, TK_MINUS, TK_MULTIPLY, TK_DIVIDE, TK_MOD,
+    TK_EQ_EQ, TK_PLUS_EQ, TK_MINUS_EQ, TK_MULTIPLY_EQ, TK_DIVIDE_EQ, TK_MOD_EQ,
+    TK_NEQ,
+    TK_LT, TK_LE, TK_GT, TK_GE,
+    TK_SHL, TK_SHR,
+    TK_SHL_EQ, TK_SHR_EQ,
+    TK_AND, TK_AND_AND, TK_AND_EQ,
+    TK_OR, TK_OR_OR, TK_OR_EQ,
+    TK_XOR, TK_XOR_EQ,
     // Semantics
-    TK_OPEN_PAREN,
-    TK_CLOSE_PAREN,
-    TK_OPEN_CURLY,
-    TK_CLOSE_CURLY,
+    TK_OPEN_PAREN, TK_CLOSE_PAREN,
+    TK_OPEN_CURLY, TK_CLOSE_CURLY,
     TK_COMMA,
+    TK_SEMI,
     // Other
-    TK_INT_LITERAL,
-    TK_FLT_LITERAL,
+    TK_INT_LITERAL, TK_FLT_LITERAL,
     TK_EXPR,
     TK_IDENTIFIER,
 } TokenType;
@@ -80,6 +75,11 @@ typedef struct {
     TokenArray tokens;
     Buffer buf;
 } Tokenizer;
+
+typedef struct{
+    TokenType type;
+    int n_chars;
+}TokenMatch;
 
 void ta_init(TokenArray *arr);
 void print_token_type(TokenType type);
