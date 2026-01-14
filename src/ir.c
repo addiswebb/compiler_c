@@ -9,6 +9,10 @@
 
 IR_CMP_OP ir_cmp_op(const TokenType type) {
     switch (type) {
+    case TK_EQ_EQ:
+        return EQ;
+    case TK_NEQ:
+        return NEQ;
     case TK_LT:
         return LT;
     case TK_LE:
@@ -17,10 +21,6 @@ IR_CMP_OP ir_cmp_op(const TokenType type) {
         return GT;
     case TK_GE:
         return GE;
-    case TK_EQ:
-        return EQ;
-    case TK_NEQ:
-        return NEQ;
     default:
         printf("Given an unsupported token to convert to IR cmp op: ");
         print_token_type(type);
@@ -345,14 +345,25 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
             ir_append_instruction(ctx->block, &assign_instr);
             return lhs;
         }
-        IR_Instruction binop;
-        binop.op = IR_BINOP;
-        binop.binop.op = ir_bin_op(expr->binary.op);
-        binop.binop.lhs = lhs;
-        binop.binop.rhs = rhs;
-        binop.dst = ir_next_reg(ctx->func);
-        ir_append_instruction(ctx->block, &binop);
-        return binop.dst;
+        if (is_comparison_op(expr->binary.op)) {
+            IR_Instruction cmp;
+            cmp.op = IR_CMP;
+            cmp.cmp.op = ir_cmp_op(expr->binary.op);
+            cmp.cmp.lhs = lhs;
+            cmp.cmp.rhs = rhs;
+            cmp.dst = ir_next_reg(ctx->func);
+            ir_append_instruction(ctx->block, &cmp);
+            return cmp.dst;
+        } else {
+            IR_Instruction binop;
+            binop.op = IR_BINOP;
+            binop.binop.op = ir_bin_op(expr->binary.op);
+            binop.binop.lhs = lhs;
+            binop.binop.rhs = rhs;
+            binop.dst = ir_next_reg(ctx->func);
+            ir_append_instruction(ctx->block, &binop);
+            return binop.dst;
+        }
     case N_FUNCTION_CALL:
         IR_Instruction func_call;
         func_call.op = IR_CALL;

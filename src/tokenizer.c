@@ -249,6 +249,20 @@ bool is_binary_operator(const TokenType type) {
     }
 }
 
+bool is_comparison_op(const TokenType type) {
+    switch (type) {
+    case TK_EQ_EQ:
+    case TK_NEQ:
+    case TK_GT:
+    case TK_GE:
+    case TK_LT:
+    case TK_LE:
+        return true;
+    default:
+        return false;
+    }
+}
+
 int associativity(const TokenType type) {
     switch (type) {
     case TK_MULTIPLY:
@@ -556,6 +570,8 @@ static TokenMatch t_match_operator(Tokenizer *tk) {
         return eq ? (TokenMatch){TK_EQ_EQ, 2} : (TokenMatch){TK_EQ, 1};
     case '^':
         return eq ? (TokenMatch){TK_XOR_EQ, 2} : (TokenMatch){TK_XOR, 1};
+    case '%':
+        return eq ? (TokenMatch){TK_MOD_EQ, 2} : (TokenMatch){TK_MOD, 1};
     case '!':
         if (eq) return (TokenMatch){TK_NEQ, 2};
         printf("Unexpected \'!\'");
@@ -642,7 +658,7 @@ void t_tokenize(Tokenizer *tk) {
             t_buffer_reset(tk);
         } else if (is_whitespace(c)) {
             t_skip(tk);
-        } else if (t_peek(tk) == '/') {
+        } else if (t_peek(tk) == '/' && (t_peek_next(tk) == '/' || t_peek_next(tk) == '*')) {
             t_skip_comments(tk);
         } else {
             if (is_op_start(c)) {

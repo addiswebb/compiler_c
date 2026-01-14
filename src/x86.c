@@ -41,29 +41,29 @@ void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr)
             break;
         case AND:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
-            fprintf(fp, "    andl %d(%%rbp)\n", offset(instr->binop.rhs));
+            fprintf(fp, "    andl %d(%%rbp), %%eax\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
             break;
         case OR:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
-            fprintf(fp, "    orl %d(%%rbp)\n", offset(instr->binop.rhs));
+            fprintf(fp, "    orl %d(%%rbp), %%eax\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
             break;
         case XOR:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
-            fprintf(fp, "    xorl %d(%%rbp)\n", offset(instr->binop.rhs));
+            fprintf(fp, "    xorl %d(%%rbp), %%eax\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
             break;
         case SHL:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    movl %d(%%rbp), %%ecx\n", offset(instr->binop.rhs));
-            fprintf(fp, "    shll %%cl %%eax\n");
+            fprintf(fp, "    shll %%cl, %%eax\n");
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
             break;
         case SHR:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    movl %d(%%rbp), %%ecx\n", offset(instr->binop.rhs));
-            fprintf(fp, "    sarl %%cl %%eax\n");
+            fprintf(fp, "    sarl %%cl, %%eax\n");
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
             break;
         }
@@ -86,9 +86,25 @@ void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr)
         fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.label);
         break;
     case IR_CMP:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->br_cond.cond));
-        fprintf(fp, "    testl %%eax, %%eax\n");
-        fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_label);
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->cmp.lhs));
+        fprintf(fp, "    cmpl %d(%%rbp), %%eax\n", offset(instr->cmp.rhs));
+        switch (instr->cmp.op) {
+        case LT:
+            fprintf(fp, "    setl %%al\n");
+        case LE:
+            fprintf(fp, "    setle %%al\n");
+        case GT:
+            fprintf(fp, "    setg %%al\n");
+        case GE:
+            fprintf(fp, "    setge %%al\n");
+        case EQ:
+            fprintf(fp, "    sete %%al\n");
+        case NEQ:
+            fprintf(fp, "    setne %%al\n");
+            break;
+        }
+        fprintf(fp, "    movzbl %%al, %%eax\n");
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
         break;
     case IR_CALL:
         for (int i = 0; i < instr->call.arg_count; i++) {

@@ -87,6 +87,7 @@ void print_token_type(TokenType type);
 void print_token(const Token *token);
 
 bool is_binary_operator(TokenType type);
+bool is_comparison_op(const TokenType type);
 
 int associativity(TokenType type);
 int precedence(TokenType type);

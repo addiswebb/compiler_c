@@ -1,9 +1,10 @@
+// courtesy of ChatGPT :)
 int main() {
     /* Equality Inequality */
     int cmp_eq = (10 == 10); // expected: 1
     int cmp_ne = (10 != 5);  // expected: 1
 
-    // /* Signed comparisons */
+    /* Signed comparisons */
     int cmp_lt = (3 < 5);  // expected: 1
     int cmp_le = (5 <= 5); // expected: 1
     int cmp_gt = (7 > 3);  // expected: 1

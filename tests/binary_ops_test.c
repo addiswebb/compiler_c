@@ -1,0 +1,24 @@
+// courtesy of ChatGPT :)
+int main() {
+    /* Arithmetic operators */
+
+    int a_plus = 1 + 2;  // PLUS  -> 3
+    int a_minus = 5 - 3; // MINUS -> 2
+    int a_mul = 4 * 3;   // MUL   -> 12
+    int a_div = 10 / 2;  // DIV   -> 5
+    int a_mod = 10 % 3;  // MOD   -> 1
+
+    /* Bitwise operators */
+
+    int a_and = 6 & 3; //   AND   -> 2   (110 & 011 = 010)
+    int a_or = 6 | 3;  //   OR    -> 7   (110 | 011 = 111)
+    int a_xor = 6 ^ 3; //   XOR   -> 5   (110 ^ 011 = 101)
+
+    /* Shift operators */
+
+    int a_shl = 3 << 2;  //  SHL   -> 12
+    int a_shr = 16 >> 2; //  SHR   -> 4
+
+    // 3 + 2 + 12 + 5 + 1 + 2 + 7 + 5 + 12 + 4 = 53
+    return a_plus + a_minus + a_mul + a_div + a_mod + a_and + a_or + a_xor + a_shl + a_shr;
+}
