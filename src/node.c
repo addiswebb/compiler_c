@@ -5,6 +5,28 @@
 #include <stdlib.h>
 #include <string.h>
 
+Type *type_int;
+Type *type_float;
+Type *type_char;
+Type *type_invalid;
+
+void init_types() {
+    type_int = new_type(T_INT, sizeof(int));
+    type_float = new_type(T_FLOAT, sizeof(float));
+    type_char = new_type(T_CHAR, sizeof(char));
+    type_invalid = new_type(T_INVALID, 0);
+}
+
+Type *new_type(TypeKind type, int size) {
+    Type *t = malloc(sizeof(Type));
+    if (!t) {
+        printf("Failed to alloc for new type\n");
+        exit(1);
+    }
+    t->kind = type;
+    t->size = size;
+    return t;
+}
 NodeManager new_node_manager() {
     NodeManager nm;
     nm.capacity = NODE_ARENA_SIZE;
@@ -20,17 +42,17 @@ NodeManager new_node_manager() {
 void free_node_manager(const NodeManager *nm) {
     for (int i = 0; i < nm->count; i++) {
         const Node *node = &nm->nodes[i];
-        if (node->type == N_TRANSLATION_UNIT) {
+        if (node->kind == N_TRANSLATION_UNIT) {
             for (int j = 0; j < node->translation_unit.count; j++) {
                 free(node->translation_unit.declarations[j]);
             }
             free(node->translation_unit.declarations);
-        } else if (node->type == N_COMPOUND) {
+        } else if (node->kind == N_COMPOUND) {
             for (int j = 0; j < node->compound.count; j++) {
                 free(node->compound.items[j]);
             }
             free(node->compound.items);
-        } else if (node->type == N_FUNCTION && node->func.body->type == N_COMPOUND) {
+        } else if (node->kind == N_FUNCTION && node->func.body->kind == N_COMPOUND) {
             for (int j = 0; j < node->func.body->compound.count; j++) {
                 free(node->func.body->compound.items[j]);
             }
@@ -43,7 +65,7 @@ void free_node_manager(const NodeManager *nm) {
 /*
     Handles creating a Node, pushing it to the global node array
 */
-Node *new_node(NodeManager *nm, const NodeType type) {
+Node *new_node(NodeManager *nm, const NodeKind type) {
     if (nm->count >= nm->capacity) {
         // In the future, create a new arena for more nodes and link them.
         printf("Node Arena overflow");
@@ -51,11 +73,36 @@ Node *new_node(NodeManager *nm, const NodeType type) {
     }
     Node *node = &nm->nodes[nm->count++];
     memset(node, 0, sizeof(Node));
-    node->type = type;
+    node->kind = type;
     return node;
 }
+Node *cast_node(NodeManager *nm, Node *node, Type *type) {
+    Node *cast = new_node(nm, N_CAST);
+    cast->type = type;
+    cast->cast.from = node->type;
+    cast->cast.expr = node;
+    return cast;
+}
 
-void print_node_type(const NodeType type) {
+bool is_valid_cast(Type *from, Type *to) { return true; }
+
+void print_type(Type *type) {
+    switch (type->kind) {
+    case T_INVALID:
+        printf("T_INVALID");
+        break;
+    case T_INT:
+        printf("T_INT");
+        break;
+    case T_FLOAT:
+        printf("T_FLOAT");
+        break;
+    case T_CHAR:
+        printf("T_CHAR");
+        break;
+    }
+}
+void print_node_type(const NodeKind type) {
     switch (type) {
     case N_TRANSLATION_UNIT:
         printf("Translation Unit");
@@ -96,15 +143,18 @@ void print_node_type(const NodeType type) {
     case N_UNARY:
         printf("Unary");
         break;
+    case N_CAST:
+        printf("Cast");
+        break;
     }
 }
 // Prints a single node
 void print_node_flat(const Node *node) {
     printf("Node {\n");
     printf("\ttype: ");
-    print_node_type(node->type);
+    print_type(node->type);
     printf(",\n");
-    switch (node->type) {
+    switch (node->kind) {
     case N_TRANSLATION_UNIT:
         printf("\t");
         printf("count: %d", node->translation_unit.count);
@@ -113,37 +163,45 @@ void print_node_flat(const Node *node) {
         printf("\tname: %s,\n", node->func.name);
         printf("\tn_params: %d,\n", node->func.param_count);
         printf("\treturn type: ");
-        print_token_type(node->func.return_type);
+        print_type(node->type);
         printf(",\n");
         printf("\tbody: {}");
         break;
     case N_VAR_DECL:
         printf("\tname: %s,\n", node->var_decl.name);
         printf("\tvar_type: ");
-        print_token_type(node->var_decl.type);
+        print_type(node->type);
         if (node->var_decl.expr != NULL) {
             printf(",\n");
-            switch (node->var_decl.expr->literal.type) {
-            case TK_INT_LITERAL:
+            switch (node->var_decl.expr->type->kind) {
+            case T_INT:
                 printf("\tvalue: %d", node->var_decl.expr->literal.i);
                 break;
-            case TK_FLT_LITERAL:
+            case T_FLOAT:
                 printf("\tvalue: %g", node->var_decl.expr->literal.f);
                 break;
-            default:
+            case T_CHAR:
+                printf("\tvalue: %c", node->var_decl.expr->literal.c);
+                break;
+            case T_INVALID:
+                printf("\tvalue: INVALID TYPE");
                 break;
             }
         }
         break;
     case N_LITERAL:
-        switch (node->literal.type) {
-        case TK_INT_LITERAL:
+        switch (node->type->kind) {
+        case T_INT:
             printf("\tvalue: %d", node->literal.i);
             break;
-        case TK_FLT_LITERAL:
+        case T_FLOAT:
             printf("\tvalue: %g", node->literal.f);
             break;
-        default:
+        case T_CHAR:
+            printf("\tvalue: %c", node->literal.c);
+            break;
+        case T_INVALID:
+            printf("\tvalue: INVALID TYPE");
             break;
         }
         break;
@@ -173,6 +231,9 @@ void print_node_flat(const Node *node) {
         !node->unary.associativity ? print_token_type(node->unary.op) : printf(" expr ");
         printf("\n");
         break;
+    case N_CAST:
+        printf("\tcast\n");
+        break;
     }
     printf("\n}\n");
 }
@@ -185,8 +246,8 @@ void print_indent(const int depth) {
 
 void print_node(const Node *node, const int depth) {
     print_indent(depth);
-    print_node_type(node->type);
-    switch (node->type) {
+    print_node_type(node->kind);
+    switch (node->kind) {
     case N_TRANSLATION_UNIT:
         printf("\n");
         for (int i = 0; i < node->translation_unit.count; i++) {
@@ -202,19 +263,24 @@ void print_node(const Node *node, const int depth) {
     case N_BINARY:
         printf(": [op= ");
         print_token_type(node->binary.op);
-        printf("]\n");
+        printf(", type= ");
+        print_type(node->type);
+        printf(" ]\n");
         print_node(node->binary.lhs, depth + 1);
         print_node(node->binary.rhs, depth + 1);
         break;
     case N_LITERAL:
         printf(": [type= ");
-        print_token_type(node->literal.type);
-        switch (node->literal.type) {
-        case TK_INT_LITERAL:
+        print_type(node->type);
+        switch (node->type->kind) {
+        case T_INT:
             printf(", value: %d]\n", node->literal.i);
             break;
-        case TK_FLT_LITERAL:
+        case T_FLOAT:
             printf(", value: %g]\n", node->literal.f);
+            break;
+        case T_CHAR:
+            printf(", value: %c]\n", node->literal.c);
             break;
         default:
             break;
@@ -222,7 +288,7 @@ void print_node(const Node *node, const int depth) {
         break;
     case N_FUNCTION:
         printf(": [name= %s, param_count= %d, return_type= ", node->func.name, node->func.param_count);
-        print_token_type(node->func.return_type);
+        print_type(node->type);
         printf("]");
         if (node->func.param_count > 0) {
             printf(" { ");
@@ -236,7 +302,7 @@ void print_node(const Node *node, const int depth) {
         break;
     case N_VAR_DECL:
         printf(": [type= ");
-        print_token_type(node->var_decl.type);
+        print_type(node->type);
         printf(", name= %s]\n", node->var_decl.name);
         print_node(node->var_decl.expr, depth + 1);
         break;
@@ -245,7 +311,9 @@ void print_node(const Node *node, const int depth) {
         print_node(node->_return.expr, depth + 1);
         break;
     case N_IDENTIFIER:
-        printf(": [name: %s]\n", node->identifier.name);
+        printf(": [name= %s, type= ", node->identifier.name);
+        print_type(node->type);
+        printf(" ]\n");
         break;
     case N_IF:
         printf(": [cond, true, false]\n");
@@ -278,6 +346,12 @@ void print_node(const Node *node, const int depth) {
         print_token_type(node->unary.op);
         printf(", associativity= %d]\n", node->unary.associativity);
         print_node(node->unary.expr, depth + 1);
+        break;
+    case N_CAST:
+        printf(": [cast_to_type= ");
+        print_type(node->type);
+        printf(" ]\n");
+        print_node(node->cast.expr, depth + 1);
         break;
     }
 }

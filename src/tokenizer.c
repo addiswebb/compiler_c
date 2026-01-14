@@ -237,6 +237,7 @@ bool is_unary_operator(const TokenType type) {
         return false;
     }
 }
+
 bool is_binary_operator(const TokenType type) {
     switch (type) {
     case TK_PLUS:
@@ -274,6 +275,62 @@ bool is_binary_operator(const TokenType type) {
     }
 }
 
+bool is_assignment_op(const TokenType type) {
+    switch (type) {
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+    case TK_OR_EQ:
+    case TK_AND_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool is_arithmetic_op(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_PLUS_EQ:
+    case TK_MINUS:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE:
+    case TK_DIVIDE_EQ:
+    case TK_MOD:
+    case TK_MOD_EQ:
+    case TK_INCR:
+    case TK_DECR:
+        return true;
+    default:
+        return false;
+    }
+}
+bool is_bitwise_op(const TokenType type) {
+    switch (type) {
+    case TK_OR:
+    case TK_AND:
+    case TK_SHL:
+    case TK_SHR:
+    case TK_XOR:
+    case TK_OR_EQ:
+    case TK_AND_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+    case TK_XOR_EQ:
+    case TK_BW_NOT:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool is_comparison_op(const TokenType type) {
     switch (type) {
     case TK_EQ_EQ:
@@ -285,6 +342,47 @@ bool is_comparison_op(const TokenType type) {
         return true;
     default:
         return false;
+    }
+}
+
+bool is_logical_op(const TokenType type) {
+    switch (type) {
+    case TK_AND_AND:
+    case TK_EQ_EQ:
+    case TK_OR_OR:
+    case TK_L_NOT:
+        return true;
+    default:
+        return false;
+    }
+}
+
+TokenType get_underlying_op(const TokenType type) {
+    switch (type) {
+    case TK_PLUS_EQ:
+        return TK_PLUS;
+    case TK_MINUS_EQ:
+        return TK_MINUS;
+    case TK_MULTIPLY_EQ:
+        return TK_MULTIPLY;
+    case TK_DIVIDE_EQ:
+        return TK_DIVIDE;
+    case TK_MOD_EQ:
+        return TK_MOD;
+    case TK_OR_EQ:
+        return TK_OR;
+    case TK_AND_EQ:
+        return TK_AND;
+    case TK_SHL_EQ:
+        return TK_SHL;
+    case TK_SHR_EQ:
+        return TK_SHR;
+    case TK_EQ:
+        return TK_EQ;
+    default:
+        printf("Tried to get the underlying operator of a non-eq operator\n");
+        print_token_type(type);
+        exit(1);
     }
 }
 

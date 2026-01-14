@@ -91,7 +91,12 @@ void print_token(const Token *token);
 
 bool is_unary_operator(const TokenType type);
 bool is_binary_operator(const TokenType type);
+bool is_assignment_op(const TokenType type);
+bool is_arithmetic_op(const TokenType type);
+bool is_bitwise_op(const TokenType type);
 bool is_comparison_op(const TokenType type);
+bool is_logical_op(const TokenType type);
+TokenType get_underlying_op(const TokenType type);
 
 int associativity(TokenType type);
 int precedence(TokenType type);

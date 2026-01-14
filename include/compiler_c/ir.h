@@ -38,28 +38,31 @@ typedef enum {
     IR_LOAD, IR_STORE, IR_RET, IR_CALL,
     IR_BR, IR_BR_COND,
     IR_CMP,
+    IR_CAST,
 } IR_OP;
 
 typedef struct {
     const char *name;
     int reg;
+    Type *type;
 } IR_Var;
 
 typedef struct {
     IR_OP op;
     int dst;
     union {
-        struct {int value;} iconst;
-        struct {int src;} mov;
-        struct {int addr; } load;
-        struct {int addr; } store;
-        struct {IR_UNARY_OP op; int expr;} unary;
-        struct {IR_BINOP_OP op; int lhs, rhs;} binop;
+        struct { union{ int i; float f; char c; }; Type *type; } _const;
+        struct {int src; Type *type;} mov;
+        struct {int addr; Type*type;} load;
+        struct {int addr; Type*type; } store;
+        struct {IR_UNARY_OP op; int expr; Type *type;} unary;
+        struct {IR_BINOP_OP op; int lhs, rhs; Type *type;} binop;
         struct {IR_CMP_OP op; int lhs, rhs; } cmp;
-        struct {int callee; int *args; int arg_count;} call;
+        struct {int callee; int *args; int arg_count; Type *type;} call;
         struct {int value;} ret;
         struct {int label;} br;
         struct {int cond, t_label, f_label;} br_cond;
+        struct {Type *from, *to; int src;} cast;
     };
 } IR_Instruction;
 
@@ -134,7 +137,7 @@ IR_Module *ir_new_module();
 */
 IR_Block *ir_new_block();
 IR_Function *ir_new_function(IR_Context *ctx,const char *name);
-int ir_new_var(IR_Function *func, const char *name);
+int ir_new_var(IR_Function *func, const char *name, Type *type);
 
 void ir_free_module(IR_Module *module);
 

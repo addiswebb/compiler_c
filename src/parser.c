@@ -17,18 +17,30 @@ Parser new_parser() {
     parser.func_def_capacity = 0;
     parser.func_def_count = 0;
     parser.func_defs = NULL;
+    parser.var_decl_count = 0;
+    parser.var_decl_capacity = 0;
+    parser.var_decls = NULL;
     return parser;
 }
 
 void init_parser(Parser *p, TokenArray *src, const int size) {
+    init_types();
     p->size = size;
     p->src = src;
     p->index = 0;
     p->expect_semi = true;
     p->func_def_capacity = 4;
+    p->func_def_count = 0;
     p->func_defs = malloc(sizeof(P_Func_Def) * p->func_def_capacity);
     if (!p->func_defs) {
         printf("Failed to allocate for func_defs\n");
+        exit(1);
+    }
+    p->var_decl_capacity = 4;
+    p->var_decl_count = 0;
+    p->var_decls = malloc(sizeof(P_Var_Decl) * p->var_decl_capacity);
+    if (!p->var_decls) {
+        printf("Failed to allocate for var_decls\n");
         exit(1);
     }
 }
@@ -136,17 +148,18 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         node->unary.op = p_consume(p)->type;
         node->unary.associativity = RIGHT_ASSOCIATIVITY;
         node->unary.expr = p_parse_primary_expression(p, nm);
+        node->type = type_invalid;
         return node;
     }
     switch (p_peek(p)->type) {
     case TK_INT_LITERAL:
         node = new_node(nm, N_LITERAL);
-        node->literal.type = p_peek(p)->type;
+        node->type = type_int;
         node->literal.i = atoi(p_consume(p)->value);
         return node;
     case TK_FLT_LITERAL:
         node = new_node(nm, N_LITERAL);
-        node->literal.type = p_peek(p)->type;
+        node->type = type_float;
         node->literal.f = atof(p_consume(p)->value);
         return node;
     case TK_IDENTIFIER:
@@ -202,8 +215,8 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     }
     if (p_peek(p)->type == TK_OPEN_PAREN) {
         p_consume(p); // '('
-        if (primary->type != N_IDENTIFIER) {
-            print_node_type(primary->type);
+        if (primary->kind != N_IDENTIFIER) {
+            print_node_type(primary->kind);
             printf(" is not a function\n");
             exit(1);
         }
@@ -256,7 +269,7 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm) {
 */
 Node *p_parse_var_declaration(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_VAR_DECL);
-    node->var_decl.type = p_consume_a(p, TK_INT)->type;
+    node->type = token_to_type(p_consume(p)->type);
     node->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
     if (p_peek(p)->type == TK_EQ) {
         p_consume(p);
@@ -265,6 +278,7 @@ Node *p_parse_var_declaration(Parser *p, NodeManager *nm) {
         node->var_decl.expr = NULL;
     }
     p_consume_semi(p);
+    p_append_var_decl(p, node);
     return node;
 }
 
@@ -337,7 +351,7 @@ void p_append_func_def(Parser *p, Node *func) {
             exit(1);
         }
     }
-    p->func_defs[p->func_def_count++] = (P_Func_Def){func->func.name, func};
+    p->func_defs[p->func_def_count++] = (P_Func_Def){func->func.name, func->type, func};
 }
 
 Node *p_get_func_def(Parser *p, const char *name) {
@@ -350,6 +364,26 @@ Node *p_get_func_def(Parser *p, const char *name) {
     exit(1);
 }
 
+void p_append_var_decl(Parser *p, Node *var) {
+    if (p->var_decl_count >= p->var_decl_capacity) {
+        p->var_decl_capacity *= 2;
+        p->var_decls = realloc(p->var_decls, sizeof(P_Var_Decl) * p->var_decl_capacity);
+        if (!p->var_decls) {
+            printf("Failed to realloc for var decl\n");
+            exit(1);
+        }
+    }
+    p->var_decls[p->var_decl_count++] = (P_Var_Decl){var->identifier.name, var->type, var};
+}
+Node *p_get_var_decl(Parser *p, const char *name) {
+    for (int i = 0; i < p->var_decl_count; i++) {
+        if (strcmp(p->var_decls[i].name, name) == 0) {
+            return p->var_decls[i].decl;
+        }
+    }
+    printf("Tried to find variable %s which does not exist\n", name);
+    exit(1);
+}
 /*
     Consumes
     `if ([cond]) {[compound]} [else [if statement]? {[compound]}]? ;
@@ -475,13 +509,13 @@ Node *p_parse_compound(Parser *p, NodeManager *nm) {
 */
 Node *p_parse_function(Parser *p, NodeManager *nm) {
     Node *node = new_function_node(nm);
-    node->func.return_type = p_consume(p)->type;
+    node->type = token_to_type(p_consume(p)->type);
     node->func.name = p_consume(p)->value;
 
     p_consume_a(p, TK_OPEN_PAREN);
     while (p_peek(p)->type == TK_INT && p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
         Node *param = new_node(nm, N_VAR_DECL);
-        param->var_decl.type = p_consume_a(p, TK_INT)->type;
+        node->type = token_to_type(p_consume_a(p, TK_INT)->type);
         param->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
         param->var_decl.expr = NULL;
         p_append_param(node, param);
@@ -518,4 +552,192 @@ Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
         p_append_declaration(root, p_parse_declaration(p, nm));
     }
     return root;
+}
+// Is this node assignable?
+bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER; }
+
+Type *token_to_type(TokenType t) {
+    switch (t) {
+    case TK_INT:
+        return type_int;
+    case TK_FLOAT:
+        return type_float;
+    default:
+        printf("Tried to convert a token which is not a valid value type\n");
+        exit(1);
+    }
+}
+
+Type *check_unary_op(Node *unaryop) {
+    Node *expr = unaryop->unary.expr;
+    TypeKind kind = expr->type->kind;
+    switch (unaryop->unary.op) {
+    // [Int, Float] => [Int, Float]
+    case TK_PLUS:
+    case TK_MINUS:
+        if (kind == T_INT || kind == T_FLOAT) return expr->type;
+        break;
+    // [Int, Float] => Int
+    case TK_L_NOT:
+        if (kind == T_INT || kind == T_FLOAT) return type_int;
+        break;
+    // Int => Int
+    case TK_AND:
+    case TK_SHL:
+    case TK_SHR:
+    case TK_BW_NOT:
+        if (kind == T_INT) return expr->type;
+        break;
+    default:
+        break;
+    }
+    printf("Invalid operand type for the given unary operator\n");
+    return type_invalid;
+}
+
+Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop) {
+    if (binop->binary.lhs->type == T_INVALID || binop->binary.rhs->type == T_INVALID) {
+        printf("Semantic Analysis: Binary op was given expression with an invalid type\n");
+        exit(1);
+    }
+    Node *lhs = binop->binary.lhs;
+    Node *rhs = binop->binary.rhs;
+    if (is_assignment_op(op)) {
+        if (!is_lvalue(lhs)) {
+            printf("Semantic Analysis: Binary op lhs is not assignable\n");
+            exit(1);
+        }
+        TokenType underlying = get_underlying_op(op);
+        if (is_arithmetic_op(underlying) || is_bitwise_op(underlying)) {
+            Type *common = promote_binary_operands(nm, binop);
+        }
+
+        if (lhs->type->kind != rhs->type->kind) {
+            binop->binary.rhs = cast_node(nm, rhs, lhs->type);
+        }
+        return lhs->type;
+    }
+
+    Type *common = promote_binary_operands(nm, binop);
+    if (!common) {
+        printf("Invalid arithmetic operands");
+        exit(1);
+    }
+
+    if (is_arithmetic_op(op)) return common;
+    if (is_comparison_op(op)) return type_int;
+
+    if (is_bitwise_op(op)) {
+        if (lhs->type != type_int || rhs->type != type_int) {
+            printf("Bitwise operation requires integers\n");
+            exit(1);
+        }
+        return type_int;
+    }
+
+    if (is_logical_op(op)) return type_int;
+
+    printf("Unknown binary operator\n");
+    return type_invalid;
+}
+
+Type *promote_binary_operands(NodeManager *nm, Node *binop) {
+    Type *common;
+    Node *lhs = binop->binary.lhs;
+    Node *rhs = binop->binary.rhs;
+    if (lhs->type == rhs->type) return lhs->type;
+    if (lhs->type->kind == T_FLOAT || rhs->type->kind == T_FLOAT) {
+        common = type_float;
+    } else {
+        common = type_int;
+    }
+
+    if (lhs->type != common) binop->binary.lhs = cast_node(nm, lhs, common);
+    if (rhs->type != common) binop->binary.rhs = cast_node(nm, rhs, common);
+    return common;
+}
+void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
+    if (!node) return;
+    switch (node->kind) {
+    case N_TRANSLATION_UNIT:
+        for (int i = 0; i < node->translation_unit.count; i++) {
+            semantic_analysis(p, nm, node->translation_unit.declarations[i]);
+        }
+        break;
+    case N_FUNCTION:
+        semantic_analysis(p, nm, node->func.body);
+        break;
+    case N_COMPOUND:
+        for (int i = 0; i < node->compound.count; i++) {
+            semantic_analysis(p, nm, node->compound.items[i]);
+        }
+        break;
+    case N_VAR_DECL:
+        semantic_analysis(p, nm, node->var_decl.expr);
+        if (node->var_decl.expr->type != node->type) {
+            cast_node(nm, node, node->type);
+        }
+        break;
+    case N_UNARY:
+        semantic_analysis(p, nm, node->unary.expr);
+        node->type = check_unary_op(node);
+        break;
+    case N_BINARY:
+        semantic_analysis(p, nm, node->binary.lhs);
+        semantic_analysis(p, nm, node->binary.rhs);
+        node->type = check_binary_op(nm, node->binary.op, node);
+        break;
+    case N_CAST:
+        semantic_analysis(p, nm, node->cast.expr);
+        if (is_valid_cast(node->cast.from, node->cast.to)) {
+            node->type = node->cast.to;
+            break;
+        } else {
+            printf("Invalid cast between");
+            print_type(node->cast.from);
+            printf(" and ");
+            print_type(node->cast.to);
+            printf("\n");
+            exit(1);
+        }
+    case N_FUNCTION_CALL:
+        node->type = p_get_func_def(p, node->func_call.identifier->identifier.name)->type;
+        break;
+    case N_IDENTIFIER:
+        node->type = p_get_var_decl(p, node->identifier.name)->type;
+        break;
+    case N_IF:
+        semantic_analysis(p, nm, node->_if.cond);
+        if (node->_if.cond->type != type_int) {
+            node->_if.cond = cast_node(nm, node->_if.cond, type_int);
+        }
+        semantic_analysis(p, nm, node->_if.if_true);
+        semantic_analysis(p, nm, node->_if.if_false);
+        break;
+    case N_WHILE:
+        semantic_analysis(p, nm, node->_while.cond);
+        if (node->_while.cond->type != type_int) {
+            node->_while.cond = cast_node(nm, node->_while.cond, type_int);
+        }
+        semantic_analysis(p, nm, node->_while.block);
+        break;
+    case N_FOR:
+        semantic_analysis(p, nm, node->_for.init);
+        semantic_analysis(p, nm, node->_for.cond);
+        if (node->_for.cond->type != type_int) {
+            node->_for.cond = cast_node(nm, node->_for.cond, type_int);
+        }
+        semantic_analysis(p, nm, node->_for.iter);
+        semantic_analysis(p, nm, node->_for.block);
+        break;
+    case N_RETURN:
+        semantic_analysis(p, nm, node->_return.expr);
+        if (node->_return.expr->type != type_int) {
+            node->_return.expr = cast_node(nm, node->_return.expr, type_int);
+        }
+        break;
+    case N_LITERAL:
+        // Trust the tokenizer
+        break;
+    }
 }

@@ -10,8 +10,15 @@
 
 typedef struct{
     const char *name;
+    Type *type;
     Node *def;
 } P_Func_Def;
+
+typedef struct{
+    const char *name;
+    Type *type;
+    Node *decl;
+} P_Var_Decl;
 
 typedef struct {
     int index;
@@ -21,6 +28,9 @@ typedef struct {
     P_Func_Def *func_defs;
     int func_def_count;
     int func_def_capacity;
+    P_Var_Decl *var_decls;
+    int var_decl_count;
+    int var_decl_capacity;
 } Parser;
 
 Parser new_parser();
@@ -98,6 +108,9 @@ void p_add_call_param(Node *func, Node *param);
 void p_append_func_def(Parser *p, Node *func);
 Node *p_get_func_def(Parser *p, const char* name);
 
+void p_append_var_decl(Parser *p, Node *var);
+Node *p_get_var_decl(Parser *p, const char* name);
+
 /*
     Appends a block item to the given compound node,
     Resizes its statement array if necessary.
@@ -162,5 +175,13 @@ bool is_function_ahead(Parser *p);
 Node *p_parse_declaration(Parser *p, NodeManager *nm);
 
 Node *p_parse_translation_unit(Parser* p, NodeManager *nm);
+
+bool is_lvalue(Node *n);
+
+Type *token_to_type(TokenType t);
+Type *check_unary_op(Node *unaryop);
+Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop);
+Type *promote_binary_operands(NodeManager *nm, Node *binop);
+void semantic_analysis(Parser *p, NodeManager *nm, Node *node);
 
 #endif // COMPILER_C_PARSER_H

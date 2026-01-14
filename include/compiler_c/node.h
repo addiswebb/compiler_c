@@ -17,12 +17,33 @@ typedef enum {
     N_LITERAL,
     N_IDENTIFIER,
     N_FUNCTION_CALL,
-} NodeType;
+    N_CAST,
+} NodeKind;
 
 typedef struct Node Node;
 
+typedef enum {
+    // Yet to be symatically analysed
+    T_INVALID,
+    T_INT,
+    T_FLOAT,
+    T_CHAR,
+} TypeKind;
+
+typedef struct{
+    TypeKind kind;
+    int size;
+} Type;
+
+extern Type *type_int;
+extern Type *type_float;
+extern Type *type_char;
+extern Type *type_invalid;
+
 struct Node {
-    NodeType type;
+    NodeKind kind;
+    Type* type;
+    // The type of the values associated with this node
     union {
         struct {
             Node **declarations;
@@ -34,7 +55,6 @@ struct Node {
             int param_count;
             int param_capacity;
             Node **params;
-            TokenType return_type;
             Node *body;
         } func;
         struct {
@@ -77,10 +97,10 @@ struct Node {
             Node *block;
         } _for;
         struct {
-            TokenType type;
             union {
                 int i;
                 float f;
+                char c;
             };
         } literal;
         struct {
@@ -89,7 +109,6 @@ struct Node {
         // type name = expr;
         struct {
             char *name;
-            TokenType type;
             Node *expr;
         } var_decl;
         // identifier(params*)
@@ -99,6 +118,12 @@ struct Node {
             int param_capacity;
             Node **params;
         } func_call;
+        // (int)0.5
+        struct {
+            Node *expr;
+            Type *from;
+            Type *to;
+        } cast;
     };
 };
 
@@ -110,17 +135,21 @@ typedef struct {
 
 #define NODE_ARENA_SIZE 1024
 
+void init_types();
+
+Type *new_type(TypeKind type, int size);
 NodeManager new_node_manager();
 void free_node_manager(const NodeManager *nm);
 
 /*
     Handles creating a Node, pushing it to the global node array
 */
-Node *new_node(NodeManager *nm,NodeType type);
+Node *new_node(NodeManager *nm, NodeKind type);
+Node *cast_node(NodeManager *nm, Node *node, Type *type);
+bool is_valid_cast(Type *from, Type *to);
 
-void print_node_type(NodeType type);
-// Prints a single node
-void print_node_flat(const Node *node);
+void print_type(Type* type);
+void print_node_type(NodeKind type);
 
 void print_indent(int depth);
 

@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -233,7 +232,7 @@ void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
     block->instructions[block->count++] = *instruction;
 }
 
-int ir_new_var(IR_Function *func, const char *name) {
+int ir_new_var(IR_Function *func, const char *name, Type *type) {
     if (func->local_count >= func->local_capacity) {
         func->local_capacity *= 2;
         IR_Var *new_locals = realloc(func->locals, sizeof(IR_Var) * func->local_capacity);
@@ -244,7 +243,7 @@ int ir_new_var(IR_Function *func, const char *name) {
         func->locals = new_locals;
     }
     const int next_reg = ir_next_reg(func);
-    func->locals[func->local_count++] = (IR_Var){name, next_reg};
+    func->locals[func->local_count++] = (IR_Var){name, next_reg, type};
     if (func->scope_count > 0) {
         func->scopes[func->scope_count - 1].var_count++;
     }
@@ -325,23 +324,28 @@ void ir_free_module(IR_Module *module) {
 IR_Block *current_block(const IR_Function *func) { return &func->blocks[func->block_count - 1]; }
 
 int ir_gen_expression(IR_Context *ctx, const Node *expr) {
-    switch (expr->type) {
+    switch (expr->kind) {
     case N_LITERAL:
-        switch (expr->literal.type) {
-        case TK_INT_LITERAL:
-            IR_Instruction instr;
-            instr.op = IR_CONST;
-            instr.dst = ir_next_reg(ctx->func);
-            instr.iconst.value = expr->literal.i;
-            ir_append_instruction(ctx->block, &instr);
-            return instr.dst;
-        case TK_FLT_LITERAL:
-            printf("Cannot handle floats yet soz");
-            exit(1);
+        IR_Instruction instr;
+        instr.op = IR_CONST;
+        instr.dst = ir_next_reg(ctx->func);
+        instr._const.type = expr->type;
+        switch (expr->type->kind) {
+        case T_INT:
+            instr._const.i = expr->literal.i;
+            break;
+        case T_FLOAT:
+            instr._const.f = expr->literal.f;
+            break;
+        case T_CHAR:
+            instr._const.c = expr->literal.c;
+            break;
         default:
-            printf("Given unknown literal");
+            printf("Tried to create IR_CONST instruction with an invalid type\n");
             exit(1);
         }
+        ir_append_instruction(ctx->block, &instr);
+        return instr.dst;
     case N_IDENTIFIER:
         const int var_reg = ir_get_var_reg(ctx, expr->identifier.name);
         if (var_reg == -1) {
@@ -357,6 +361,7 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
             assign_instr.op = IR_STORE;
             assign_instr.dst = lhs;
             assign_instr.store.addr = rhs;
+            assign_instr.store.type = expr->type;
             ir_append_instruction(ctx->block, &assign_instr);
             return lhs;
         }
@@ -375,6 +380,7 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
             binop.binop.op = ir_binary_op(expr->binary.op);
             binop.binop.lhs = lhs;
             binop.binop.rhs = rhs;
+            binop.binop.type = expr->type;
             binop.dst = ir_next_reg(ctx->func);
             ir_append_instruction(ctx->block, &binop);
             return binop.dst;
@@ -382,24 +388,37 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
     case N_UNARY:
         int expr_reg = ir_gen_expression(ctx, expr->unary.expr);
         if (expr->unary.op == TK_INCR || expr->unary.op == TK_DECR) {
-            if (expr->unary.expr->type != N_IDENTIFIER) {
+            if (expr->unary.expr->kind != N_IDENTIFIER) {
                 printf("Can only increment on a identifieir/variable\n");
                 exit(1);
             }
             IR_Instruction const_1;
             const_1.op = IR_CONST;
             const_1.dst = ir_next_reg(ctx->func); // r2
-            const_1.iconst.value = 1;
+            const_1._const.type = expr->type;
             IR_Instruction store;
             store.op = IR_STORE;
             store.store.addr = expr_reg;
             store.dst = ir_next_reg(ctx->func);
+            store.store.type = expr->type;
             IR_Instruction instr;
             instr.op = IR_BINOP;
             instr.binop.lhs = expr_reg;    // r1 = x
             instr.binop.rhs = const_1.dst; // r2 = 1
             instr.binop.op = expr->unary.op == TK_INCR ? ADD : SUB;
+            instr.binop.type = expr->type;
             instr.dst = expr_reg;
+            switch (expr->type->kind) {
+            case T_INT:
+                const_1._const.i = 1;
+                break;
+            case T_FLOAT:
+                const_1._const.f = 1.0;
+                break;
+            default:
+                printf("Tried to increment a value which is neither float or int\n");
+                exit(1);
+            }
             ir_append_instruction(ctx->block, &const_1);
             ir_append_instruction(ctx->block, &store);
             ir_append_instruction(ctx->block, &instr);
@@ -410,6 +429,7 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
         unaryop.unary.op = ir_unary_op(expr->unary.op);
         unaryop.unary.expr = expr_reg;
         unaryop.dst = ir_next_reg(ctx->func);
+        unaryop.unary.type = expr->type;
         ir_append_instruction(ctx->block, &unaryop);
         return unaryop.dst;
     case N_FUNCTION_CALL:
@@ -418,6 +438,11 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
         func_call.call.callee = ir_get_func_def(ctx, expr->func_call.identifier->identifier.name);
         func_call.call.arg_count = expr->func_call.param_count;
         func_call.call.args = malloc(sizeof(int) * func_call.call.arg_count);
+        func_call.call.type = expr->type;
+        if (!func_call.call.args) {
+            printf("Failed to alloc for IR_FUNC_CALL args\n");
+            exit(1);
+        }
         if (!func_call.call.args) {
             printf("Failed to malloc for IR_CALL args\n");
             exit(1);
@@ -429,17 +454,25 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
         func_call.dst = ir_next_reg(ctx->func);
         ir_append_instruction(ctx->block, &func_call);
         return func_call.dst;
+    case N_CAST:
+        IR_Instruction cast;
+        cast.op = IR_CAST;
+        cast.cast.from = expr->cast.from;
+        cast.cast.to = expr->cast.to;
+        cast.cast.src = ir_gen_expression(ctx, expr->cast.expr);
+        cast.dst = ir_next_reg(ctx->func);
+        return cast.dst;
     default:
         break;
     }
     printf("Failed to gen expr for ");
-    print_node_type(expr->type);
+    print_node_type(expr->kind);
     printf("\n");
     exit(1);
 }
 
 void ir_gen_block_item(IR_Context *ctx, const Node *item) {
-    if (item->type == N_VAR_DECL) {
+    if (item->kind == N_VAR_DECL) {
         ir_gen_var_decl(ctx, item);
     } else {
         ir_gen_statement(ctx, item);
@@ -525,7 +558,7 @@ void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
         ir_append_instruction(ctx->block, &br_instr);
         ir_append_block(ctx, ir_new_block()); // IF else or endblock
     } else {
-        if (_if->_if.if_false->type == N_IF) {
+        if (_if->_if.if_false->kind == N_IF) {
             IR_Instruction br_instr;
             br_instr.op = IR_BR;
             br_instr.dst = -1;
@@ -553,20 +586,17 @@ void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
 }
 
 void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
-    if (var_decl->var_decl.type == TK_FLOAT) {
-        printf("Soz cant handle floats yet, only integers\n");
-        exit(1);
-    }
-    IR_Instruction var_decl_instr; //= {IR_STORE, var_reg, expr_reg, 0};
+    IR_Instruction var_decl_instr;
     var_decl_instr.op = IR_STORE;
-    var_decl_instr.dst = ir_new_var(ctx->func, var_decl->var_decl.name);
+    var_decl_instr.dst = ir_new_var(ctx->func, var_decl->var_decl.name, var_decl->type);
     var_decl_instr.store.addr = ir_gen_expression(ctx, var_decl->var_decl.expr);
+    var_decl_instr.store.type = var_decl->type;
     ir_append_instruction(ctx->block, &var_decl_instr);
     return;
 }
 
 void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
-    switch (stmt->type) {
+    switch (stmt->kind) {
     case N_RETURN:
         ir_gen_return(ctx, stmt);
         return;
@@ -590,7 +620,7 @@ void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     default:
         // given invalid statement? probably an expression
         printf("Dont know what to do with the given statemnet: ir_gen_statement: ");
-        print_node_type(stmt->type);
+        print_node_type(stmt->kind);
         printf("\n");
         exit(1);
     }
@@ -606,13 +636,13 @@ void ir_gen_return(IR_Context *ctx, const Node *_return) {
 }
 
 IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
-    if (func->type != N_FUNCTION) {
+    if (func->kind != N_FUNCTION) {
         printf("Tried ir_gen_function but given node is not a function!\n");
         exit(1);
     }
 
     IR_Function *fn = ir_new_function(ctx, func->func.name);
-    if (func->func.body->type != N_COMPOUND) {
+    if (func->func.body->kind != N_COMPOUND) {
         printf("Function body is not a compound,\n");
         exit(1);
     }
@@ -620,15 +650,12 @@ IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     ir_begin_scope(fn);
     // handle (params)
     for (int i = 0; i < func->func.param_count; i++) {
-        int test = ir_new_var(ctx->func, func->func.params[i]->var_decl.name);
+        int test = ir_new_var(ctx->func, func->func.params[i]->var_decl.name, func->func.params[i]->type);
         IR_Instruction store_instr;
         store_instr.op = IR_STORE;
         store_instr.dst = i;
-        if (test != i) {
-            printf("I WAS WRONG!!\n");
-            exit(1);
-        }
         store_instr.store.addr = -func->func.param_count + i;
+        store_instr.store.type = func->func.params[i]->type;
         ir_append_instruction(ctx->block, &store_instr);
     }
     // handle {[statement]*}
@@ -641,7 +668,7 @@ IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
 }
 
 IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
-    if (tu->type != N_TRANSLATION_UNIT) {
+    if (tu->kind != N_TRANSLATION_UNIT) {
         printf("Tried ir_gen_function but given node is not a translation unit!\n");
         exit(1);
     }
@@ -649,7 +676,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
     IR_Module *module = ir_new_module();
     ctx->module = module;
     for (int i = 0; i < tu->translation_unit.count; i++) {
-        switch (tu->translation_unit.declarations[i]->type) {
+        switch (tu->translation_unit.declarations[i]->kind) {
         case N_FUNCTION:
             ir_append_function(ctx->module, ir_gen_function(ctx, tu->translation_unit.declarations[i]));
             break;
@@ -737,26 +764,54 @@ void print_cmp_op(IR_CMP_OP op) {
     }
 }
 
+const char ir_type_suffix(Type *type) {
+    switch (type->kind) {
+    case T_INVALID:
+        printf("Tried to print invalid type\n");
+        exit(1);
+    case T_INT:
+        return 'i';
+    case T_FLOAT:
+        return 'f';
+    case T_CHAR:
+        return 'c';
+    }
+}
+
 void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_CONST:
-        printf("    r%d = CONST $%d", instr->dst, instr->iconst.value);
+        switch (instr->_const.type->kind) {
+        case T_INT:
+            printf("    r%d = CONST $%d", instr->dst, instr->_const.i);
+            break;
+        case T_FLOAT:
+            printf("    r%d = CONST $%g", instr->dst, instr->_const.f);
+            break;
+        case T_CHAR:
+            printf("    r%d = CONST $%c", instr->dst, instr->_const.c);
+            break;
+        default:
+            printf("Given invalid type to print ir instruction\n");
+            exit(1);
+        }
         break;
     case IR_BINOP:
-        printf("    r%d = BINOP r%d, r%d, ", instr->dst, instr->binop.lhs, instr->binop.rhs);
+        printf("    r%d = BINOP:%c r%d, r%d, ", ir_type_suffix(instr->binop.type), instr->dst, instr->binop.lhs, instr->binop.rhs);
         print_binary_op(instr->binop.op);
         break;
     case IR_LOAD:
-        printf("    r%d = LOAD r%d", instr->dst, instr->load.addr);
+        printf("    r%d = LOAD:%c r%d", ir_type_suffix(instr->load.type), instr->dst, instr->load.addr);
         break;
     case IR_STORE:
-        printf("    STORE r%d -> r%d", instr->store.addr, instr->dst);
+        printf("    STORE:%c r%d -> r%d", ir_type_suffix(instr->store.type), instr->store.addr, instr->dst);
         break;
     case IR_RET:
         printf("    RET r%d", instr->ret.value);
         break;
     case IR_CALL:
-        printf("    r%d = CALL %s, %d:", instr->dst, ctx->module->defs[instr->call.callee].name, instr->call.arg_count);
+        printf("    r%d = CALL:%c %s, %d:", ir_type_suffix(instr->call.type), instr->dst, ctx->module->defs[instr->call.callee].name,
+               instr->call.arg_count);
         printf("[ ");
         for (int i = 0; i < instr->call.arg_count; i++) {
             printf("r%d", instr->call.args[i]);
@@ -780,6 +835,10 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
     case IR_UNARYOP:
         printf("    r%d = UNARYOP r%d, ", instr->dst, instr->unary.expr);
         print_unary_op(instr->unary.op);
+        break;
+    case IR_CAST:
+        printf("    r%d = CAST %c to %c r%d, ", ir_type_suffix(instr->cast.from), ir_type_suffix(instr->cast.to), instr->dst,
+               instr->cast.src);
         break;
     }
     printf("\n");

@@ -1,3 +1,4 @@
+#include "compiler_c/parser.h"
 #include <compiler_c/compiler.h>
 #include <compiler_c/ir.h>
 #include <compiler_c/tokenizer.h>
@@ -108,6 +109,8 @@ int compile(Compiler *compiler) {
     }
     init_parser(&compiler->p, &compiler->tk.tokens, compiler->tk.tokens.size);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
+
+    semantic_analysis(&compiler->p, &compiler->nm, &compiler->nm.nodes[0]);
 
     if (compiler->flags & COMP_FLAG_NODES) print_nodes(&compiler->nm);
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);

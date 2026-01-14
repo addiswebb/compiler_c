@@ -1,5 +1,7 @@
+#include "compiler_c/node.h"
 #include <compiler_c/ir.h>
 #include <compiler_c/x86.h>
+#include <stdlib.h>
 
 static int offset(const int a) {
     if (a < 0) {
@@ -8,108 +10,327 @@ static int offset(const int a) {
     return -(a * 8 + 8);
 }
 
-void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    switch (instr->op) {
-    case IR_UNARYOP:
+void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    Type *from = instr->cast.from;
+    Type *to = instr->cast.to;
+    int dst_offset = offset(instr->dst);
+    int src_offset = offset(instr->cast.src);
+    // char -> int : zero-extend
+    if (from->kind == T_CHAR && to->kind == T_INT) {
+        fprintf(fp, "    movzbl %d(%%rbp), %%eax\n", src_offset);
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", dst_offset);
+        return;
+    }
+    // int -> char : truncate
+    if (from->kind == T_INT && to->kind == T_CHAR) {
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", src_offset);
+        fprintf(fp, "    movb %%al, %d(%%rbp)\n", dst_offset);
+        return;
+    }
+    // int -> int : (just load to %eax)
+    if (from->kind == T_INT && to->kind == T_INT) {
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", src_offset);
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", dst_offset);
+    }
+    // int/char -> float
+    if ((from->kind == T_INT || from->kind == T_CHAR) && to->kind == T_FLOAT) {
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", src_offset);
+        fprintf(fp, "    cvtsi2ss %%eax, %%xmm0\n");
+        fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", dst_offset);
+        return;
+    }
+
+    // float -> int/char : truncate
+    if (from->kind == T_FLOAT && (to->kind == T_INT || to->kind == T_CHAR)) {
+        fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", src_offset);
+        fprintf(fp, "    cvttss2si %%xmm0, %%eax\n");
+        if (to->kind == T_CHAR) {
+            fprintf(fp, "    movb %%al, %d(%%rbp)\n", dst_offset);
+        } else {
+            fprintf(fp, "    movl %%eax, %d(%%rbp)\n", dst_offset);
+        }
+        return;
+    }
+
+    // float -> float (just load into %xmm0)
+    if (from->kind == T_FLOAT && to->kind == T_FLOAT) {
+        fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", src_offset);
+        fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", dst_offset);
+        return;
+    }
+}
+void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->_const.type->kind) {
+    case T_INT:
+        fprintf(fp, "    movl $%d, %%eax\n", instr->_const.i);
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    case T_FLOAT:
+        fprintf(fp, "    movss $%lf, %%xmm0\n", instr->_const.f);
+        fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    case T_CHAR:
+        fprintf(fp, "    movl $%d, %%eax\n", instr->_const.c);
+        fprintf(fp, "    movb %%eax, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    default:
+        printf("Tried to gen x86 IR_CONST for unsupported type\n");
+        exit(1);
+    }
+}
+void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->_const.type->kind) {
+    case T_INT:
+        for (int i = 0; i < instr->call.arg_count; i++) {
+            fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->call.args[i]));
+            fprintf(fp, "    push %%rax\n");
+        }
+        fprintf(fp, "    call %s\n", ctx->module->defs[instr->call.callee].name);
+        fprintf(fp, "    add $%d, %%rsp\n", instr->call.arg_count * 8);
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    case T_FLOAT:
+        for (int i = 0; i < instr->call.arg_count; i++) {
+            fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->call.args[i]));
+            fprintf(fp, "    sub $8, %%rsp\n");
+            fprintf(fp, "    movss %%xmm0, (%%rsp)\n");
+        }
+        fprintf(fp, "    call %s\n", ctx->module->defs[instr->call.callee].name);
+        fprintf(fp, "    add $%d, %%rsp\n", instr->call.arg_count * 8);
+        fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    case T_CHAR:
+        for (int i = 0; i < instr->call.arg_count; i++) {
+            fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->call.args[i]));
+            fprintf(fp, "    push %%rax\n");
+        }
+        fprintf(fp, "    call %s\n", ctx->module->defs[instr->call.callee].name);
+        fprintf(fp, "    add $%d, %%rsp\n", instr->call.arg_count * 8);
+        fprintf(fp, "    movzbl %%al, %%eax\n");
+        fprintf(fp, "    movb %%al, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    default:
+        printf("Tried to gen x86 IR_CONST for unsupported type\n");
+        exit(1);
+    }
+}
+void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->_const.type->kind) {
+    case T_INT:
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->store.addr));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    case T_FLOAT:
+        fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->store.addr));
+        fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    case T_CHAR:
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->store.addr));
+        fprintf(fp, "    movb %%eax, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    default:
+        printf("Tried to gen x86 IR_CONST for unsupported type\n");
+        exit(1);
+    }
+}
+void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->_const.type->kind) {
+    case T_INT:
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->load.addr));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    case T_FLOAT:
+        fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->load.addr));
+        fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
+        break;
+    case T_CHAR:
+        fprintf(fp, "    movbl %d(%%rbp), %%eax\n", offset(instr->load.addr));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        return;
+    default:
+        printf("Tried to gen x86 IR_LOAD for unsupported type\n");
+        exit(1);
+    }
+}
+
+void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->unary.type->kind) {
+    case T_INT:
         switch (instr->unary.op) {
         case POS:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->unary.expr));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case NEG:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->unary.expr));
             fprintf(fp, "    negl %%eax\n");
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case LNOT:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->unary.expr));
             fprintf(fp, "    testl %%eax, %%eax\n");
             fprintf(fp, "    sete %%al\n");
             fprintf(fp, "    movzbl %%al, %%eax\n");
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case BNOT:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->unary.expr));
             fprintf(fp, "    notl %%eax\n");
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         }
-        break;
-    case IR_BINOP:
+    case T_FLOAT:
+        switch (instr->unary.op) {
+        case POS:
+            fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->unary.expr));
+            fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
+            return;
+        case NEG:
+            fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->unary.expr));
+            fprintf(fp, "    xorps %%xmm1, %%xmm1\n"); // xmm1 = 0.0
+            fprintf(fp, "    subss %%xmm0, %%xmm1\n"); // xmm1 = 0.0 - xmm0
+            fprintf(fp, "    movss %%xmm1, %d(%%rbp)\n", offset(instr->dst));
+            return;
+        case LNOT:
+            fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->unary.expr));
+            fprintf(fp, "    xorps %%xmm1, %%xmm1\n");   // xmm1 = 0.0
+            fprintf(fp, "    ucomiss %%xmm1, %%xmm0\n"); // compare xmm0 with 0.0
+            fprintf(fp, "    sete %%al\n");              // set al = 1 if equal
+            fprintf(fp, "    movzbl %%al, %%eax\n");     // zero-extend to eax
+            fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+            return;
+        case BNOT:
+            printf("Tried to perform Bitwise Not ~ on Type float\n");
+            exit(1);
+        }
+    default:
+        printf("Tried to gen x86 for IR_UNARY which is neither float or int");
+        exit(1);
+    }
+}
+void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->binop.type->kind) {
+    case T_INT:
         switch (instr->binop.op) {
         case ADD:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    addl %d(%%rbp), %%eax\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case SUB:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    subl %d(%%rbp), %%eax\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case MUL:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    imull %d(%%rbp)\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case DIV:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    cltd\n");
             fprintf(fp, "    idivl %d(%%rbp)\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case MOD:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    cltd\n");
             fprintf(fp, "    idivl %d(%%rbp)\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%edx, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case AND:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    andl %d(%%rbp), %%eax\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case OR:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    orl %d(%%rbp), %%eax\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case XOR:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    xorl %d(%%rbp), %%eax\n", offset(instr->binop.rhs));
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case SHL:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    movl %d(%%rbp), %%ecx\n", offset(instr->binop.rhs));
             fprintf(fp, "    shll %%cl, %%eax\n");
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         case SHR:
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->binop.lhs));
             fprintf(fp, "    movl %d(%%rbp), %%ecx\n", offset(instr->binop.rhs));
             fprintf(fp, "    sarl %%cl, %%eax\n");
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-            break;
+            return;
         }
-        break;
+    case T_FLOAT:
+        switch (instr->binop.op) {
+        case ADD:
+            fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->binop.lhs));
+            fprintf(fp, "    addss %d(%%rbp), %%xmm0\n", offset(instr->binop.rhs));
+            fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
+            return;
+        case SUB:
+            fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->binop.lhs));
+            fprintf(fp, "    subss %d(%%rbp), %%xmm0\n", offset(instr->binop.rhs));
+            fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
+            return;
+        case MUL:
+            fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->binop.lhs));
+            fprintf(fp, "    mulss %d(%%rbp), %%xmm0\n", offset(instr->binop.rhs));
+            fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
+            return;
+        case DIV:
+            fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->binop.lhs));
+            fprintf(fp, "    divss %d(%%rbp), %%xmm0\n", offset(instr->binop.rhs));
+            fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
+            return;
+        default:
+            printf("Tried to perform unsuported binary operation on type float\n");
+            exit(1);
+        }
+    default:
+        printf("Tried to gen x86 for IR_BINARY which is neither float or int");
+        exit(1);
+    }
+}
+
+void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->op) {
+    case IR_UNARYOP:
+        x86_gen_unary_instruction(fp, ctx, instr);
+        return;
+    case IR_BINOP:
+        x86_gen_binary_instruction(fp, ctx, instr);
+        return;
     case IR_LOAD:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->load.addr));
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-        break;
+        x86_gen_load_instruction(fp, ctx, instr);
+        return;
     case IR_STORE:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->store.addr));
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        x86_gen_store_instruction(fp, ctx, instr);
+        return;
+    case IR_CALL:
+        x86_gen_call_instruction(fp, ctx, instr);
+        return;
+    case IR_CONST:
+        x86_gen_const_instruction(fp, ctx, instr);
+        return;
+    case IR_CAST:
+        x86_gen_cast_instruction(fp, ctx, instr);
         break;
     case IR_RET:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->ret.value));
         fprintf(fp, "    mov %%rbp, %%rsp\n");
         fprintf(fp, "    pop %%rbp\n");
         fprintf(fp, "    ret\n");
-        break;
+        return;
     case IR_BR:
         fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.label);
-        break;
+        return;
     case IR_CMP:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->cmp.lhs));
         fprintf(fp, "    cmpl %d(%%rbp), %%eax\n", offset(instr->cmp.rhs));
@@ -135,20 +356,7 @@ void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr)
         }
         fprintf(fp, "    movzbl %%al, %%eax\n");
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-        break;
-    case IR_CALL:
-        for (int i = 0; i < instr->call.arg_count; i++) {
-            fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->call.args[i]));
-            fprintf(fp, "    push %%rax\n");
-        }
-        fprintf(fp, "    call %s\n", ctx->module->defs[instr->call.callee].name);
-        fprintf(fp, "    add $%d, %%rsp\n", instr->call.arg_count * 8);
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-        break;
-    case IR_CONST:
-        fprintf(fp, "    movl $%d, %%eax\n", instr->iconst.value);
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
-        break;
+        return;
     case IR_BR_COND:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->br_cond.cond));
         fprintf(fp, "    testl %%eax, %%eax\n");
