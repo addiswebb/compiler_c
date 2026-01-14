@@ -116,14 +116,19 @@ void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr)
         switch (instr->cmp.op) {
         case LT:
             fprintf(fp, "    setl %%al\n");
+            break;
         case LE:
             fprintf(fp, "    setle %%al\n");
+            break;
         case GT:
             fprintf(fp, "    setg %%al\n");
+            break;
         case GE:
             fprintf(fp, "    setge %%al\n");
+            break;
         case EQ:
             fprintf(fp, "    sete %%al\n");
+            break;
         case NEQ:
             fprintf(fp, "    setne %%al\n");
             break;
