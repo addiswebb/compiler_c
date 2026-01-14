@@ -12,6 +12,7 @@ typedef enum {
     N_WHILE,
     N_FOR,
     N_RETURN,
+    N_UNARY,
     N_BINARY,
     N_LITERAL,
     N_IDENTIFIER,
@@ -41,6 +42,12 @@ struct Node {
             int capacity;
             int count;
         } compound;
+        // op expr | expr op
+        struct {
+            Node *expr;
+            TokenType op;
+            int associativity;
+        } unary;
         // lhs op rhs
         struct {
             Node *lhs;

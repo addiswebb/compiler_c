@@ -115,7 +115,7 @@ int compile(Compiler *compiler) {
     IR_Context ctx = {NULL, NULL, NULL};
     IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
     if (compiler->flags & COMP_FLAG_IR) {
-        print_ir_module(&ctx,module);
+        print_ir_module(&ctx, module);
     }
 
     if (compiler->flags & COMP_FLAG_ASM) {

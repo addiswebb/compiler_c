@@ -1,3 +1,4 @@
+#include "compiler_c/tokenizer.h"
 #include <compiler_c/node.h>
 
 #include <stdio.h>
@@ -92,9 +93,9 @@ void print_node_type(const NodeType type) {
     case N_FUNCTION_CALL:
         printf("Func Call");
         break;
-    default:
-        printf("\nTried to print an unknown node type\n");
-        exit(1);
+    case N_UNARY:
+        printf("Unary");
+        break;
     }
 }
 // Prints a single node
@@ -162,9 +163,15 @@ void print_node_flat(const Node *node) {
         printf("\tname: %s\n", node->func_call.identifier->identifier.name);
         printf("\tparam count: %d\n", node->func_call.param_count);
         break;
-    default:
-        printf("\t");
-        printf("[Unimplemented]");
+    case N_IF:
+    case N_WHILE:
+    case N_FOR:
+        break;
+    case N_UNARY:
+        printf("\tunary: ");
+        node->unary.associativity ? print_token_type(node->unary.op) : printf(" expr ");
+        !node->unary.associativity ? print_token_type(node->unary.op) : printf(" expr ");
+        printf("\n");
         break;
     }
     printf("\n}\n");
@@ -266,9 +273,12 @@ void print_node(const Node *node, const int depth) {
             print_node(node->func_call.params[i], depth + 1);
         }
         break;
-    default:
-        printf("Tried to print an unknown node type\n");
-        exit(1);
+    case N_UNARY:
+        printf(": [op= ");
+        print_token_type(node->unary.op);
+        printf(", associativity= %d]\n", node->unary.associativity);
+        print_node(node->unary.expr, depth + 1);
+        break;
     }
 }
 

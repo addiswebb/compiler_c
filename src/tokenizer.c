@@ -194,6 +194,18 @@ void print_token_type(const TokenType type) {
     case TK_XOR_EQ:
         printf("\'^=\'");
         break;
+    case TK_L_NOT:
+        printf("\'!\'");
+        break;
+    case TK_BW_NOT:
+        printf("\'~\'");
+        break;
+    case TK_INCR:
+        printf("\'++\'");
+        break;
+    case TK_DECR:
+        printf("\'--\'");
+        break;
     }
 }
 
@@ -212,6 +224,19 @@ void print_token(const Token *token) {
     printf("}\n");
 }
 
+bool is_unary_operator(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_INCR:
+    case TK_DECR:
+    case TK_L_NOT:
+    case TK_BW_NOT:
+        return true;
+    default:
+        return false;
+    }
+}
 bool is_binary_operator(const TokenType type) {
     switch (type) {
     case TK_PLUS:
@@ -303,91 +328,8 @@ int associativity(const TokenType type) {
     }
 }
 
-// int precedence(const TokenType type) {
-//     switch (type) {
-//     case TK_MULTIPLY:
-//     case TK_DIVIDE:
-//     case TK_MOD:
-//         return 0;
-//     case TK_PLUS:
-//     case TK_MINUS:
-//         return 1;
-//     case TK_SHR:
-//     case TK_SHL:
-//         return 2;
-//     case TK_LT:
-//     case TK_LE:
-//     case TK_GT:
-//     case TK_GE:
-//         return 3;
-//     case TK_EQ_EQ:
-//     case TK_NEQ:
-//         return 4;
-//     case TK_AND:
-//         return 5;
-//     case TK_XOR:
-//         return 6;
-//     case TK_OR:
-//         return 7;
-//     case TK_AND_AND:
-//         return 8;
-//     case TK_OR_OR:
-//         return 9;
-//     case TK_SHR_EQ:
-//     case TK_SHL_EQ:
-//     case TK_AND_EQ:
-//     case TK_XOR_EQ:
-//     case TK_OR_EQ:
-//         return 10;
-//     case TK_EQ:
-//     case TK_PLUS_EQ:
-//     case TK_MINUS_EQ:
-//     case TK_MULTIPLY_EQ:
-//     case TK_DIVIDE_EQ:
-//     case TK_MOD_EQ:
-//         return 11;
-//     default:
-//         printf("Tried to get the precedence of a token which is not a binary operator");
-//         print_token_type(type);
-//         exit(1);
-//     }
-// }
 int precedence(const TokenType type) {
     switch (type) {
-    case TK_MULTIPLY:
-    case TK_DIVIDE:
-    case TK_MOD:
-        return 11;
-    case TK_PLUS:
-    case TK_MINUS:
-        return 10;
-    case TK_SHR:
-    case TK_SHL:
-        return 9;
-    case TK_LT:
-    case TK_LE:
-    case TK_GT:
-    case TK_GE:
-        return 8;
-    case TK_EQ_EQ:
-    case TK_NEQ:
-        return 7;
-    case TK_AND:
-        return 6;
-    case TK_XOR:
-        return 5;
-    case TK_OR:
-        return 4;
-    case TK_AND_AND:
-        return 3;
-    case TK_OR_OR:
-        return 2;
-    case TK_SHR_EQ:
-    case TK_SHL_EQ:
-    case TK_AND_EQ:
-    case TK_XOR_EQ:
-    case TK_OR_EQ:
-        return 1;
     case TK_EQ:
     case TK_PLUS_EQ:
     case TK_MINUS_EQ:
@@ -395,6 +337,40 @@ int precedence(const TokenType type) {
     case TK_DIVIDE_EQ:
     case TK_MOD_EQ:
         return 0;
+    case TK_SHR_EQ:
+    case TK_SHL_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_OR_EQ:
+        return 1;
+    case TK_OR_OR:
+        return 2;
+    case TK_AND_AND:
+        return 3;
+    case TK_OR:
+        return 4;
+    case TK_XOR:
+        return 5;
+    case TK_AND:
+        return 6;
+    case TK_EQ_EQ:
+    case TK_NEQ:
+        return 7;
+    case TK_LT:
+    case TK_LE:
+    case TK_GT:
+    case TK_GE:
+        return 8;
+    case TK_SHR:
+    case TK_SHL:
+        return 9;
+    case TK_PLUS:
+    case TK_MINUS:
+        return 10;
+    case TK_MULTIPLY:
+    case TK_DIVIDE:
+    case TK_MOD:
+        return 11;
     default:
         printf("Tried to get the precedence of a token which is not a binary operator");
         print_token_type(type);
@@ -543,6 +519,7 @@ static int is_op_start(char c) {
     case '%':
     case '=':
     case '!':
+    case '~':
     case '<':
     case '>':
     case '|':
@@ -559,8 +536,10 @@ static TokenMatch t_match_operator(Tokenizer *tk) {
     const int eq = next == '=';
     switch (t_peek(tk)) {
     case '+':
+        if (next == '+') return (TokenMatch){TK_INCR, 2};
         return eq ? (TokenMatch){TK_PLUS_EQ, 2} : (TokenMatch){TK_PLUS, 1};
     case '-':
+        if (next == '-') return (TokenMatch){TK_DECR, 2};
         return eq ? (TokenMatch){TK_MINUS_EQ, 2} : (TokenMatch){TK_MINUS, 1};
     case '*':
         return eq ? (TokenMatch){TK_MULTIPLY_EQ, 2} : (TokenMatch){TK_MULTIPLY, 1};
@@ -573,9 +552,9 @@ static TokenMatch t_match_operator(Tokenizer *tk) {
     case '%':
         return eq ? (TokenMatch){TK_MOD_EQ, 2} : (TokenMatch){TK_MOD, 1};
     case '!':
-        if (eq) return (TokenMatch){TK_NEQ, 2};
-        printf("Unexpected \'!\'");
-        exit(1);
+        return eq ? (TokenMatch){TK_NEQ, 2} : (TokenMatch){TK_L_NOT, 1};
+    case '~':
+        return (TokenMatch){TK_BW_NOT, 1};
     case '&':
         return next == '&' ? (TokenMatch){TK_AND_AND, 2} : (eq) ? (TokenMatch){TK_AND_EQ, 2} : (TokenMatch){TK_AND, 1};
     case '|':

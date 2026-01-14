@@ -25,9 +25,16 @@ typedef enum{
     SHL,
 } IR_BINOP_OP;
 
+typedef enum{
+    POS,
+    NEG,
+    LNOT,
+    BNOT,
+} IR_UNARY_OP;
+
 typedef enum {
     IR_CONST,
-    IR_BINOP,
+    IR_UNARYOP,IR_BINOP,
     IR_LOAD, IR_STORE, IR_RET, IR_CALL,
     IR_BR, IR_BR_COND,
     IR_CMP,
@@ -46,6 +53,7 @@ typedef struct {
         struct {int src;} mov;
         struct {int addr; } load;
         struct {int addr; } store;
+        struct {IR_UNARY_OP op; int expr;} unary;
         struct {IR_BINOP_OP op; int lhs, rhs;} binop;
         struct {IR_CMP_OP op; int lhs, rhs; } cmp;
         struct {int callee; int *args; int arg_count;} call;
@@ -100,7 +108,8 @@ typedef struct{
 } IR_Context;
 
 IR_CMP_OP ir_cmp_op(const TokenType type);
-IR_BINOP_OP ir_bin_op(const TokenType type);
+IR_UNARY_OP ir_unary_op(const TokenType type);
+IR_BINOP_OP ir_binary_op(const TokenType type);
 
 /*
     Begin an IR Scope,
@@ -151,7 +160,8 @@ void ir_gen_return(IR_Context *ctx, const Node *_return);
 IR_Function *ir_gen_function(IR_Context *ctx, const Node *func);
 IR_Module *ir_gen_translation_unit(IR_Context *ctx,const Node *tu);
 
-void print_bin_op(IR_BINOP_OP op);
+void print_unary_op(IR_UNARY_OP op);
+void print_binary_op(IR_BINOP_OP op);
 void print_cmp_op(IR_CMP_OP op);
 void print_ir_op(IR_OP op);
 void print_ir_instruction(IR_Context *ctx,const IR_Instruction *instr);

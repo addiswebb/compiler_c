@@ -130,6 +130,14 @@ Node *new_compound_node(NodeManager *nm) {
 */
 Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     Node *node = NULL;
+
+    if (is_unary_operator(p_peek(p)->type)) {
+        node = new_node(nm, N_UNARY);
+        node->unary.op = p_consume(p)->type;
+        node->unary.associativity = RIGHT_ASSOCIATIVITY;
+        node->unary.expr = p_parse_primary_expression(p, nm);
+        return node;
+    }
     switch (p_peek(p)->type) {
     case TK_INT_LITERAL:
         node = new_node(nm, N_LITERAL);
@@ -185,6 +193,13 @@ Node *new_function_call_node(NodeManager *nm, Node *identifier, int param_count)
 
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     Node *primary = p_parse_primary_expression(p, nm);
+    if (p_peek(p)->type == TK_INCR || p_peek(p)->type == TK_DECR) {
+        Node *node = new_node(nm, N_UNARY);
+        node->unary.op = p_consume(p)->type;
+        node->unary.associativity = LEFT_ASSOCIATIVITY;
+        node->unary.expr = primary;
+        primary = node;
+    }
     if (p_peek(p)->type == TK_OPEN_PAREN) {
         p_consume(p); // '('
         if (primary->type != N_IDENTIFIER) {

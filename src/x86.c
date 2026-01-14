@@ -10,6 +10,31 @@ static int offset(const int a) {
 
 void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
+    case IR_UNARYOP:
+        switch (instr->unary.op) {
+        case POS:
+            fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->unary.expr));
+            fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+            break;
+        case NEG:
+            fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->unary.expr));
+            fprintf(fp, "    negl %%eax\n");
+            fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+            break;
+        case LNOT:
+            fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->unary.expr));
+            fprintf(fp, "    testl %%eax, %%eax\n");
+            fprintf(fp, "    sete %%al\n");
+            fprintf(fp, "    movzbl %%al, %%eax\n");
+            fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+            break;
+        case BNOT:
+            fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->unary.expr));
+            fprintf(fp, "    notl %%eax\n");
+            fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+            break;
+        }
+        break;
     case IR_BINOP:
         switch (instr->binop.op) {
         case ADD:

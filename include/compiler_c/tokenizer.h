@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #define MIN_BINARY_OP_PRECEDENCE 0
+
 #define LEFT_ASSOCIATIVITY 1
 #define RIGHT_ASSOCIATIVITY 0
 
@@ -36,6 +37,8 @@ typedef enum {
     TK_RETURN,
     TK_VOID,
     TK_WHILE,
+    // Unary Operators
+    TK_L_NOT, TK_BW_NOT, TK_INCR, TK_DECR,
     // Binary Operators
     TK_EQ, TK_PLUS, TK_MINUS, TK_MULTIPLY, TK_DIVIDE, TK_MOD,
     TK_EQ_EQ, TK_PLUS_EQ, TK_MINUS_EQ, TK_MULTIPLY_EQ, TK_DIVIDE_EQ, TK_MOD_EQ,
@@ -86,7 +89,8 @@ void print_token_type(TokenType type);
 
 void print_token(const Token *token);
 
-bool is_binary_operator(TokenType type);
+bool is_unary_operator(const TokenType type);
+bool is_binary_operator(const TokenType type);
 bool is_comparison_op(const TokenType type);
 
 int associativity(TokenType type);

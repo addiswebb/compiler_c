@@ -28,7 +28,22 @@ IR_CMP_OP ir_cmp_op(const TokenType type) {
         exit(1);
     }
 }
-IR_BINOP_OP ir_bin_op(const TokenType type) {
+IR_UNARY_OP ir_unary_op(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+        return POS;
+    case TK_MINUS:
+        return NEG;
+    case TK_L_NOT:
+        return LNOT;
+    case TK_BW_NOT:
+        return BNOT;
+    default:
+        printf("Given a token which is not a unary operator\n");
+        exit(1);
+    }
+}
+IR_BINOP_OP ir_binary_op(const TokenType type) {
     switch (type) {
     case TK_PLUS:
         return ADD;
@@ -357,13 +372,46 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
         } else {
             IR_Instruction binop;
             binop.op = IR_BINOP;
-            binop.binop.op = ir_bin_op(expr->binary.op);
+            binop.binop.op = ir_binary_op(expr->binary.op);
             binop.binop.lhs = lhs;
             binop.binop.rhs = rhs;
             binop.dst = ir_next_reg(ctx->func);
             ir_append_instruction(ctx->block, &binop);
             return binop.dst;
         }
+    case N_UNARY:
+        int expr_reg = ir_gen_expression(ctx, expr->unary.expr);
+        if (expr->unary.op == TK_INCR || expr->unary.op == TK_DECR) {
+            if (expr->unary.expr->type != N_IDENTIFIER) {
+                printf("Can only increment on a identifieir/variable\n");
+                exit(1);
+            }
+            IR_Instruction const_1;
+            const_1.op = IR_CONST;
+            const_1.dst = ir_next_reg(ctx->func); // r2
+            const_1.iconst.value = 1;
+            IR_Instruction store;
+            store.op = IR_STORE;
+            store.store.addr = expr_reg;
+            store.dst = ir_next_reg(ctx->func);
+            IR_Instruction instr;
+            instr.op = IR_BINOP;
+            instr.binop.lhs = expr_reg;    // r1 = x
+            instr.binop.rhs = const_1.dst; // r2 = 1
+            instr.binop.op = expr->unary.op == TK_INCR ? ADD : SUB;
+            instr.dst = expr_reg;
+            ir_append_instruction(ctx->block, &const_1);
+            ir_append_instruction(ctx->block, &store);
+            ir_append_instruction(ctx->block, &instr);
+            return expr->unary.associativity ? store.dst : instr.dst;
+        }
+        IR_Instruction unaryop;
+        unaryop.op = IR_UNARYOP;
+        unaryop.unary.op = ir_unary_op(expr->unary.op);
+        unaryop.unary.expr = expr_reg;
+        unaryop.dst = ir_next_reg(ctx->func);
+        ir_append_instruction(ctx->block, &unaryop);
+        return unaryop.dst;
     case N_FUNCTION_CALL:
         IR_Instruction func_call;
         func_call.op = IR_CALL;
@@ -522,9 +570,6 @@ void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     case N_RETURN:
         ir_gen_return(ctx, stmt);
         return;
-    case N_BINARY:
-        ir_gen_expression(ctx, stmt);
-        return;
     case N_COMPOUND:
         ir_gen_compound(ctx, stmt);
         return;
@@ -538,6 +583,8 @@ void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
         ir_gen_for_loop(ctx, stmt);
         return;
     case N_FUNCTION_CALL:
+    case N_BINARY:
+    case N_UNARY:
         ir_gen_expression(ctx, stmt);
         return;
     default:
@@ -616,8 +663,24 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
 
     return module;
 }
+void print_unary_op(IR_UNARY_OP op) {
+    switch (op) {
+    case POS:
+        printf("POS");
+        break;
+    case NEG:
+        printf("NEG");
+        break;
+    case LNOT:
+        printf("LNOT");
+        break;
+    case BNOT:
+        printf("BNOT");
+        break;
+    }
+}
 
-void print_bin_op(IR_BINOP_OP op) {
+void print_binary_op(IR_BINOP_OP op) {
     switch (op) {
     case ADD:
         printf("ADD");
@@ -680,9 +743,8 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
         printf("    r%d = CONST $%d", instr->dst, instr->iconst.value);
         break;
     case IR_BINOP:
-        printf("    r%d = BINOP ", instr->dst);
-        printf("r%d, r%d, ", instr->binop.lhs, instr->binop.rhs);
-        print_bin_op(instr->binop.op);
+        printf("    r%d = BINOP r%d, r%d, ", instr->dst, instr->binop.lhs, instr->binop.rhs);
+        print_binary_op(instr->binop.op);
         break;
     case IR_LOAD:
         printf("    r%d = LOAD r%d", instr->dst, instr->load.addr);
@@ -714,6 +776,10 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
         printf("    r%d = CMP ", instr->dst);
         printf("r%d, r%d, ", instr->cmp.lhs, instr->cmp.rhs);
         print_cmp_op(instr->cmp.op);
+        break;
+    case IR_UNARYOP:
+        printf("    r%d = UNARYOP r%d, ", instr->dst, instr->unary.expr);
+        print_unary_op(instr->unary.op);
         break;
     }
     printf("\n");
