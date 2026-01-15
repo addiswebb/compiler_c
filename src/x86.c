@@ -1,7 +1,9 @@
 #include "compiler_c/node.h"
 #include <compiler_c/ir.h>
 #include <compiler_c/x86.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 static int offset(const int a) {
     if (a < 0) {
@@ -31,6 +33,7 @@ void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *i
     if (from->kind == T_INT && to->kind == T_INT) {
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", src_offset);
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", dst_offset);
+        return;
     }
     // int/char -> float
     if ((from->kind == T_INT || from->kind == T_CHAR) && to->kind == T_FLOAT) {
@@ -58,19 +61,23 @@ void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *i
         fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", dst_offset);
         return;
     }
+
+    printf("Cast node did literally nothing?\n");
+    exit(1);
 }
 void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    IR_Const *c = &ctx->module->const_pool.consts[instr->_const.pool_index];
     switch (instr->_const.type->kind) {
     case T_INT:
-        fprintf(fp, "    movl $%d, %%eax\n", instr->_const.i);
+        fprintf(fp, "    movl $%d, %%eax\n", c->i);
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
         return;
     case T_FLOAT:
-        fprintf(fp, "    movss $%lf, %%xmm0\n", instr->_const.f);
+        fprintf(fp, "    movss .LC%d(%%rip), %%xmm0\n", instr->_const.pool_index);
         fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
         return;
     case T_CHAR:
-        fprintf(fp, "    movl $%d, %%eax\n", instr->_const.c);
+        fprintf(fp, "    movl $%d, %%eax\n", c->c);
         fprintf(fp, "    movb %%eax, %d(%%rbp)\n", offset(instr->dst));
         return;
     default:
@@ -79,7 +86,7 @@ void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *
     }
 }
 void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    switch (instr->_const.type->kind) {
+    switch (instr->call.type->kind) {
     case T_INT:
         for (int i = 0; i < instr->call.arg_count; i++) {
             fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->call.args[i]));
@@ -115,7 +122,7 @@ void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *i
     }
 }
 void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    switch (instr->_const.type->kind) {
+    switch (instr->store.type->kind) {
     case T_INT:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->store.addr));
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
@@ -134,7 +141,7 @@ void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *
     }
 }
 void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    switch (instr->_const.type->kind) {
+    switch (instr->load.type->kind) {
     case T_INT:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->load.addr));
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
@@ -321,7 +328,7 @@ void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr)
         return;
     case IR_CAST:
         x86_gen_cast_instruction(fp, ctx, instr);
-        break;
+        return;
     case IR_RET:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->ret.value));
         fprintf(fp, "    mov %%rbp, %%rsp\n");
@@ -386,8 +393,22 @@ void x86_gen_function(FILE *fp, IR_Context *ctx) {
 }
 
 void x86_gen_module(FILE *fp, IR_Context *ctx) {
+    // Const floats/strings
+    if (ctx->module->const_pool.count > 0) {
+        fprintf(fp, ".section .rodata\n");
+        for (int i = 0; i < ctx->module->const_pool.count; i++) {
+            if (ctx->module->const_pool.consts[i].type == type_float) {
+                uint32_t bits;
+                memcpy(&bits, &ctx->module->const_pool.consts[i].f, sizeof(bits));
+                fprintf(fp, ".LC%d:\n    .align 4\n    .long 0x%08x\n", i, bits);
+                // fprintf(fp, ".LC%d:\n    .float %g\n", i, ctx->module->const_pool.consts[i].f);
+            }
+        }
+        fprintf(fp, ".section .text\n\n");
+    }
+
     fprintf(fp, ".global main\n");
-    fprintf(fp, "    jmp main\n");
+    // fprintf(fp, "    jmp main\n"); // To remove
     for (int i = 0; i < ctx->module->func_count; i++) {
         ctx->func = ctx->module->functions[i];
         x86_gen_function(fp, ctx);

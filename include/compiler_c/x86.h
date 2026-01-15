@@ -18,6 +18,7 @@ void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *
 void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+
 void x86_gen_instruction(FILE *fp,IR_Context *ctx, const IR_Instruction *instr);
 void x86_gen_block(FILE *fp, IR_Context *ctx);
 void x86_gen_function(FILE *fp, IR_Context *ctx);

@@ -1,7 +1,5 @@
 int main() {
-    int x = 3;
-    if (x) {
-        return 10;
-    }
-    return x;
+    float pie = 112.5153;
+    int a = pie;
+    return a;
 }

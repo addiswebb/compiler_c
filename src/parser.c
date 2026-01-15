@@ -675,7 +675,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
     case N_VAR_DECL:
         semantic_analysis(p, nm, node->var_decl.expr);
         if (node->var_decl.expr->type != node->type) {
-            cast_node(nm, node, node->type);
+            node->var_decl.expr = cast_node(nm, node->var_decl.expr, node->type);
         }
         break;
     case N_UNARY:

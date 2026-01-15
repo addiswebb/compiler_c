@@ -51,7 +51,7 @@ typedef struct {
     IR_OP op;
     int dst;
     union {
-        struct { union{ int i; float f; char c; }; Type *type; } _const;
+        struct {int pool_index; Type *type; } _const;
         struct {int src; Type *type;} mov;
         struct {int addr; Type*type;} load;
         struct {int addr; Type*type; } store;
@@ -97,12 +97,30 @@ typedef struct{
     int index;
 } IR_Func_Def;
 
+
+typedef struct{
+    Type *type;
+    union{
+        int i;
+        float f;
+        char c;
+    };
+}IR_Const;
+
+typedef struct{
+    int count;
+    int capacity;
+    IR_Const *consts;
+}IR_Const_Pool;
+
 typedef struct {
     IR_Function **functions;
     int func_count;
     int func_capacity;
     IR_Func_Def *defs;
+    IR_Const_Pool const_pool;
 } IR_Module;
+
 
 typedef struct{
     IR_Module *module;
@@ -145,6 +163,7 @@ void ir_new_func_def(IR_Module *module, IR_Function *func);
 void ir_append_function(IR_Module *module, IR_Function *func);
 int ir_append_block(IR_Context *ctx, IR_Block *block);
 void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction);
+int ir_append_const(IR_Module *module, IR_Const *new_const);
 
 int ir_get_func_def(const IR_Context *ctx, const char *name);
 int ir_get_var_reg(const IR_Context *ctx, const char *name);

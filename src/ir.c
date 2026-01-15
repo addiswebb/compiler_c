@@ -135,6 +135,17 @@ IR_Module *ir_new_module() {
         free(module);
         exit(1);
     }
+    module->const_pool.capacity = 4;
+    module->const_pool.count = 0;
+    module->const_pool.consts = malloc(sizeof(IR_Const) * module->const_pool.capacity);
+    if (!module->const_pool.consts) {
+        printf("Failed to allocate IR module const pool\n");
+        free(module->defs);
+        free(module->functions);
+        free(module->const_pool.consts);
+        free(module);
+        exit(1);
+    }
     return module;
 }
 
@@ -230,6 +241,20 @@ void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
         block->instructions = new_instructions;
     }
     block->instructions[block->count++] = *instruction;
+}
+
+int ir_append_const(IR_Module *module, IR_Const *new_const) {
+    if (module->const_pool.count >= module->const_pool.capacity) {
+        module->const_pool.capacity *= 2;
+        IR_Const *new_consts = realloc(module->const_pool.consts, sizeof(IR_Const) * module->const_pool.capacity);
+        if (!new_consts) {
+            printf("Failed to reallocate for new ir_consts\n");
+            exit(1);
+        }
+        module->const_pool.consts = new_consts;
+    }
+    module->const_pool.consts[module->const_pool.count] = *new_const;
+    return module->const_pool.count++;
 }
 
 int ir_new_var(IR_Function *func, const char *name, Type *type) {
@@ -330,20 +355,23 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
         instr.op = IR_CONST;
         instr.dst = ir_next_reg(ctx->func);
         instr._const.type = expr->type;
+        IR_Const c;
+        c.type = expr->type;
         switch (expr->type->kind) {
         case T_INT:
-            instr._const.i = expr->literal.i;
+            c.i = expr->literal.i;
             break;
         case T_FLOAT:
-            instr._const.f = expr->literal.f;
+            c.f = expr->literal.f;
             break;
         case T_CHAR:
-            instr._const.c = expr->literal.c;
+            c.c = expr->literal.c;
             break;
         default:
             printf("Tried to create IR_CONST instruction with an invalid type\n");
             exit(1);
         }
+        instr._const.pool_index = ir_append_const(ctx->module, &c);
         ir_append_instruction(ctx->block, &instr);
         return instr.dst;
     case N_IDENTIFIER:
@@ -408,17 +436,20 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
             instr.binop.op = expr->unary.op == TK_INCR ? ADD : SUB;
             instr.binop.type = expr->type;
             instr.dst = expr_reg;
+            IR_Const c;
+            c.type = expr->type;
             switch (expr->type->kind) {
             case T_INT:
-                const_1._const.i = 1;
+                c.i = 1;
                 break;
             case T_FLOAT:
-                const_1._const.f = 1.0;
+                c.f = 1.0;
                 break;
             default:
                 printf("Tried to increment a value which is neither float or int\n");
                 exit(1);
             }
+            instr._const.pool_index = ir_append_const(ctx->module, &c);
             ir_append_instruction(ctx->block, &const_1);
             ir_append_instruction(ctx->block, &store);
             ir_append_instruction(ctx->block, &instr);
@@ -458,9 +489,10 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
         IR_Instruction cast;
         cast.op = IR_CAST;
         cast.cast.from = expr->cast.from;
-        cast.cast.to = expr->cast.to;
+        cast.cast.to = expr->type;
         cast.cast.src = ir_gen_expression(ctx, expr->cast.expr);
         cast.dst = ir_next_reg(ctx->func);
+        ir_append_instruction(ctx->block, &cast);
         return cast.dst;
     default:
         break;
@@ -781,20 +813,7 @@ const char ir_type_suffix(Type *type) {
 void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_CONST:
-        switch (instr->_const.type->kind) {
-        case T_INT:
-            printf("    r%d = CONST $%d", instr->dst, instr->_const.i);
-            break;
-        case T_FLOAT:
-            printf("    r%d = CONST $%g", instr->dst, instr->_const.f);
-            break;
-        case T_CHAR:
-            printf("    r%d = CONST $%c", instr->dst, instr->_const.c);
-            break;
-        default:
-            printf("Given invalid type to print ir instruction\n");
-            exit(1);
-        }
+        printf("    r%d = CONST c%d", instr->dst, instr->_const.pool_index);
         break;
     case IR_BINOP:
         printf("    r%d = BINOP:%c r%d, r%d, ", ir_type_suffix(instr->binop.type), instr->dst, instr->binop.lhs, instr->binop.rhs);
@@ -837,7 +856,7 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
         print_unary_op(instr->unary.op);
         break;
     case IR_CAST:
-        printf("    r%d = CAST %c to %c r%d, ", ir_type_suffix(instr->cast.from), ir_type_suffix(instr->cast.to), instr->dst,
+        printf("    r%d = CAST %c to %c, r%d, ", instr->dst, ir_type_suffix(instr->cast.from), ir_type_suffix(instr->cast.to),
                instr->cast.src);
         break;
     }
