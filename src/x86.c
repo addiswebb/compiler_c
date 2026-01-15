@@ -37,7 +37,11 @@ void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *i
     }
     // int/char -> float
     if ((from->kind == T_INT || from->kind == T_CHAR) && to->kind == T_FLOAT) {
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", src_offset);
+        if (to->kind == T_CHAR) {
+            fprintf(fp, "    movb %d(%%rbp), %%al\n", src_offset);
+        } else {
+            fprintf(fp, "    movl %d(%%rbp), %%eax\n", src_offset);
+        }
         fprintf(fp, "    cvtsi2ss %%eax, %%xmm0\n");
         fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", dst_offset);
         return;
@@ -77,8 +81,8 @@ void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *
         fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
         return;
     case T_CHAR:
-        fprintf(fp, "    movl $%d, %%eax\n", c->c);
-        fprintf(fp, "    movb %%eax, %d(%%rbp)\n", offset(instr->dst));
+        fprintf(fp, "    movb $%d, %%al\n", c->c);
+        fprintf(fp, "    movb %%al, %d(%%rbp)\n", offset(instr->dst));
         return;
     default:
         printf("Tried to gen x86 IR_CONST for unsupported type\n");
@@ -113,7 +117,6 @@ void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *i
         }
         fprintf(fp, "    call %s\n", ctx->module->defs[instr->call.callee].name);
         fprintf(fp, "    add $%d, %%rsp\n", instr->call.arg_count * 8);
-        fprintf(fp, "    movzbl %%al, %%eax\n");
         fprintf(fp, "    movb %%al, %d(%%rbp)\n", offset(instr->dst));
         return;
     default:
@@ -132,8 +135,8 @@ void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *
         fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
         return;
     case T_CHAR:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->store.addr));
-        fprintf(fp, "    movb %%eax, %d(%%rbp)\n", offset(instr->dst));
+        fprintf(fp, "    movb %d(%%rbp), %%al\n", offset(instr->store.addr));
+        fprintf(fp, "    movb %%al, %d(%%rbp)\n", offset(instr->dst));
         return;
     default:
         printf("Tried to gen x86 IR_CONST for unsupported type\n");
@@ -151,8 +154,8 @@ void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *i
         fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
         break;
     case T_CHAR:
-        fprintf(fp, "    movbl %d(%%rbp), %%eax\n", offset(instr->load.addr));
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        fprintf(fp, "    movb %d(%%rbp), %%al\n", offset(instr->load.addr));
+        fprintf(fp, "    movb %%al, %d(%%rbp)\n", offset(instr->dst));
         return;
     default:
         printf("Tried to gen x86 IR_LOAD for unsupported type\n");
@@ -194,16 +197,16 @@ void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *
             return;
         case NEG:
             fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->unary.expr));
-            fprintf(fp, "    xorps %%xmm1, %%xmm1\n"); // xmm1 = 0.0
-            fprintf(fp, "    subss %%xmm0, %%xmm1\n"); // xmm1 = 0.0 - xmm0
+            fprintf(fp, "    xorps %%xmm1, %%xmm1\n");
+            fprintf(fp, "    subss %%xmm0, %%xmm1\n");
             fprintf(fp, "    movss %%xmm1, %d(%%rbp)\n", offset(instr->dst));
             return;
         case LNOT:
             fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->unary.expr));
-            fprintf(fp, "    xorps %%xmm1, %%xmm1\n");   // xmm1 = 0.0
-            fprintf(fp, "    ucomiss %%xmm1, %%xmm0\n"); // compare xmm0 with 0.0
-            fprintf(fp, "    sete %%al\n");              // set al = 1 if equal
-            fprintf(fp, "    movzbl %%al, %%eax\n");     // zero-extend to eax
+            fprintf(fp, "    xorps %%xmm1, %%xmm1\n");
+            fprintf(fp, "    ucomiss %%xmm1, %%xmm0\n");
+            fprintf(fp, "    sete %%al\n");
+            fprintf(fp, "    movzbl %%al, %%eax\n");
             fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
             return;
         case BNOT:

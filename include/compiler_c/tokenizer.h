@@ -16,7 +16,7 @@ typedef struct {
     int size;
 } Buffer;
 
-#define KEYWORDS_N 9
+#define KEYWORDS_N 10
 extern const char* KEYWORDS[KEYWORDS_N];
 
 /*
@@ -28,6 +28,7 @@ extern const char* KEYWORDS[KEYWORDS_N];
 */
 typedef enum {
     // Keywords
+    TK_CHAR,
     TK_ELSE,
     TK_EXIT,
     TK_IF,
@@ -55,7 +56,7 @@ typedef enum {
     TK_COMMA,
     TK_SEMI,
     // Other
-    TK_INT_LITERAL, TK_FLT_LITERAL,
+    TK_INT_LITERAL, TK_FLT_LITERAL, TK_CHAR_LITERAL,
     TK_EXPR,
     TK_IDENTIFIER,
 } TokenType;

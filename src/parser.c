@@ -162,6 +162,11 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         node->type = type_float;
         node->literal.f = atof(p_consume(p)->value);
         return node;
+    case TK_CHAR_LITERAL:
+        node = new_node(nm, N_LITERAL);
+        node->type = type_char;
+        node->literal.c = p_consume(p)->value[0];
+        return node;
     case TK_IDENTIFIER:
         node = new_node(nm, N_IDENTIFIER);
         node->identifier.name = p_consume(p)->value;
@@ -255,6 +260,7 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm) {
     switch (p_peek(p)->type) {
     case TK_INT:
     case TK_FLOAT:
+    case TK_CHAR:
         return p_parse_var_declaration(p, nm);
         break;
     default:
@@ -562,6 +568,8 @@ Type *token_to_type(TokenType t) {
         return type_int;
     case TK_FLOAT:
         return type_float;
+    case TK_CHAR:
+        return type_char;
     default:
         printf("Tried to convert a token which is not a valid value type\n");
         exit(1);

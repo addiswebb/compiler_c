@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *KEYWORDS[KEYWORDS_N] = {"else", "exit", "if", "int", "for", "float", "return", "void", "while"};
+const char *KEYWORDS[KEYWORDS_N] = {"char", "else", "exit", "if", "int", "for", "float", "return", "void", "while"};
 
 static void t_buffer_reset(Tokenizer *tk) {
     tk->buf.size = 0;
@@ -59,6 +59,9 @@ void print_token_type(const TokenType type) {
     case TK_FLT_LITERAL:
         printf("Float Literal");
         break;
+    case TK_CHAR_LITERAL:
+        printf("Char Literal");
+        break;
     case TK_SEMI:
         printf("\';\'");
         break;
@@ -88,6 +91,9 @@ void print_token_type(const TokenType type) {
         break;
     case TK_FLOAT:
         printf("Float");
+        break;
+    case TK_CHAR:
+        printf("Char");
         break;
     case TK_VOID:
         printf("void");
@@ -708,6 +714,17 @@ static void t_consume_special_char(Tokenizer *tk) {
     t_consume(tk);
     t_push_buffer(tk, type);
 }
+static void t_consume_char_literal(Tokenizer *tk) {
+    if (t_peek_n(tk, 2) == '\'') {
+        t_skip(tk);
+        t_consume(tk);
+        t_skip(tk);
+        t_push_buffer(tk, TK_CHAR_LITERAL);
+    } else {
+        printf("Expected single character char 'c' \n");
+        exit(1);
+    }
+}
 
 void t_tokenize(Tokenizer *tk) {
     while (!t_is_eof(tk)) {
@@ -737,6 +754,8 @@ void t_tokenize(Tokenizer *tk) {
             t_skip(tk);
         } else if (t_peek(tk) == '/' && (t_peek_next(tk) == '/' || t_peek_next(tk) == '*')) {
             t_skip_comments(tk);
+        } else if (t_peek(tk) == '\'') {
+            t_consume_char_literal(tk);
         } else {
             if (is_op_start(c)) {
                 t_consume_operator(tk);

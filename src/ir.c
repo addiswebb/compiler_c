@@ -813,7 +813,23 @@ const char ir_type_suffix(Type *type) {
 void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_CONST:
-        printf("    r%d = CONST c%d", instr->dst, instr->_const.pool_index);
+        switch (instr->_const.type->kind) {
+        case T_INT:
+            printf("    r%d = CONST c%d, %d", instr->dst, instr->_const.pool_index,
+                   ctx->module->const_pool.consts[instr->_const.pool_index].i);
+            break;
+        case T_FLOAT:
+            printf("    r%d = CONST c%d, %g", instr->dst, instr->_const.pool_index,
+                   ctx->module->const_pool.consts[instr->_const.pool_index].f);
+            break;
+        case T_CHAR:
+            printf("    r%d = CONST c%d, %c", instr->dst, instr->_const.pool_index,
+                   ctx->module->const_pool.consts[instr->_const.pool_index].c);
+            break;
+        default:
+            printf("Tried to print IR_CONST of unknown type\n");
+            exit(1);
+        }
         break;
     case IR_BINOP:
         printf("    r%d = BINOP:%c r%d, r%d, ", ir_type_suffix(instr->binop.type), instr->dst, instr->binop.lhs, instr->binop.rhs);

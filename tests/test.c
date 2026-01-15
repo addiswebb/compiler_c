@@ -1,5 +1,4 @@
 int main() {
-    float pie = 112.5153;
-    int a = pie;
-    return a;
+    char c = 'a';
+    return c + 3;
 }
