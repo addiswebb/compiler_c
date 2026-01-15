@@ -543,7 +543,6 @@ static void t_consume_n(Tokenizer *tk, int n) {
         printf("T_Consume Reached the end of the file");
         exit(1);
     } else {
-
         for (int i = 0; i < n; i++) {
             tk->buf.buf[tk->buf.size++] = tk->src[tk->index++];
         }
@@ -724,6 +723,15 @@ static void t_consume_char_literal(Tokenizer *tk) {
         printf("Expected single character char 'c' \n");
         exit(1);
     }
+}
+
+static void t_consume_string_literal(Tokenizer *tk) {
+    t_skip(tk); // "
+    while (t_peek(tk) != '\"') {
+        t_consume(tk);
+    }
+    t_skip(tk); // "
+    t_push_buffer(tk, TK_STRING_LITERAL);
 }
 
 void t_tokenize(Tokenizer *tk) {

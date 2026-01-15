@@ -1,7 +1,8 @@
+#include "compiler_c/ir.h"
 #include "compiler_c/node.h"
-#include <compiler_c/ir.h>
-#include <compiler_c/x86.h>
+
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -11,8 +12,7 @@ static int offset(const int a) {
     }
     return -(a * 8 + 8);
 }
-
-void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     Type *from = instr->cast.from;
     Type *to = instr->cast.to;
     int dst_offset = offset(instr->dst);
@@ -69,7 +69,7 @@ void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *i
     printf("Cast node did literally nothing?\n");
     exit(1);
 }
-void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     IR_Const *c = &ctx->module->const_pool.consts[instr->_const.pool_index];
     switch (instr->_const.type->kind) {
     case T_INT:
@@ -89,7 +89,7 @@ void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *
         exit(1);
     }
 }
-void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->call.type->kind) {
     case T_INT:
         for (int i = 0; i < instr->call.arg_count; i++) {
@@ -124,7 +124,7 @@ void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *i
         exit(1);
     }
 }
-void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->store.type->kind) {
     case T_INT:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->store.addr));
@@ -143,7 +143,7 @@ void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *
         exit(1);
     }
 }
-void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->load.type->kind) {
     case T_INT:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->load.addr));
@@ -162,8 +162,7 @@ void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *i
         exit(1);
     }
 }
-
-void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->unary.type->kind) {
     case T_INT:
         switch (instr->unary.op) {
@@ -218,7 +217,7 @@ void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *
         exit(1);
     }
 }
-void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->binop.type->kind) {
     case T_INT:
         switch (instr->binop.op) {
@@ -308,8 +307,7 @@ void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         exit(1);
     }
 }
-
-void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_UNARYOP:
         x86_gen_unary_instruction(fp, ctx, instr);
@@ -374,14 +372,12 @@ void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr)
         break;
     }
 }
-
-void x86_gen_block(FILE *fp, IR_Context *ctx) {
+static void x86_gen_block(FILE *fp, IR_Context *ctx) {
     for (int i = 0; i < ctx->block->count; i++) {
         x86_gen_instruction(fp, ctx, &ctx->block->instructions[i]);
     }
 }
-
-void x86_gen_function(FILE *fp, IR_Context *ctx) {
+static void x86_gen_function(FILE *fp, IR_Context *ctx) {
     const int locals_size = ctx->func->max_reg * 8;
     const int stack_size = locals_size + 15 & ~15;
     fprintf(fp, "%s:\n", ctx->func->name);
@@ -394,7 +390,6 @@ void x86_gen_function(FILE *fp, IR_Context *ctx) {
         x86_gen_block(fp, ctx);
     }
 }
-
 void x86_gen_module(FILE *fp, IR_Context *ctx) {
     // Const floats/strings
     if (ctx->module->const_pool.count > 0) {
@@ -404,14 +399,12 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
                 uint32_t bits;
                 memcpy(&bits, &ctx->module->const_pool.consts[i].f, sizeof(bits));
                 fprintf(fp, ".LC%d:\n    .align 4\n    .long 0x%08x\n", i, bits);
-                // fprintf(fp, ".LC%d:\n    .float %g\n", i, ctx->module->const_pool.consts[i].f);
             }
         }
         fprintf(fp, ".section .text\n\n");
     }
 
     fprintf(fp, ".global main\n");
-    // fprintf(fp, "    jmp main\n"); // To remove
     for (int i = 0; i < ctx->module->func_count; i++) {
         ctx->func = ctx->module->functions[i];
         x86_gen_function(fp, ctx);
