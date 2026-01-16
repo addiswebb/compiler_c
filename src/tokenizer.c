@@ -576,12 +576,17 @@ static void t_skip(Tokenizer *tk) { t_skip_n(tk, 1); }
 
 static void t_push_buffer(Tokenizer *tk, const TokenType type) {
     if (tk->buf.size == 0) {
-        printf("EMPTY BUFFER");
+        printf("Tried to push an empty buffer to TokenArray, skipping.\n");
         return;
     }
-    const Token token = {type, strdup(tk->buf.buf)};
+    char *buf_dupe = malloc(sizeof(char) * tk->buf.size);
+    if (!buf_dupe) {
+        printf("Failed to allocate for buffer duplicate\n");
+        exit(1);
+    }
+    memcpy(buf_dupe, tk->buf.buf, sizeof(char) * tk->buf.size);
+    ta_push(&tk->tokens, (Token){type, buf_dupe, tk->buf.size});
     t_buffer_reset(tk);
-    ta_push(&tk->tokens, token);
 }
 
 static void t_parse_and_push_buffer(Tokenizer *tk) {

@@ -23,6 +23,7 @@ const char *x86_rax_reg(Type *t) {
         }
     }
     if (t->kind == T_POINTER) return "%rax";
+    if (t->kind == T_ARRAY) return "%rax";
     printf("Tried to get %%rax register of unsupported type\n");
     exit(1);
 }
@@ -45,6 +46,7 @@ const char *x86_rbx_reg(Type *t) {
         }
     }
     if (t->kind == T_POINTER) return "%rbx";
+    if (t->kind == T_ARRAY) return "%rbx";
     printf("Tried to get %%rbx register of unsupported type\n");
     exit(1);
 }
@@ -67,6 +69,7 @@ const char *x86_rcx_reg(Type *t) {
         }
     }
     if (t->kind == T_POINTER) return "%rcx";
+    if (t->kind == T_ARRAY) return "%rcx";
     printf("Tried to get %%rcx register of unsupported type\n");
     exit(1);
 }
@@ -89,6 +92,7 @@ const char *x86_rdx_reg(Type *t) {
         }
     }
     if (t->kind == T_POINTER) return "%rdx";
+    if (t->kind == T_ARRAY) return "%rdx";
     printf("Tried to get %%rdx register of unsupported type\n");
     exit(1);
 }
@@ -121,6 +125,7 @@ const char *x86_op_suffix(Type *t) {
         }
     }
     if (t->kind == T_POINTER) return "q";
+    if (t->kind == T_ARRAY) return "q";
     printf("Tried to op of unsupported type\n");
     exit(1);
 }

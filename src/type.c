@@ -22,10 +22,10 @@ void init_types() {
     type_short = init_type(T_INT, sizeof(short));
     type_int = init_type(T_INT, sizeof(int));
     type_long = init_type(T_INT, sizeof(long long));
-    
+
     type_float = init_type(T_FLOAT, sizeof(float));
     type_double = init_type(T_FLOAT, sizeof(double));
-    
+
     type_void = init_type(T_VOID, sizeof(void));
 
     type_void_ptr = init_type(T_POINTER, sizeof(void *));
@@ -50,8 +50,7 @@ Type *init_type(TypeKind type, int size) {
     t->base = type_invalid;
     return t;
 }
-
-Type *new_pointer_type(Type *type) {
+Type *new_type() {
     if (typepool.count >= typepool.capacity) {
         typepool.capacity *= 2;
         Type *new_pool = realloc(typepool.types, sizeof(Type) * typepool.capacity);
@@ -61,18 +60,37 @@ Type *new_pointer_type(Type *type) {
         }
         typepool.types = new_pool;
     }
-    Type ptr_type;
-    ptr_type.kind = T_POINTER;
-    ptr_type.size = sizeof(void *);
-    ptr_type.base = type;
-    typepool.types[typepool.count] = ptr_type;
     return &typepool.types[typepool.count++];
 }
 
+Type *new_array_type(Type *type, int len) {
+    Type *arr_type = new_type();
+    arr_type->kind = T_ARRAY;
+    arr_type->size = sizeof(type->base->size * len);
+    arr_type->base = type;
+    arr_type->array_len = len;
+    return arr_type;
+}
+Type *new_pointer_type(Type *type) {
+    Type *ptr_type = new_type();
+    ptr_type->kind = T_POINTER;
+    ptr_type->size = sizeof(void *);
+    ptr_type->base = type;
+    return ptr_type;
+}
+
+Type *get_array_type(Type *type, int len) {
+    for (int i = 0; i < typepool.count; i++) {
+        if (typepool.types[i].base == type && typepool.types[i].kind == T_ARRAY && typepool.types[i].array_len == len) {
+            return &typepool.types[i];
+        }
+    }
+    return new_array_type(type, len);
+}
 // Retrieves the given "type" wrapped in a pointer from global type pool if it exits, otherwise it creates one and adds it to the pool
 Type *get_pointer_type(Type *type) {
     for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].base == type) {
+        if (typepool.types[i].base == type && typepool.types[i].kind == T_POINTER) {
             return &typepool.types[i];
         }
     }

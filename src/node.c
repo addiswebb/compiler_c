@@ -73,6 +73,10 @@ void print_type(Type *type) {
     case T_INVALID:
         printf("[INVALID TYPE]");
         break;
+    case T_ARRAY:
+        print_type(type->base);
+        printf("[%d]", type->array_len);
+        break;
     case T_INT:
         switch (type->size) {
         case 1:
@@ -200,23 +204,23 @@ void print_node(const Node *node, const int depth) {
         print_type(node->type);
         printf(", ");
         if (node->type == type_char) {
-            printf("value: %c]", (char)node->literal.i);
+            printf("value= %c]\n", (char)node->literal.i);
             break;
         }
         switch (node->type->kind) {
         case T_INT:
             switch (node->type->size) {
             case 1:
-                printf("value: \'%c\']", (char)node->literal.i);
+                printf("value= \'%c\']\n", (char)node->literal.i);
                 break;
             case 2:
-                printf("value: %d]", (short)node->literal.i);
+                printf("value= %d]\n", (short)node->literal.i);
                 break;
             case 4:
-                printf("value: %d]", (int)node->literal.i);
+                printf("value= %d]\n", (int)node->literal.i);
                 break;
             case 8:
-                printf("value: %lld]", node->literal.i);
+                printf("value= %lld]\n", node->literal.i);
                 break;
             default:
                 printf("Given invalid size of int to print node_flat\n");
@@ -224,14 +228,23 @@ void print_node(const Node *node, const int depth) {
             }
             break;
         case T_FLOAT:
-            printf("value: %g]\n", node->literal.f);
+            printf("value= %g]\n", node->literal.f);
             break;
         case T_INVALID:
-            printf(", INVALID TYPE]\n");
+            printf("INVALID TYPE]\n");
             break;
+        case T_ARRAY:
+            if (node->type->base == type_char) {
+                printf("value= \"");
+                for (int i = 0; i < node->type->array_len; i++) {
+                    printf("%c", node->literal.s[i]);
+                }
+                printf("\"]\n");
+                break;
+            }
         case T_POINTER:
             if (node->type->base == type_char) {
-                printf(", value: \"%s\"]\n", node->literal.s);
+                printf("value= \"%s\"]\n", node->literal.s);
                 break;
             }
         default:
@@ -301,10 +314,10 @@ void print_node(const Node *node, const int depth) {
         print_node(node->unary.expr, depth + 1);
         break;
     case N_CAST:
-        printf(": [to= ");
-        print_type(node->type);
-        printf(", from= ");
+        printf(": [from= ");
         print_type(node->cast.from);
+        printf(", to= ");
+        print_type(node->type);
         printf(" ]\n");
         print_node(node->cast.expr, depth + 1);
         break;

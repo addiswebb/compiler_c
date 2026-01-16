@@ -48,7 +48,11 @@ extern TypePool typepool;
 void init_types();
 Type *init_type(TypeKind type, int size);
 
+Type *new_type();
 Type *get_pointer_type(Type *type);
 Type *new_pointer_type(Type *type);
+
+Type *new_array_type(Type *type, int len);
+Type *get_array_type(Type *type, int len);
 
 #endif // COMPILER_C_TYPE_H

@@ -1,4 +1,3 @@
-#include "compiler_c/ir.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
 #include <compiler_c/node.h>
@@ -169,8 +168,9 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         return node;
     case TK_STRING_LITERAL:
         node = new_node(nm, N_LITERAL);
-        node->type = get_pointer_type(type_char);
-        node->literal.s = p_consume(p)->value;
+        Token *tk = p_consume(p);
+        node->literal.s = tk->value;
+        node->type = get_array_type(type_char, tk->size);
         return node;
     case TK_IDENTIFIER:
         node = new_node(nm, N_IDENTIFIER);
@@ -309,9 +309,9 @@ Node *p_parse_var_declaration(Parser *p, NodeManager *nm) {
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p);
         // Todo; allow for const expressions like [5 + 6] or smt
-        atoi(p_consume_a(p, TK_INT_LITERAL)->value);
+        const int len = atoi(p_consume_a(p, TK_INT_LITERAL)->value);
         p_consume_a(p, TK_CLOSE_SQUARE);
-        node->type = get_pointer_type(type);
+        node->type = get_array_type(type, len);
     }
 
     if (p_peek(p)->type == TK_EQ) {
@@ -820,6 +820,14 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
         break;
     case N_LITERAL:
         // Trust the tokenizer
+        switch (node->type->kind) {
+        case T_ARRAY:
+        // if(node->type->base == type_char){
+        // //     node->literal.s;
+        // // }
+        default:
+            break;
+        }
         break;
     case N_INDEX:
         semantic_analysis(p, nm, node->index.index);

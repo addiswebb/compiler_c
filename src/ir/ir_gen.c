@@ -44,6 +44,7 @@ int ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             c.f = expr->literal.f;
             break;
         case T_POINTER:
+        case T_ARRAY:
             if (c.type->base == type_char) {
                 c.s = expr->literal.s;
                 break;
