@@ -1,32 +1,11 @@
 #include "compiler_c/tokenizer.h"
+#include "compiler_c/type.h"
 #include <compiler_c/node.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-Type *type_int;
-Type *type_float;
-Type *type_char;
-Type *type_invalid;
-
-void init_types() {
-    type_int = new_type(T_INT, sizeof(int));
-    type_float = new_type(T_FLOAT, sizeof(float));
-    type_char = new_type(T_CHAR, sizeof(char));
-    type_invalid = new_type(T_INVALID, 0);
-}
-
-Type *new_type(TypeKind type, int size) {
-    Type *t = malloc(sizeof(Type));
-    if (!t) {
-        printf("Failed to alloc for new type\n");
-        exit(1);
-    }
-    t->kind = type;
-    t->size = size;
-    return t;
-}
 NodeManager new_node_manager() {
     NodeManager nm;
     nm.capacity = NODE_ARENA_SIZE;
@@ -89,16 +68,20 @@ bool is_valid_cast(Type *from, Type *to) { return true; }
 void print_type(Type *type) {
     switch (type->kind) {
     case T_INVALID:
-        printf("T_INVALID");
+        printf("[INVALID TYPE]");
         break;
     case T_INT:
-        printf("T_INT");
+        printf("int");
         break;
     case T_FLOAT:
-        printf("T_FLOAT");
+        printf("float");
         break;
     case T_CHAR:
-        printf("T_CHAR");
+        printf("char");
+        break;
+    case T_POINTER:
+        printf("*");
+        print_type(type->ptr_to);
         break;
     }
 }

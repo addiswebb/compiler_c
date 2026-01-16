@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "compiler_c/tokenizer.h"
+#include "compiler_c/type.h"
 #include <compiler_c/ir.h>
 #include <compiler_c/node.h>
 
@@ -37,6 +38,10 @@ IR_UNARY_OP ir_unary_op(const TokenType type) {
         return LNOT;
     case TK_BW_NOT:
         return BNOT;
+    case TK_AND:
+        return REF;
+    case TK_MULTIPLY:
+        return DEREF;
     default:
         printf("Given a token which is not a unary operator\n");
         exit(1);
@@ -391,7 +396,7 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
             assign_instr.store.addr = rhs;
             assign_instr.store.type = expr->type;
             ir_append_instruction(ctx->block, &assign_instr);
-            return lhs;
+            return rhs;
         }
         if (is_comparison_op(expr->binary.op)) {
             IR_Instruction cmp;
@@ -736,6 +741,12 @@ void print_unary_op(IR_UNARY_OP op) {
     case BNOT:
         printf("BNOT");
         break;
+    case REF:
+        printf("REF");
+        break;
+    case DEREF:
+        printf("DEREF");
+        break;
     }
 }
 
@@ -807,6 +818,8 @@ const char ir_type_suffix(Type *type) {
         return 'f';
     case T_CHAR:
         return 'c';
+    case T_POINTER:
+        return 'p';
     }
 }
 

@@ -102,6 +102,7 @@ void free_compiler(Compiler *compiler) {
 }
 
 int compile(Compiler *compiler) {
+    init_types();
     t_tokenize(&compiler->tk);
 
     if (compiler->flags & COMP_FLAG_TOKENS) {
@@ -115,18 +116,21 @@ int compile(Compiler *compiler) {
     if (compiler->flags & COMP_FLAG_NODES) print_nodes(&compiler->nm);
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 
-    IR_Context ctx = {NULL, NULL, NULL};
-    IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
-    if (compiler->flags & COMP_FLAG_IR) {
-        print_ir_module(&ctx, module);
+    if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {
+        IR_Context ctx = {NULL, NULL, NULL};
+        IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
+        if (compiler->flags & COMP_FLAG_IR) {
+            print_ir_module(&ctx, module);
+        }
+
+        if (compiler->flags & COMP_FLAG_ASM) {
+            FILE *fp = fopen(compiler->output_file, "w");
+            x86_gen_module(fp, &ctx);
+            fclose(fp);
+        }
+        ir_free_module(module);
     }
 
-    if (compiler->flags & COMP_FLAG_ASM) {
-        FILE *fp = fopen(compiler->output_file, "w");
-        x86_gen_module(fp, &ctx);
-        fclose(fp);
-    }
-    ir_free_module(module);
     return 1;
 }
 

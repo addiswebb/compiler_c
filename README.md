@@ -147,7 +147,7 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
 * Variable Declaration
     * Shadowing
 * Types:
-    * Int
+    * Int, Float, Char
 * All Binary operators:
     * Arithmetic:  \[ `+`, `-`, `*`, `/` \]
     * Bitwise:  \[ `&`, `|`, `^`, `<<`, `>>` \]
@@ -164,7 +164,7 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
     
 ## To be Implemented (Ordered from next to never...)
 * Types
-    * float, double, char, short, long, long long,
+    * double, short, long, long long,
 * Pointers/Addresses 
 * Arrays using '[]'
     * Indexing an array
@@ -185,4 +185,3 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
     * `free`
 * Type conversion
     * `(int)x`, `(float)y`
-

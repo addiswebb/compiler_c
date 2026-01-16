@@ -1,5 +1,5 @@
-
 #include "compiler_c/tokenizer.h"
+#include "compiler_c/type.h"
 #include <compiler_c/node.h>
 #include <compiler_c/parser.h>
 
@@ -24,7 +24,6 @@ Parser new_parser() {
 }
 
 void init_parser(Parser *p, TokenArray *src, const int size) {
-    init_types();
     p->size = size;
     p->src = src;
     p->index = 0;
@@ -275,7 +274,16 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm) {
 */
 Node *p_parse_var_declaration(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_VAR_DECL);
-    node->type = token_to_type(p_consume(p)->type);
+    Type *type = token_to_type(p_consume(p)->type);
+    int ptrs = 0;
+    while (p_peek(p)->type == TK_MULTIPLY) {
+        ptrs++;
+        p_consume(p);
+    }
+    for (int i = 0; i < ptrs; i++) {
+        type = get_pointer_type(type);
+    }
+    node->type = type;
     node->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
     if (p_peek(p)->type == TK_EQ) {
         p_consume(p);
@@ -560,7 +568,14 @@ Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
     return root;
 }
 // Is this node assignable?
-bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER; }
+bool is_lvalue(Node *n) {
+    if (n->kind == N_IDENTIFIER) {
+        printf("true");
+    } else {
+        printf("false");
+    }
+    return n->kind == N_IDENTIFIER;
+}
 
 Type *token_to_type(TokenType t) {
     switch (t) {
@@ -590,12 +605,19 @@ Type *check_unary_op(Node *unaryop) {
         if (kind == T_INT || kind == T_FLOAT) return type_int;
         break;
     // Int => Int
-    case TK_AND:
-    case TK_SHL:
-    case TK_SHR:
     case TK_BW_NOT:
         if (kind == T_INT) return expr->type;
         break;
+    case TK_AND:
+        if (is_lvalue(expr)) {
+            return get_pointer_type(expr->type);
+        }
+        printf("Tried to reference a non assignable term\n");
+        exit(1);
+    case TK_MULTIPLY:
+        if (expr->type->ptr_to != type_invalid) return expr->type->ptr_to;
+        printf("Tried to derefence some nonexistent term\n");
+        exit(1);
     default:
         break;
     }

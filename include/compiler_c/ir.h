@@ -30,6 +30,8 @@ typedef enum{
     NEG,
     LNOT,
     BNOT,
+    REF,
+    DEREF,
 } IR_UNARY_OP;
 
 typedef enum {

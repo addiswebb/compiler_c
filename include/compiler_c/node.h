@@ -1,6 +1,7 @@
 #ifndef COMPILER_C_NODE_H
 #define COMPILER_C_NODE_H
 
+#include "type.h"
 #include "tokenizer.h"
 
 typedef enum {
@@ -21,24 +22,6 @@ typedef enum {
 } NodeKind;
 
 typedef struct Node Node;
-
-typedef enum {
-    // Yet to be symatically analysed
-    T_INVALID,
-    T_INT,
-    T_FLOAT,
-    T_CHAR,
-} TypeKind;
-
-typedef struct{
-    TypeKind kind;
-    int size;
-} Type;
-
-extern Type *type_int;
-extern Type *type_float;
-extern Type *type_char;
-extern Type *type_invalid;
 
 struct Node {
     NodeKind kind;
@@ -137,7 +120,7 @@ typedef struct {
 
 void init_types();
 
-Type *new_type(TypeKind type, int size);
+Type *init_type(TypeKind type, int size);
 NodeManager new_node_manager();
 void free_node_manager(const NodeManager *nm);
 
