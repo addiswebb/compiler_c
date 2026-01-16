@@ -74,18 +74,44 @@ void print_type(Type *type) {
         printf("[INVALID TYPE]");
         break;
     case T_INT:
-        printf("int");
+        switch (type->size) {
+        case 1:
+            printf("char");
+            break;
+        case 2:
+            printf("short");
+            break;
+        case 4:
+            printf("int");
+            break;
+        case 8:
+            printf("long");
+            break;
+        default:
+            printf("Tried to type of int, with invalid size\n");
+            exit(1);
+        }
         break;
     case T_FLOAT:
-        printf("float");
-        break;
-    case T_CHAR:
-        printf("char");
+        switch (type->size) {
+        case 4:
+            printf("float");
+            break;
+        case 8:
+            printf("double");
+            break;
+        default:
+            printf("Tried to type of float, with invalid size\n");
+            exit(1);
+        }
         break;
     case T_POINTER:
         printf("*");
-        print_type(type->ptr_to);
+        print_type(type->base);
         break;
+    default:
+        printf("Not handling other types in print_type\n");
+        exit(1);
     }
 }
 void print_node_type(const NodeKind type) {
@@ -137,103 +163,6 @@ void print_node_type(const NodeKind type) {
         break;
     }
 }
-// Prints a single node
-void print_node_flat(const Node *node) {
-    printf("Node {\n");
-    printf("\ttype: ");
-    print_type(node->type);
-    printf(",\n");
-    switch (node->kind) {
-    case N_TRANSLATION_UNIT:
-        printf("\t");
-        printf("count: %d", node->translation_unit.count);
-        break;
-    case N_FUNCTION:
-        printf("\tname: %s,\n", node->func.name);
-        printf("\tn_params: %d,\n", node->func.param_count);
-        printf("\treturn type: ");
-        print_type(node->type);
-        printf(",\n");
-        printf("\tbody: {}");
-        break;
-    case N_VAR_DECL:
-        printf("\tname: %s,\n", node->var_decl.name);
-        printf("\tvar_type: ");
-        print_type(node->type);
-        if (node->var_decl.expr != NULL) {
-            printf(",\n");
-            switch (node->var_decl.expr->type->kind) {
-            case T_INT:
-                printf("\tvalue: %d", node->var_decl.expr->literal.i);
-                break;
-            case T_FLOAT:
-                printf("\tvalue: %g", node->var_decl.expr->literal.f);
-                break;
-            case T_CHAR:
-                printf("\tvalue: \'%c\'", node->var_decl.expr->literal.c);
-                break;
-            case T_POINTER:
-                printf("\tvalue: \"%s\"", node->var_decl.expr->literal.s);
-                break;
-            case T_INVALID:
-                printf("\tvalue: INVALID TYPE");
-                break;
-            }
-        }
-        break;
-    case N_LITERAL:
-        switch (node->type->kind) {
-        case T_INT:
-            printf("\tvalue: %d", node->literal.i);
-            break;
-        case T_FLOAT:
-            printf("\tvalue: %g", node->literal.f);
-            break;
-        case T_CHAR:
-            printf("\tvalue: %c", node->literal.c);
-            break;
-        case T_INVALID:
-            printf("\tvalue: %s", node->literal.s);
-            break;
-        case T_POINTER:
-            break;
-        }
-        break;
-    case N_BINARY:
-        printf("\top: ");
-        print_token_type(node->binary.op);
-        break;
-    case N_COMPOUND:
-        printf("\tn_statements: %d,\n", node->compound.count);
-        break;
-    case N_RETURN:
-        break;
-    case N_IDENTIFIER:
-        printf("\tname: %s\n", node->identifier.name);
-        break;
-    case N_FUNCTION_CALL:
-        printf("\tname: %s\n", node->func_call.identifier->identifier.name);
-        printf("\tparam count: %d\n", node->func_call.param_count);
-        break;
-    case N_IF:
-    case N_WHILE:
-    case N_FOR:
-        break;
-    case N_UNARY:
-        printf("\tunary: ");
-        node->unary.associativity ? print_token_type(node->unary.op) : printf(" expr ");
-        !node->unary.associativity ? print_token_type(node->unary.op) : printf(" expr ");
-        printf("\n");
-        break;
-    case N_CAST:
-        printf("\tcast\n");
-        break;
-    case N_INDEX:
-        printf("\tindex\n");
-        break;
-    }
-    printf("\n}\n");
-}
 
 void print_indent(const int depth) {
     for (int i = 0; i < depth; i++) {
@@ -269,22 +198,44 @@ void print_node(const Node *node, const int depth) {
     case N_LITERAL:
         printf(": [type= ");
         print_type(node->type);
+        printf(", ");
+        if (node->type == type_char) {
+            printf("value: %c]", (char)node->literal.i);
+            break;
+        }
         switch (node->type->kind) {
         case T_INT:
-            printf(", value: %d]\n", node->literal.i);
+            switch (node->type->size) {
+            case 1:
+                printf("value: \'%c\']", (char)node->literal.i);
+                break;
+            case 2:
+                printf("value: %d]", (short)node->literal.i);
+                break;
+            case 4:
+                printf("value: %d]", (int)node->literal.i);
+                break;
+            case 8:
+                printf("value: %lld]", node->literal.i);
+                break;
+            default:
+                printf("Given invalid size of int to print node_flat\n");
+                exit(1);
+            }
             break;
         case T_FLOAT:
-            printf(", value: %g]\n", node->literal.f);
-            break;
-        case T_CHAR:
-            printf(", value: %c]\n", node->literal.c);
+            printf("value: %g]\n", node->literal.f);
             break;
         case T_INVALID:
             printf(", INVALID TYPE]\n");
             break;
+        case T_POINTER:
+            if (node->type->base == type_char) {
+                printf(", value: \"%s\"]\n", node->literal.s);
+                break;
+            }
         default:
-            if (node->type == get_pointer_type(type_char)) printf(", value: \"%s\"]\n", node->literal.s);
-            else printf(" (dont know how to print this type)]\n");
+            printf(" (dont know how to print this type)]\n");
             break;
         }
         break;
@@ -365,11 +316,6 @@ void print_node(const Node *node, const int depth) {
     }
 }
 
-void print_nodes(NodeManager *nm) {
-    for (int i = 0; i < nm->count; i++) {
-        print_node_flat(&nm->nodes[i]);
-    }
-}
 /*
     Recursively prints the parse tree starting with the translation unit
 */

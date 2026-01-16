@@ -1,3 +1,4 @@
+#include "compiler_c/ir.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
 #include <compiler_c/node.h>
@@ -154,17 +155,17 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     case TK_INT_LITERAL:
         node = new_node(nm, N_LITERAL);
         node->type = type_int;
-        node->literal.i = atoi(p_consume(p)->value);
+        node->literal.i = (long long)atoi(p_consume(p)->value);
         return node;
     case TK_FLT_LITERAL:
         node = new_node(nm, N_LITERAL);
-        node->type = type_float;
+        node->type = type_double;
         node->literal.f = atof(p_consume(p)->value);
         return node;
     case TK_CHAR_LITERAL:
         node = new_node(nm, N_LITERAL);
         node->type = type_char;
-        node->literal.c = p_consume(p)->value[0];
+        node->literal.i = (long long)p_consume(p)->value[0];
         return node;
     case TK_STRING_LITERAL:
         node = new_node(nm, N_LITERAL);
@@ -307,7 +308,8 @@ Node *p_parse_var_declaration(Parser *p, NodeManager *nm) {
 
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p);
-        int const_offset = atoi(p_consume_a(p, TK_INT_LITERAL)->value);
+        // Todo; allow for const expressions like [5 + 6] or smt
+        atoi(p_consume_a(p, TK_INT_LITERAL)->value);
         p_consume_a(p, TK_CLOSE_SQUARE);
         node->type = get_pointer_type(type);
     }
@@ -554,9 +556,24 @@ Node *p_parse_function(Parser *p, NodeManager *nm) {
     node->func.name = p_consume(p)->value;
 
     p_consume_a(p, TK_OPEN_PAREN);
-    while (p_peek(p)->type == TK_INT && p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
+    while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
         Node *param = new_node(nm, N_VAR_DECL);
-        node->type = token_to_type(p_consume_a(p, TK_INT)->type);
+        param->type = token_to_type(p_peek(p)->type);
+        if (!param->type) {
+            printf("Expected type got ");
+            print_token_type(p_peek(p)->type);
+            printf("\n");
+            exit(1);
+        }
+        p_consume(p);
+        int ptrs = 0;
+        while (p_peek(p)->type == TK_MULTIPLY) {
+            ptrs++;
+            p_consume(p);
+        }
+        for (int i = 0; i < ptrs; i++) {
+            param->type = get_pointer_type(param->type);
+        }
         param->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
         param->var_decl.expr = NULL;
         p_append_param(node, param);
@@ -606,8 +623,7 @@ Type *token_to_type(TokenType t) {
     case TK_CHAR:
         return type_char;
     default:
-        printf("Tried to convert a token which is not a valid value type\n");
-        exit(1);
+        return NULL;
     }
 }
 
@@ -635,7 +651,7 @@ Type *check_unary_op(Node *unaryop) {
         printf("Tried to reference a non assignable term\n");
         exit(1);
     case TK_MULTIPLY:
-        if (expr->type->ptr_to != type_invalid) return expr->type->ptr_to;
+        if (expr->type->base != type_invalid) return expr->type->base;
         printf("Tried to derefence some nonexistent term\n");
         exit(1);
     default:
@@ -646,7 +662,7 @@ Type *check_unary_op(Node *unaryop) {
 }
 
 Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop) {
-    if (binop->binary.lhs->type == T_INVALID || binop->binary.rhs->type == T_INVALID) {
+    if (binop->binary.lhs->type == type_invalid || binop->binary.rhs->type == type_invalid) {
         printf("Semantic Analysis: Binary op was given expression with an invalid type\n");
         exit(1);
     }
@@ -715,7 +731,11 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
         }
         break;
     case N_FUNCTION:
+        for (int i = 0; i < node->func.param_count; i++) {
+            p_append_var_decl(p, node->func.params[i]);
+        }
         semantic_analysis(p, nm, node->func.body);
+        p->var_decl_count -= node->func.param_count;
         break;
     case N_COMPOUND:
         for (int i = 0; i < node->compound.count; i++) {
@@ -751,7 +771,19 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
             exit(1);
         }
     case N_FUNCTION_CALL:
-        node->type = p_get_func_def(p, node->func_call.identifier->identifier.name)->type;
+        Node *func_def = p_get_func_def(p, node->func_call.identifier->identifier.name);
+        if (func_def->func.param_count != node->func_call.param_count) {
+            printf("Argument count mismatch: %s expects %d found %d\n", func_def->func.name, func_def->func.param_count,
+                   node->func_call.param_count);
+            exit(1);
+        }
+        node->type = func_def->type;
+        for (int i = 0; i < func_def->func.param_count; i++) {
+            semantic_analysis(p, nm, node->func_call.params[i]);
+            if (func_def->func.params[i]->type != node->func_call.params[i]->type) {
+                node->func_call.params[i] = cast_node(nm, node->func_call.params[i], func_def->func.params[i]->type);
+            }
+        }
         break;
     case N_IDENTIFIER:
         node->type = p_get_var_decl(p, node->identifier.name)->type;
@@ -795,7 +827,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
         if (node->index.index->type != type_int) {
             node->index.index = cast_node(nm, node->index.index, type_int);
         }
-        node->type = node->index.identifier->type->ptr_to;
+        node->type = node->index.identifier->type->base;
         break;
     }
 }

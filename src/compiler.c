@@ -113,7 +113,6 @@ int compile(Compiler *compiler) {
 
     semantic_analysis(&compiler->p, &compiler->nm, &compiler->nm.nodes[0]);
 
-    if (compiler->flags & COMP_FLAG_NODES) print_nodes(&compiler->nm);
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 
     if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {

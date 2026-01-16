@@ -16,7 +16,7 @@ static int ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     case N_INDEX:
         const int index = ir_gen_rvalue(ctx, expr->index.index);
         const int ptr_reg = ir_gen_lvalue(ctx, expr->index.identifier);
-        const int elem_size = expr->index.identifier->type->ptr_to->size;
+        const int elem_size = expr->index.identifier->type->base->size;
         const int size_reg = ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){expr->type, elem_size}), type_int);
         const int offset_reg = elem_size == 1 ? index : ir_binary(ctx, MUL, ir_next_reg(ctx->func), size_reg, index, type_int);
         return ir_binary(ctx, ADD, ir_next_reg(ctx->func), ptr_reg, offset_reg, type_void_ptr);
@@ -40,19 +40,16 @@ int ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         switch (c.type->kind) {
         case T_INT:
             c.i = expr->literal.i;
-            break;
         case T_FLOAT:
             c.f = expr->literal.f;
             break;
-        case T_CHAR:
-            c.c = expr->literal.c;
-            break;
         case T_POINTER:
-            if (c.type->ptr_to == type_char) {
+            if (c.type->base == type_char) {
                 c.s = expr->literal.s;
                 break;
             }
         case T_INVALID:
+        default:
             printf("Tried to create IR_CONST instruction with an invalid type\n");
             exit(1);
         }

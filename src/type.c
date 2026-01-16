@@ -2,18 +2,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-Type *type_int;
-Type *type_float;
 Type *type_char;
-Type *type_invalid;
+Type *type_short;
+Type *type_int;
+Type *type_long;
+
+Type *type_float;
+Type *type_double;
+
+Type *type_void;
+
 Type *type_void_ptr;
+Type *type_invalid;
 
 TypePool typepool;
 
 void init_types() {
+    type_char = init_type(T_INT, sizeof(char));
+    type_short = init_type(T_INT, sizeof(short));
     type_int = init_type(T_INT, sizeof(int));
+    type_long = init_type(T_INT, sizeof(long long));
+    
     type_float = init_type(T_FLOAT, sizeof(float));
-    type_char = init_type(T_CHAR, sizeof(char));
+    type_double = init_type(T_FLOAT, sizeof(double));
+    
+    type_void = init_type(T_VOID, sizeof(void));
+
     type_void_ptr = init_type(T_POINTER, sizeof(void *));
     type_invalid = init_type(T_INVALID, -1);
 
@@ -33,7 +47,7 @@ Type *init_type(TypeKind type, int size) {
     }
     t->kind = type;
     t->size = size;
-    t->ptr_to = type_invalid;
+    t->base = type_invalid;
     return t;
 }
 
@@ -50,7 +64,7 @@ Type *new_pointer_type(Type *type) {
     Type ptr_type;
     ptr_type.kind = T_POINTER;
     ptr_type.size = sizeof(void *);
-    ptr_type.ptr_to = type;
+    ptr_type.base = type;
     typepool.types[typepool.count] = ptr_type;
     return &typepool.types[typepool.count++];
 }
@@ -58,7 +72,7 @@ Type *new_pointer_type(Type *type) {
 // Retrieves the given "type" wrapped in a pointer from global type pool if it exits, otherwise it creates one and adds it to the pool
 Type *get_pointer_type(Type *type) {
     for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].ptr_to == type) {
+        if (typepool.types[i].base == type) {
             return &typepool.types[i];
         }
     }

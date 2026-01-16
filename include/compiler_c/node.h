@@ -82,9 +82,8 @@ struct Node {
         } _for;
         struct {
             union {
-                int i;
-                float f;
-                char c;
+                long long i;
+                double f;
                 char*s;
             };
         } literal;
@@ -143,7 +142,6 @@ void print_node_type(NodeKind type);
 void print_indent(int depth);
 
 void print_node(const Node *node,int depth);
-void print_nodes(NodeManager *nm);
 
 /*
     Recursively prints the parse tree starting with the translation unit

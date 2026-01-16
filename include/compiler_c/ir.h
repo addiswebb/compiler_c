@@ -2,6 +2,7 @@
 #define COMPILER_C_IR_H
 
 #include "node.h"
+#include <stdint.h>
 
 typedef enum{
     LT, // <
@@ -50,6 +51,7 @@ typedef struct {
     Type *type;
 } IR_Var;
 
+
 typedef struct {
     IR_OP op;
     int dst;
@@ -60,7 +62,7 @@ typedef struct {
         struct {IR_UNARY_OP op; int expr; Type *type;} unary;
         struct {IR_BINOP_OP op; int lhs, rhs; Type *type;} binop;
         struct {IR_CMP_OP op; int lhs, rhs; } cmp;
-        struct {int callee; int *args; int arg_count; Type *type;} call;
+        struct {int callee; IR_Var *args; int arg_count; Type *type;} call;
         struct {int value;} ret;
         struct {int label;} br;
         struct {int cond, t_label, f_label;} br_cond;
@@ -104,10 +106,9 @@ typedef struct{
 typedef struct{
     Type *type;
     union{
-        int i;
-        float f;
-        char c;
-        char* s;
+        long long i;
+        double f;
+        const char* s;
     };
 }IR_Const;
 

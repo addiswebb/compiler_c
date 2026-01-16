@@ -153,34 +153,53 @@ static const char ir_type_suffix(Type *type) {
         printf("Tried to print invalid type\n");
         exit(1);
     case T_INT:
-        return 'i';
+        switch (type->size) {
+        case 1:
+            return 'c';
+        case 2:
+            return 's';
+        case 4:
+            return 'i';
+        case 8:
+            return 'l';
+        default:
+            printf("Given invalid size of INT\n");
+            exit(1);
+        }
     case T_FLOAT:
-        return 'f';
-    case T_CHAR:
-        return 'c';
+        switch (type->size) {
+        case 4:
+            return 'f';
+        case 8:
+            return 'd';
+        default:
+            printf("Given invalid size of INT\n");
+            exit(1);
+        }
     case T_POINTER:
         return 'p';
+    default:
+        printf("Not handling this type ir_type_suffix\n");
+        exit(1);
     }
 }
 
 static void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_CONST:
+        IR_Const *c = &ctx->module->const_pool.consts[instr->_const.pool_index];
         switch (instr->_const.type->kind) {
         case T_INT:
-            printf("    r%d = CONST c%d, %d", instr->dst, instr->_const.pool_index,
-                   ctx->module->const_pool.consts[instr->_const.pool_index].i);
+            printf("    r%d = CONST c%d, ", instr->dst, instr->_const.pool_index);
+            if (instr->_const.type->size == 8) printf("%lld", c->i);
+            else printf("%d", (int)c->i);
             break;
         case T_FLOAT:
             printf("    r%d = CONST c%d, %g", instr->dst, instr->_const.pool_index,
                    ctx->module->const_pool.consts[instr->_const.pool_index].f);
             break;
-        case T_CHAR:
-            printf("    r%d = CONST c%d, %c", instr->dst, instr->_const.pool_index,
-                   ctx->module->const_pool.consts[instr->_const.pool_index].c);
-            break;
         case T_POINTER:
-            if (instr->_const.type->ptr_to->kind == T_CHAR) {
+            if (instr->_const.type->base == type_char) {
                 printf("    r%d = CONST c%d, \"%s\"", instr->dst, instr->_const.pool_index,
                        ctx->module->const_pool.consts[instr->_const.pool_index].s);
                 break;
@@ -208,7 +227,8 @@ static void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
                instr->call.arg_count);
         printf("[ ");
         for (int i = 0; i < instr->call.arg_count; i++) {
-            printf("r%d", instr->call.args[i]);
+            print_type(instr->call.args[i].type);
+            printf("=r%d", instr->call.args[i].reg);
             if (i < instr->call.arg_count - 1) {
                 printf(", ");
             }
