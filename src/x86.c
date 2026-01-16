@@ -130,19 +130,19 @@ static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruc
 static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->store.type->kind) {
     case T_INT:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->store.addr));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->store.src));
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
         return;
     case T_FLOAT:
-        fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->store.addr));
+        fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->store.src));
         fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
         return;
     case T_CHAR:
-        fprintf(fp, "    movb %d(%%rbp), %%al\n", offset(instr->store.addr));
+        fprintf(fp, "    movb %d(%%rbp), %%al\n", offset(instr->store.src));
         fprintf(fp, "    movb %%al, %d(%%rbp)\n", offset(instr->dst));
         return;
     case T_POINTER:
-        fprintf(fp, "    movq %d(%%rbp), %%rax\n", offset(instr->store.addr));
+        fprintf(fp, "    movq %d(%%rbp), %%rax\n", offset(instr->store.src));
         fprintf(fp, "    movq %%rax, %d(%%rbp)\n", offset(instr->dst));
         return;
     default:
@@ -317,7 +317,7 @@ static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
 }
 static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
-    case IR_UNARYOP:
+    case IR_UNOP:
         x86_gen_unary_instruction(fp, ctx, instr);
         return;
     case IR_BINOP:
