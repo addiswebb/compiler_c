@@ -27,6 +27,7 @@ struct Type{
 extern Type *type_int;
 extern Type *type_float;
 extern Type *type_char;
+extern Type *type_void_ptr;
 extern Type *type_invalid;
 
 extern TypePool typepool;

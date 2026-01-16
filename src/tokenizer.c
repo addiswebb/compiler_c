@@ -62,6 +62,9 @@ void print_token_type(const TokenType type) {
     case TK_CHAR_LITERAL:
         printf("Char Literal");
         break;
+    case TK_STRING_LITERAL:
+        printf("String Literal");
+        break;
     case TK_SEMI:
         printf("\';\'");
         break;
@@ -211,6 +214,12 @@ void print_token_type(const TokenType type) {
         break;
     case TK_DECR:
         printf("\'--\'");
+        break;
+    case TK_OPEN_SQUARE:
+        printf("\'[\'");
+        break;
+    case TK_CLOSE_SQUARE:
+        printf("\']\'");
         break;
     }
 }
@@ -701,6 +710,12 @@ static void t_consume_special_char(Tokenizer *tk) {
     case '}':
         type = TK_CLOSE_CURLY;
         break;
+    case '[':
+        type = TK_OPEN_SQUARE;
+        break;
+    case ']':
+        type = TK_CLOSE_SQUARE;
+        break;
     case ';':
         type = TK_SEMI;
         break;
@@ -766,6 +781,8 @@ void t_tokenize(Tokenizer *tk) {
             t_skip_comments(tk);
         } else if (t_peek(tk) == '\'') {
             t_consume_char_literal(tk);
+        } else if (t_peek(tk) == '\"') {
+            t_consume_string_literal(tk);
         } else {
             if (is_op_start(c)) {
                 t_consume_operator(tk);

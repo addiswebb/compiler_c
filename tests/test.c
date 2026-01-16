@@ -1,4 +1,4 @@
 int main() {
-    int a = 10;
-    return a;
+    char a[5] = "hello";
+    return a[0];
 }

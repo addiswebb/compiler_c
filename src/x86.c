@@ -1,4 +1,5 @@
 #include "compiler_c/ir.h"
+#include "compiler_c/type.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -87,6 +88,12 @@ static void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instru
         fprintf(fp, "    movb $%d, %%al\n", c->c);
         fprintf(fp, "    movb %%al, %d(%%rbp)\n", offset(instr->dst));
         return;
+    case T_POINTER:
+        if (instr->_const.type->ptr_to == type_char) {
+            fprintf(fp, "    lea .LC%d(%%rip), %%rax\n", instr->_const.pool_index);
+            fprintf(fp, "    movq %%rax, %d(%%rbp)\n", offset(instr->dst));
+            return;
+        }
     default:
         printf("Tried to gen x86 IR_CONST for unsupported type\n");
         exit(1);
@@ -310,6 +317,24 @@ static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
             printf("Tried to perform unsuported binary operation on type float\n");
             exit(1);
         }
+    case T_POINTER:
+        switch (instr->binop.op) {
+        // lhs: pointer, rhs: int
+        case ADD:
+            fprintf(fp, "    movq %d(%%rbp), %%rax\n", offset(instr->binop.lhs));
+            fprintf(fp, "    addq %d(%%rbp), %%rax\n", offset(instr->binop.rhs));
+            fprintf(fp, "    movq %%rax, %d(%%rbp)\n", offset(instr->dst));
+            return;
+        case SUB:
+            fprintf(fp, "    movq %d(%%rbp), %%rax\n", offset(instr->binop.lhs));
+            fprintf(fp, "    subq %d(%%rbp), %%rax\n", offset(instr->binop.rhs));
+            fprintf(fp, "    movq %%rax, %d(%%rbp)\n", offset(instr->dst));
+            return;
+        // todo: add pointer-pointer subtraction
+        default:
+            printf("Tried to perform unsupported binary op on pointer\n");
+            exit(1);
+        }
     default:
         printf("Tried to gen x86 for IR_BINARY which is neither float or int");
         exit(1);
@@ -406,10 +431,13 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
     if (ctx->module->const_pool.count > 0) {
         fprintf(fp, ".section .rodata\n");
         for (int i = 0; i < ctx->module->const_pool.count; i++) {
-            if (ctx->module->const_pool.consts[i].type == type_float) {
+            IR_Const *c = &ctx->module->const_pool.consts[i];
+            if (c->type == type_float) {
                 uint32_t bits;
-                memcpy(&bits, &ctx->module->const_pool.consts[i].f, sizeof(bits));
+                memcpy(&bits, &c->f, sizeof(bits));
                 fprintf(fp, ".LC%d:\n    .align 4\n    .long 0x%08x\n", i, bits);
+            } else if (c->type->kind == T_POINTER && c->type->ptr_to == type_char) {
+                fprintf(fp, ".LC%d:\n    .string \"%s\"\n", i, c->s);
             }
         }
         fprintf(fp, ".section .text\n\n");

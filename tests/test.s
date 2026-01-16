@@ -1,17 +1,31 @@
 .section .rodata
+.LC0:
+    .string "hello"
 .section .text
 
 .global main
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $16, %rsp
+    subq $64, %rsp
 main_0:
-    movl $10, %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
-    movl %eax, -8(%rbp)
-    movl -8(%rbp), %eax
+    lea .LC0(%rip), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq %rax, -8(%rbp)
+    movl $0, %eax
+    movl %eax, -24(%rbp)
+    movl $1, %eax
+    movl %eax, -32(%rbp)
+    movq -8(%rbp), %rax
+    addq -24(%rbp), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    movzbl (%rax), %eax
+    movb %al, -48(%rbp)
+    movzbl -48(%rbp), %eax
+    movl %eax, -56(%rbp)
+    movl -56(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp
     ret

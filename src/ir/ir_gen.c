@@ -13,7 +13,13 @@ static int ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     case N_UNARY:
         if (expr->unary.op != TK_MULTIPLY) break;
         return ir_gen_rvalue(ctx, expr->unary.expr);
-    // TODO: case N_BINARY index [x]
+    case N_INDEX:
+        const int index = ir_gen_rvalue(ctx, expr->index.index);
+        const int ptr_reg = ir_gen_lvalue(ctx, expr->index.identifier);
+        const int elem_size = expr->index.identifier->type->ptr_to->size;
+        const int size_reg = ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){expr->type, elem_size}), type_int);
+        const int offset_reg = elem_size == 1 ? index : ir_binary(ctx, MUL, ir_next_reg(ctx->func), size_reg, index, type_int);
+        return ir_binary(ctx, ADD, ir_next_reg(ctx->func), ptr_reg, offset_reg, type_void_ptr);
     default:
         break;
     }
@@ -24,12 +30,14 @@ static int ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
 
 int ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
+    case N_INDEX:
+        return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_IDENTIFIER:
         return ir_gen_lvalue(ctx, expr);
     case N_LITERAL:
         IR_Const c;
         c.type = expr->type;
-        switch (expr->type->kind) {
+        switch (c.type->kind) {
         case T_INT:
             c.i = expr->literal.i;
             break;
@@ -39,7 +47,12 @@ int ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         case T_CHAR:
             c.c = expr->literal.c;
             break;
-        default:
+        case T_POINTER:
+            if (c.type->ptr_to == type_char) {
+                c.s = expr->literal.s;
+                break;
+            }
+        case T_INVALID:
             printf("Tried to create IR_CONST instruction with an invalid type\n");
             exit(1);
         }
@@ -82,10 +95,10 @@ int ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             const int store_dst = ir_store(ctx, ir_next_reg(ctx->func), addr_reg, expr->type);
             const int binary_dst = ir_binary(ctx, expr->unary.op == TK_INCR ? ADD : SUB, addr_reg, addr_reg, const_dst, expr->type);
             return expr->unary.associativity ? store_dst : binary_dst;
-        } else if (expr->unary.op == TK_AND) {
+        } else if (expr->unary.op == TK_AND) { // & ref
             const int addr = ir_gen_lvalue(ctx, expr->unary.expr);
             return ir_address(ctx, addr, 0);
-        } else if (expr->unary.op == TK_MULTIPLY) {
+        } else if (expr->unary.op == TK_MULTIPLY) { // * deref
             const int addr = ir_gen_lvalue(ctx, expr->unary.expr);
             return ir_load(ctx, addr, expr->type);
         }

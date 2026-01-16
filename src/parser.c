@@ -166,6 +166,11 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         node->type = type_char;
         node->literal.c = p_consume(p)->value[0];
         return node;
+    case TK_STRING_LITERAL:
+        node = new_node(nm, N_LITERAL);
+        node->type = get_pointer_type(type_char);
+        node->literal.s = p_consume(p)->value;
+        return node;
     case TK_IDENTIFIER:
         node = new_node(nm, N_IDENTIFIER);
         node->identifier.name = p_consume(p)->value;
@@ -217,7 +222,21 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
         node->unary.expr = primary;
         primary = node;
     }
-    if (p_peek(p)->type == TK_OPEN_PAREN) {
+
+    if (p_peek(p)->type == TK_OPEN_SQUARE) {
+        p_consume(p); // '['
+        if (!is_lvalue(primary)) {
+            print_node_type(primary->kind);
+            printf(" is not a an ltype, needed for indexing\n");
+            exit(1);
+        }
+        // Only works for a[5], not a[b + 1] (can fix later)
+        Node *node = new_node(nm, N_INDEX);
+        node->index.index = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+        node->index.identifier = primary;
+        primary = node;
+        p_consume_a(p, TK_CLOSE_SQUARE);
+    } else if (p_peek(p)->type == TK_OPEN_PAREN) {
         p_consume(p); // '('
         if (primary->kind != N_IDENTIFIER) {
             print_node_type(primary->kind);
@@ -285,6 +304,14 @@ Node *p_parse_var_declaration(Parser *p, NodeManager *nm) {
     }
     node->type = type;
     node->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
+
+    if (p_peek(p)->type == TK_OPEN_SQUARE) {
+        p_consume(p);
+        int const_offset = atoi(p_consume_a(p, TK_INT_LITERAL)->value);
+        p_consume_a(p, TK_CLOSE_SQUARE);
+        node->type = get_pointer_type(type);
+    }
+
     if (p_peek(p)->type == TK_EQ) {
         p_consume(p);
         node->var_decl.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
@@ -761,6 +788,14 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
         break;
     case N_LITERAL:
         // Trust the tokenizer
+        break;
+    case N_INDEX:
+        semantic_analysis(p, nm, node->index.index);
+        semantic_analysis(p, nm, node->index.identifier);
+        if (node->index.index->type != type_int) {
+            node->index.index = cast_node(nm, node->index.index, type_int);
+        }
+        node->type = node->index.identifier->type->ptr_to;
         break;
     }
 }

@@ -107,6 +107,7 @@ typedef struct{
         int i;
         float f;
         char c;
+        char* s;
     };
 }IR_Const;
 

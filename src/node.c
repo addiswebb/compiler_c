@@ -66,6 +66,9 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
 bool is_valid_cast(Type *from, Type *to) { return true; }
 
 void print_type(Type *type) {
+    if (!type) {
+        printf("NULL");
+    }
     switch (type->kind) {
     case T_INVALID:
         printf("[INVALID TYPE]");
@@ -129,6 +132,9 @@ void print_node_type(const NodeKind type) {
     case N_CAST:
         printf("Cast");
         break;
+    case N_INDEX:
+        printf("Index");
+        break;
     }
 }
 // Prints a single node
@@ -164,7 +170,10 @@ void print_node_flat(const Node *node) {
                 printf("\tvalue: %g", node->var_decl.expr->literal.f);
                 break;
             case T_CHAR:
-                printf("\tvalue: %c", node->var_decl.expr->literal.c);
+                printf("\tvalue: \'%c\'", node->var_decl.expr->literal.c);
+                break;
+            case T_POINTER:
+                printf("\tvalue: \"%s\"", node->var_decl.expr->literal.s);
                 break;
             case T_INVALID:
                 printf("\tvalue: INVALID TYPE");
@@ -184,7 +193,9 @@ void print_node_flat(const Node *node) {
             printf("\tvalue: %c", node->literal.c);
             break;
         case T_INVALID:
-            printf("\tvalue: INVALID TYPE");
+            printf("\tvalue: %s", node->literal.s);
+            break;
+        case T_POINTER:
             break;
         }
         break;
@@ -216,6 +227,9 @@ void print_node_flat(const Node *node) {
         break;
     case N_CAST:
         printf("\tcast\n");
+        break;
+    case N_INDEX:
+        printf("\tindex\n");
         break;
     }
     printf("\n}\n");
@@ -265,7 +279,12 @@ void print_node(const Node *node, const int depth) {
         case T_CHAR:
             printf(", value: %c]\n", node->literal.c);
             break;
+        case T_INVALID:
+            printf(", INVALID TYPE]\n");
+            break;
         default:
+            if (node->type == get_pointer_type(type_char)) printf(", value: \"%s\"]\n", node->literal.s);
+            else printf(" (dont know how to print this type)]\n");
             break;
         }
         break;
@@ -296,7 +315,7 @@ void print_node(const Node *node, const int depth) {
     case N_IDENTIFIER:
         printf(": [name= %s, type= ", node->identifier.name);
         print_type(node->type);
-        printf(" ]\n");
+        printf("]\n");
         break;
     case N_IF:
         printf(": [cond, true, false]\n");
@@ -331,10 +350,17 @@ void print_node(const Node *node, const int depth) {
         print_node(node->unary.expr, depth + 1);
         break;
     case N_CAST:
-        printf(": [cast_to_type= ");
+        printf(": [to= ");
         print_type(node->type);
+        printf(", from= ");
+        print_type(node->cast.from);
         printf(" ]\n");
         print_node(node->cast.expr, depth + 1);
+        break;
+    case N_INDEX:
+        printf(": [index,indentifier]\n");
+        print_node(node->index.index, depth + 1);
+        print_node(node->index.identifier, depth + 1);
         break;
     }
 }

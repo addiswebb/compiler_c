@@ -53,6 +53,7 @@ typedef enum {
     // Semantics
     TK_OPEN_PAREN, TK_CLOSE_PAREN,
     TK_OPEN_CURLY, TK_CLOSE_CURLY,
+    TK_OPEN_SQUARE, TK_CLOSE_SQUARE,
     TK_COMMA,
     TK_SEMI,
     // Other
@@ -105,6 +106,5 @@ void t_print_tokens(const Tokenizer *tk);
 Tokenizer t_new_tokenizer(const char *src, int src_size);
 void t_free(Tokenizer *tokenizer);
 
-TokenType char_to_token_type(char c);
 void t_tokenize(Tokenizer *tk);
 #endif // COMPILER_C_TOKENIZER_H

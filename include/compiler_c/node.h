@@ -19,6 +19,7 @@ typedef enum {
     N_IDENTIFIER,
     N_FUNCTION_CALL,
     N_CAST,
+    N_INDEX,
 } NodeKind;
 
 typedef struct Node Node;
@@ -84,6 +85,7 @@ struct Node {
                 int i;
                 float f;
                 char c;
+                char*s;
             };
         } literal;
         struct {
@@ -107,6 +109,10 @@ struct Node {
             Type *from;
             Type *to;
         } cast;
+        struct {
+            Node *identifier;
+            Node *index;
+        } index;
     };
 };
 

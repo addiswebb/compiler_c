@@ -1,4 +1,5 @@
 #include "compiler_c/ir.h"
+#include "compiler_c/type.h"
 #include <stdio.h>
 #include <stdlib.h>
 IR_CMP_OP ir_cmp_op(const TokenType type) {
@@ -178,13 +179,19 @@ static void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
             printf("    r%d = CONST c%d, %c", instr->dst, instr->_const.pool_index,
                    ctx->module->const_pool.consts[instr->_const.pool_index].c);
             break;
+        case T_POINTER:
+            if (instr->_const.type->ptr_to->kind == T_CHAR) {
+                printf("    r%d = CONST c%d, \"%s\"", instr->dst, instr->_const.pool_index,
+                       ctx->module->const_pool.consts[instr->_const.pool_index].s);
+                break;
+            }
         default:
             printf("Tried to print IR_CONST of unknown type\n");
             exit(1);
         }
         break;
     case IR_BINOP:
-        printf("    r%d = BINOP:%c r%d, r%d, ", ir_type_suffix(instr->binop.type), instr->dst, instr->binop.lhs, instr->binop.rhs);
+        printf("    r%d = BINOP:%c r%d, r%d, ", instr->dst, ir_type_suffix(instr->binop.type), instr->binop.lhs, instr->binop.rhs);
         print_binary_op(instr->binop.op);
         break;
     case IR_LOAD:

@@ -6,6 +6,7 @@ Type *type_int;
 Type *type_float;
 Type *type_char;
 Type *type_invalid;
+Type *type_void_ptr;
 
 TypePool typepool;
 
@@ -13,6 +14,7 @@ void init_types() {
     type_int = init_type(T_INT, sizeof(int));
     type_float = init_type(T_FLOAT, sizeof(float));
     type_char = init_type(T_CHAR, sizeof(char));
+    type_void_ptr = init_type(T_POINTER, sizeof(void *));
     type_invalid = init_type(T_INVALID, -1);
 
     typepool.count = 0;
