@@ -1,5 +1,4 @@
 #include "compiler_c/ir.h"
-#include "compiler_c/node.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -11,6 +10,10 @@ static int offset(const int a) {
         return -offset(a * -1);
     }
     return -(a * 8 + 8);
+}
+static void x86_gen_addr_instr(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    fprintf(fp, "    lea %d(%%rbp), %%rax\n", offset(instr->addr.src) - instr->addr.offset);
+    fprintf(fp, "    movq %%rax, %d(%%rbp)\n", offset(instr->dst));
 }
 static void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     Type *from = instr->cast.from;
@@ -120,7 +123,7 @@ static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruc
         fprintf(fp, "    movb %%al, %d(%%rbp)\n", offset(instr->dst));
         return;
     default:
-        printf("Tried to gen x86 IR_CONST for unsupported type\n");
+        printf("Tried to gen x86 IR_CALL for unsupported type\n");
         exit(1);
     }
 }
@@ -138,23 +141,28 @@ static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instru
         fprintf(fp, "    movb %d(%%rbp), %%al\n", offset(instr->store.addr));
         fprintf(fp, "    movb %%al, %d(%%rbp)\n", offset(instr->dst));
         return;
+    case T_POINTER:
+        fprintf(fp, "    movq %d(%%rbp), %%rax\n", offset(instr->store.addr));
+        fprintf(fp, "    movq %%rax, %d(%%rbp)\n", offset(instr->dst));
+        return;
     default:
-        printf("Tried to gen x86 IR_CONST for unsupported type\n");
+        printf("Tried to gen x86 IR_STORE for unsupported type\n");
         exit(1);
     }
 }
 static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    fprintf(fp, "    movq %d(%%rbp), %%rax\n", offset(instr->load.addr));
     switch (instr->load.type->kind) {
     case T_INT:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->load.addr));
+        fprintf(fp, "    movl (%%rax), %%eax\n");
         fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
         return;
     case T_FLOAT:
-        fprintf(fp, "    movss %d(%%rbp), %%xmm0\n", offset(instr->load.addr));
+        fprintf(fp, "    movss (%%rax), %%xmm0\n");
         fprintf(fp, "    movss %%xmm0, %d(%%rbp)\n", offset(instr->dst));
         break;
     case T_CHAR:
-        fprintf(fp, "    movb %d(%%rbp), %%al\n", offset(instr->load.addr));
+        fprintf(fp, "    movzbl (%%rax), %%eax\n");
         fprintf(fp, "    movb %%al, %d(%%rbp)\n", offset(instr->dst));
         return;
     default:
@@ -330,6 +338,9 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
     case IR_CAST:
         x86_gen_cast_instruction(fp, ctx, instr);
         return;
+    case IR_ADDR:
+        x86_gen_addr_instr(fp, ctx, instr);
+        break;
     case IR_RET:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->ret.value));
         fprintf(fp, "    mov %%rbp, %%rsp\n");

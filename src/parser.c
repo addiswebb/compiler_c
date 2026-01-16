@@ -568,14 +568,7 @@ Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
     return root;
 }
 // Is this node assignable?
-bool is_lvalue(Node *n) {
-    if (n->kind == N_IDENTIFIER) {
-        printf("true");
-    } else {
-        printf("false");
-    }
-    return n->kind == N_IDENTIFIER;
-}
+bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER; }
 
 Type *token_to_type(TokenType t) {
     switch (t) {

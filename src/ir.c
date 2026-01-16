@@ -7,7 +7,7 @@
 #include <compiler_c/ir.h>
 #include <compiler_c/node.h>
 
-IR_CMP_OP ir_cmp_op(const TokenType type) {
+static IR_CMP_OP ir_cmp_op(const TokenType type) {
     switch (type) {
     case TK_EQ_EQ:
         return EQ;
@@ -28,7 +28,7 @@ IR_CMP_OP ir_cmp_op(const TokenType type) {
         exit(1);
     }
 }
-IR_UNARY_OP ir_unary_op(const TokenType type) {
+static IR_UNARY_OP ir_unary_op(const TokenType type) {
     switch (type) {
     case TK_PLUS:
         return POS;
@@ -38,16 +38,12 @@ IR_UNARY_OP ir_unary_op(const TokenType type) {
         return LNOT;
     case TK_BW_NOT:
         return BNOT;
-    case TK_AND:
-        return REF;
-    case TK_MULTIPLY:
-        return DEREF;
     default:
         printf("Given a token which is not a unary operator\n");
         exit(1);
     }
 }
-IR_BINOP_OP ir_binary_op(const TokenType type) {
+static IR_BINOP_OP ir_binary_op(const TokenType type) {
     switch (type) {
     case TK_PLUS:
         return ADD;
@@ -81,7 +77,7 @@ IR_BINOP_OP ir_binary_op(const TokenType type) {
     Begin an IR Scope,
     Tracks any variables added afterwards, and pops them from the IR virtual stack when `ir_end_scope()` is called.
 */
-void ir_begin_scope(IR_Function *func) {
+static void ir_begin_scope(IR_Function *func) {
     if (func->scope_count >= func->scope_capacity) {
         func->scope_capacity *= 2;
         IR_Scope *new_scopes = realloc(func->scopes, sizeof(IR_Scope) * func->scope_capacity);
@@ -97,7 +93,7 @@ void ir_begin_scope(IR_Function *func) {
 /*
     Pops variables declared within the scope from the IR virtual stack.
 */
-void ir_end_scope(IR_Function *func) {
+static void ir_end_scope(IR_Function *func) {
     if (func->scope_count > 0) {
         func->scope_count -= 1;
         if (func->next_reg >= func->max_reg) {
@@ -108,7 +104,7 @@ void ir_end_scope(IR_Function *func) {
     }
 }
 
-int ir_next_reg(IR_Function *func) {
+static int ir_next_reg(IR_Function *func) {
     func->scopes[func->scope_count - 1].reg_count++;
     return func->next_reg++;
 }
@@ -117,7 +113,7 @@ int ir_next_reg(IR_Function *func) {
     Allocates for a new IR Module,
     Also initializes/allocates for its functions array
 */
-IR_Module *ir_new_module() {
+static IR_Module *ir_new_module() {
     IR_Module *module = malloc(sizeof(IR_Module));
     if (!module) {
         printf("Failed to allocate new IR module\n");
@@ -157,7 +153,7 @@ IR_Module *ir_new_module() {
 /*
     Allocates for a new IR_Block
 */
-IR_Block *ir_new_block() {
+static IR_Block *ir_new_block() {
     IR_Block *block = malloc(sizeof(IR_Block));
     if (!block) {
         printf("Failed to allocate new block\n");
@@ -174,7 +170,7 @@ IR_Block *ir_new_block() {
     return block;
 }
 
-IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
+static IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
     IR_Function *func = malloc(sizeof(*func));
     if (!func) {
         printf("Failed to allocate IR_Function\n");
@@ -217,7 +213,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
     return func;
 }
 
-int ir_append_block(IR_Context *ctx, IR_Block *block) {
+static int ir_append_block(IR_Context *ctx, IR_Block *block) {
     IR_Function *func = ctx->func;
     if (func->block_count >= func->block_capacity) {
         func->block_capacity *= 2;
@@ -234,7 +230,7 @@ int ir_append_block(IR_Context *ctx, IR_Block *block) {
     return func->block_count - 1;
 }
 
-void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
+static void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
     if (block->count >= block->capacity) {
         block->capacity *= 2;
 
@@ -248,7 +244,7 @@ void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
     block->instructions[block->count++] = *instruction;
 }
 
-int ir_append_const(IR_Module *module, IR_Const *new_const) {
+static int ir_append_const(IR_Module *module, IR_Const *new_const) {
     if (module->const_pool.count >= module->const_pool.capacity) {
         module->const_pool.capacity *= 2;
         IR_Const *new_consts = realloc(module->const_pool.consts, sizeof(IR_Const) * module->const_pool.capacity);
@@ -262,7 +258,7 @@ int ir_append_const(IR_Module *module, IR_Const *new_const) {
     return module->const_pool.count++;
 }
 
-int ir_new_var(IR_Function *func, const char *name, Type *type) {
+static int ir_new_var(IR_Function *func, const char *name, Type *type) {
     if (func->local_count >= func->local_capacity) {
         func->local_capacity *= 2;
         IR_Var *new_locals = realloc(func->locals, sizeof(IR_Var) * func->local_capacity);
@@ -280,7 +276,7 @@ int ir_new_var(IR_Function *func, const char *name, Type *type) {
     return next_reg;
 }
 
-int ir_get_func_def(const IR_Context *ctx, const char *name) {
+static int ir_get_func_def(const IR_Context *ctx, const char *name) {
     for (int i = 0; i < ctx->module->func_count; i++) {
         if (strcmp(ctx->module->defs[i].name, name) == 0) {
             return i;
@@ -288,7 +284,7 @@ int ir_get_func_def(const IR_Context *ctx, const char *name) {
     }
     return -1;
 }
-int ir_get_var_reg(const IR_Context *ctx, const char *name) {
+static int ir_get_var_reg(const IR_Context *ctx, const char *name) {
     IR_Function *func = ctx->func;
     int sp = func->local_count - 1;
     for (int i = func->scope_count - 1; i >= 0; i--) {
@@ -303,10 +299,12 @@ int ir_get_var_reg(const IR_Context *ctx, const char *name) {
             sp--;
         }
     }
-    return -1;
+
+    printf("Undefined local variable \'%s\' \n", name);
+    exit(1);
 }
 
-void ir_new_func_def(IR_Module *module, IR_Function *func) {
+static void ir_new_func_def(IR_Module *module, IR_Function *func) {
     for (int i = 0; i < module->func_count; i++) {
         if (strcmp(module->defs[i].name, func->name) == 0) {
             printf("Function %s is already defined at [%d]", func->name, i);
@@ -316,7 +314,7 @@ void ir_new_func_def(IR_Module *module, IR_Function *func) {
     IR_Func_Def def = {func->name, module->func_count};
     module->defs[module->func_count] = def;
 }
-void ir_append_function(IR_Module *module, IR_Function *func) {
+static void ir_append_function(IR_Module *module, IR_Function *func) {
     if (module->func_count >= module->func_capacity) {
         module->func_capacity *= 2;
         IR_Function **new_functions = realloc(module->functions, sizeof(IR_Function *) * module->func_capacity);
@@ -351,10 +349,28 @@ void ir_free_module(IR_Module *module) {
     free(module);
 }
 
-IR_Block *current_block(const IR_Function *func) { return &func->blocks[func->block_count - 1]; }
+static IR_Block *current_block(const IR_Function *func) { return &func->blocks[func->block_count - 1]; }
 
-int ir_gen_expression(IR_Context *ctx, const Node *expr) {
+static int ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
+    case N_IDENTIFIER:
+        return ir_get_var_reg(ctx, expr->identifier.name);
+    case N_UNARY:
+        if (expr->unary.op != TK_MULTIPLY) break;
+        return ir_gen_rvalue(ctx, expr->unary.expr);
+    // TODO: case N_BINARY index [x]
+    default:
+        break;
+    }
+
+    printf("Tried to ir_gen_lvalue for a node which is not an lvalue\n");
+    exit(1);
+}
+
+static int ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
+    switch (expr->kind) {
+    case N_IDENTIFIER:
+        return ir_gen_lvalue(ctx, expr);
     case N_LITERAL:
         IR_Instruction instr;
         instr.op = IR_CONST;
@@ -379,25 +395,20 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
         instr._const.pool_index = ir_append_const(ctx->module, &c);
         ir_append_instruction(ctx->block, &instr);
         return instr.dst;
-    case N_IDENTIFIER:
-        const int var_reg = ir_get_var_reg(ctx, expr->identifier.name);
-        if (var_reg == -1) {
-            printf("Undefined local variable \'%s\' \n", expr->identifier.name);
-            exit(1);
-        }
-        return var_reg;
     case N_BINARY:
-        int lhs = ir_gen_expression(ctx, expr->binary.lhs);
-        int rhs = ir_gen_expression(ctx, expr->binary.rhs);
         if (expr->binary.op == TK_EQ) {
+            int addr = ir_gen_lvalue(ctx, expr->binary.lhs);
+            int val = ir_gen_rvalue(ctx, expr->binary.rhs);
             IR_Instruction assign_instr;
             assign_instr.op = IR_STORE;
-            assign_instr.dst = lhs;
-            assign_instr.store.addr = rhs;
+            assign_instr.dst = addr;
+            assign_instr.store.addr = val;
             assign_instr.store.type = expr->type;
             ir_append_instruction(ctx->block, &assign_instr);
-            return rhs;
+            return val;
         }
+        int lhs = ir_gen_rvalue(ctx, expr->binary.lhs);
+        int rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
         if (is_comparison_op(expr->binary.op)) {
             IR_Instruction cmp;
             cmp.op = IR_CMP;
@@ -419,28 +430,28 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
             return binop.dst;
         }
     case N_UNARY:
-        int expr_reg = ir_gen_expression(ctx, expr->unary.expr);
         if (expr->unary.op == TK_INCR || expr->unary.op == TK_DECR) {
             if (expr->unary.expr->kind != N_IDENTIFIER) {
                 printf("Can only increment on a identifieir/variable\n");
                 exit(1);
             }
+            int addr_reg = ir_gen_lvalue(ctx, expr->unary.expr);
             IR_Instruction const_1;
             const_1.op = IR_CONST;
             const_1.dst = ir_next_reg(ctx->func); // r2
             const_1._const.type = expr->type;
             IR_Instruction store;
             store.op = IR_STORE;
-            store.store.addr = expr_reg;
+            store.store.addr = addr_reg;
             store.dst = ir_next_reg(ctx->func);
             store.store.type = expr->type;
             IR_Instruction instr;
             instr.op = IR_BINOP;
-            instr.binop.lhs = expr_reg;    // r1 = x
+            instr.binop.lhs = addr_reg;    // r1 = x
             instr.binop.rhs = const_1.dst; // r2 = 1
             instr.binop.op = expr->unary.op == TK_INCR ? ADD : SUB;
             instr.binop.type = expr->type;
-            instr.dst = expr_reg;
+            instr.dst = addr_reg;
             IR_Const c;
             c.type = expr->type;
             switch (expr->type->kind) {
@@ -459,15 +470,32 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
             ir_append_instruction(ctx->block, &store);
             ir_append_instruction(ctx->block, &instr);
             return expr->unary.associativity ? store.dst : instr.dst;
+        } else if (expr->unary.op == TK_AND) {
+            IR_Instruction instr;
+            instr.op = IR_ADDR;
+            instr.addr.src = ir_gen_lvalue(ctx, expr->unary.expr);
+            instr.addr.offset = 0;
+            instr.dst = ir_next_reg(ctx->func);
+            ir_append_instruction(ctx->block, &instr);
+            return instr.dst;
+        } else if (expr->unary.op == TK_MULTIPLY) {
+            IR_Instruction instr;
+            instr.op = IR_LOAD;
+            instr.load.addr = ir_gen_lvalue(ctx, expr->unary.expr);
+            instr.load.type = expr->type;
+            instr.dst = ir_next_reg(ctx->func);
+            ir_append_instruction(ctx->block, &instr);
+            return instr.dst;
         }
-        IR_Instruction unaryop;
-        unaryop.op = IR_UNARYOP;
-        unaryop.unary.op = ir_unary_op(expr->unary.op);
-        unaryop.unary.expr = expr_reg;
-        unaryop.dst = ir_next_reg(ctx->func);
-        unaryop.unary.type = expr->type;
-        ir_append_instruction(ctx->block, &unaryop);
-        return unaryop.dst;
+        int expr_reg = ir_gen_rvalue(ctx, expr->unary.expr);
+        IR_Instruction unop;
+        unop.op = IR_UNARYOP;
+        unop.unary.op = ir_unary_op(expr->unary.op);
+        unop.unary.expr = expr_reg;
+        unop.dst = ir_next_reg(ctx->func);
+        unop.unary.type = expr->type;
+        ir_append_instruction(ctx->block, &unop);
+        return unop.dst;
     case N_FUNCTION_CALL:
         IR_Instruction func_call;
         func_call.op = IR_CALL;
@@ -484,8 +512,7 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
             exit(1);
         }
         for (int i = 0; i < func_call.call.arg_count; i++) {
-            const int arg_reg = ir_gen_expression(ctx, expr->func_call.params[i]);
-            func_call.call.args[i] = arg_reg;
+            func_call.call.args[i] = ir_gen_rvalue(ctx, expr->func.params[i]);
         }
         func_call.dst = ir_next_reg(ctx->func);
         ir_append_instruction(ctx->block, &func_call);
@@ -495,7 +522,7 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
         cast.op = IR_CAST;
         cast.cast.from = expr->cast.from;
         cast.cast.to = expr->type;
-        cast.cast.src = ir_gen_expression(ctx, expr->cast.expr);
+        cast.cast.src = ir_gen_rvalue(ctx, expr->cast.expr);
         cast.dst = ir_next_reg(ctx->func);
         ir_append_instruction(ctx->block, &cast);
         return cast.dst;
@@ -508,7 +535,7 @@ int ir_gen_expression(IR_Context *ctx, const Node *expr) {
     exit(1);
 }
 
-void ir_gen_block_item(IR_Context *ctx, const Node *item) {
+static void ir_gen_block_item(IR_Context *ctx, const Node *item) {
     if (item->kind == N_VAR_DECL) {
         ir_gen_var_decl(ctx, item);
     } else {
@@ -516,7 +543,7 @@ void ir_gen_block_item(IR_Context *ctx, const Node *item) {
     }
 }
 
-void ir_gen_compound(IR_Context *ctx, const Node *comp) {
+static void ir_gen_compound(IR_Context *ctx, const Node *comp) {
     ir_begin_scope(ctx->func);
     for (int i = 0; i < comp->compound.count; i++) {
         ir_gen_block_item(ctx, comp->compound.items[i]);
@@ -524,9 +551,9 @@ void ir_gen_compound(IR_Context *ctx, const Node *comp) {
     ir_end_scope(ctx->func);
 }
 
-void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
+static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
     const int cond_id = ir_append_block(ctx, ir_new_block()); // cond:
-    const int cond_reg = ir_gen_expression(ctx, _while->_while.cond);
+    const int cond_reg = ir_gen_rvalue(ctx, _while->_while.cond);
     const int block_id = cond_id + 1;
     const int end_id = cond_id + 2;
     IR_Instruction br_eq_instr;
@@ -545,13 +572,13 @@ void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
     ir_append_instruction(ctx->block, &br_instr);
     ir_append_block(ctx, ir_new_block()); // end:
 }
-void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
+static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_gen_block_item(ctx, _for->_for.init);
 
     const int cond_id = ir_append_block(ctx, ir_new_block()); // cond:
     const int block_id = cond_id + 1;
     const int end_id = cond_id + 2;
-    const int cond_reg = ir_gen_expression(ctx, _for->_for.cond);
+    const int cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
 
     IR_Instruction br_eq_instr;
     br_eq_instr.op = IR_BR_COND;
@@ -563,7 +590,7 @@ void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
 
     ir_append_block(ctx, ir_new_block()); // block:
     ir_gen_statement(ctx, _for->_for.block);
-    ir_gen_expression(ctx, _for->_for.iter);
+    ir_gen_rvalue(ctx, _for->_for.iter);
 
     IR_Instruction br_to_cond;
     br_to_cond.op = IR_BR;
@@ -573,8 +600,8 @@ void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_append_block(ctx, ir_new_block()); // end:
 }
 
-void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
-    const int cond_reg = ir_gen_expression(ctx, _if->_if.cond);
+static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
+    const int cond_reg = ir_gen_rvalue(ctx, _if->_if.cond);
     const int if_true_id = ctx->func->block_count;
     const int if_false_id = if_true_id + 1; // if no else, then this is the end block
     IR_Instruction br_eq_instr;
@@ -622,17 +649,17 @@ void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
     }
 }
 
-void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
+static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     IR_Instruction var_decl_instr;
     var_decl_instr.op = IR_STORE;
     var_decl_instr.dst = ir_new_var(ctx->func, var_decl->var_decl.name, var_decl->type);
-    var_decl_instr.store.addr = ir_gen_expression(ctx, var_decl->var_decl.expr);
+    var_decl_instr.store.addr = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
     var_decl_instr.store.type = var_decl->type;
     ir_append_instruction(ctx->block, &var_decl_instr);
     return;
 }
 
-void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
+static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     switch (stmt->kind) {
     case N_RETURN:
         ir_gen_return(ctx, stmt);
@@ -652,7 +679,10 @@ void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     case N_FUNCTION_CALL:
     case N_BINARY:
     case N_UNARY:
-        ir_gen_expression(ctx, stmt);
+        ir_gen_rvalue(ctx, stmt);
+        return;
+    case N_IDENTIFIER:
+    case N_LITERAL:
         return;
     default:
         // given invalid statement? probably an expression
@@ -663,8 +693,8 @@ void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     }
 }
 
-void ir_gen_return(IR_Context *ctx, const Node *_return) {
-    const int ret_reg = ir_gen_expression(ctx, _return->_return.expr);
+static void ir_gen_return(IR_Context *ctx, const Node *_return) {
+    const int ret_reg = ir_gen_rvalue(ctx, _return->_return.expr);
     IR_Instruction ret_instr;
     ret_instr.op = IR_RET;
     ret_instr.dst = -1;
@@ -672,7 +702,7 @@ void ir_gen_return(IR_Context *ctx, const Node *_return) {
     ir_append_instruction(ctx->block, &ret_instr);
 }
 
-IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
+static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     if (func->kind != N_FUNCTION) {
         printf("Tried ir_gen_function but given node is not a function!\n");
         exit(1);
@@ -687,7 +717,7 @@ IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     ir_begin_scope(fn);
     // handle (params)
     for (int i = 0; i < func->func.param_count; i++) {
-        int test = ir_new_var(ctx->func, func->func.params[i]->var_decl.name, func->func.params[i]->type);
+        ir_new_var(ctx->func, func->func.params[i]->var_decl.name, func->func.params[i]->type);
         IR_Instruction store_instr;
         store_instr.op = IR_STORE;
         store_instr.dst = i;
@@ -727,7 +757,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
 
     return module;
 }
-void print_unary_op(IR_UNARY_OP op) {
+static void print_unary_op(IR_UNARY_OP op) {
     switch (op) {
     case POS:
         printf("POS");
@@ -750,7 +780,7 @@ void print_unary_op(IR_UNARY_OP op) {
     }
 }
 
-void print_binary_op(IR_BINOP_OP op) {
+static void print_binary_op(IR_BINOP_OP op) {
     switch (op) {
     case ADD:
         printf("ADD");
@@ -784,7 +814,7 @@ void print_binary_op(IR_BINOP_OP op) {
         break;
     }
 }
-void print_cmp_op(IR_CMP_OP op) {
+static void print_cmp_op(IR_CMP_OP op) {
     switch (op) {
     case LT:
         printf("LT");
@@ -807,7 +837,7 @@ void print_cmp_op(IR_CMP_OP op) {
     }
 }
 
-const char ir_type_suffix(Type *type) {
+static const char ir_type_suffix(Type *type) {
     switch (type->kind) {
     case T_INVALID:
         printf("Tried to print invalid type\n");
@@ -823,7 +853,7 @@ const char ir_type_suffix(Type *type) {
     }
 }
 
-void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_CONST:
         switch (instr->_const.type->kind) {
@@ -849,7 +879,7 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
         print_binary_op(instr->binop.op);
         break;
     case IR_LOAD:
-        printf("    r%d = LOAD:%c r%d", ir_type_suffix(instr->load.type), instr->dst, instr->load.addr);
+        printf("    r%d = LOAD:%c r%d", instr->dst, ir_type_suffix(instr->load.type), instr->load.addr);
         break;
     case IR_STORE:
         printf("    STORE:%c r%d -> r%d", ir_type_suffix(instr->store.type), instr->store.addr, instr->dst);
@@ -888,17 +918,20 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
         printf("    r%d = CAST %c to %c, r%d, ", instr->dst, ir_type_suffix(instr->cast.from), ir_type_suffix(instr->cast.to),
                instr->cast.src);
         break;
+    case IR_ADDR:
+        printf("    r%d = ADDR r%d+%d", instr->dst, instr->addr.src, instr->addr.offset);
+        break;
     }
     printf("\n");
 }
 
-void print_ir_block(IR_Context *ctx, const IR_Block *block) {
+static void print_ir_block(IR_Context *ctx, const IR_Block *block) {
     for (int i = 0; i < block->count; i++) {
         print_ir_instruction(ctx, &block->instructions[i]);
     }
 }
 
-void print_ir_function(IR_Context *ctx, const IR_Function *func) {
+static void print_ir_function(IR_Context *ctx, const IR_Function *func) {
     printf("%s:\n", func->name);
     for (int i = 0; i < func->block_count; i++) {
         printf("L%d:\n", i);

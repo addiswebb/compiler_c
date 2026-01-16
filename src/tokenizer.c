@@ -239,6 +239,7 @@ bool is_unary_operator(const TokenType type) {
     case TK_L_NOT:
     case TK_BW_NOT:
     case TK_AND:
+    case TK_MULTIPLY:
         return true;
     default:
         return false;
