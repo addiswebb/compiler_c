@@ -310,10 +310,10 @@ IR_StackSlot *linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, i
             l->stack_slot = (*slot_count)++;
         }
     }
-    printf("Needed %d slots at %d\n", *slot_count, *stack_size);
     return slots;
 }
-void ir_reg_to_stack(IR_Function *f, Lifetime *lts, int reg_count, IR_StackSlot *slots, int slot_count) {
+void ir_reg_to_stack(IR_Function *f, Lifetime *lts, int reg_count, IR_StackSlot *slots, int slot_count, IR_StackSlot *mem_slots,
+                     int mem_slot_count) {
     for (int i = 0; i < f->block_count; i++) {
         IR_Block *b = &f->blocks[i];
         for (int j = 0; j < b->count; j++) {
@@ -358,18 +358,105 @@ void ir_reg_to_stack(IR_Function *f, Lifetime *lts, int reg_count, IR_StackSlot 
                 break;
             }
 
-            if (a != NULL && a->kind == IR_REG) {
-                a->kind = IR_STACK;
-                a->stack_offset = lts[a->reg].stack_offset;
+            if (a != NULL) {
+                if (a->kind == IR_REG) {
+                    a->kind = IR_STACK;
+                    a->stack_offset = lts[a->reg].stack_offset;
+                } else if (a->kind == IR_MEM) {
+                    a->kind = IR_STACK;
+                    a->stack_offset = mem_slots[a->i].offset;
+                }
+                printf(" a offset: -%d\n", a->stack_offset);
             }
-            if (b != NULL && b->kind == IR_REG) {
-                b->kind = IR_STACK;
-                b->stack_offset = lts[b->reg].stack_offset;
+            if (b != NULL) {
+                if (b->kind == IR_REG) {
+                    b->kind = IR_STACK;
+                    b->stack_offset = lts[b->reg].stack_offset;
+                } else if (b->kind == IR_MEM) {
+                    b->kind = IR_STACK;
+                    b->stack_offset = mem_slots[b->i].offset;
+                }
+                printf(" b offset: -%d\n", b->stack_offset);
             }
             if (instr->dst.kind == IR_REG) {
                 instr->dst.kind = IR_STACK;
                 instr->dst.stack_offset = lts[instr->dst.reg].stack_offset;
+                printf(" dst offset: -%d\n", instr->dst.stack_offset);
+            } else if (instr->dst.kind == IR_MEM) {
+                instr->dst.kind = IR_STACK;
+                instr->dst.stack_offset = mem_slots[instr->dst.i].offset;
+                printf(" dst offset: -%d\n", instr->dst.stack_offset);
             }
+        }
+    }
+}
+
+void verify_completion(IR_Function *f) {
+    for (int i = 0; i < f->block_count; i++) {
+        IR_Block *b = &f->blocks[i];
+        for (int j = 0; j < b->count; j++) {
+            IR_Instruction *instr = &b->instructions[j];
+            IR_Value *a = NULL;
+            IR_Value *b = NULL;
+            switch (instr->op) {
+            case IR_UNOP:
+                a = &instr->unary.expr;
+                break;
+            case IR_BINOP:
+                a = &instr->binop.lhs;
+                b = &instr->binop.rhs;
+                break;
+            case IR_LOAD:
+                a = &instr->load.addr;
+                break;
+            case IR_STORE:
+                a = &instr->store.src;
+                break;
+            case IR_RET:
+                a = &instr->ret.value;
+                break;
+            case IR_BR_COND:
+                a = &instr->br_cond.cond;
+                break;
+            case IR_CMP:
+                a = &instr->cmp.lhs;
+                b = &instr->cmp.rhs;
+                break;
+            case IR_CAST:
+                a = &instr->cast.src;
+                break;
+            case IR_ADDR:
+                a = &instr->addr.src;
+                break;
+            case IR_MEMCPY:
+                a = &instr->memcpy.from_reg;
+                b = &instr->memcpy.to_reg;
+                break;
+            default:
+                break;
+            }
+            if (a != NULL) {
+                if (a->kind != IR_STACK) {
+                    print_ir_value(a);
+                    printf(" was not converted to stack offset\n");
+                    exit(1);
+                }
+                a->stack_offset = -(a->stack_offset + 8);
+            }
+            if (b != NULL) {
+                if (b->kind != IR_STACK) {
+                    print_ir_value(b);
+                    printf(" was not converted to stack offset\n");
+                    exit(1);
+                }
+                b->stack_offset = -(b->stack_offset + 8);
+            }
+            if (instr->dst.kind != IR_STACK) {
+                print_ir_value(b);
+                printf(" was not converted to stack offset\n");
+                exit(1);
+            }
+            instr->dst.stack_offset = -(instr->dst.stack_offset + 8);
         }
     }
 }
@@ -388,14 +475,30 @@ void ir_analysis(IR_Context *ctx) {
 
         Lifetime *lifetimes = compute_lifetimes(ctx, f, reg_count, rpo);
         qsort(lifetimes, reg_count, sizeof(Lifetime), cmp);
-        for (int j = 0; j < reg_count; j++) {
-            printf("r%d: [%d->%d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
-        }
         int frame_size = 0;
         int slot_count = 0;
+        IR_StackSlot *mem_slots = malloc(sizeof(IR_StackSlot) * f->local_count);
+        int mem_slot_count;
+        if (!mem_slots) {
+            printf("Failed to allocate memslots\n");
+            exit(1);
+        }
+        for (int j = 0; j < f->local_count; j++) {
+            Type *t = f->locals[j].type;
+            int k = f->locals[j].reg.i;
+            mem_slots[k].size = align(t->size, 8);
+            mem_slots[k].align = t->align;
+            mem_slots[k].id = slot_count;
+            mem_slots[k].offset = frame_size;
+            mem_slots[k].free_at = -1;
+            frame_size += mem_slots[k].size;
+        }
         IR_StackSlot *slots = linear_stack_slot_allocation(lifetimes, reg_count, rpo, &frame_size, &slot_count);
 
-        ir_reg_to_stack(f, lifetimes, reg_count, slots, slot_count);
+        ir_reg_to_stack(f, lifetimes, reg_count, slots, slot_count, mem_slots, mem_slot_count);
+
+        verify_completion(f);
+        f->stack_size = frame_size;
 
         free(rpo);
         free(lifetimes);

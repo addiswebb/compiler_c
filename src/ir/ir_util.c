@@ -402,7 +402,7 @@ void print_ir_value(const IR_Value *v) {
         printf("v%d", v->i);
         break;
     case IR_STACK:
-        printf("[-%d]", v->stack_offset + 8);
+        printf("[-%d]", v->stack_offset);
         break;
     case IR_LITERAL:
         printf(".LC%d", v->const_index);

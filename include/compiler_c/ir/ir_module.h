@@ -140,6 +140,8 @@ typedef struct {
     int var_count;
     int reg_count;
     int stack_pointer;
+    int var_capacity;
+    int *var_indices;
 } IR_Scope;
 
 typedef struct {

@@ -48,6 +48,7 @@ Type *init_type(TypeKind type, int size) {
     }
     t->kind = type;
     t->size = size;
+    t->align = size;
     t->base = type_invalid;
     return t;
 }

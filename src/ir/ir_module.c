@@ -20,7 +20,12 @@ void ir_begin_scope(IR_Function *func) {
         }
         func->scopes = new_scopes;
     }
-    func->scopes[func->scope_count++] = (IR_Scope){0, 0, func->stack_size};
+    int *var_indices = malloc(sizeof(int) * 4);
+    if (!var_indices) {
+        printf("Failed to allocate for scope var indices\n");
+        exit(1);
+    }
+    func->scopes[func->scope_count++] = (IR_Scope){0, 0, func->stack_size, 4, var_indices};
 }
 
 /*
@@ -33,8 +38,7 @@ void ir_end_scope(IR_Function *func) {
             func->max_reg = func->next_reg;
         }
         func->stack_size = func->scopes[func->scope_count].stack_pointer;
-        func->local_count -= func->scopes[func->scope_count].var_count;
-        // func->next_reg -= func->scopes[func->scope_count].reg_count;
+        // func->local_count -= func->scopes[func->scope_count].var_count;
     }
 }
 
@@ -237,7 +241,17 @@ IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
     const IR_Value next_var = ir_next_virtual_slot(func, type->size, type->align);
     func->locals[func->local_count++] = (IR_Var){name, next_var, type};
     if (func->scope_count > 0) {
-        func->scopes[func->scope_count - 1].var_count++;
+        IR_Scope *scope = &func->scopes[func->scope_count - 1];
+        if (scope->var_count >= scope->var_capacity) {
+            scope->var_capacity *= 2;
+            int *new_var_indices = realloc(scope->var_indices, sizeof(int) * scope->var_capacity);
+            if (!new_var_indices) {
+                printf("Failed to realloc for new scope var indices\n");
+                exit(1);
+            }
+            scope->var_indices = new_var_indices;
+        }
+        scope->var_indices[scope->var_count++] = func->local_count - 1;
     } else {
         printf("cooked");
         exit(1);
@@ -255,17 +269,12 @@ int ir_get_func_def(const IR_Context *ctx, const char *name) {
 }
 IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name) {
     IR_Function *func = ctx->func;
-    int sp = func->local_count - 1;
     for (int i = func->scope_count - 1; i >= 0; i--) {
         for (int j = 0; j < func->scopes[i].var_count; j++) {
-            if (sp < 0) {
-                printf("Locals and scope virtual stack pointer is corrupt or cooked\n");
-                exit(1);
+            int k = func->scopes[i].var_indices[j];
+            if (strcmp(func->locals[k].name, name) == 0) {
+                return func->locals[k].reg;
             }
-            if (strcmp(func->locals[sp].name, name) == 0) {
-                return func->locals[sp].reg;
-            }
-            sp--;
         }
     }
 
