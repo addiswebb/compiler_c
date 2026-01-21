@@ -232,7 +232,7 @@ IR_StackSlot *linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, i
         int found_slot = 0;
         for (int j = 0; j < *slot_count; j++) {
             IR_StackSlot *s = &slots[j];
-            if (s->free_at < l->start) {
+            if (s->free_at <= l->start) {
                 s->free_at = l->end;
                 l->stack_slot = j;
                 l->stack_offset = s->offset;
