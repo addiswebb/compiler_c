@@ -2,10 +2,13 @@
     Begin an IR Scope,
     Tracks any variables added afterwards, and pops them from the IR virtual stack when `ir_end_scope()` is called.
 */
-#include "compiler_c/ir.h"
+#include "compiler_c/ir/ir_module.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+IR_Value ir_reg_value(int reg) { return (IR_Value){IR_REG, reg, 1}; }
+IR_Value ir_literal_value(int i) { return (IR_Value){IR_LITERAL, i, 1}; }
 
 void ir_begin_scope(IR_Function *func) {
     if (func->scope_count >= func->scope_capacity) {
@@ -17,7 +20,7 @@ void ir_begin_scope(IR_Function *func) {
         }
         func->scopes = new_scopes;
     }
-    func->scopes[func->scope_count++] = (IR_Scope){0};
+    func->scopes[func->scope_count++] = (IR_Scope){0, 0, func->stack_size};
 }
 
 /*
@@ -29,14 +32,30 @@ void ir_end_scope(IR_Function *func) {
         if (func->next_reg >= func->max_reg) {
             func->max_reg = func->next_reg;
         }
+        func->stack_size = func->scopes[func->scope_count].stack_pointer;
         func->local_count -= func->scopes[func->scope_count].var_count;
-        func->next_reg -= func->scopes[func->scope_count].reg_count;
+        // func->next_reg -= func->scopes[func->scope_count].reg_count;
     }
 }
 
-int ir_next_reg(IR_Function *func) {
+IR_Value ir_next_virtual_slot(IR_Function *func, int size, int align) {
     func->scopes[func->scope_count - 1].reg_count++;
-    return func->next_reg++;
+    IR_Value v;
+    v.kind = IR_MEM;
+    v.size = size;
+    v.align = align;
+    v.i = func->local_count;
+    return v;
+}
+// Returns the IR_Value of the next virtual register (8,8 stack slot);
+IR_Value ir_next_virtual_reg(IR_Function *func) {
+    func->scopes[func->scope_count - 1].reg_count++;
+    IR_Value v;
+    v.kind = IR_REG;
+    v.size = 8;
+    v.align = 8;
+    v.reg = func->next_reg++;
+    return v;
 }
 
 /*
@@ -109,6 +128,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
     func->name = name;
     func->next_reg = 0;
     func->max_reg = 0;
+    func->stack_size = 0;
     func->block_capacity = 4;
     func->block_count = 0;
     func->blocks = malloc(sizeof(IR_Block) * func->block_capacity);
@@ -138,6 +158,19 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
         free(func);
         exit(1);
     }
+
+    func->stack_slot_capacity = 4;
+    func->stack_slot_count = 0;
+    func->stack_slots = malloc(sizeof(IR_StackSlot) * func->stack_slot_capacity);
+    if (!func->stack_slots) {
+        printf("Failed to allocated IR_Stack_Objects\n");
+        free(func->blocks);
+        free(func->locals);
+        free(func->stack_slots);
+        free(func);
+        exit(1);
+    }
+
     ctx->func = func;
     ir_add_block(ctx);
     return func;
@@ -176,7 +209,7 @@ void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
     block->instructions[block->count++] = *instruction;
 }
 
-int ir_append_const(IR_Module *module, IR_Const *new_const) {
+IR_Value ir_append_const(IR_Module *module, IR_Const *new_const) {
     if (module->const_pool.count >= module->const_pool.capacity) {
         module->const_pool.capacity *= 2;
         IR_Const *new_consts = realloc(module->const_pool.consts, sizeof(IR_Const) * module->const_pool.capacity);
@@ -187,10 +220,11 @@ int ir_append_const(IR_Module *module, IR_Const *new_const) {
         module->const_pool.consts = new_consts;
     }
     module->const_pool.consts[module->const_pool.count] = *new_const;
-    return module->const_pool.count++;
+    IR_Const *c = &module->const_pool.consts[module->const_pool.count];
+    return ir_literal_value(module->const_pool.count++);
 }
 
-int ir_new_var(IR_Function *func, const char *name, Type *type) {
+IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
     if (func->local_count >= func->local_capacity) {
         func->local_capacity *= 2;
         IR_Var *new_locals = realloc(func->locals, sizeof(IR_Var) * func->local_capacity);
@@ -200,12 +234,15 @@ int ir_new_var(IR_Function *func, const char *name, Type *type) {
         }
         func->locals = new_locals;
     }
-    const int next_reg = ir_next_reg(func);
-    func->locals[func->local_count++] = (IR_Var){name, next_reg, type};
+    const IR_Value next_var = ir_next_virtual_slot(func, type->size, type->align);
+    func->locals[func->local_count++] = (IR_Var){name, next_var, type};
     if (func->scope_count > 0) {
         func->scopes[func->scope_count - 1].var_count++;
+    } else {
+        printf("cooked");
+        exit(1);
     }
-    return next_reg;
+    return next_var;
 }
 
 int ir_get_func_def(const IR_Context *ctx, const char *name) {
@@ -216,7 +253,7 @@ int ir_get_func_def(const IR_Context *ctx, const char *name) {
     }
     return -1;
 }
-int ir_get_var_reg(const IR_Context *ctx, const char *name) {
+IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name) {
     IR_Function *func = ctx->func;
     int sp = func->local_count - 1;
     for (int i = func->scope_count - 1; i >= 0; i--) {
@@ -282,3 +319,5 @@ void ir_free_module(IR_Module *module) {
 }
 
 IR_Block *current_block(const IR_Function *func) { return &func->blocks[func->block_count - 1]; }
+
+void compute_stack_lifetimes(IR_Context *ctx) {}

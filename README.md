@@ -167,7 +167,7 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
     
 ## To be Implemented (Ordered from next to never...)
 * Types
-    * double, short, long, long long,
+    * double, short, long, int64_t,
 * Advanced Control Flow:
     * switch, case, continue, break, goto,
 * Structs and Unions, Enums

@@ -1,4 +1,3 @@
-#include "compiler_c/ir.h"
 #include "compiler_c/type.h"
 #include "compiler_c/x86.h"
 
@@ -131,7 +130,7 @@ const char *x86_op_suffix(Type *t) {
 }
 
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    int dst_offset = offset(instr->dst);
+    int dst_offset = reg_offset(instr->dst.reg);
     Type *t = instr->call.type;
 
     const char *reg = x86_rax_reg(t);
@@ -141,17 +140,17 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         IR_Var *v = &instr->call.args[i];
         switch (v->type->kind) {
         case T_INT:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), offset(v->reg), x86_rax_reg(v->type));
+            fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), reg_offset(v->reg.reg), x86_rax_reg(v->type));
             fprintf(fp, "    push %%rax\n");
             break;
         case T_FLOAT:
             const char *f_suffix = x86_op_suffix(v->type);
-            fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, offset(v->reg));
+            fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, reg_offset(v->reg.reg));
             fprintf(fp, "    sub $8, %%rsp\n");
             fprintf(fp, "    mov%s %%xmm0, (%%rsp)\n", f_suffix);
             break;
         case T_POINTER:
-            fprintf(fp, "    movq %d(%%rbp), %%rax\n", offset(v->reg));
+            fprintf(fp, "    movq %d(%%rbp), %%rax\n", reg_offset(v->reg.reg));
             fprintf(fp, "    push %%rax\n");
             break;
         default:
@@ -166,9 +165,9 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
 }
 
 void x86_emit_binary(FILE *fp, int dst_reg, int lhs_reg, int rhs_reg, IR_BINOP_OP op, Type *t) {
-    int dst_offset = offset(dst_reg);
-    int lhs_offset = offset(lhs_reg);
-    int rhs_offset = offset(rhs_reg);
+    int dst_offset = reg_offset(dst_reg);
+    int lhs_offset = reg_offset(lhs_reg);
+    int rhs_offset = reg_offset(rhs_reg);
 
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
@@ -312,8 +311,8 @@ void x86_emit_binary(FILE *fp, int dst_reg, int lhs_reg, int rhs_reg, IR_BINOP_O
     }
 }
 void x86_emit_unary(FILE *fp, int dst_reg, int expr_reg, IR_UNARY_OP op, Type *t) {
-    int dst_offset = offset(dst_reg);
-    int expr_offset = offset(expr_reg);
+    int dst_offset = reg_offset(dst_reg);
+    int expr_offset = reg_offset(expr_reg);
 
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
@@ -378,8 +377,8 @@ void x86_emit_unary(FILE *fp, int dst_reg, int expr_reg, IR_UNARY_OP op, Type *t
     }
 }
 void x86_emit_cast(FILE *fp, int src_reg, int dst_reg, Type *from, Type *to) {
-    int dst_offset = offset(dst_reg);
-    int src_offset = offset(src_reg);
+    int dst_offset = reg_offset(dst_reg);
+    int src_offset = reg_offset(src_reg);
 
     const char *from_reg = x86_rax_reg(from);
     const char *from_op_suffix = x86_op_suffix(from);
@@ -433,7 +432,7 @@ void x86_emit_cast(FILE *fp, int src_reg, int dst_reg, Type *from, Type *to) {
     exit(1);
 }
 void x86_emit_const(FILE *fp, int dst_reg, Type *t, IR_Const *c, int pool_index) {
-    int dst_offset = offset(dst_reg);
+    int dst_offset = reg_offset(dst_reg);
 
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
@@ -466,6 +465,7 @@ void x86_emit_const(FILE *fp, int dst_reg, Type *t, IR_Const *c, int pool_index)
         }
         break;
     case T_POINTER:
+    case T_ARRAY:
         if (t->base == type_char) {
             fprintf(fp, "    lea .LC%d(%%rip), %%rax\n", pool_index);
             break;
@@ -476,8 +476,8 @@ void x86_emit_const(FILE *fp, int dst_reg, Type *t, IR_Const *c, int pool_index)
     fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
 }
 void x86_emit_store(FILE *fp, int src_reg, int dst_reg, Type *t) {
-    int src_offset = offset(src_reg);
-    int dst_offset = offset(dst_reg);
+    int src_offset = reg_offset(src_reg);
+    int dst_offset = reg_offset(dst_reg);
 
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
@@ -486,8 +486,8 @@ void x86_emit_store(FILE *fp, int src_reg, int dst_reg, Type *t) {
     fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
 }
 void x86_emit_load(FILE *fp, int addr_reg, int dst_reg, Type *t) {
-    int addr_offset = offset(addr_reg);
-    int dst_offset = offset(dst_reg);
+    int addr_offset = reg_offset(addr_reg);
+    int dst_offset = reg_offset(dst_reg);
 
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);

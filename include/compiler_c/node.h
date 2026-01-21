@@ -3,6 +3,7 @@
 
 #include "type.h"
 #include "tokenizer.h"
+#include <stdint.h>
 
 typedef enum {
     N_TRANSLATION_UNIT,
@@ -21,6 +22,13 @@ typedef enum {
     N_CAST,
     N_INDEX,
 } NodeKind;
+
+typedef enum{
+    L_INT,
+    L_FLOAT,
+    L_CHAR,
+    L_STRING,
+} LiteralKind;
 
 typedef struct Node Node;
 
@@ -81,14 +89,23 @@ struct Node {
             Node *block;
         } _for;
         struct {
-            union {
-                long long i;
+            LiteralKind kind;
+            const char *raw_rata;
+            int len;
+            union{
+                int64_t i;
                 double f;
-                char*s;
+                char c;
+                struct {
+                    const char *data;
+                    int len;
+                } s;
+                void *ptr;
             };
         } literal;
         struct {
-            char *name;
+            const char *name;
+            int len;
         } identifier;
         // type name = expr;
         struct {
@@ -136,6 +153,8 @@ Node *new_node(NodeManager *nm, NodeKind type);
 Node *cast_node(NodeManager *nm, Node *node, Type *type);
 bool is_valid_cast(Type *from, Type *to);
 
+
+LiteralKind literal_kind(TokenType type);
 void print_type(Type* type);
 void print_node_type(NodeKind type);
 

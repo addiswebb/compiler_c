@@ -1,4 +1,11 @@
 int main() {
-    char helo[11] = "hello world";
-    return helo[0];
+    int a = 0;
+    int x = 0;
+    if (a) {
+        x = 1;
+    } else {
+        x = 2;
+    }
+
+    return x;
 }

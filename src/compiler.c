@@ -1,6 +1,8 @@
+#include "compiler_c/ir/ir_analysis.h"
+#include "compiler_c/ir/ir_util.h"
 #include "compiler_c/parser.h"
 #include <compiler_c/compiler.h>
-#include <compiler_c/ir.h>
+#include <compiler_c/sema.h>
 #include <compiler_c/tokenizer.h>
 #include <compiler_c/x86.h>
 
@@ -118,6 +120,11 @@ int compile(Compiler *compiler) {
     if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {
         IR_Context ctx = {NULL, NULL, NULL};
         IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
+
+        ir_analysis(&ctx);
+        for (int i = 0; i < module->func_count; i++) {
+            print_cfg(module->functions[i]);
+        }
         if (compiler->flags & COMP_FLAG_IR) {
             print_ir_module(&ctx, module);
         }

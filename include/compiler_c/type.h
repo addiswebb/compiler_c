@@ -2,6 +2,8 @@
 #define COMPILER_C_TYPE_H
 
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 typedef enum {
     // Yet to be symatically analysed
     T_INT,
@@ -44,6 +46,13 @@ extern Type *type_invalid;
 
 extern TypePool typepool;
 
+static inline int align(int size, int align) {
+    if ((align & (align - 1)) != 0) {
+        printf("Invalid alignment: %d", align);
+        exit(1);
+    }
+    return (size + align - 1) & ~(align - 1);
+}
 
 void init_types();
 Type *init_type(TypeKind type, int size);

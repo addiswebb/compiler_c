@@ -44,7 +44,7 @@ void free_node_manager(const NodeManager *nm) {
 /*
     Handles creating a Node, pushing it to the global node array
 */
-Node *new_node(NodeManager *nm, const NodeKind type) {
+Node *new_node(NodeManager *nm, const NodeKind kind) {
     if (nm->count >= nm->capacity) {
         // In the future, create a new arena for more nodes and link them.
         printf("Node Arena overflow");
@@ -52,10 +52,19 @@ Node *new_node(NodeManager *nm, const NodeKind type) {
     }
     Node *node = &nm->nodes[nm->count++];
     memset(node, 0, sizeof(Node));
-    node->kind = type;
+    node->kind = kind;
+    node->type = type_invalid;
     return node;
 }
 Node *cast_node(NodeManager *nm, Node *node, Type *type) {
+    if (!is_valid_cast(node->type, type)) {
+        printf("Invalid conversion from ");
+        print_type(node->type);
+        printf(" to ");
+        print_type(type);
+        printf("\n");
+        exit(1);
+    }
     Node *cast = new_node(nm, N_CAST);
     cast->type = type;
     cast->cast.from = node->type;
@@ -63,8 +72,29 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
     return cast;
 }
 
-bool is_valid_cast(Type *from, Type *to) { return true; }
+bool is_valid_cast(Type *from, Type *to) {
+    if (from->kind == T_ARRAY) {
+        // Can only cast array->pointer (pointer decay)
+        return to->kind == T_POINTER;
+    }
+    return true;
+}
 
+LiteralKind literal_kind(TokenType type) {
+    switch (type) {
+    case TK_INT_LITERAL:
+        return L_INT;
+    case TK_FLT_LITERAL:
+        return L_FLOAT;
+    case TK_CHAR_LITERAL:
+        return L_CHAR;
+    case TK_STRING_LITERAL:
+        return L_STRING;
+    default:
+        printf("Given Tokentype which is not a literal\n");
+        exit(1);
+    }
+}
 void print_type(Type *type) {
     if (!type) {
         printf("NULL");
@@ -231,20 +261,20 @@ void print_node(const Node *node, const int depth) {
             printf("value= %g]\n", node->literal.f);
             break;
         case T_INVALID:
-            printf("INVALID TYPE]\n");
+            printf("value= [INVALID TYPE]]\n");
             break;
         case T_ARRAY:
             if (node->type->base == type_char) {
                 printf("value= \"");
                 for (int i = 0; i < node->type->array_len; i++) {
-                    printf("%c", node->literal.s[i]);
+                    printf("%c", node->literal.s.data[i]);
                 }
                 printf("\"]\n");
                 break;
             }
         case T_POINTER:
             if (node->type->base == type_char) {
-                printf("value= \"%s\"]\n", node->literal.s);
+                printf("value= \"%s\"]\n", node->literal.s.data);
                 break;
             }
         default:

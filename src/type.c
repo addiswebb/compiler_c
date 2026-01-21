@@ -1,4 +1,5 @@
 #include "compiler_c/type.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -21,7 +22,7 @@ void init_types() {
     type_char = init_type(T_INT, sizeof(char));
     type_short = init_type(T_INT, sizeof(short));
     type_int = init_type(T_INT, sizeof(int));
-    type_long = init_type(T_INT, sizeof(long long));
+    type_long = init_type(T_INT, sizeof(int64_t));
 
     type_float = init_type(T_FLOAT, sizeof(float));
     type_double = init_type(T_FLOAT, sizeof(double));

@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "compiler_c/ir/ir_util.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
-#include <compiler_c/ir.h>
+#include <compiler_c/ir/ir_builder.h>
+#include <compiler_c/ir/ir_gen.h>
 #include <compiler_c/node.h>
 
-static int ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
+static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
     case N_IDENTIFIER:
         return ir_get_var_reg(ctx, expr->identifier.name);
@@ -14,12 +16,18 @@ static int ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         if (expr->unary.op != TK_MULTIPLY) break;
         return ir_gen_rvalue(ctx, expr->unary.expr);
     case N_INDEX:
-        const int index = ir_gen_rvalue(ctx, expr->index.index);
-        const int ptr_reg = ir_gen_lvalue(ctx, expr->index.identifier);
+        const IR_Value index = ir_gen_rvalue(ctx, expr->index.index);
+        const IR_Value ptr_reg = ir_gen_lvalue(ctx, expr->index.identifier);
         const int elem_size = expr->index.identifier->type->base->size;
-        const int size_reg = ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){expr->type, elem_size}), type_int);
-        const int offset_reg = elem_size == 1 ? index : ir_binary(ctx, MUL, ir_next_reg(ctx->func), size_reg, index, type_int);
-        return ir_binary(ctx, ADD, ir_next_reg(ctx->func), ptr_reg, offset_reg, type_void_ptr);
+
+        IR_Value offset_reg;
+        if (elem_size == 1) {
+            offset_reg = index;
+        } else {
+            IR_Value size_reg = ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){expr->type, elem_size}), type_int);
+            offset_reg = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), size_reg, index, type_int);
+        }
+        return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ptr_reg, offset_reg, type_void_ptr);
     default:
         break;
     }
@@ -28,7 +36,7 @@ static int ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     exit(1);
 }
 
-int ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
+IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
     case N_INDEX:
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
@@ -40,14 +48,18 @@ int ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         switch (c.type->kind) {
         case T_INT:
             c.i = expr->literal.i;
+            break;
         case T_FLOAT:
             c.f = expr->literal.f;
             break;
         case T_POINTER:
         case T_ARRAY:
             if (c.type->base == type_char) {
-                c.s = expr->literal.s;
-                break;
+                c.s.data = expr->literal.s.data;
+                c.s.len = expr->literal.s.len;
+                IR_Value ptr_reg = ir_alloca(ctx, c.s.len * c.type->base->size, 8);
+                IR_Value str_literal = ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
+                return ir_memcpy(ctx, str_literal, ptr_reg, c.s.len);
             }
         case T_INVALID:
         default:
@@ -57,17 +69,17 @@ int ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         return ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
     case N_BINARY:
         if (expr->binary.op == TK_EQ) {
-            int addr = ir_gen_lvalue(ctx, expr->binary.lhs);
-            int val = ir_gen_rvalue(ctx, expr->binary.rhs);
+            IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
+            IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
             ir_store(ctx, addr, val, expr->type);
             return val;
         }
-        int lhs = ir_gen_rvalue(ctx, expr->binary.lhs);
-        int rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
+        IR_Value lhs = ir_gen_rvalue(ctx, expr->binary.lhs);
+        IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
         if (is_comparison_op(expr->binary.op)) {
             return ir_cmp(ctx, ir_cmp_op(expr->binary.op), lhs, rhs);
         } else {
-            return ir_binary(ctx, ir_binary_op(expr->binary.op), ir_next_reg(ctx->func), lhs, rhs, expr->type);
+            return ir_binary(ctx, ir_binary_op(expr->binary.op), ir_next_virtual_reg(ctx->func), lhs, rhs, expr->type);
         }
     case N_UNARY:
         if (expr->unary.op == TK_INCR || expr->unary.op == TK_DECR) {
@@ -88,24 +100,25 @@ int ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                 printf("Tried to increment a value which is neither float or int\n");
                 exit(1);
             }
-            int addr_reg = ir_gen_lvalue(ctx, expr->unary.expr);
-            const int const_dst = ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
-            const int store_dst = ir_store(ctx, ir_next_reg(ctx->func), addr_reg, expr->type);
-            const int binary_dst = ir_binary(ctx, expr->unary.op == TK_INCR ? ADD : SUB, addr_reg, addr_reg, const_dst, expr->type);
+            IR_Value addr_reg = ir_gen_lvalue(ctx, expr->unary.expr);
+
+            const IR_Value const_dst = ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
+            const IR_Value store_dst = ir_store(ctx, ir_next_virtual_reg(ctx->func), addr_reg, expr->type);
+            const IR_Value binary_dst = ir_binary(ctx, expr->unary.op == TK_INCR ? ADD : SUB, addr_reg, addr_reg, const_dst, expr->type);
             return expr->unary.associativity ? store_dst : binary_dst;
         } else if (expr->unary.op == TK_AND) { // & ref
-            const int addr = ir_gen_lvalue(ctx, expr->unary.expr);
+            const IR_Value addr = ir_gen_lvalue(ctx, expr->unary.expr);
             return ir_address(ctx, addr, 0);
         } else if (expr->unary.op == TK_MULTIPLY) { // * deref
-            const int addr = ir_gen_lvalue(ctx, expr->unary.expr);
+            const IR_Value addr = ir_gen_lvalue(ctx, expr->unary.expr);
             return ir_load(ctx, addr, expr->type);
         }
-        const int expr_reg = ir_gen_rvalue(ctx, expr->unary.expr);
+        const IR_Value expr_reg = ir_gen_rvalue(ctx, expr->unary.expr);
         ir_unary(ctx, ir_unary_op(expr->unary.op), expr_reg, expr->type);
     case N_FUNCTION_CALL:
         return ir_call(ctx, expr);
     case N_CAST:
-        const int src = ir_gen_rvalue(ctx, expr->cast.expr);
+        const IR_Value src = ir_gen_rvalue(ctx, expr->cast.expr);
         return ir_cast(ctx, src, expr->type, expr->cast.from);
     default:
         break;
@@ -134,7 +147,7 @@ static void ir_gen_compound(IR_Context *ctx, const Node *comp) {
 
 static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
     const int cond_id = ir_add_block(ctx); // cond:
-    const int cond_reg = ir_gen_rvalue(ctx, _while->_while.cond);
+    const IR_Value cond_reg = ir_gen_rvalue(ctx, _while->_while.cond);
     const int block_id = cond_id + 1;
     const int end_id = cond_id + 2;
     ir_branch_cond(ctx, cond_reg, block_id, end_id);
@@ -149,7 +162,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     const int cond_id = ir_add_block(ctx); // cond:
     const int block_id = cond_id + 1;
     const int end_id = cond_id + 2;
-    const int cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
+    const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
 
     ir_branch_cond(ctx, cond_reg, block_id, end_id);
     ir_add_block(ctx); // block:
@@ -160,7 +173,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
 }
 
 static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
-    const int cond_reg = ir_gen_rvalue(ctx, _if->_if.cond);
+    const IR_Value cond_reg = ir_gen_rvalue(ctx, _if->_if.cond);
     const int if_true_id = ctx->func->block_count;
     const int if_false_id = if_true_id + 1; // if no else, then this is the end block
     ir_branch_cond(ctx, cond_reg, if_true_id, if_false_id);
@@ -186,8 +199,8 @@ static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
 }
 
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
-    const int dst = ir_new_var(ctx->func, var_decl->var_decl.name, var_decl->type);
-    const int addr = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
+    const IR_Value dst = ir_new_var(ctx->func, var_decl->var_decl.name, var_decl->type);
+    const IR_Value addr = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
     ir_store(ctx, dst, addr, var_decl->type);
 }
 
@@ -243,7 +256,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     // handle (params)
     for (int i = 0; i < func->func.param_count; i++) {
         ir_new_var(ctx->func, func->func.params[i]->var_decl.name, func->func.params[i]->type);
-        ir_store(ctx, i, -func->func.param_count + i, func->func.params[i]->type);
+        ir_store(ctx, ir_reg_value(i), ir_reg_value(-func->func.param_count + i), func->func.params[i]->type);
     }
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.count; i++) {
@@ -274,6 +287,5 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
             exit(1);
         }
     }
-
     return module;
 }

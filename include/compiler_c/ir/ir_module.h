@@ -1,0 +1,229 @@
+#ifndef COMPILER_C_IR_MODULE_H
+#define COMPILER_C_IR_MODULE_H
+
+#include "compiler_c/node.h"
+#include "compiler_c/type.h"
+#include <stdint.h>
+
+typedef enum{
+    LT, // <
+    LE, // <=
+    GT, // >
+    GE, // >=
+    EQ, // ==
+    NEQ, // !=
+} IR_CMP_OP;
+
+typedef enum{
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    MOD,
+    AND,
+    OR,
+    XOR,
+    SHR,
+    SHL,
+} IR_BINOP_OP;
+
+typedef enum{
+    POS,
+    NEG,
+    LNOT,
+    BNOT,
+    REF,
+    DEREF,
+} IR_UNARY_OP;
+
+typedef enum {
+    IR_CONST,
+    IR_UNOP,IR_BINOP,
+    IR_LOAD, IR_STORE, IR_RET, IR_CALL,
+    IR_BR, IR_BR_COND,
+    IR_CMP,
+    IR_CAST,
+    IR_ADDR,
+    IR_ALLOCA,
+    IR_MEMCPY,
+} IR_OP;
+
+
+typedef struct{
+    enum { IR_REG, IR_MEM, IR_STACK, IR_LITERAL } kind;
+    union{
+        struct{
+            int reg;
+            int stack_slot;
+            int stack_offset;
+        };
+        int i;
+        int const_index;
+    };
+    int size;
+    int align;
+}IR_Value;
+
+typedef struct {
+    const char *name;
+    IR_Value reg;
+    Type *type;
+} IR_Var;
+
+typedef struct {
+    IR_OP op;
+    IR_Value dst;
+    union {
+        struct {IR_Value c; Type *type; } _const;
+        struct {IR_Value addr; Type*type;} load;
+        struct {IR_Value src; Type*type; } store;
+        struct {IR_UNARY_OP op; IR_Value expr; Type *type;} unary;
+        struct {IR_BINOP_OP op; IR_Value lhs, rhs; Type *type;} binop;
+        struct {IR_CMP_OP op; IR_Value lhs, rhs; } cmp;
+        struct {int callee; IR_Var *args; int arg_count; Type *type;} call;
+        struct {IR_Value value;} ret;
+        struct {int label;} br;
+        struct {IR_Value cond; int t_label, f_label;} br_cond;
+        struct {Type *from, *to; IR_Value src;} cast;
+        struct {IR_Value src; int offset;} addr;
+        struct {int size; } alloca;
+        struct {IR_Value from_reg, to_reg; int size;} memcpy;
+    };
+} IR_Instruction;
+
+typedef struct{
+    int id;
+    int offset;
+    int size;
+    int align;
+    int free_at;
+}IR_StackSlot;
+
+typedef struct{
+    int *data;
+    int num_bits;
+    int capacity;
+} BitSet;
+
+typedef struct{
+    int *succ;
+    int succ_count;
+    int *pred;
+    int pred_count;
+}IR_BlockCFG;
+
+typedef struct{
+    BitSet def;
+    BitSet use;
+    BitSet live_in;
+    BitSet live_out;
+}IR_BlockLiveness;
+
+typedef struct{
+    int reg;
+    int start;
+    int end;
+    int stack_slot;
+    int stack_offset;
+    IR_Value *v;
+} Lifetime;
+
+typedef struct {
+    IR_Instruction *instructions;
+    int count;
+    int capacity;
+    IR_BlockCFG cfg;
+    IR_BlockLiveness live;
+} IR_Block;
+
+typedef struct {
+    int var_count;
+    int reg_count;
+    int stack_pointer;
+} IR_Scope;
+
+typedef struct {
+    const char *name;
+    IR_Block *blocks;
+    int block_count;
+    int block_capacity;
+    int next_reg;
+    int max_reg;
+    int stack_size;
+    IR_Var *locals;
+    int local_count;
+    int local_capacity;
+    IR_Scope *scopes;
+    int scope_count;
+    int scope_capacity;
+    IR_StackSlot *stack_slots;
+    int stack_slot_count;
+    int stack_slot_capacity;
+} IR_Function;
+
+typedef struct{
+    const char *name;
+    int index;
+} IR_Func_Def;
+
+typedef struct{
+    Type *type;
+    union{
+        int64_t i;
+        double f;
+        struct {
+            const char* data;
+            int len;
+        }s;
+    };
+}IR_Const;
+
+typedef struct{
+    int count;
+    int capacity;
+    IR_Const *consts;
+}IR_Const_Pool;
+
+typedef struct {
+    IR_Function **functions;
+    int func_count;
+    int func_capacity;
+    IR_Func_Def *defs;
+    IR_Const_Pool const_pool;
+} IR_Module;
+
+
+typedef struct{
+    IR_Module *module;
+    IR_Function *func;
+    IR_Block *block;
+} IR_Context;
+
+IR_Value ir_reg_value(int reg);
+IR_Value ir_literal_value(int i);
+void ir_free_module(IR_Module *module);
+IR_Module *ir_gen_translation_unit(IR_Context *ctx,const Node *tu);
+
+void ir_begin_scope(IR_Function *func);
+void ir_end_scope(IR_Function *func);
+IR_Value ir_next_virtual_slot(IR_Function *func, int size, int align);
+IR_Value ir_next_virtual_reg(IR_Function *func);
+
+IR_Module *ir_new_module();
+IR_Function *ir_new_function(IR_Context *ctx,const char *name);
+void ir_new_func_def(IR_Module *module, IR_Function *func);
+IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
+static IR_Block *ir_new_block();
+
+int ir_add_block(IR_Context *ctx);
+void ir_append_function(IR_Module *module, IR_Function *func);
+void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction);
+IR_Value ir_append_const(IR_Module *module, IR_Const *new_const);
+static int ir_append_block(IR_Context *ctx, IR_Block *block);
+
+int ir_get_func_def(const IR_Context *ctx, const char *name);
+IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name);
+IR_Block *current_block(const IR_Function *func);
+
+
+#endif

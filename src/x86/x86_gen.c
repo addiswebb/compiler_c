@@ -1,41 +1,78 @@
-#include "compiler_c/ir.h"
 #include "compiler_c/type.h"
 #include "compiler_c/x86.h"
 
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
-int offset(const int a) {
+int reg_offset(const int a) {
     if (a < 0) {
-        return -offset(a * -1);
+        return -reg_offset(a * -1);
     }
-    return -(a * 8 + 8);
+    return -(a * 8 + 8 + current_offset);
 }
-static void x86_gen_addr_instr(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    fprintf(fp, "    lea %d(%%rbp), %%rax\n", offset(instr->addr.src) - instr->addr.offset);
-    fprintf(fp, "    movq %%rax, %d(%%rbp)\n", offset(instr->dst));
+
+static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->memcpy.from_reg.kind) {
+    case IR_REG:
+        fprintf(fp, "    movq %d(%%rbp), %%rsi\n", reg_offset(instr->memcpy.from_reg.reg));
+        break;
+    case IR_LITERAL:
+        fprintf(fp, "    lea .LC%d(%%rip), %%rsi\n", instr->memcpy.from_reg.const_index);
+        break;
+    }
+
+    switch (instr->memcpy.to_reg.kind) {
+    case IR_REG:
+        fprintf(fp, "    movq %d(%%rbp), %%rdi\n", reg_offset(instr->memcpy.to_reg.reg));
+        break;
+    case IR_LITERAL:
+        fprintf(fp, "    lea .LC%d(%%rip), %%rdi\n", instr->memcpy.to_reg.const_index);
+        break;
+    }
+    fprintf(fp, "    mov $%d, %%edx\n", instr->memcpy.size);
+    fprintf(fp, "    call memcpy\n");
+}
+
+static void x86_gen_alloca_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    printf("dst reg = %d", instr->dst.reg);
+    fprintf(fp, "    lea %d(%%rbp), %%rax\n", reg_offset(0));
+    current_offset += instr->alloca.size;
+    fprintf(fp, "    movq %%rax, %d(%%rbp)\n", reg_offset(instr->dst.reg));
+}
+
+static void x86_gen_addr_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->addr.src.kind) {
+    case IR_REG:
+        fprintf(fp, "    lea %d(%%rbp), %%rax\n", reg_offset(instr->addr.src.reg) - instr->addr.offset);
+        break;
+    case IR_LITERAL:
+        fprintf(fp, "    lea .LC%d(%%rip), %%rax\n", instr->addr.src.const_index);
+        break;
+    }
+    fprintf(fp, "    movq %%rax, %d(%%rbp)\n", reg_offset(instr->dst.reg));
 }
 static void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     // char -> int : zero-extend
-    x86_emit_cast(fp, instr->cast.src, instr->dst, instr->cast.from, instr->cast.to);
+    x86_emit_cast(fp, instr->cast.src.reg, instr->dst.reg, instr->cast.from, instr->cast.to);
 }
 static void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    IR_Const *c = &ctx->module->const_pool.consts[instr->_const.pool_index];
-    x86_emit_const(fp, instr->dst, instr->_const.type, c, instr->_const.pool_index);
+    IR_Const *c = &ctx->module->const_pool.consts[instr->_const.c.const_index];
+    x86_emit_const(fp, instr->dst.reg, instr->_const.type, c, instr->_const.c.const_index);
 }
 static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { x86_emit_call(fp, ctx, instr); }
 static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_store(fp, instr->store.src, instr->dst, instr->store.type);
+    x86_emit_store(fp, instr->store.src.reg, instr->dst.reg, instr->store.type);
 }
 static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_load(fp, instr->load.addr, instr->dst, instr->load.type);
+    x86_emit_load(fp, instr->load.addr.reg, instr->dst.reg, instr->load.type);
 }
 static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_unary(fp, instr->dst, instr->unary.expr, instr->unary.op, instr->unary.type);
+    x86_emit_unary(fp, instr->dst.reg, instr->unary.expr.reg, instr->unary.op, instr->unary.type);
 }
 static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_binary(fp, instr->dst, instr->binop.lhs, instr->binop.rhs, instr->binop.op, instr->binop.type);
+    x86_emit_binary(fp, instr->dst.reg, instr->binop.lhs.reg, instr->binop.rhs.reg, instr->binop.op, instr->binop.type);
 }
 static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
@@ -61,10 +98,16 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         x86_gen_cast_instruction(fp, ctx, instr);
         return;
     case IR_ADDR:
-        x86_gen_addr_instr(fp, ctx, instr);
+        x86_gen_addr_instruction(fp, ctx, instr);
+        break;
+    case IR_ALLOCA:
+        x86_gen_alloca_instruction(fp, ctx, instr);
+        break;
+    case IR_MEMCPY:
+        x86_gen_memcpy_instruction(fp, ctx, instr);
         break;
     case IR_RET:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->ret.value));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", reg_offset(instr->ret.value.reg));
         fprintf(fp, "    mov %%rbp, %%rsp\n");
         fprintf(fp, "    pop %%rbp\n");
         fprintf(fp, "    ret\n");
@@ -73,8 +116,8 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.label);
         return;
     case IR_CMP:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->cmp.lhs));
-        fprintf(fp, "    cmpl %d(%%rbp), %%eax\n", offset(instr->cmp.rhs));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", reg_offset(instr->cmp.lhs.reg));
+        fprintf(fp, "    cmpl %d(%%rbp), %%eax\n", reg_offset(instr->cmp.rhs.reg));
         switch (instr->cmp.op) {
         case LT:
             fprintf(fp, "    setl %%al\n");
@@ -96,10 +139,10 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
             break;
         }
         fprintf(fp, "    movzbl %%al, %%eax\n");
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", offset(instr->dst));
+        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", reg_offset(instr->dst.reg));
         return;
     case IR_BR_COND:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", offset(instr->br_cond.cond));
+        fprintf(fp, "    movl %d(%%rbp), %%eax\n", reg_offset(instr->br_cond.cond.reg));
         fprintf(fp, "    testl %%eax, %%eax\n");
         fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_label);
         break;
@@ -111,12 +154,13 @@ static void x86_gen_block(FILE *fp, IR_Context *ctx) {
     }
 }
 static void x86_gen_function(FILE *fp, IR_Context *ctx) {
-    const int locals_size = ctx->func->max_reg * 8;
-    const int stack_size = locals_size + 15 & ~15;
+    const int stack_size = ctx->func->max_reg;
+    const int aligned_stack_size = stack_size + 15 & ~15;
+
     fprintf(fp, "%s:\n", ctx->func->name);
     fprintf(fp, "    push %%rbp\n");
     fprintf(fp, "    mov %%rsp, %%rbp\n");
-    fprintf(fp, "    subq $%d, %%rsp\n", stack_size);
+    fprintf(fp, "    subq $%d, %%rsp\n", aligned_stack_size);
     for (int i = 0; i < ctx->func->block_count; i++) {
         fprintf(fp, "%s_%d:\n", ctx->func->name, i);
         ctx->block = &ctx->func->blocks[i];
@@ -137,8 +181,8 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
                 uint32_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
                 fprintf(fp, ".align 4\n.LC%d:\n    .long 0x%08x\n", i, bits);
-            } else if (c->type->kind == T_POINTER && c->type->base == type_char) {
-                fprintf(fp, ".LC%d:\n    .string \"%s\"\n", i, c->s);
+            } else if (c->type->kind == T_ARRAY && c->type->base == type_char) {
+                fprintf(fp, ".LC%d:\n    .string \"%s\"\n", i, c->s.data);
             }
         }
         fprintf(fp, ".section .text\n\n");
