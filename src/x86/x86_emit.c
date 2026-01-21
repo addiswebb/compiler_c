@@ -130,7 +130,7 @@ const char *x86_op_suffix(Type *t) {
 }
 
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    int dst_offset = instr->dst.stack_offset;
+    int dst_offset = instr->ops[0].stack_offset;
     Type *t = instr->call.type;
 
     const char *reg = x86_rax_reg(t);
@@ -290,7 +290,7 @@ void x86_emit_binary(FILE *fp, int dst_offset, int lhs_offset, int rhs_offset, I
     case T_POINTER:
         switch (op) {
         case ADD:
-            fprintf(fp, "    movq %d(%%rbp), %%rax\n", lhs_offset);
+            fprintf(fp, "    lea %d(%%rbp), %%rax\n", lhs_offset);
             fprintf(fp, "    addq %d(%%rbp), %%rax\n", rhs_offset);
             fprintf(fp, "    movq %%rax, %d(%%rbp)\n", dst_offset);
             return;
@@ -386,7 +386,7 @@ void x86_emit_cast(FILE *fp, int src_offset, int dst_offset, Type *from, Type *t
     // char/short/int/long/ -> char/short/int/long
     if (from->kind == T_INT && to->kind == T_INT) {
         if (from->size < to->size) {
-            fprintf(fp, "    movz%s%s %d(%%rbp), %s\n", from_op_suffix, to_op_suffix, src_offset, to_reg);
+            fprintf(fp, "    movs%s%s %d(%%rbp), %s\n", from_op_suffix, to_op_suffix, src_offset, to_reg);
         } else {
             fprintf(fp, "    mov%s %d(%%rbp), %s\n", from_op_suffix, src_offset, from_reg);
         }
@@ -478,5 +478,6 @@ void x86_emit_load(FILE *fp, int addr_offset, int dst_offset, Type *t) {
 
     fprintf(fp, "    movq %d(%%rbp), %%rax\n", addr_offset);
     fprintf(fp, "    mov%s (%%rax), %s\n", op_suffix, reg);
+    // fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, addr_offset, reg);
     fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
 }

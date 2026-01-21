@@ -121,21 +121,13 @@ void compute_reverse_postorder(IR_Function *func, int *rpo) {
 }
 
 void bitset_add_defined(BitSet *defined, IR_Value *v) {
-    if (v->kind == IR_REG) {
-        bitset_add(defined, v->reg);
-    } else {
-        print_ir_value(v);
-        printf(" is not IR_REG\n");
-    }
+    if (v->kind == IR_REG) bitset_add(defined, v->reg);
 }
 void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v) {
     if (v->kind == IR_REG) {
         if (!bitset_has(defined, v->reg)) {
             bitset_add(used, v->reg);
         }
-    } else {
-        print_ir_value(v);
-        printf(" is not IR_REG");
     }
 }
 
@@ -183,66 +175,15 @@ int ir_reg_bitset(IR_Function *f) {
         IR_Block *b = &f->blocks[j];
         for (int k = 0; k < b->count; k++) {
             IR_Instruction *instr = &b->instructions[k];
-            switch (instr->op) {
-            case IR_STORE:
-                bitset_add_used(&b->live.def, &b->live.use, &instr->store.src);
-                break;
-            case IR_UNOP:
-                bitset_add_defined(&b->live.def, &instr->dst);
-                defined++;
-                bitset_add_used(&b->live.def, &b->live.use, &instr->unary.expr);
-                break;
-            case IR_BINOP:
-                bitset_add_defined(&b->live.def, &instr->dst);
-                defined++;
-                bitset_add_used(&b->live.def, &b->live.use, &instr->binop.lhs);
-                bitset_add_used(&b->live.def, &b->live.use, &instr->binop.rhs);
-                break;
-            case IR_RET:
-                bitset_add_used(&b->live.def, &b->live.use, &instr->ret.value);
-                break;
-            case IR_CMP:
-                bitset_add_defined(&b->live.def, &instr->dst);
-                defined++;
-                bitset_add_used(&b->live.def, &b->live.use, &instr->cmp.lhs);
-                bitset_add_used(&b->live.def, &b->live.use, &instr->cmp.rhs);
-                break;
-            case IR_CAST:
-                bitset_add_defined(&b->live.def, &instr->dst);
-                defined++;
-                bitset_add_used(&b->live.def, &b->live.use, &instr->cast.src);
-                break;
-            case IR_ADDR:
-                bitset_add_defined(&b->live.def, &instr->dst);
-                defined++;
-                bitset_add_used(&b->live.def, &b->live.use, &instr->addr.src);
-                break;
-            case IR_MEMCPY:
-                bitset_add_used(&b->live.def, &b->live.use, &instr->memcpy.from_reg);
-                bitset_add_used(&b->live.def, &b->live.use, &instr->memcpy.to_reg);
-                break;
-            case IR_LOAD:
-                bitset_add_defined(&b->live.def, &instr->dst);
-                defined++;
-                bitset_add_used(&b->live.def, &b->live.use, &instr->load.addr);
-                break;
-            case IR_BR:
-                break;
-            case IR_BR_COND:
-                bitset_add_used(&b->live.def, &b->live.use, &instr->br_cond.cond);
-                break;
-            case IR_ALLOCA:
-                bitset_add_defined(&b->live.def, &instr->dst);
-                defined++;
-                break;
-            case IR_CALL:
-                bitset_add_defined(&b->live.def, &instr->dst);
-                defined++;
-                break;
-            case IR_CONST:
-                bitset_add_defined(&b->live.def, &instr->dst);
-                defined++;
-                break;
+            for (int i = 0; i < instr->op_count; i++) {
+                if (instr->ops[i].kind == IR_LITERAL || instr->ops[i].kind == IR_MEM) continue;
+                if (op_info[instr->op].def_mask & (1 << i)) {
+                    bitset_add_defined(&b->live.def, &instr->ops[i]);
+                    defined++;
+                }
+                if (op_info[instr->op].use_mask & (1 << i)) {
+                    bitset_add_used(&b->live.def, &b->live.use, &instr->ops[i]);
+                }
             }
         }
     }
@@ -299,7 +240,12 @@ IR_StackSlot *linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, i
             }
         }
         if (!found_slot) {
-            slots = realloc(slots, sizeof(IR_StackSlot) * (*slot_count + 1));
+            IR_StackSlot *new_slots = realloc(slots, sizeof(IR_StackSlot) * (*slot_count + 1));
+            if (!new_slots) {
+                printf("Failed to realloc new_slots\n");
+                exit(1);
+            }
+            slots = new_slots;
             slots[*slot_count].size = l->v->size;
             slots[*slot_count].align = l->v->align;
             slots[*slot_count].free_at = l->end;
@@ -318,74 +264,21 @@ void ir_reg_to_stack(IR_Function *f, Lifetime *lts, int reg_count, IR_StackSlot 
         IR_Block *b = &f->blocks[i];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
-            IR_Value *a = NULL;
-            IR_Value *b = NULL;
-            switch (instr->op) {
-            case IR_UNOP:
-                a = &instr->unary.expr;
-                break;
-            case IR_BINOP:
-                a = &instr->binop.lhs;
-                b = &instr->binop.rhs;
-                break;
-            case IR_LOAD:
-                a = &instr->load.addr;
-                break;
-            case IR_STORE:
-                a = &instr->store.src;
-                break;
-            case IR_RET:
-                a = &instr->ret.value;
-                break;
-            case IR_BR_COND:
-                a = &instr->br_cond.cond;
-                break;
-            case IR_CMP:
-                a = &instr->cmp.lhs;
-                b = &instr->cmp.rhs;
-                break;
-            case IR_CAST:
-                a = &instr->cast.src;
-                break;
-            case IR_ADDR:
-                a = &instr->addr.src;
-                break;
-            case IR_MEMCPY:
-                a = &instr->memcpy.from_reg;
-                b = &instr->memcpy.to_reg;
-                break;
-            default:
-                break;
-            }
-
-            if (a != NULL) {
-                if (a->kind == IR_REG) {
-                    a->kind = IR_STACK;
+            for (int i = 0; i < instr->op_count; i++) {
+                IR_Value *a = &instr->ops[i];
+                if (a->kind == IR_LITERAL) continue;
+                switch (a->kind) {
+                case IR_REG:
                     a->stack_offset = lts[a->reg].stack_offset;
-                } else if (a->kind == IR_MEM) {
-                    a->kind = IR_STACK;
+                    break;
+                case IR_MEM:
                     a->stack_offset = mem_slots[a->i].offset;
+                    break;
+                case IR_STACK:
+                case IR_LITERAL:
+                    break;
                 }
-                printf(" a offset: -%d\n", a->stack_offset);
-            }
-            if (b != NULL) {
-                if (b->kind == IR_REG) {
-                    b->kind = IR_STACK;
-                    b->stack_offset = lts[b->reg].stack_offset;
-                } else if (b->kind == IR_MEM) {
-                    b->kind = IR_STACK;
-                    b->stack_offset = mem_slots[b->i].offset;
-                }
-                printf(" b offset: -%d\n", b->stack_offset);
-            }
-            if (instr->dst.kind == IR_REG) {
-                instr->dst.kind = IR_STACK;
-                instr->dst.stack_offset = lts[instr->dst.reg].stack_offset;
-                printf(" dst offset: -%d\n", instr->dst.stack_offset);
-            } else if (instr->dst.kind == IR_MEM) {
-                instr->dst.kind = IR_STACK;
-                instr->dst.stack_offset = mem_slots[instr->dst.i].offset;
-                printf(" dst offset: -%d\n", instr->dst.stack_offset);
+                instr->ops[i].kind = IR_STACK;
             }
         }
     }
@@ -396,46 +289,9 @@ void verify_completion(IR_Function *f) {
         IR_Block *b = &f->blocks[i];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
-            IR_Value *a = NULL;
-            IR_Value *b = NULL;
-            switch (instr->op) {
-            case IR_UNOP:
-                a = &instr->unary.expr;
-                break;
-            case IR_BINOP:
-                a = &instr->binop.lhs;
-                b = &instr->binop.rhs;
-                break;
-            case IR_LOAD:
-                a = &instr->load.addr;
-                break;
-            case IR_STORE:
-                a = &instr->store.src;
-                break;
-            case IR_RET:
-                a = &instr->ret.value;
-                break;
-            case IR_BR_COND:
-                a = &instr->br_cond.cond;
-                break;
-            case IR_CMP:
-                a = &instr->cmp.lhs;
-                b = &instr->cmp.rhs;
-                break;
-            case IR_CAST:
-                a = &instr->cast.src;
-                break;
-            case IR_ADDR:
-                a = &instr->addr.src;
-                break;
-            case IR_MEMCPY:
-                a = &instr->memcpy.from_reg;
-                b = &instr->memcpy.to_reg;
-                break;
-            default:
-                break;
-            }
-            if (a != NULL) {
+            for (int i = 0; i < instr->op_count; i++) {
+                IR_Value *a = &instr->ops[i];
+                if (a->kind == IR_LITERAL) continue;
                 if (a->kind != IR_STACK) {
                     print_ir_value(a);
                     printf(" was not converted to stack offset\n");
@@ -443,20 +299,6 @@ void verify_completion(IR_Function *f) {
                 }
                 a->stack_offset = -(a->stack_offset + 8);
             }
-            if (b != NULL) {
-                if (b->kind != IR_STACK) {
-                    print_ir_value(b);
-                    printf(" was not converted to stack offset\n");
-                    exit(1);
-                }
-                b->stack_offset = -(b->stack_offset + 8);
-            }
-            if (instr->dst.kind != IR_STACK) {
-                print_ir_value(b);
-                printf(" was not converted to stack offset\n");
-                exit(1);
-            }
-            instr->dst.stack_offset = -(instr->dst.stack_offset + 8);
         }
     }
 }
@@ -475,6 +317,9 @@ void ir_analysis(IR_Context *ctx) {
 
         Lifetime *lifetimes = compute_lifetimes(ctx, f, reg_count, rpo);
         qsort(lifetimes, reg_count, sizeof(Lifetime), cmp);
+        // for (int j = 0; j < reg_count; j++) {
+        //     printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
+        // }
         int frame_size = 0;
         int slot_count = 0;
         IR_StackSlot *mem_slots = malloc(sizeof(IR_StackSlot) * f->local_count);
@@ -507,58 +352,7 @@ void ir_analysis(IR_Context *ctx) {
 
 static inline int assign_if_ir_reg(IR_Value *v, int reg) { return v->kind == IR_REG ? reg : -1; }
 
-void handle_uses(IR_Instruction *instr, Lifetime *lts, int pc) {
-    IR_Value *reg_a = NULL;
-    IR_Value *reg_b = NULL;
-    switch (instr->op) {
-    case IR_STORE:
-        reg_a = &instr->store.src;
-        break;
-    case IR_UNOP:
-        reg_a = &instr->unary.expr;
-        break;
-    case IR_BINOP:
-        reg_a = &instr->binop.lhs;
-        reg_b = &instr->binop.rhs;
-        break;
-    case IR_RET:
-        reg_a = &instr->ret.value;
-        break;
-    case IR_CMP:
-        reg_a = &instr->cmp.lhs;
-        reg_b = &instr->cmp.rhs;
-        break;
-    case IR_CAST:
-        reg_a = &instr->cast.src;
-        break;
-    case IR_ADDR:
-        reg_a = &instr->addr.src;
-        break;
-    case IR_MEMCPY:
-        reg_a = &instr->memcpy.from_reg;
-        reg_b = &instr->memcpy.to_reg;
-        break;
-    case IR_LOAD:
-        reg_a = &instr->load.addr;
-        break;
-    case IR_BR_COND:
-        reg_a = &instr->br_cond.cond;
-        break;
-    default:
-        break;
-    }
-    if (reg_a != NULL && reg_a->kind == IR_REG) {
-        if (lts[reg_a->reg].end < pc) {
-            lts[reg_a->reg].end = pc;
-        }
-    }
-
-    if (reg_b != NULL && reg_b->kind == IR_REG) {
-        if (lts[reg_b->reg].end < pc) {
-            lts[reg_b->reg].end = pc;
-        }
-    }
-}
+void handle_uses(IR_Instruction *instr, Lifetime *lts, int pc) {}
 
 Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f, int defined, int *rpo) {
     Lifetime *lts = malloc(sizeof(Lifetime) * defined);
@@ -569,27 +363,19 @@ Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f, int defined, int *r
         IR_Block *b = &f->blocks[rpo[i]];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
-            // handle defines
-            switch (instr->op) {
-            case IR_UNOP:
-            case IR_BINOP:
-            case IR_CMP:
-            case IR_CAST:
-            case IR_ADDR:
-            case IR_ALLOCA:
-            case IR_CALL:
-            case IR_CONST:
-                if (instr->dst.kind != IR_REG) {
-                    printf("Defining a non ir_reg irvalue somehow!\n");
-                    exit(1);
+            for (int i = 0; i < instr->op_count; i++) {
+                IR_Value *a = &instr->ops[i];
+                if (a->kind == IR_REG) {
+                    if (op_info[instr->op].def_mask & (1 << i)) {
+                        lts[instr->ops[i].reg] = (Lifetime){instr->ops[i].reg, pc, -1, 0, 0, &instr->ops[i]};
+                    }
+                    if (op_info[instr->op].use_mask & (1 << i)) {
+                        if (lts[a->reg].end < pc) {
+                            lts[a->reg].end = pc;
+                        }
+                    }
                 }
-                lts[instr->dst.reg] = (Lifetime){instr->dst.reg, pc, -1, 0, 0, &instr->dst};
-                break;
-            default:
-                break;
             }
-
-            handle_uses(instr, lts, pc);
             pc++;
         }
     }

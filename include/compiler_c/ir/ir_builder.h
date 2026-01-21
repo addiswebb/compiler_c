@@ -15,7 +15,7 @@ IR_Value ir_branch(IR_Context *ctx, int label);
 IR_Value ir_branch_cond(IR_Context *ctx,IR_Value cond_reg, int t_label, int f_label);
 IR_Value ir_cast(IR_Context *ctx,IR_Value src, Type *to, Type *from);
 IR_Value ir_address(IR_Context *ctx,IR_Value src, int offset);
-IR_Value ir_alloca(IR_Context *ctx, int size, int al);
+IR_Value ir_alloca(IR_Context *ctx, IR_Value dst, int size, int al);
 IR_Value ir_memcpy(IR_Context *ctx, IR_Value from_reg, IR_Value to_reg, int size);
 
 #endif

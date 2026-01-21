@@ -70,24 +70,39 @@ typedef struct {
     Type *type;
 } IR_Var;
 
+typedef struct{
+    uint8_t def_mask;
+    uint8_t use_mask;
+} IR_OpInfo;
+/*
+    IR_BR, IR_BR_COND,
+    IR_CMP,
+    IR_CAST,
+    IR_ADDR,
+    IR_ALLOCA,
+    IR_MEMCPY,
+*/
+
+extern IR_OpInfo op_info[];
+
 typedef struct {
     IR_OP op;
-    IR_Value dst;
+    IR_Value ops[3];
+    int op_count;
     union {
-        struct {IR_Value c; Type *type; } _const;
-        struct {IR_Value addr; Type*type;} load;
-        struct {IR_Value src; Type*type; } store;
-        struct {IR_UNARY_OP op; IR_Value expr; Type *type;} unary;
-        struct {IR_BINOP_OP op; IR_Value lhs, rhs; Type *type;} binop;
-        struct {IR_CMP_OP op; IR_Value lhs, rhs; } cmp;
-        struct {int callee; IR_Var *args; int arg_count; Type *type;} call;
-        struct {IR_Value value;} ret;
-        struct {int label;} br;
-        struct {IR_Value cond; int t_label, f_label;} br_cond;
-        struct {Type *from, *to; IR_Value src;} cast;
-        struct {IR_Value src; int offset;} addr;
-        struct {int size; } alloca;
-        struct {IR_Value from_reg, to_reg; int size;} memcpy;
+        struct { Type *type; } _const;
+        struct { Type *type; } load;
+        struct { Type *type; } store;
+        struct { IR_UNARY_OP op; Type *type; } unary;
+        struct { IR_BINOP_OP op; Type *type; } binop;
+        struct { IR_CMP_OP op; } cmp;
+        struct { int callee; IR_Var *args; int arg_count; Type *type; } call;
+        struct { int label; } br;
+        struct { int t_label, f_label; } br_cond;
+        struct { Type *from, *to; } cast;
+        struct { int offset; } addr;
+        struct { int size; } alloca;
+        struct { int size; } memcpy;
     };
 } IR_Instruction;
 

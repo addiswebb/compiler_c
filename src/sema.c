@@ -255,8 +255,8 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
     case N_INDEX:
         semantic_analysis(p, nm, node->index.index);
         semantic_analysis(p, nm, node->index.identifier);
-        if (node->index.index->type != type_int) {
-            node->index.index = cast_node(nm, node->index.index, type_int);
+        if (node->index.index->type != type_long) {
+            node->index.index = cast_node(nm, node->index.index, type_long);
         }
         node->type = node->index.identifier->type->base;
         break;

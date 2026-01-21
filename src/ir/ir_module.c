@@ -6,7 +6,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+IR_OpInfo op_info[] = {
+    [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},  [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_STORE] = {.def_mask = 0b001, .use_mask = 0b010},  [IR_RET] = {.def_mask = 0b000, .use_mask = 0b001},
+    [IR_BR] = {.def_mask = 0b000, .use_mask = 0b000},     [IR_BR_COND] = {.def_mask = 0b000, .use_mask = 0b001},
+    [IR_CMP] = {.def_mask = 0b001, .use_mask = 0b110},    [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},   [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},
+    [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b010}, [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
+    [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
+    // IR_CALL handled seperately
+};
 IR_Value ir_reg_value(int reg) { return (IR_Value){IR_REG, reg, 1}; }
 IR_Value ir_literal_value(int i) { return (IR_Value){IR_LITERAL, i, 1}; }
 
@@ -238,7 +247,7 @@ IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
         }
         func->locals = new_locals;
     }
-    const IR_Value next_var = ir_next_virtual_slot(func, type->size, type->align);
+    const IR_Value next_var = ir_next_virtual_slot(func, align(type->size, 8), 8);
     func->locals[func->local_count++] = (IR_Var){name, next_var, type};
     if (func->scope_count > 0) {
         IR_Scope *scope = &func->scopes[func->scope_count - 1];

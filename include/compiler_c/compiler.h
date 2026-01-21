@@ -21,6 +21,7 @@ typedef struct {
 #define COMP_FLAG_NODES (1u << 3)  // -n
 #define COMP_FLAG_IR (1u << 4)     // -ir
 #define COMP_FLAG_ASM (1u << 5)    // -a
+#define COMP_FLAG_IR_ANALYSIS (1u << 6)    // -ira
 
 int compile(Compiler *compiler);
 Compiler init_compiler(int argc, char *argv[]);

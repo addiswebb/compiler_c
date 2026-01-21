@@ -68,7 +68,8 @@ Type *new_type() {
 Type *new_array_type(Type *type, int len) {
     Type *arr_type = new_type();
     arr_type->kind = T_ARRAY;
-    arr_type->size = sizeof(type->base->size * len);
+    arr_type->size = type->size * len;
+    arr_type->align = type->align;
     arr_type->base = type;
     arr_type->array_len = len;
     return arr_type;
@@ -77,6 +78,7 @@ Type *new_pointer_type(Type *type) {
     Type *ptr_type = new_type();
     ptr_type->kind = T_POINTER;
     ptr_type->size = sizeof(void *);
+    ptr_type->align = ptr_type->size;
     ptr_type->base = type;
     return ptr_type;
 }

@@ -20,6 +20,9 @@ Compiler init_compiler(const int argc, char *argv[]) {
         printf("compiler [input]\n");
         printf("\t-o [output] : Set output file path\n");
         printf("\t-d          : Compile in debug mode\n");
+        printf("\t-ir         : Compile to IR\n");
+        printf("\t-ira        : Compile to IR and print IR analysis\n");
+        printf("\t-a          : Compile to assembly\n");
         printf("\t-t          : Print parse tree\n");
         printf("\t-h          : Get help\n");
         exit(0);
@@ -53,6 +56,9 @@ Compiler init_compiler(const int argc, char *argv[]) {
             compiler.flags |= COMP_FLAG_TOKENS;
         } else if (strcmp(argv[i], "-n") == 0) {
             compiler.flags |= COMP_FLAG_NODES;
+        } else if (strcmp(argv[i], "-ira") == 0) {
+            compiler.flags |= COMP_FLAG_IR;
+            compiler.flags |= COMP_FLAG_IR_ANALYSIS;
         } else if (strcmp(argv[i], "-ir") == 0) {
             compiler.flags |= COMP_FLAG_IR;
         } else if (strcmp(argv[i], "-a") == 0) {
@@ -83,6 +89,9 @@ Compiler init_compiler(const int argc, char *argv[]) {
         }
         if (compiler.flags & COMP_FLAG_IR) {
             printf("-ir ");
+        }
+        if (compiler.flags & COMP_FLAG_IR_ANALYSIS) {
+            printf("-ira ");
         }
         if (compiler.flags & COMP_FLAG_ASM) {
             printf("-a ");
@@ -121,11 +130,15 @@ int compile(Compiler *compiler) {
         IR_Context ctx = {NULL, NULL, NULL};
         IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
 
-        ir_analysis(&ctx);
-        for (int i = 0; i < module->func_count; i++) {
-            print_cfg(module->functions[i]);
-        }
         if (compiler->flags & COMP_FLAG_IR) {
+            print_ir_module(&ctx, module);
+        }
+        ir_analysis(&ctx);
+
+        if (compiler->flags & COMP_FLAG_IR) {
+            for (int i = 0; i < module->func_count; i++) {
+                print_cfg(module->functions[i]);
+            }
             print_ir_module(&ctx, module);
         }
 
@@ -136,6 +149,7 @@ int compile(Compiler *compiler) {
         }
         ir_free_module(module);
     }
+    printf("Finished.\n");
 
     return 1;
 }
