@@ -237,6 +237,7 @@ IR_StackSlot *linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, i
                 l->stack_slot = j;
                 l->stack_offset = s->offset;
                 found_slot = 1;
+                break;
             }
         }
         if (!found_slot) {

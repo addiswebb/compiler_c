@@ -1,5 +1,2 @@
-.clang-format
-.clangd
-/CMakeLists.txt
 /build
 /.cache

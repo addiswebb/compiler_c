@@ -295,7 +295,7 @@ void x86_emit_binary(FILE *fp, int dst_offset, int lhs_offset, int rhs_offset, I
             fprintf(fp, "    movq %%rax, %d(%%rbp)\n", dst_offset);
             return;
         case SUB:
-            fprintf(fp, "    movq %d(%%rbp), %%rax\n", lhs_offset);
+            fprintf(fp, "    lea %d(%%rbp), %%rax\n", lhs_offset);
             fprintf(fp, "    subq %d(%%rbp), %%rax\n", rhs_offset);
             fprintf(fp, "    movq %%rax, %d(%%rbp)\n", dst_offset);
             return;
