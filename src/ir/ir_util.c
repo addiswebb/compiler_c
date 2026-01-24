@@ -253,7 +253,7 @@ static void print_ir_ret(IR_Context *ctx, const IR_Instruction *instr) {
 static void print_ir_call(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
-    printf(" = CALL:%c '%s', %d:[ ", ir_type_suffix(instr->store.type), ctx->module->defs[instr->call.callee].name, instr->call.arg_count);
+    printf(" = CALL:%c '%s', %d:[ ", ir_type_suffix(instr->call.type), ctx->module->defs[instr->call.callee].name, instr->call.arg_count);
     for (int i = 0; i < instr->call.arg_count; i++) {
         print_type(instr->call.args[i].type);
         printf("=");
@@ -396,16 +396,19 @@ void print_ir_module(IR_Context *ctx, const IR_Module *module) {
 void print_ir_value(const IR_Value *v) {
     switch (v->kind) {
     case IR_REG:
-        printf("r%d", v->reg);
+        if (v->reg >= 0) printf("r%d", v->reg);
+        else printf("p%d", -v->reg);
         break;
     case IR_MEM:
-        printf("v%d", v->i);
+        printf("v%d", v->mem);
         break;
     case IR_STACK:
         printf("[%d]", v->stack_offset);
         break;
     case IR_LITERAL:
         printf(".LC%d", v->const_index);
+        break;
+    case IR_UNDEFINED:
         break;
     }
 }

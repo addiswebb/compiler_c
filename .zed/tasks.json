@@ -1,7 +1,7 @@
 [
     {
         "label": "Full Run Test.c",
-        "command": "cmake --build build;./build/compiler_c ./tests/test.c -a; gcc ./tests/test.s -o ./tests/test.exe; ./tests/test.exe; echo \"Exit Code: $LASTEXITCODE\"",
+        "command": "cmake --build build;./build/compiler_c ./tests/test.c -a;echo \"Compile and Run: ./tests/test.s\"; gcc ./tests/test.s -o ./tests/test.exe; ./tests/test.exe; echo \"Exit Code: $LASTEXITCODE\"",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,

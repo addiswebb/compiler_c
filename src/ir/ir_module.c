@@ -7,17 +7,41 @@
 #include <stdlib.h>
 #include <string.h>
 IR_OpInfo op_info[] = {
-    [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},  [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_STORE] = {.def_mask = 0b001, .use_mask = 0b010},  [IR_RET] = {.def_mask = 0b000, .use_mask = 0b001},
-    [IR_BR] = {.def_mask = 0b000, .use_mask = 0b000},     [IR_BR_COND] = {.def_mask = 0b000, .use_mask = 0b001},
-    [IR_CMP] = {.def_mask = 0b001, .use_mask = 0b110},    [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},   [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},
-    [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b010}, [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
+    [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},
+    [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_STORE] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_RET] = {.def_mask = 0b000, .use_mask = 0b001},
+    [IR_BR] = {.def_mask = 0b000, .use_mask = 0b000},
+    [IR_BR_COND] = {.def_mask = 0b000, .use_mask = 0b001},
+    [IR_CMP] = {.def_mask = 0b001, .use_mask = 0b110},
+    [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},
+    [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b010},
+    [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
     [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
-    // IR_CALL handled seperately
+    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b000} // IR_CALL uses handled seperately
 };
-IR_Value ir_reg_value(int reg) { return (IR_Value){IR_REG, reg, 1}; }
-IR_Value ir_literal_value(int i) { return (IR_Value){IR_LITERAL, i, 1}; }
+const IR_Value ir_no_value = (IR_Value){IR_UNDEFINED, 0, 0, 0};
+
+IR_Value ir_mem_value(int mem_reg, Type *type) {
+    IR_Value v;
+    v.kind = IR_MEM;
+    v.mem = mem_reg;
+    v.size = type->size;
+    v.align = type->align;
+    return v;
+}
+IR_Value ir_reg_value(int reg, Type *type) {
+    IR_Value v;
+    v.kind = IR_REG;
+    v.reg = reg;
+    v.stack_offset = 0;
+    v.stack_slot = 0;
+    v.size = type->size;
+    v.align = type->align;
+    return v;
+}
 
 void ir_begin_scope(IR_Function *func) {
     if (func->scope_count >= func->scope_capacity) {
@@ -57,7 +81,7 @@ IR_Value ir_next_virtual_slot(IR_Function *func, int size, int align) {
     v.kind = IR_MEM;
     v.size = size;
     v.align = align;
-    v.i = func->local_count;
+    v.mem = func->local_count;
     return v;
 }
 // Returns the IR_Value of the next virtual register (8,8 stack slot);
@@ -234,7 +258,12 @@ IR_Value ir_append_const(IR_Module *module, IR_Const *new_const) {
     }
     module->const_pool.consts[module->const_pool.count] = *new_const;
     IR_Const *c = &module->const_pool.consts[module->const_pool.count];
-    return ir_literal_value(module->const_pool.count++);
+    IR_Value v;
+    v.kind = IR_LITERAL;
+    v.const_index = module->const_pool.count++;
+    v.size = new_const->type->size;
+    v.align = new_const->type->align;
+    return v;
 }
 
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {

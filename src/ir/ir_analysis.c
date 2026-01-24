@@ -8,10 +8,14 @@
 void bitset_init(BitSet *s, int reg_count) {
     s->num_bits = reg_count;
     s->capacity = (s->num_bits + 31) / 32;
-    s->data = calloc(s->capacity, sizeof(int));
-    if (!s->data) {
-        printf("Failed to alloc for bitset init\n");
-        exit(1);
+    if (reg_count) {
+        s->data = calloc(s->capacity, sizeof(int));
+        if (!s->data) {
+            printf("Failed to alloc for bitset init\n");
+            exit(1);
+        }
+    } else {
+        s->data = NULL;
     }
 }
 void bitset_clear(BitSet *s) {
@@ -19,20 +23,10 @@ void bitset_clear(BitSet *s) {
         s->data[i] = 0;
     }
 }
-void bitset_expand(BitSet *s) {
-    s->num_bits *= 2;
-    s->capacity = (s->num_bits + 31) / 32;
-    int *new_data = realloc(s->data, sizeof(int) * s->capacity);
-    if (!new_data) {
-        printf("Failed to realloc for bitset expand: %d\n", s->capacity);
-        free(s->data);
-        exit(1);
-    }
-    s->data = new_data;
-}
 void bitset_add(BitSet *s, int reg) {
     if (reg >= s->num_bits) {
-        bitset_expand(s);
+        printf("%d is too large a register for this bitset\n", reg);
+        exit(1);
     }
     int word = reg / 32;
     int offset = reg % 32;
@@ -225,7 +219,7 @@ void compute_bitset(IR_Function *f, int *rpo) {
 }
 int cmp(const void *a, const void *b) { return ((Lifetime *)a)->start - ((Lifetime *)b)->start; }
 
-IR_StackSlot *linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, int *stack_size, int *slot_count) {
+void linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, int *stack_size, int *slot_count) {
     IR_StackSlot *slots = NULL;
     for (int i = 0; i < count; i++) {
         Lifetime *l = &lts[i];
@@ -257,29 +251,55 @@ IR_StackSlot *linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, i
             l->stack_slot = (*slot_count)++;
         }
     }
-    return slots;
+    if (slots) free(slots);
 }
-void ir_reg_to_stack(IR_Function *f, Lifetime *lts, int reg_count, IR_StackSlot *slots, int slot_count, IR_StackSlot *mem_slots,
-                     int mem_slot_count) {
+
+void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlot *mem_slots) {
     for (int i = 0; i < f->block_count; i++) {
         IR_Block *b = &f->blocks[i];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
-            for (int i = 0; i < instr->op_count; i++) {
-                IR_Value *a = &instr->ops[i];
+            if (instr->op == IR_CALL) {
+                for (int k = 0; k < instr->call.arg_count; k++) {
+                    IR_Value *a = &instr->call.args[k].reg;
+                    if (a->kind == IR_LITERAL) continue;
+                    switch (a->kind) {
+                    case IR_REG:
+                        // a->reg is negative for function parameters
+                        a->stack_offset = a->reg >= 0 ? -(lts[a->reg].stack_offset + 8) : -(a->reg * 8 - 8);
+                        break;
+                    case IR_MEM:
+                        a->stack_offset = mem_slots[a->mem].offset;
+                        break;
+                    case IR_STACK:
+                    case IR_LITERAL:
+                        break;
+                    case IR_UNDEFINED:
+                        printf("An undefined IR value made it to analysis!!\n");
+                        exit(1);
+                    }
+                    instr->call.args[k].reg.kind = IR_STACK;
+                }
+            }
+            for (int k = 0; k < instr->op_count; k++) {
+                IR_Value *a = &instr->ops[k];
                 if (a->kind == IR_LITERAL) continue;
                 switch (a->kind) {
                 case IR_REG:
-                    a->stack_offset = lts[a->reg].stack_offset;
+                    // a->reg is negative for function parameters
+                    a->stack_offset = a->reg >= 0 ? -(lts[a->reg].stack_offset + 8) : -(a->reg * 8 - 8);
                     break;
                 case IR_MEM:
-                    a->stack_offset = mem_slots[a->i].offset;
+                    a->stack_offset = -(mem_slots[a->mem].offset + 8);
                     break;
                 case IR_STACK:
                 case IR_LITERAL:
                     break;
+                case IR_UNDEFINED:
+                    printf("An undefined IR value made it to analysis!!\n");
+                    exit(1);
                 }
-                instr->ops[i].kind = IR_STACK;
+                instr->ops[k].kind = IR_STACK;
             }
         }
     }
@@ -290,6 +310,15 @@ void verify_completion(IR_Function *f) {
         IR_Block *b = &f->blocks[i];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
+            if (instr->op == IR_CALL) {
+                for (int k = 0; k < instr->call.arg_count; k++) {
+                    if (instr->call.args[k].reg.kind != IR_STACK) {
+                        print_ir_value(&instr->call.args[k].reg);
+                        printf(" was not converted to stack offset\n");
+                        exit(1);
+                    }
+                }
+            }
             for (int i = 0; i < instr->op_count; i++) {
                 IR_Value *a = &instr->ops[i];
                 if (a->kind == IR_LITERAL) continue;
@@ -298,10 +327,29 @@ void verify_completion(IR_Function *f) {
                     printf(" was not converted to stack offset\n");
                     exit(1);
                 }
-                a->stack_offset = -(a->stack_offset + 8);
             }
         }
     }
+}
+
+IR_StackSlot *local_stack_allocation(IR_Function *f, int *frame_size, int *slot_count) {
+    IR_StackSlot *mem_slots = malloc(sizeof(IR_StackSlot) * f->local_count);
+    int mem_slot_count;
+    if (!mem_slots) {
+        printf("Failed to allocate memslots\n");
+        exit(1);
+    }
+    for (int j = 0; j < f->local_count; j++) {
+        Type *t = f->locals[j].type;
+        int k = f->locals[j].reg.mem;
+        mem_slots[k].size = align(t->size, 8);
+        mem_slots[k].align = t->align;
+        mem_slots[k].id = *slot_count;
+        mem_slots[k].offset = *frame_size;
+        mem_slots[k].free_at = -1;
+        *frame_size += mem_slots[k].size;
+    }
+    return mem_slots;
 }
 
 void ir_analysis(IR_Context *ctx) {
@@ -310,38 +358,26 @@ void ir_analysis(IR_Context *ctx) {
         // Build cfg
         ir_init_func_cfg(f);
         ir_compute_func_io(f);
-        int reg_count = ir_reg_bitset(f);
-
+        Lifetime *lifetimes = NULL;
         int *rpo = malloc(f->block_count * sizeof(int));
-        compute_reverse_postorder(f, rpo);
-        compute_bitset(f, rpo);
+        int reg_count = 0;
+        if (f->max_reg > 0) {
+            reg_count = ir_reg_bitset(f);
+            compute_reverse_postorder(f, rpo);
+            compute_bitset(f, rpo);
 
-        Lifetime *lifetimes = compute_lifetimes(ctx, f, reg_count, rpo);
-        qsort(lifetimes, reg_count, sizeof(Lifetime), cmp);
-        // for (int j = 0; j < reg_count; j++) {
-        //     printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
-        // }
+            lifetimes = compute_lifetimes(ctx, f, reg_count, rpo);
+            qsort(lifetimes, reg_count, sizeof(Lifetime), cmp);
+        }
+
         int frame_size = 0;
-        int slot_count = 0;
-        IR_StackSlot *mem_slots = malloc(sizeof(IR_StackSlot) * f->local_count);
-        int mem_slot_count;
-        if (!mem_slots) {
-            printf("Failed to allocate memslots\n");
-            exit(1);
-        }
-        for (int j = 0; j < f->local_count; j++) {
-            Type *t = f->locals[j].type;
-            int k = f->locals[j].reg.i;
-            mem_slots[k].size = align(t->size, 8);
-            mem_slots[k].align = t->align;
-            mem_slots[k].id = slot_count;
-            mem_slots[k].offset = frame_size;
-            mem_slots[k].free_at = -1;
-            frame_size += mem_slots[k].size;
-        }
-        IR_StackSlot *slots = linear_stack_slot_allocation(lifetimes, reg_count, rpo, &frame_size, &slot_count);
+        int mem_slots_count = 0;
+        IR_StackSlot *mem_slots = local_stack_allocation(f, &frame_size, &mem_slots_count);
 
-        ir_reg_to_stack(f, lifetimes, reg_count, slots, slot_count, mem_slots, mem_slot_count);
+        int slot_count = 0;
+        linear_stack_slot_allocation(lifetimes, reg_count, rpo, &frame_size, &slot_count);
+
+        update_values_with_stack_offsets(f, lifetimes, mem_slots);
 
         verify_completion(f);
         f->stack_size = frame_size;
@@ -364,15 +400,24 @@ Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f, int defined, int *r
         IR_Block *b = &f->blocks[rpo[i]];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
-            for (int i = 0; i < instr->op_count; i++) {
-                IR_Value *a = &instr->ops[i];
-                if (a->kind == IR_REG) {
-                    if (op_info[instr->op].def_mask & (1 << i)) {
-                        lts[instr->ops[i].reg] = (Lifetime){instr->ops[i].reg, pc, -1, 0, 0, &instr->ops[i]};
+            if (instr->op == IR_CALL) {
+                lts[instr->ops[0].reg] = (Lifetime){instr->ops[0].reg, pc, -1, 0, 0, &instr->ops[0]};
+                for (int k = 0; k < instr->call.arg_count; k++) {
+                    if (lts[instr->call.args[k].reg.reg].end < pc) {
+                        lts[instr->call.args[k].reg.reg].end = pc;
                     }
-                    if (op_info[instr->op].use_mask & (1 << i)) {
-                        if (lts[a->reg].end < pc) {
-                            lts[a->reg].end = pc;
+                }
+            } else {
+                for (int k = 0; k < instr->op_count; k++) {
+                    IR_Value *a = &instr->ops[k];
+                    if (a->kind == IR_REG) {
+                        if (op_info[instr->op].def_mask & (1 << k)) {
+                            lts[instr->ops[k].reg] = (Lifetime){instr->ops[k].reg, pc, -1, 0, 0, &instr->ops[k]};
+                        }
+                        if (op_info[instr->op].use_mask & (1 << k)) {
+                            if (lts[a->reg].end < pc) {
+                                lts[a->reg].end = pc;
+                            }
                         }
                     }
                 }

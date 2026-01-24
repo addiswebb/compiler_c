@@ -19,10 +19,10 @@ IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     i.op = IR_STORE;
     i.ops[1] = src;
     i.store.type = type;
-    if (dst.kind != IR_MEM) {
-        printf("Store destination must be a var memory slot\n");
-        exit(1);
-    }
+    // if (dst.kind != IR_MEM) {
+    //     printf("Store destination must be a var memory slot\n");
+    //     exit(1);
+    // }
     i.ops[0] = dst;
     i.op_count = 2;
     ir_append_instruction(ctx->block, &i);
@@ -99,7 +99,7 @@ IR_Value ir_return(IR_Context *ctx, IR_Value reg) {
     i.ops[0] = reg;
     i.op_count = 1;
     ir_append_instruction(ctx->block, &i);
-    return ir_reg_value(-1);
+    return ir_no_value;
 }
 IR_Value ir_branch(IR_Context *ctx, int label) {
     IR_Instruction i;
@@ -107,7 +107,7 @@ IR_Value ir_branch(IR_Context *ctx, int label) {
     i.br.label = label;
     i.op_count = 0;
     ir_append_instruction(ctx->block, &i);
-    return ir_reg_value(-1);
+    return ir_no_value;
 }
 IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, int t_label, int f_label) {
     IR_Instruction i;
@@ -117,7 +117,7 @@ IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, int t_label, int f_l
     i.br_cond.f_label = f_label;
     i.op_count = 1;
     ir_append_instruction(ctx->block, &i);
-    return ir_reg_value(-1);
+    return ir_no_value;
 }
 IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
     IR_Instruction i;

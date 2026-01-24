@@ -8,6 +8,7 @@ void bitset_add_defined(BitSet *defined, IR_Value *v);
 void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v);
 
 int ir_reg_bitset(IR_Function *f);
+void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlot *mem_slots);
 void add_successor(IR_Function *func, int from, int to);
 
 Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f,int defined, int *rpo);
@@ -15,7 +16,7 @@ void compute_reverse_postorder(IR_Function *func, int *rpo);
 void compute_bitset(IR_Function *f, int *rpo);
 
 int cmp(const void *a, const void *b);
-IR_StackSlot *linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, int *stack_size, int *slot_count);
+void linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, int *stack_size, int *slot_count);
 
 void bitset_init(BitSet *s, int reg_count);
 void bitset_expand(BitSet *s);

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
@@ -259,7 +260,8 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     // handle (params)
     for (int i = 0; i < func->func.param_count; i++) {
         ir_new_var(ctx->func, func->func.params[i]->var_decl.name, func->func.params[i]->type);
-        ir_store(ctx, ir_reg_value(i), ir_reg_value(-func->func.param_count + i), func->func.params[i]->type);
+        ir_store(ctx, ir_mem_value(i, func->func.params[i]->type), ir_reg_value(-func->func.param_count + i, func->func.params[i]->type),
+                 func->func.params[i]->type);
     }
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.count; i++) {

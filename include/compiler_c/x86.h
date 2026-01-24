@@ -10,8 +10,6 @@ static int current_offset = 0;
 
 void x86_gen_module(FILE *fp, IR_Context *ctx);
 
-int reg_offset(const int a);
-
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 void x86_emit_binary(FILE *fp, int dst_reg, int lhs_reg, int rhs_reg, IR_BINOP_OP op, Type *t);
 void x86_emit_unary(FILE *fp, int dst_reg, int expr_reg, IR_UNARY_OP op, Type *t);

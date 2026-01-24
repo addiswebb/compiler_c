@@ -147,7 +147,7 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
 * Variable Declaration
     * Shadowing
 * Types:
-    * Int, Float, Char
+    * Int, Float, Char, Double, Short, Long
 * All Binary operators:
     * Arithmetic:  \[ `+`, `-`, `*`, `/` \]
     * Bitwise:  \[ `&`, `|`, `^`, `<<`, `>>` \]
@@ -162,12 +162,12 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
 * Functions
     * Passing Parameters
 * Pointers/Addresses 
+* Type conversion
+    * `(int)x`, `(float)y`
 * Arrays using '[]'
     * Indexing an array
     
 ## To be Implemented (Ordered from next to never...)
-* Types
-    * double, short, long, int64_t,
 * Advanced Control Flow:
     * switch, case, continue, break, goto,
 * Structs and Unions, Enums
@@ -177,11 +177,10 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
 * Qualifiers
     * const, volatile, extern
 * typedef
+* sizeof()
 * preprocessor
     * `#define`, `#include` etc for conditional compilation.
 * Create a standard library
     * `printf`
     * `malloc`
     * `free`
-* Type conversion
-    * `(int)x`, `(float)y`

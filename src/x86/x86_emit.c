@@ -137,22 +137,20 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const char *op_suffix = x86_op_suffix(t);
 
     for (int i = 0; i < instr->call.arg_count; i++) {
-        printf("need to handle +positive offsets natively for args\n");
-        exit(1);
         IR_Var *v = &instr->call.args[i];
         switch (v->type->kind) {
         case T_INT:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), reg_offset(v->reg.reg), x86_rax_reg(v->type));
+            fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x86_rax_reg(v->type));
             fprintf(fp, "    push %%rax\n");
             break;
         case T_FLOAT:
             const char *f_suffix = x86_op_suffix(v->type);
-            fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, reg_offset(v->reg.reg));
+            fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, v->reg.stack_offset);
             fprintf(fp, "    sub $8, %%rsp\n");
             fprintf(fp, "    mov%s %%xmm0, (%%rsp)\n", f_suffix);
             break;
         case T_POINTER:
-            fprintf(fp, "    movq %d(%%rbp), %%rax\n", reg_offset(v->reg.reg));
+            fprintf(fp, "    movq %d(%%rbp), %%rax\n", v->reg.stack_offset);
             fprintf(fp, "    push %%rax\n");
             break;
         default:

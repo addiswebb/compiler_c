@@ -8,7 +8,7 @@
         "label": "Debug Compiler_C",
         "request": "launch",
         "program": "./build/compiler_c",
-        "args": ["./tests/test.c", "-a"],
+        "args": ["./tests/test.c", "-ir"],
         "build": {
             "command": "cmake",
             "args": ["--build", "build"],

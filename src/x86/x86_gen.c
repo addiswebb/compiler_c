@@ -7,13 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 
-int reg_offset(const int a) {
-    if (a < 0) {
-        return -reg_offset(a * -1);
-    }
-    return -(a * 8 + 8 + current_offset);
-}
-
 static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->ops[1].kind) {
     case IR_STACK:
@@ -24,6 +17,7 @@ static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
         break;
     case IR_REG:
     case IR_MEM:
+    case IR_UNDEFINED:
         printf("Sanity check failed\n");
         exit(1);
     }
@@ -37,6 +31,7 @@ static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
         break;
     case IR_REG:
     case IR_MEM:
+    case IR_UNDEFINED:
         printf("Sanity check failed\n");
         exit(1);
     }
@@ -62,6 +57,7 @@ static void x86_gen_addr_instruction(FILE *fp, IR_Context *ctx, const IR_Instruc
         break;
     case IR_REG:
     case IR_MEM:
+    case IR_UNDEFINED:
         printf("Sanity check failed\n");
         exit(1);
     }

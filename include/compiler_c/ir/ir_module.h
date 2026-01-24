@@ -48,16 +48,19 @@ typedef enum {
     IR_MEMCPY,
 } IR_OP;
 
+typedef enum{
+     IR_UNDEFINED, IR_REG, IR_MEM, IR_STACK, IR_LITERAL
+}IR_ValueKind;
 
 typedef struct{
-    enum { IR_REG, IR_MEM, IR_STACK, IR_LITERAL } kind;
+    IR_ValueKind kind;
     union{
         struct{
             int reg;
             int stack_slot;
             int stack_offset;
         };
-        int i;
+        int mem;
         int const_index;
     };
     int size;
@@ -216,8 +219,13 @@ typedef struct{
     IR_Block *block;
 } IR_Context;
 
-IR_Value ir_reg_value(int reg);
-IR_Value ir_literal_value(int i);
+extern const IR_Value ir_no_value;
+
+IR_Value ir_mem_value(int mem_reg, Type *type);
+IR_Value ir_reg_value(int reg, Type *type);
+
+IR_Value ir_literal_value(int const_index);
+
 void ir_free_module(IR_Module *module);
 IR_Module *ir_gen_translation_unit(IR_Context *ctx,const Node *tu);
 
