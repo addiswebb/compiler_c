@@ -48,451 +48,6 @@ static void ta_free(TokenArray *arr) {
     arr->capacity = 0;
 }
 
-void print_token_type(const TokenType type) {
-    switch (type) {
-    case TK_EXIT:
-        printf("Exit");
-        break;
-    case TK_INT_LITERAL:
-        printf("Int Literal");
-        break;
-    case TK_FLT_LITERAL:
-        printf("Float Literal");
-        break;
-    case TK_CHAR_LITERAL:
-        printf("Char Literal");
-        break;
-    case TK_STRING_LITERAL:
-        printf("String Literal");
-        break;
-    case TK_SEMI:
-        printf("\';\'");
-        break;
-    case TK_PLUS:
-        printf("\'+\'");
-        break;
-    case TK_MINUS:
-        printf("\'-\'");
-        break;
-    case TK_MULTIPLY:
-        printf("\'*\'");
-        break;
-    case TK_DIVIDE:
-        printf("\'/\'");
-        break;
-    case TK_XOR:
-        printf("\'^\'");
-        break;
-    case TK_EXPR:
-        printf("Expr");
-        break;
-    case TK_EQ:
-        printf("\'=\'");
-        break;
-    case TK_INT:
-        printf("Int");
-        break;
-    case TK_FLOAT:
-        printf("Float");
-        break;
-    case TK_CHAR:
-        printf("Char");
-        break;
-    case TK_VOID:
-        printf("void");
-        break;
-    case TK_OPEN_PAREN:
-        printf("\'(\'");
-        break;
-    case TK_CLOSE_PAREN:
-        printf("\')\'");
-        break;
-    case TK_OPEN_CURLY:
-        printf("\'{\'");
-        break;
-    case TK_CLOSE_CURLY:
-        printf("\'}\'");
-        break;
-    case TK_COMMA:
-        printf("\',\'");
-        break;
-    case TK_RETURN:
-        printf("Return");
-        break;
-    case TK_IDENTIFIER:
-        printf("Identifier");
-        break;
-    case TK_IF:
-        printf("If");
-        break;
-    case TK_ELSE:
-        printf("Else");
-        break;
-    case TK_WHILE:
-        printf("While");
-        break;
-    case TK_FOR:
-        printf("For");
-        break;
-    case TK_MOD:
-        printf("\'%%\'");
-        break;
-    case TK_EQ_EQ:
-        printf("\'==\'");
-        break;
-    case TK_PLUS_EQ:
-        printf("\'+=\'");
-        break;
-    case TK_MINUS_EQ:
-        printf("\'-=\'");
-        break;
-    case TK_MULTIPLY_EQ:
-        printf("\'*=\'");
-        break;
-    case TK_DIVIDE_EQ:
-        printf("\'/=\'");
-        break;
-    case TK_MOD_EQ:
-        printf("\'%%=\'");
-        break;
-    case TK_NEQ:
-        printf("\'!=\'");
-        break;
-    case TK_LT:
-        printf("\'<\'");
-        break;
-    case TK_LE:
-        printf("\'<=\'");
-        break;
-    case TK_GT:
-        printf("\'>\'");
-        break;
-    case TK_GE:
-        printf("\'>=\'");
-        break;
-    case TK_SHL:
-        printf("\'<<\'");
-        break;
-    case TK_SHR:
-        printf("\'>>\'");
-        break;
-    case TK_SHL_EQ:
-        printf("\'<<=\'");
-        break;
-    case TK_SHR_EQ:
-        printf("\'>>=\'");
-        break;
-    case TK_AND:
-        printf("\'&\'");
-        break;
-    case TK_AND_AND:
-        printf("\'&&\'");
-        break;
-    case TK_AND_EQ:
-        printf("\'&=\'");
-        break;
-    case TK_OR:
-        printf("\'|\'");
-        break;
-    case TK_OR_OR:
-        printf("\'||\'");
-        break;
-    case TK_OR_EQ:
-        printf("\'|=\'");
-        break;
-    case TK_XOR_EQ:
-        printf("\'^=\'");
-        break;
-    case TK_L_NOT:
-        printf("\'!\'");
-        break;
-    case TK_BW_NOT:
-        printf("\'~\'");
-        break;
-    case TK_INCR:
-        printf("\'++\'");
-        break;
-    case TK_DECR:
-        printf("\'--\'");
-        break;
-    case TK_OPEN_SQUARE:
-        printf("\'[\'");
-        break;
-    case TK_CLOSE_SQUARE:
-        printf("\']\'");
-        break;
-    }
-}
-
-void print_token(const Token *token) {
-    printf("Token { Type: ");
-    print_token_type(token->type);
-    if (token->value != NULL) {
-        printf(", value: ");
-        if (token->value[0] == '\0') {
-            printf("\\0");
-        } else if (token->value[0] == '\n') {
-            printf("\\n");
-        }
-        printf("%s ", token->value);
-    }
-    printf("}\n");
-}
-
-bool is_unary_operator(const TokenType type) {
-    switch (type) {
-    case TK_PLUS:
-    case TK_MINUS:
-    case TK_INCR:
-    case TK_DECR:
-    case TK_L_NOT:
-    case TK_BW_NOT:
-    case TK_AND:
-    case TK_MULTIPLY:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool is_binary_operator(const TokenType type) {
-    switch (type) {
-    case TK_PLUS:
-    case TK_MINUS:
-    case TK_MULTIPLY:
-    case TK_DIVIDE:
-    case TK_XOR:
-    case TK_EQ:
-    case TK_AND_AND:
-    case TK_AND_EQ:
-    case TK_EQ_EQ:
-    case TK_GE:
-    case TK_GT:
-    case TK_LE:
-    case TK_LT:
-    case TK_DIVIDE_EQ:
-    case TK_MINUS_EQ:
-    case TK_MULTIPLY_EQ:
-    case TK_OR_EQ:
-    case TK_OR_OR:
-    case TK_NEQ:
-    case TK_PLUS_EQ:
-    case TK_SHL_EQ:
-    case TK_SHR_EQ:
-    case TK_XOR_EQ:
-    case TK_SHL:
-    case TK_SHR:
-    case TK_OR:
-    case TK_AND:
-    case TK_MOD:
-    case TK_MOD_EQ:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool is_assignment_op(const TokenType type) {
-    switch (type) {
-    case TK_EQ:
-    case TK_PLUS_EQ:
-    case TK_MINUS_EQ:
-    case TK_MULTIPLY_EQ:
-    case TK_DIVIDE_EQ:
-    case TK_MOD_EQ:
-    case TK_OR_EQ:
-    case TK_AND_EQ:
-    case TK_SHL_EQ:
-    case TK_SHR_EQ:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool is_arithmetic_op(const TokenType type) {
-    switch (type) {
-    case TK_PLUS:
-    case TK_PLUS_EQ:
-    case TK_MINUS:
-    case TK_MINUS_EQ:
-    case TK_MULTIPLY:
-    case TK_MULTIPLY_EQ:
-    case TK_DIVIDE:
-    case TK_DIVIDE_EQ:
-    case TK_MOD:
-    case TK_MOD_EQ:
-    case TK_INCR:
-    case TK_DECR:
-        return true;
-    default:
-        return false;
-    }
-}
-bool is_bitwise_op(const TokenType type) {
-    switch (type) {
-    case TK_OR:
-    case TK_AND:
-    case TK_SHL:
-    case TK_SHR:
-    case TK_XOR:
-    case TK_OR_EQ:
-    case TK_AND_EQ:
-    case TK_SHL_EQ:
-    case TK_SHR_EQ:
-    case TK_XOR_EQ:
-    case TK_BW_NOT:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool is_comparison_op(const TokenType type) {
-    switch (type) {
-    case TK_EQ_EQ:
-    case TK_NEQ:
-    case TK_GT:
-    case TK_GE:
-    case TK_LT:
-    case TK_LE:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool is_logical_op(const TokenType type) {
-    switch (type) {
-    case TK_AND_AND:
-    case TK_EQ_EQ:
-    case TK_OR_OR:
-    case TK_L_NOT:
-        return true;
-    default:
-        return false;
-    }
-}
-
-TokenType get_underlying_op(const TokenType type) {
-    switch (type) {
-    case TK_PLUS_EQ:
-        return TK_PLUS;
-    case TK_MINUS_EQ:
-        return TK_MINUS;
-    case TK_MULTIPLY_EQ:
-        return TK_MULTIPLY;
-    case TK_DIVIDE_EQ:
-        return TK_DIVIDE;
-    case TK_MOD_EQ:
-        return TK_MOD;
-    case TK_OR_EQ:
-        return TK_OR;
-    case TK_AND_EQ:
-        return TK_AND;
-    case TK_SHL_EQ:
-        return TK_SHL;
-    case TK_SHR_EQ:
-        return TK_SHR;
-    case TK_EQ:
-        return TK_EQ;
-    default:
-        printf("Tried to get the underlying operator of a non-eq operator\n");
-        print_token_type(type);
-        exit(1);
-    }
-}
-
-int associativity(const TokenType type) {
-    switch (type) {
-    case TK_MULTIPLY:
-    case TK_DIVIDE:
-    case TK_MOD:
-    case TK_PLUS:
-    case TK_MINUS:
-    case TK_SHR:
-    case TK_SHL:
-    case TK_LT:
-    case TK_LE:
-    case TK_GT:
-    case TK_GE:
-    case TK_EQ_EQ:
-    case TK_NEQ:
-    case TK_AND:
-    case TK_XOR:
-    case TK_OR:
-    case TK_AND_AND:
-    case TK_OR_OR:
-        return LEFT_ASSOCIATIVITY;
-    case TK_SHR_EQ:
-    case TK_SHL_EQ:
-    case TK_AND_EQ:
-    case TK_XOR_EQ:
-    case TK_OR_EQ:
-    case TK_EQ:
-    case TK_PLUS_EQ:
-    case TK_MINUS_EQ:
-    case TK_MULTIPLY_EQ:
-    case TK_DIVIDE_EQ:
-    case TK_MOD_EQ:
-        return RIGHT_ASSOCIATIVITY;
-    default:
-        printf("Tried to get the associativity of a token which is not a binary "
-               "operator");
-        exit(1);
-    }
-}
-
-int precedence(const TokenType type) {
-    switch (type) {
-    case TK_EQ:
-    case TK_PLUS_EQ:
-    case TK_MINUS_EQ:
-    case TK_MULTIPLY_EQ:
-    case TK_DIVIDE_EQ:
-    case TK_MOD_EQ:
-        return 0;
-    case TK_SHR_EQ:
-    case TK_SHL_EQ:
-    case TK_AND_EQ:
-    case TK_XOR_EQ:
-    case TK_OR_EQ:
-        return 1;
-    case TK_OR_OR:
-        return 2;
-    case TK_AND_AND:
-        return 3;
-    case TK_OR:
-        return 4;
-    case TK_XOR:
-        return 5;
-    case TK_AND:
-        return 6;
-    case TK_EQ_EQ:
-    case TK_NEQ:
-        return 7;
-    case TK_LT:
-    case TK_LE:
-    case TK_GT:
-    case TK_GE:
-        return 8;
-    case TK_SHR:
-    case TK_SHL:
-        return 9;
-    case TK_PLUS:
-    case TK_MINUS:
-        return 10;
-    case TK_MULTIPLY:
-    case TK_DIVIDE:
-    case TK_MOD:
-        return 11;
-    default:
-        printf("Tried to get the precedence of a token which is not a binary operator");
-        print_token_type(type);
-        exit(1);
-    }
-}
-
 void t_print_tokens(const Tokenizer *tk) {
     for (int i = 0; i < tk->tokens.size; i++) {
         print_token(&tk->tokens.data[i]);
@@ -796,4 +351,460 @@ void t_tokenize(Tokenizer *tk) {
             }
         }
     }
+}
+
+bool is_type_token(const TokenType tk) {
+    switch (tk) {
+    case TK_CHAR:
+    case TK_INT:
+    case TK_FLOAT:
+    case TK_VOID:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool is_unary_operator(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_INCR:
+    case TK_DECR:
+    case TK_L_NOT:
+    case TK_BW_NOT:
+    case TK_AND:
+    case TK_MULTIPLY:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool is_binary_operator(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_MULTIPLY:
+    case TK_DIVIDE:
+    case TK_XOR:
+    case TK_EQ:
+    case TK_AND_AND:
+    case TK_AND_EQ:
+    case TK_EQ_EQ:
+    case TK_GE:
+    case TK_GT:
+    case TK_LE:
+    case TK_LT:
+    case TK_DIVIDE_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_OR_EQ:
+    case TK_OR_OR:
+    case TK_NEQ:
+    case TK_PLUS_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+    case TK_XOR_EQ:
+    case TK_SHL:
+    case TK_SHR:
+    case TK_OR:
+    case TK_AND:
+    case TK_MOD:
+    case TK_MOD_EQ:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool is_assignment_op(const TokenType type) {
+    switch (type) {
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+    case TK_OR_EQ:
+    case TK_AND_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool is_arithmetic_op(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_PLUS_EQ:
+    case TK_MINUS:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE:
+    case TK_DIVIDE_EQ:
+    case TK_MOD:
+    case TK_MOD_EQ:
+    case TK_INCR:
+    case TK_DECR:
+        return true;
+    default:
+        return false;
+    }
+}
+bool is_bitwise_op(const TokenType type) {
+    switch (type) {
+    case TK_OR:
+    case TK_AND:
+    case TK_SHL:
+    case TK_SHR:
+    case TK_XOR:
+    case TK_OR_EQ:
+    case TK_AND_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+    case TK_XOR_EQ:
+    case TK_BW_NOT:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool is_comparison_op(const TokenType type) {
+    switch (type) {
+    case TK_EQ_EQ:
+    case TK_NEQ:
+    case TK_GT:
+    case TK_GE:
+    case TK_LT:
+    case TK_LE:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool is_logical_op(const TokenType type) {
+    switch (type) {
+    case TK_AND_AND:
+    case TK_EQ_EQ:
+    case TK_OR_OR:
+    case TK_L_NOT:
+        return true;
+    default:
+        return false;
+    }
+}
+
+TokenType get_underlying_op(const TokenType type) {
+    switch (type) {
+    case TK_PLUS_EQ:
+        return TK_PLUS;
+    case TK_MINUS_EQ:
+        return TK_MINUS;
+    case TK_MULTIPLY_EQ:
+        return TK_MULTIPLY;
+    case TK_DIVIDE_EQ:
+        return TK_DIVIDE;
+    case TK_MOD_EQ:
+        return TK_MOD;
+    case TK_OR_EQ:
+        return TK_OR;
+    case TK_AND_EQ:
+        return TK_AND;
+    case TK_SHL_EQ:
+        return TK_SHL;
+    case TK_SHR_EQ:
+        return TK_SHR;
+    case TK_EQ:
+        return TK_EQ;
+    default:
+        printf("Tried to get the underlying operator of a non-eq operator\n");
+        print_token_type(type);
+        exit(1);
+    }
+}
+
+int associativity(const TokenType type) {
+    switch (type) {
+    case TK_MULTIPLY:
+    case TK_DIVIDE:
+    case TK_MOD:
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_SHR:
+    case TK_SHL:
+    case TK_LT:
+    case TK_LE:
+    case TK_GT:
+    case TK_GE:
+    case TK_EQ_EQ:
+    case TK_NEQ:
+    case TK_AND:
+    case TK_XOR:
+    case TK_OR:
+    case TK_AND_AND:
+    case TK_OR_OR:
+        return LEFT_ASSOCIATIVITY;
+    case TK_SHR_EQ:
+    case TK_SHL_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_OR_EQ:
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+        return RIGHT_ASSOCIATIVITY;
+    default:
+        printf("Tried to get the associativity of a token which is not a binary "
+               "operator");
+        exit(1);
+    }
+}
+
+int precedence(const TokenType type) {
+    switch (type) {
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+        return 0;
+    case TK_SHR_EQ:
+    case TK_SHL_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_OR_EQ:
+        return 1;
+    case TK_OR_OR:
+        return 2;
+    case TK_AND_AND:
+        return 3;
+    case TK_OR:
+        return 4;
+    case TK_XOR:
+        return 5;
+    case TK_AND:
+        return 6;
+    case TK_EQ_EQ:
+    case TK_NEQ:
+        return 7;
+    case TK_LT:
+    case TK_LE:
+    case TK_GT:
+    case TK_GE:
+        return 8;
+    case TK_SHR:
+    case TK_SHL:
+        return 9;
+    case TK_PLUS:
+    case TK_MINUS:
+        return 10;
+    case TK_MULTIPLY:
+    case TK_DIVIDE:
+    case TK_MOD:
+        return 11;
+    default:
+        printf("Tried to get the precedence of a token which is not a binary operator");
+        print_token_type(type);
+        exit(1);
+    }
+}
+void print_token_type(const TokenType type) {
+    switch (type) {
+    case TK_EXIT:
+        printf("Exit");
+        break;
+    case TK_INT_LITERAL:
+        printf("Int Literal");
+        break;
+    case TK_FLT_LITERAL:
+        printf("Float Literal");
+        break;
+    case TK_CHAR_LITERAL:
+        printf("Char Literal");
+        break;
+    case TK_STRING_LITERAL:
+        printf("String Literal");
+        break;
+    case TK_SEMI:
+        printf("\';\'");
+        break;
+    case TK_PLUS:
+        printf("\'+\'");
+        break;
+    case TK_MINUS:
+        printf("\'-\'");
+        break;
+    case TK_MULTIPLY:
+        printf("\'*\'");
+        break;
+    case TK_DIVIDE:
+        printf("\'/\'");
+        break;
+    case TK_XOR:
+        printf("\'^\'");
+        break;
+    case TK_EXPR:
+        printf("Expr");
+        break;
+    case TK_EQ:
+        printf("\'=\'");
+        break;
+    case TK_INT:
+        printf("Int");
+        break;
+    case TK_FLOAT:
+        printf("Float");
+        break;
+    case TK_CHAR:
+        printf("Char");
+        break;
+    case TK_VOID:
+        printf("void");
+        break;
+    case TK_OPEN_PAREN:
+        printf("\'(\'");
+        break;
+    case TK_CLOSE_PAREN:
+        printf("\')\'");
+        break;
+    case TK_OPEN_CURLY:
+        printf("\'{\'");
+        break;
+    case TK_CLOSE_CURLY:
+        printf("\'}\'");
+        break;
+    case TK_COMMA:
+        printf("\',\'");
+        break;
+    case TK_RETURN:
+        printf("Return");
+        break;
+    case TK_IDENTIFIER:
+        printf("Identifier");
+        break;
+    case TK_IF:
+        printf("If");
+        break;
+    case TK_ELSE:
+        printf("Else");
+        break;
+    case TK_WHILE:
+        printf("While");
+        break;
+    case TK_FOR:
+        printf("For");
+        break;
+    case TK_MOD:
+        printf("\'%%\'");
+        break;
+    case TK_EQ_EQ:
+        printf("\'==\'");
+        break;
+    case TK_PLUS_EQ:
+        printf("\'+=\'");
+        break;
+    case TK_MINUS_EQ:
+        printf("\'-=\'");
+        break;
+    case TK_MULTIPLY_EQ:
+        printf("\'*=\'");
+        break;
+    case TK_DIVIDE_EQ:
+        printf("\'/=\'");
+        break;
+    case TK_MOD_EQ:
+        printf("\'%%=\'");
+        break;
+    case TK_NEQ:
+        printf("\'!=\'");
+        break;
+    case TK_LT:
+        printf("\'<\'");
+        break;
+    case TK_LE:
+        printf("\'<=\'");
+        break;
+    case TK_GT:
+        printf("\'>\'");
+        break;
+    case TK_GE:
+        printf("\'>=\'");
+        break;
+    case TK_SHL:
+        printf("\'<<\'");
+        break;
+    case TK_SHR:
+        printf("\'>>\'");
+        break;
+    case TK_SHL_EQ:
+        printf("\'<<=\'");
+        break;
+    case TK_SHR_EQ:
+        printf("\'>>=\'");
+        break;
+    case TK_AND:
+        printf("\'&\'");
+        break;
+    case TK_AND_AND:
+        printf("\'&&\'");
+        break;
+    case TK_AND_EQ:
+        printf("\'&=\'");
+        break;
+    case TK_OR:
+        printf("\'|\'");
+        break;
+    case TK_OR_OR:
+        printf("\'||\'");
+        break;
+    case TK_OR_EQ:
+        printf("\'|=\'");
+        break;
+    case TK_XOR_EQ:
+        printf("\'^=\'");
+        break;
+    case TK_L_NOT:
+        printf("\'!\'");
+        break;
+    case TK_BW_NOT:
+        printf("\'~\'");
+        break;
+    case TK_INCR:
+        printf("\'++\'");
+        break;
+    case TK_DECR:
+        printf("\'--\'");
+        break;
+    case TK_OPEN_SQUARE:
+        printf("\'[\'");
+        break;
+    case TK_CLOSE_SQUARE:
+        printf("\']\'");
+        break;
+    }
+}
+
+void print_token(const Token *token) {
+    printf("Token { Type: ");
+    print_token_type(token->type);
+    if (token->value != NULL) {
+        printf(", value: ");
+        if (token->value[0] == '\0') {
+            printf("\\0");
+        } else if (token->value[0] == '\n') {
+            printf("\\n");
+        }
+        printf("%s ", token->value);
+    }
+    printf("}\n");
 }

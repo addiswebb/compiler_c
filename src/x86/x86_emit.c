@@ -381,6 +381,11 @@ void x86_emit_cast(FILE *fp, int src_offset, int dst_offset, Type *from, Type *t
         fprintf(fp, "    mov%s %s, %d(%%rbp)\n", from_op_suffix, from_reg, dst_offset);
         return;
     }
+    if (from->kind == T_ARRAY && to->kind == T_POINTER) {
+        fprintf(fp, "    mov%s %d(%%rbp), %s\n", from_op_suffix, src_offset, from_reg);
+        fprintf(fp, "    mov%s %s, %d(%%rbp)\n", from_op_suffix, from_reg, dst_offset);
+        return;
+    }
     // char/short/int/long/ -> char/short/int/long
     if (from->kind == T_INT && to->kind == T_INT) {
         if (from->size < to->size) {

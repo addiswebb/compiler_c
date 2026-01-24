@@ -92,6 +92,7 @@ void print_token_type(TokenType type);
 
 void print_token(const Token *token);
 
+bool is_type_token(const TokenType tk);
 bool is_unary_operator(const TokenType type);
 bool is_binary_operator(const TokenType type);
 bool is_assignment_op(const TokenType type);

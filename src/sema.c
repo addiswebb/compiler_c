@@ -18,8 +18,10 @@ Type *token_to_type(TokenType t) {
         return type_float;
     case TK_CHAR:
         return type_char;
+    case TK_VOID:
+        return type_void;
     default:
-        return NULL;
+        return type_invalid;
     }
 }
 
@@ -156,13 +158,14 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
         break;
     case N_CAST:
         semantic_analysis(p, nm, node->cast.expr);
-        if (is_valid_cast(node->cast.from, node->cast.to)) {
+        if (is_valid_cast(node->cast.expr->type, node->cast.to)) {
+            node->cast.from = node->cast.expr->type;
             node->type = node->cast.to;
             break;
         } else {
-            printf("Invalid cast between");
-            print_type(node->cast.from);
-            printf(" and ");
+            printf("Invalid cast from ");
+            print_type(node->cast.expr->type);
+            printf(" to ");
             print_type(node->cast.to);
             printf("\n");
             exit(1);

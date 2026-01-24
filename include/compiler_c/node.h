@@ -150,6 +150,7 @@ void free_node_manager(const NodeManager *nm);
     Handles creating a Node, pushing it to the global node array
 */
 Node *new_node(NodeManager *nm, NodeKind type);
+Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type);
 Node *cast_node(NodeManager *nm, Node *node, Type *type);
 bool is_valid_cast(Type *from, Type *to);
 

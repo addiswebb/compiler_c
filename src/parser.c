@@ -171,8 +171,15 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         return node;
     case TK_OPEN_PAREN:
         p_consume_a(p, TK_OPEN_PAREN);
-        node = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-        p_consume_a(p, TK_CLOSE_PAREN);
+        if (is_type_token(p_peek(p)->type)) {
+            Type *type = p_parse_type(p, NULL);
+            p_consume_a(p, TK_CLOSE_PAREN);
+            node = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+            node = cast_node_unchecked(nm, node, type);
+        } else {
+            node = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+            p_consume_a(p, TK_CLOSE_PAREN);
+        }
         return node;
     default:
         printf("Expected term got ");
@@ -269,19 +276,18 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     statement
 */
 Node *p_parse_block_item(Parser *p, NodeManager *nm) {
-    switch (p_peek(p)->type) {
-    case TK_INT:
-    case TK_FLOAT:
-    case TK_CHAR:
-        return p_parse_var_declaration(p, nm);
-        break;
-    default:
-        return p_parse_statement(p, nm);
-        break;
-    }
+    if (is_type_token(p_peek(p)->type)) return p_parse_var_declaration(p, nm);
+    else return p_parse_statement(p, nm);
 }
+/*
+    Give the var decl node, if the var name/identifier is needed, otherwise NULL
+*/
 Type *p_parse_type(Parser *p, Node *node) {
     Type *type = token_to_type(p_consume(p)->type);
+    if (type == type_invalid) {
+        printf("Tried to parse an unknown type\n");
+        exit(1);
+    }
     int ptrs = 0;
     while (p_peek(p)->type == TK_MULTIPLY) {
         ptrs++;
@@ -290,7 +296,9 @@ Type *p_parse_type(Parser *p, Node *node) {
     for (int i = 0; i < ptrs; i++) {
         type = get_pointer_type(type);
     }
-    node->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
+    if (node) {
+        node->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
+    }
 
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p); // [

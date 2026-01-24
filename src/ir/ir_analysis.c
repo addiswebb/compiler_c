@@ -259,30 +259,9 @@ void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlo
         IR_Block *b = &f->blocks[i];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
-            if (instr->op == IR_CALL) {
-                for (int k = 0; k < instr->call.arg_count; k++) {
-                    IR_Value *a = &instr->call.args[k].reg;
-                    if (a->kind == IR_LITERAL) continue;
-                    switch (a->kind) {
-                    case IR_REG:
-                        // a->reg is negative for function parameters
-                        a->stack_offset = a->reg >= 0 ? -(lts[a->reg].stack_offset + 8) : -(a->reg * 8 - 8);
-                        break;
-                    case IR_MEM:
-                        a->stack_offset = mem_slots[a->mem].offset;
-                        break;
-                    case IR_STACK:
-                    case IR_LITERAL:
-                        break;
-                    case IR_UNDEFINED:
-                        printf("An undefined IR value made it to analysis!!\n");
-                        exit(1);
-                    }
-                    instr->call.args[k].reg.kind = IR_STACK;
-                }
-            }
-            for (int k = 0; k < instr->op_count; k++) {
-                IR_Value *a = &instr->ops[k];
+            int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
+            for (int k = 0; k < value_count; k++) {
+                IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
                 if (a->kind == IR_LITERAL) continue;
                 switch (a->kind) {
                 case IR_REG:
@@ -299,7 +278,7 @@ void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlo
                     printf("An undefined IR value made it to analysis!!\n");
                     exit(1);
                 }
-                instr->ops[k].kind = IR_STACK;
+                a->kind = IR_STACK;
             }
         }
     }
@@ -310,18 +289,10 @@ void verify_completion(IR_Function *f) {
         IR_Block *b = &f->blocks[i];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
-            if (instr->op == IR_CALL) {
-                for (int k = 0; k < instr->call.arg_count; k++) {
-                    if (instr->call.args[k].reg.kind != IR_STACK) {
-                        print_ir_value(&instr->call.args[k].reg);
-                        printf(" was not converted to stack offset\n");
-                        exit(1);
-                    }
-                }
-            }
-            for (int i = 0; i < instr->op_count; i++) {
-                IR_Value *a = &instr->ops[i];
-                if (a->kind == IR_LITERAL) continue;
+            int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
+            for (int k = 0; k < value_count; k++) {
+                IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
+                if (a->kind == IR_LITERAL && instr->op != IR_CALL) continue;
                 if (a->kind != IR_STACK) {
                     print_ir_value(a);
                     printf(" was not converted to stack offset\n");
@@ -355,12 +326,15 @@ IR_StackSlot *local_stack_allocation(IR_Function *f, int *frame_size, int *slot_
 void ir_analysis(IR_Context *ctx) {
     for (int i = 0; i < ctx->module->func_count; i++) {
         IR_Function *f = ctx->module->functions[i];
-        // Build cfg
+        // Initialize Control Flow Graph Variables per block
         ir_init_func_cfg(f);
+        // Compute Function dependecies (successors, predecessors)
         ir_compute_func_io(f);
+
         Lifetime *lifetimes = NULL;
         int *rpo = malloc(f->block_count * sizeof(int));
         int reg_count = 0;
+        // If any registers were used, compute their lifetimes
         if (f->max_reg > 0) {
             reg_count = ir_reg_bitset(f);
             compute_reverse_postorder(f, rpo);
@@ -372,24 +346,25 @@ void ir_analysis(IR_Context *ctx) {
 
         int frame_size = 0;
         int mem_slots_count = 0;
+        // Allocate local variables
         IR_StackSlot *mem_slots = local_stack_allocation(f, &frame_size, &mem_slots_count);
 
         int slot_count = 0;
+        // Allocate virtual registers
         linear_stack_slot_allocation(lifetimes, reg_count, rpo, &frame_size, &slot_count);
 
+        // Update all instances of IR_Value with the correct stack offsets
         update_values_with_stack_offsets(f, lifetimes, mem_slots);
 
+        // Verify all IR_Values are now of IR_STACK kind,
         verify_completion(f);
         f->stack_size = frame_size;
 
         free(rpo);
         free(lifetimes);
+        free(mem_slots);
     }
 }
-
-static inline int assign_if_ir_reg(IR_Value *v, int reg) { return v->kind == IR_REG ? reg : -1; }
-
-void handle_uses(IR_Instruction *instr, Lifetime *lts, int pc) {}
 
 Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f, int defined, int *rpo) {
     Lifetime *lts = malloc(sizeof(Lifetime) * defined);
@@ -400,24 +375,17 @@ Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f, int defined, int *r
         IR_Block *b = &f->blocks[rpo[i]];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
-            if (instr->op == IR_CALL) {
-                lts[instr->ops[0].reg] = (Lifetime){instr->ops[0].reg, pc, -1, 0, 0, &instr->ops[0]};
-                for (int k = 0; k < instr->call.arg_count; k++) {
-                    if (lts[instr->call.args[k].reg.reg].end < pc) {
-                        lts[instr->call.args[k].reg.reg].end = pc;
+            int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
+            for (int k = 0; k < value_count; k++) {
+                IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
+                bool is_call_arg = k > +instr->op_count;
+                if (a->kind == IR_REG) {
+                    if (op_info[instr->op].def_mask & (1 << k)) {
+                        lts[instr->ops[k].reg] = (Lifetime){instr->ops[k].reg, pc, -1, 0, 0, &instr->ops[k]};
                     }
-                }
-            } else {
-                for (int k = 0; k < instr->op_count; k++) {
-                    IR_Value *a = &instr->ops[k];
-                    if (a->kind == IR_REG) {
-                        if (op_info[instr->op].def_mask & (1 << k)) {
-                            lts[instr->ops[k].reg] = (Lifetime){instr->ops[k].reg, pc, -1, 0, 0, &instr->ops[k]};
-                        }
-                        if (op_info[instr->op].use_mask & (1 << k)) {
-                            if (lts[a->reg].end < pc) {
-                                lts[a->reg].end = pc;
-                            }
+                    if (is_call_arg || op_info[instr->op].use_mask & (1 << k)) {
+                        if (lts[a->reg].end < pc) {
+                            lts[a->reg].end = pc;
                         }
                     }
                 }

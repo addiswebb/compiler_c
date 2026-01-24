@@ -1,6 +1,7 @@
-int test(int a) { return a; }
+int get(char *a, int b) { return a[b]; }
 
 int main() {
-    int b = test(11);
-    return b;
+    char x[6] = "hello";
+    int i = 0;
+    return get(x, i);
 }

@@ -175,6 +175,7 @@ bool is_function_ahead(Parser *p);
 Node *p_parse_declaration(Parser *p, NodeManager *nm);
 
 Node *p_parse_translation_unit(Parser* p, NodeManager *nm);
+Type *p_parse_type(Parser *p, Node *node);
 
 
 #endif // COMPILER_C_PARSER_H

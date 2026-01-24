@@ -56,6 +56,14 @@ Node *new_node(NodeManager *nm, const NodeKind kind) {
     node->type = type_invalid;
     return node;
 }
+
+Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type) {
+    Node *cast = new_node(nm, N_CAST);
+    cast->cast.from = node->type;
+    cast->cast.to = type;
+    cast->cast.expr = node;
+    return cast;
+}
 Node *cast_node(NodeManager *nm, Node *node, Type *type) {
     if (!is_valid_cast(node->type, type)) {
         printf("Invalid conversion from ");
@@ -67,6 +75,7 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
     }
     Node *cast = new_node(nm, N_CAST);
     cast->type = type;
+    // cast->cast.to = type;
     cast->cast.from = node->type;
     cast->cast.expr = node;
     return cast;
@@ -75,7 +84,7 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
 bool is_valid_cast(Type *from, Type *to) {
     if (from->kind == T_ARRAY) {
         // Can only cast array->pointer (pointer decay)
-        return to->kind == T_POINTER;
+        return to->kind == T_POINTER && from->base == to->base;
     }
     return true;
 }
