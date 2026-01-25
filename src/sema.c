@@ -12,12 +12,18 @@ bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER; }
 
 Type *token_to_type(TokenType t) {
     switch (t) {
-    case TK_INT:
-        return type_int;
-    case TK_FLOAT:
-        return type_float;
     case TK_CHAR:
         return type_char;
+    case TK_SHORT:
+        return type_short;
+    case TK_INT:
+        return type_int;
+    case TK_LONG:
+        return type_long;
+    case TK_FLOAT:
+        return type_float;
+    case TK_DOUBLE:
+        return type_double;
     case TK_VOID:
         return type_void;
     default:
@@ -51,6 +57,10 @@ Type *check_unary_op(Node *unaryop) {
     case TK_MULTIPLY:
         if (expr->type->base != type_invalid) return expr->type->base;
         printf("Tried to derefence some nonexistent term\n");
+        exit(1);
+    case TK_SIZEOF:
+        if (expr->type != type_invalid && expr->type->size) return type_int;
+        printf("Tried to get the sizeof something without a size\n");
         exit(1);
     default:
         break;
@@ -142,6 +152,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
         }
         break;
     case N_VAR_DECL:
+        if (!node->var_decl.expr) break;
         semantic_analysis(p, nm, node->var_decl.expr);
         if (node->var_decl.expr->type != node->type) {
             node->var_decl.expr = cast_node(nm, node->var_decl.expr, node->type);
@@ -215,6 +226,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
     case N_RETURN:
         semantic_analysis(p, nm, node->_return.expr);
         if (node->_return.expr->type != type_int) {
+            printf("1\n");
             node->_return.expr = cast_node(nm, node->_return.expr, type_int);
         }
         break;

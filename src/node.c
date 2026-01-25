@@ -309,7 +309,7 @@ void print_node(const Node *node, const int depth) {
         printf(": [type= ");
         print_type(node->type);
         printf(", name= %s]\n", node->var_decl.name);
-        print_node(node->var_decl.expr, depth + 1);
+        if (node->var_decl.expr) print_node(node->var_decl.expr, depth + 1);
         break;
     case N_RETURN:
         printf("\n");

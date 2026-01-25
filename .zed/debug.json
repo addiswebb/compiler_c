@@ -5,7 +5,29 @@
 [
     {
         "adapter": "CodeLLDB",
-        "label": "Debug Compiler_C",
+        "label": "Debug Compiler_C -a",
+        "request": "launch",
+        "program": "./build/compiler_c",
+        "args": ["./tests/test.c", "-a"],
+        "build": {
+            "command": "cmake",
+            "args": ["--build", "build"],
+        },
+    },
+    {
+        "adapter": "CodeLLDB",
+        "label": "Debug Compiler_C -ir",
+        "request": "launch",
+        "program": "./build/compiler_c",
+        "args": ["./tests/test.c", "-ir"],
+        "build": {
+            "command": "cmake",
+            "args": ["--build", "build"],
+        },
+    },
+    {
+        "adapter": "CodeLLDB",
+        "label": "Debug Compiler_C -t",
         "request": "launch",
         "program": "./build/compiler_c",
         "args": ["./tests/test.c", "-t"],

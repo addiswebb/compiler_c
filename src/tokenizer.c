@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *KEYWORDS[KEYWORDS_N] = {"char", "else", "exit", "if", "int", "for", "float", "return", "void", "while"};
+const char *KEYWORDS[KEYWORDS_N] = {"char",  "double", "else",   "exit",   "if",    "int",  "for",
+                                    "float", "long",   "return", "sizeof", "short", "void", "while"};
 
 static void t_buffer_reset(Tokenizer *tk) {
     tk->buf.size = 0;
@@ -356,8 +357,11 @@ void t_tokenize(Tokenizer *tk) {
 bool is_type_token(const TokenType tk) {
     switch (tk) {
     case TK_CHAR:
+    case TK_SHORT:
     case TK_INT:
+    case TK_LONG:
     case TK_FLOAT:
+    case TK_DOUBLE:
     case TK_VOID:
         return true;
     default:
@@ -375,6 +379,7 @@ bool is_unary_operator(const TokenType type) {
     case TK_BW_NOT:
     case TK_AND:
     case TK_MULTIPLY:
+    case TK_SIZEOF:
         return true;
     default:
         return false;
@@ -790,6 +795,18 @@ void print_token_type(const TokenType type) {
         break;
     case TK_CLOSE_SQUARE:
         printf("\']\'");
+        break;
+    case TK_DOUBLE:
+        printf("double");
+        break;
+    case TK_LONG:
+        printf("long");
+        break;
+    case TK_SIZEOF:
+        printf("sizeof");
+        break;
+    case TK_SHORT:
+        printf("short");
         break;
     }
 }

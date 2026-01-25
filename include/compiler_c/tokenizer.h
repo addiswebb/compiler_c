@@ -16,11 +16,11 @@ typedef struct {
     int size;
 } Buffer;
 
-#define KEYWORDS_N 10
+#define KEYWORDS_N 14
 extern const char* KEYWORDS[KEYWORDS_N];
 
 /*
-    Adding a Keyword Checklist
+    Adding a Keyword Checklist:
     1. add to TokenType,
     2. KEYWORDS_N ++
     3. add to KEYWORDS array
@@ -29,13 +29,17 @@ extern const char* KEYWORDS[KEYWORDS_N];
 typedef enum {
     // Keywords
     TK_CHAR,
+    TK_DOUBLE,
     TK_ELSE,
     TK_EXIT,
     TK_IF,
     TK_INT,
     TK_FOR,
     TK_FLOAT,
+    TK_LONG,
     TK_RETURN,
+    TK_SIZEOF,
+    TK_SHORT,
     TK_VOID,
     TK_WHILE,
     // Unary Operators

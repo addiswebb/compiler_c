@@ -147,8 +147,14 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         node = new_node(nm, N_UNARY);
         node->unary.op = p_consume(p)->type;
         node->unary.associativity = RIGHT_ASSOCIATIVITY;
+        // if (is_type_token(p_peek(p)->type)) {
+        //     /* TODO: Add a N_TYPE to represent (int/void etc) by itsself,
+        //     Update N_VAR_DECL to use n->type = node, where node->kind == N_TYPE
+        //     */
+        //     node->unary.expr = new_node(nm, N_LITERAL);
+        //     node->unary.expr->type = p_parse_type(p, NULL);
+        // } else
         node->unary.expr = p_parse_primary_expression(p, nm);
-        node->type = type_invalid;
         return node;
     }
     switch (p_peek(p)->type) {
@@ -157,7 +163,6 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     case TK_CHAR_LITERAL:
     case TK_STRING_LITERAL:
         node = new_node(nm, N_LITERAL);
-        // Give this type checking to the semantic analysis
         tk = p_consume(p);
         node->literal.kind = literal_kind(tk->type);
         node->literal.raw_rata = tk->value;
@@ -293,12 +298,10 @@ Type *p_parse_type(Parser *p, Node *node) {
         ptrs++;
         p_consume(p);
     }
-    for (int i = 0; i < ptrs; i++) {
+    for (int i = 0; i < ptrs; i++)
         type = get_pointer_type(type);
-    }
-    if (node) {
-        node->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
-    }
+
+    if (node) node->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
 
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p); // [
