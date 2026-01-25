@@ -204,6 +204,9 @@ void print_node_type(const NodeKind type) {
     case N_INDEX:
         printf("Index");
         break;
+    case N_TYPE:
+        printf("Type");
+        break;
     }
 }
 
@@ -364,6 +367,11 @@ void print_node(const Node *node, const int depth) {
         printf(": [index,indentifier]\n");
         print_node(node->index.index, depth + 1);
         print_node(node->index.identifier, depth + 1);
+        break;
+    case N_TYPE:
+        printf(": [type= ");
+        print_type(node->type);
+        printf("]\n");
         break;
     }
 }

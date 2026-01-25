@@ -21,6 +21,7 @@ typedef enum {
     N_FUNCTION_CALL,
     N_CAST,
     N_INDEX,
+    N_TYPE,
 } NodeKind;
 
 typedef enum{
@@ -109,6 +110,7 @@ struct Node {
         } identifier;
         // type name = expr;
         struct {
+            Node *type;
             char *name;
             Node *expr;
         } var_decl;

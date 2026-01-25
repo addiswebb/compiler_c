@@ -177,10 +177,13 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     case TK_OPEN_PAREN:
         p_consume_a(p, TK_OPEN_PAREN);
         if (is_type_token(p_peek(p)->type)) {
-            Type *type = p_parse_type(p, NULL);
+            Node *type_node = p_parse_type(p, nm, NULL);
             p_consume_a(p, TK_CLOSE_PAREN);
+            if (is_unary_operator(p_peek(p)->type) || is_binary_operator(p_peek(p)->type) || p_peek(p)->type == TK_SEMI) {
+                return type_node;
+            }
             node = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-            node = cast_node_unchecked(nm, node, type);
+            node = cast_node_unchecked(nm, node, type_node->type);
         } else {
             node = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
             p_consume_a(p, TK_CLOSE_PAREN);
@@ -287,7 +290,8 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm) {
 /*
     Give the var decl node, if the var name/identifier is needed, otherwise NULL
 */
-Type *p_parse_type(Parser *p, Node *node) {
+Node *p_parse_type(Parser *p, NodeManager *nm, Node *var_decl) {
+    Node *node = new_node(nm, N_TYPE);
     Type *type = token_to_type(p_consume(p)->type);
     if (type == type_invalid) {
         printf("Tried to parse an unknown type\n");
@@ -301,7 +305,7 @@ Type *p_parse_type(Parser *p, Node *node) {
     for (int i = 0; i < ptrs; i++)
         type = get_pointer_type(type);
 
-    if (node) node->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
+    if (var_decl) var_decl->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
 
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p); // [
@@ -310,7 +314,8 @@ Type *p_parse_type(Parser *p, Node *node) {
         p_consume_a(p, TK_CLOSE_SQUARE);
         type = get_array_type(type, len);
     }
-    return type;
+    node->type = type;
+    return node;
 }
 /*
     Consumes
@@ -319,7 +324,8 @@ Type *p_parse_type(Parser *p, Node *node) {
 */
 Node *p_parse_var_declaration(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_VAR_DECL);
-    node->type = p_parse_type(p, node);
+    node->var_decl.type = p_parse_type(p, nm, node);
+    node->type = node->var_decl.type->type;
 
     if (p_peek(p)->type == TK_EQ) {
         p_consume(p);
@@ -423,7 +429,7 @@ void p_append_var_decl(Parser *p, Node *var) {
             exit(1);
         }
     }
-    p->var_decls[p->var_decl_count++] = (P_Var_Decl){var->identifier.name, var->type, var};
+    p->var_decls[p->var_decl_count++] = (P_Var_Decl){var->var_decl.name, var->type, var};
 }
 Node *p_get_var_decl(Parser *p, const char *name) {
     for (int i = 0; i < p->var_decl_count; i++) {

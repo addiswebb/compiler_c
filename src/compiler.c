@@ -35,7 +35,7 @@ Compiler init_compiler(const int argc, char *argv[]) {
     compiler.output_file = strdup(argv[1]);
     compiler.output_file[strlen(argv[1]) - 1] = 's';
 
-    // Loop and try find compile flags: [-o, -t, -d]
+    // Loop and try find compile flags
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0) {
             if (argv[i + 1] != NULL) {

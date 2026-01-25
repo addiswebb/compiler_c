@@ -1,5 +1,4 @@
 int main() {
-    int x;
-    int i = sizeof(x);
+    int i = sizeof(double[5]);
     return i;
 }

@@ -173,14 +173,13 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
             node->cast.from = node->cast.expr->type;
             node->type = node->cast.to;
             break;
-        } else {
-            printf("Invalid cast from ");
-            print_type(node->cast.expr->type);
-            printf(" to ");
-            print_type(node->cast.to);
-            printf("\n");
-            exit(1);
         }
+        printf("Invalid cast from ");
+        print_type(node->cast.expr->type);
+        printf(" to ");
+        print_type(node->cast.to);
+        printf("\n");
+        exit(1);
     case N_FUNCTION_CALL:
         Node *func_def = p_get_func_def(p, node->func_call.identifier->identifier.name);
         if (func_def->func.param_count != node->func_call.param_count) {
@@ -274,6 +273,8 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
             node->index.index = cast_node(nm, node->index.index, type_long);
         }
         node->type = node->index.identifier->type->base;
+        break;
+    case N_TYPE:
         break;
     }
 }
