@@ -147,13 +147,6 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         node = new_node(nm, N_UNARY);
         node->unary.op = p_consume(p)->type;
         node->unary.associativity = RIGHT_ASSOCIATIVITY;
-        // if (is_type_token(p_peek(p)->type)) {
-        //     /* TODO: Add a N_TYPE to represent (int/void etc) by itsself,
-        //     Update N_VAR_DECL to use n->type = node, where node->kind == N_TYPE
-        //     */
-        //     node->unary.expr = new_node(nm, N_LITERAL);
-        //     node->unary.expr->type = p_parse_type(p, NULL);
-        // } else
         node->unary.expr = p_parse_primary_expression(p, nm);
         return node;
     }
@@ -179,7 +172,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         if (is_type_token(p_peek(p)->type)) {
             Node *type_node = p_parse_type(p, nm, NULL);
             p_consume_a(p, TK_CLOSE_PAREN);
-            if (is_unary_operator(p_peek(p)->type) || is_binary_operator(p_peek(p)->type) || p_peek(p)->type == TK_SEMI) {
+            if (is_unary_operator(p_peek(p)->type) || is_binary_operator(p_peek(p)->type) || p_peek(p)->type == TK_SEMI || p_peek(p)->type == TK_CLOSE_PAREN) {
                 return type_node;
             }
             node = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
@@ -239,7 +232,6 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
             printf(" is not a an ltype, needed for indexing\n");
             exit(1);
         }
-        // Only works for a[5], not a[b + 1] (can fix later)
         Node *node = new_node(nm, N_INDEX);
         node->index.index = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
         node->index.identifier = primary;
@@ -309,6 +301,7 @@ Node *p_parse_type(Parser *p, NodeManager *nm, Node *var_decl) {
 
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p); // [
+        // Only works for a[5], not a[b + 1] (can fix later)
         // Todo; allow for const expressions like [5 + 6] or smt
         const int len = atoi(p_consume_a(p, TK_INT_LITERAL)->value);
         p_consume_a(p, TK_CLOSE_SQUARE);

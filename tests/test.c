@@ -1,4 +1,6 @@
+int test(int x){return x;}
+
 int main() {
-    int i = sizeof(double[5]);
+    int i = test(sizeof(double[5]));
     return i;
 }
