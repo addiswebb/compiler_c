@@ -1,5 +1,6 @@
 #ifndef COMPILER_C_PARSER_H
 #define COMPILER_C_PARSER_H
+#define DEBUG_CONSUME 0
 
 #include "node.h"
 #include "tokenizer.h"

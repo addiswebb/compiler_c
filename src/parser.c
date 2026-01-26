@@ -66,6 +66,9 @@ Token *p_consume_n(Parser *p, const int n) {
     }
     Token *token = &p->src->data[p->index];
     p->index += n;
+    if(DEBUG_CONSUME){
+        print_token(token);
+    }
     return token;
 }
 

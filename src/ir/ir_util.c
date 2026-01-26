@@ -35,7 +35,7 @@ IR_UNARY_OP ir_unary_op(const TokenType type) {
     case TK_BW_NOT:
         return BNOT;
     default:
-        printf("Given a token which is not a unary operator\n");
+        printf("IR Given unknown token as unary operator\n");
         exit(1);
     }
 }
