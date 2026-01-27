@@ -147,54 +147,55 @@ static void ir_gen_compound(IR_Context *ctx, const Node *comp) {
 }
 
 static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
-    const int cond_id = ir_add_block(ctx); // cond:
+    IR_Block *cond_block = ir_add_block(ctx); // cond:
+    IR_Block *block_block = ir_new_block();
+    IR_Block *end_block = ir_new_block();
+
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _while->_while.cond);
-    const int block_id = cond_id + 1;
-    const int end_id = cond_id + 2;
-    ir_branch_cond(ctx, cond_reg, block_id, end_id);
-    ir_add_block(ctx); // block:
+    ir_branch_cond(ctx, cond_reg, block_block, end_block);
+
+    ir_append_block(ctx, block_block);
     ir_gen_statement(ctx, _while->_while.block);
-    ir_branch(ctx, cond_id);
-    ir_add_block(ctx); // end:
+    ir_branch(ctx, cond_block);
+
+    ir_append_block(ctx, end_block);
 }
 static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_gen_block_item(ctx, _for->_for.init);
 
-    const int cond_id = ir_add_block(ctx); // cond:
-    const int block_id = cond_id + 1;
-    const int end_id = cond_id + 2;
-    const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
+    IR_Block *cond_block = ir_add_block(ctx); // cond:
+    IR_Block *block_block = ir_new_block();
+    IR_Block *end_block = ir_new_block();
 
-    ir_branch_cond(ctx, cond_reg, block_id, end_id);
-    ir_add_block(ctx); // block:
+    const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
+    ir_branch_cond(ctx, cond_reg, block_block, end_block);
+
+    ir_append_block(ctx, block_block);
     ir_gen_statement(ctx, _for->_for.block);
     ir_gen_rvalue(ctx, _for->_for.iter);
-    ir_branch(ctx, cond_id);
-    ir_add_block(ctx); // end:
+    ir_branch(ctx, cond_block);
+
+    ir_append_block(ctx, end_block);
 }
 
 static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
+    int current_block = ctx->block->id;
+    IR_Block *if_true_block = ir_new_block();
+    IR_Block *else_block = ir_new_block();
+
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _if->_if.cond);
-    const int if_true_id = ctx->func->block_count;
-    const int if_false_id = if_true_id + 1; // if no else, then this is the end block
-    ir_branch_cond(ctx, cond_reg, if_true_id, if_false_id);
-    ir_add_block(ctx); // IF true block
+
+    ir_branch_cond(use_block(ctx, current_block), cond_reg, if_true_block, else_block);
+    ir_append_block(ctx, if_true_block);
     ir_gen_statement(ctx, _if->_if.if_true);
-    if (_if->_if.if_false == NULL) { // No else, means branch to the end after compound
-        ir_branch(ctx, if_false_id);
-        ir_add_block(ctx); // IF else or endblock
-    } else {
-        if (_if->_if.if_false->kind == N_IF) {
-            ir_branch(ctx, if_false_id);
-            ir_add_block(ctx); // IF else or endblock
+    ir_branch(ctx, else_block);
+    ir_append_block(ctx, else_block);
+    if (_if->_if.if_false) {                   // IF there is an else {}
+        if (_if->_if.if_false->kind == N_IF) { // -> ELSE IF {}
             ir_gen_if_statement(ctx, _if->_if.if_false);
         } else {
-            const int end_id = if_false_id + 1;
-            ir_branch(ctx, end_id);
-            ir_add_block(ctx); // IF else or endblock
             ir_gen_statement(ctx, _if->_if.if_false);
-            ir_branch(ctx, end_id);
-            ir_add_block(ctx); // end
+            ir_branch(ctx, ir_add_block(ctx));
         }
     }
 }

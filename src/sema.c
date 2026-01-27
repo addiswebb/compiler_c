@@ -62,6 +62,9 @@ Type *check_unary_op(Node *unaryop) {
         if (expr->type != type_invalid && expr->type->size) return type_int;
         printf("Tried to get the sizeof something without a size\n");
         exit(1);
+    case TK_INCR:
+    case TK_DECR:
+        return expr->type;
     default:
         break;
     }

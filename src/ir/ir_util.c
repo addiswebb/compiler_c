@@ -268,7 +268,7 @@ static void print_ir_call(IR_Context *ctx, const IR_Instruction *instr) {
 static void print_ir_br_cond(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    BR_COND ");
     print_ir_value(&instr->ops[0]);
-    printf(" %d %d\n", instr->br_cond.t_label, instr->br_cond.f_label);
+    printf(" %d %d\n", instr->br_cond.t_block->id, instr->br_cond.f_block->id);
 }
 
 static void print_ir_cmp(IR_Context *ctx, const IR_Instruction *instr) {
@@ -347,7 +347,7 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
         print_ir_call(ctx, instr);
         break;
     case IR_BR:
-        printf("    BR %d\n", instr->br.label);
+        printf("    BR %d\n", instr->br.block->id);
         break;
     case IR_BR_COND:
         print_ir_br_cond(ctx, instr);
@@ -383,7 +383,7 @@ static void print_ir_function(IR_Context *ctx, const IR_Function *func) {
     printf("%s: [max_reg: %d]\n ", func->name, func->max_reg);
     for (int i = 0; i < func->block_count; i++) {
         printf("L%d:\n", i);
-        print_ir_block(ctx, &func->blocks[i]);
+        print_ir_block(ctx, func->blocks[i]);
     }
 }
 

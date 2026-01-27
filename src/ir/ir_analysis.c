@@ -77,26 +77,23 @@ static int contains(int *arr, int count, int val) {
     return false;
 }
 
-void add_successor(IR_Function *func, int from_idx, int to_idx) {
-    IR_Block *from = &func->blocks[from_idx];
-    IR_Block *to = &func->blocks[to_idx];
-
+void add_successor(IR_Function *func, IR_Block *from, IR_Block *to) {
     // Check if it already exists
-    if (!contains(from->cfg.succ, from->cfg.succ_count, to_idx)) {
+    if (!contains(from->cfg.succ, from->cfg.succ_count, to->id)) {
         from->cfg.succ = realloc(from->cfg.succ, sizeof(int) * (from->cfg.succ_count + 1));
-        from->cfg.succ[from->cfg.succ_count++] = to_idx;
+        from->cfg.succ[from->cfg.succ_count++] = to->id;
     }
 
-    if (!contains(to->cfg.pred, to->cfg.pred_count, from_idx)) {
+    if (!contains(to->cfg.pred, to->cfg.pred_count, from->id)) {
         to->cfg.pred = realloc(to->cfg.pred, sizeof(int) * (to->cfg.pred_count + 1));
-        to->cfg.pred[to->cfg.pred_count++] = from_idx;
+        to->cfg.pred[to->cfg.pred_count++] = from->id;
     }
 }
 
 void dfs_postorder(IR_Function *func, int block_id, bool *visited, int *postorder, int *count) {
     if (visited[block_id]) return;
     visited[block_id] = true;
-    IR_Block *b = &func->blocks[block_id];
+    IR_Block *b = func->blocks[block_id];
     for (int i = 0; i < b->cfg.succ_count; i++) {
         dfs_postorder(func, b->cfg.succ[i], visited, postorder, count);
     }
@@ -127,7 +124,7 @@ void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v) {
 
 void ir_init_func_cfg(IR_Function *f) {
     for (int j = 0; j < f->block_count; j++) {
-        IR_Block *b = &f->blocks[j];
+        IR_Block *b = f->blocks[j];
         b->cfg.succ = NULL;
         b->cfg.succ_count = 0;
 
@@ -143,22 +140,28 @@ void ir_init_func_cfg(IR_Function *f) {
 
 void ir_compute_func_io(IR_Function *f) {
     for (int j = 0; j < f->block_count; j++) {
-        IR_Block *b = &f->blocks[j];
+        IR_Block *b = f->blocks[j];
 
         if (b->count == 0) continue;
         IR_Instruction *end_instr = &b->instructions[b->count - 1];
         switch (end_instr->op) {
         case IR_BR:
-            add_successor(f, j, end_instr->br.label);
+            add_successor(f, b, end_instr->br.block);
             break;
         case IR_BR_COND:
-            add_successor(f, j, end_instr->br_cond.f_label);
-            add_successor(f, j, end_instr->br_cond.t_label);
+            add_successor(f, b, end_instr->br_cond.f_block);
+            add_successor(f, b, end_instr->br_cond.t_block);
             break;
         case IR_RET:
             break;
         default:
-            break;
+            if (j < f->block_count - 1) {
+                // printf("Adding fallthrough successor\n");
+                // TODO: give this more thought, can it fail...?
+                add_successor(f, b, f->blocks[j + 1]);
+            }
+            // printf("Block %d falls through\n", j);
+            // exit(1);
         }
     }
 }
@@ -166,7 +169,7 @@ void ir_compute_func_io(IR_Function *f) {
 int ir_reg_bitset(IR_Function *f) {
     int defined = 0;
     for (int j = 0; j < f->block_count; j++) {
-        IR_Block *b = &f->blocks[j];
+        IR_Block *b = f->blocks[j];
         for (int k = 0; k < b->count; k++) {
             IR_Instruction *instr = &b->instructions[k];
             for (int i = 0; i < instr->op_count; i++) {
@@ -195,7 +198,7 @@ void compute_bitset(IR_Function *f, int *rpo) {
     while (changed) {
         changed = false;
         for (int i = 0; i < f->block_count; i++) {
-            IR_Block *b = &f->blocks[rpo[i]];
+            IR_Block *b = f->blocks[rpo[i]];
             bitset_clear(&old_live_out);
             bitset_clear(&old_live_in);
             bitset_clear(&tmp);
@@ -204,7 +207,7 @@ void compute_bitset(IR_Function *f, int *rpo) {
 
             bitset_clear(&b->live.live_out);
             for (int j = 0; j < b->cfg.succ_count; j++)
-                bitset_union(&b->live.live_out, &f->blocks[b->cfg.succ[j]].live.live_in);
+                bitset_union(&b->live.live_out, &f->blocks[b->cfg.succ[j]]->live.live_in);
             bitset_copy(&tmp, &b->live.live_out);
             bitset_difference(&tmp, &b->live.def);
             bitset_copy(&b->live.live_in, &b->live.use);
@@ -256,7 +259,7 @@ void linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, int *stack
 
 void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlot *mem_slots) {
     for (int i = 0; i < f->block_count; i++) {
-        IR_Block *b = &f->blocks[i];
+        IR_Block *b = f->blocks[i];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
             int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
@@ -286,7 +289,7 @@ void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlo
 
 void verify_completion(IR_Function *f) {
     for (int i = 0; i < f->block_count; i++) {
-        IR_Block *b = &f->blocks[i];
+        IR_Block *b = f->blocks[i];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
             int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
@@ -372,7 +375,7 @@ Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f, int defined, int *r
     int pc = 0;
 
     for (int i = 0; i < f->block_count; i++) {
-        IR_Block *b = &f->blocks[rpo[i]];
+        IR_Block *b = f->blocks[rpo[i]];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
             int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
@@ -412,7 +415,7 @@ void print_bitset(BitSet *bs) {
 void print_cfg(IR_Function *func) {
     printf("Func Analysis: %s\n", func->name);
     for (int i = 0; i < func->block_count; i++) {
-        IR_Block *b = &func->blocks[i];
+        IR_Block *b = func->blocks[i];
         printf("L%d:\n", i);
 
         // Successors

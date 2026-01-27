@@ -101,20 +101,20 @@ IR_Value ir_return(IR_Context *ctx, IR_Value reg) {
     ir_append_instruction(ctx->block, &i);
     return ir_no_value;
 }
-IR_Value ir_branch(IR_Context *ctx, int label) {
+IR_Value ir_branch(IR_Context *ctx, IR_Block *block) {
     IR_Instruction i;
     i.op = IR_BR;
-    i.br.label = label;
+    i.br.block = block;
     i.op_count = 0;
     ir_append_instruction(ctx->block, &i);
     return ir_no_value;
 }
-IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, int t_label, int f_label) {
+IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, IR_Block *f_block) {
     IR_Instruction i;
     i.op = IR_BR_COND;
     i.ops[0] = cond_reg;
-    i.br_cond.t_label = t_label;
-    i.br_cond.f_label = f_label;
+    i.br_cond.t_block = t_block;
+    i.br_cond.f_block = f_block;
     i.op_count = 1;
     ir_append_instruction(ctx->block, &i);
     return ir_no_value;
