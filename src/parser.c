@@ -447,9 +447,9 @@ Node *p_parse_if_statement(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_OPEN_PAREN);
     node->_if.cond = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
     p_consume_a(p, TK_CLOSE_PAREN);
-    node->_if.if_true = p_parse_compound(p, nm); //{[compound]} (in the future, can be a function call)
-    if (p_peek(p)->type == TK_ELSE) {            // If there is an if, it can be a
-        p_consume(p);                            // -> else
+    node->_if.if_true = p_parse_statement(p, nm); //{[compound]} (in the future, can be a function call)
+    if (p_peek(p)->type == TK_ELSE) {             // If there is an if, it can be a
+        p_consume(p);                             // -> else
         if (p_peek(p)->type == TK_IF) {
             node->_if.if_false = p_parse_if_statement(p, nm);
         } else {

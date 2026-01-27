@@ -216,18 +216,32 @@ typedef struct {
     IR_Const_Pool const_pool;
 } IR_Module;
 
+typedef struct{
+    IR_Block *continue_block;
+    IR_Block *break_block;
+} IR_LoopContext;
+
+typedef struct{
+    IR_LoopContext *data;
+    int size;
+    int capacity;
+} IR_LoopStack;
 
 typedef struct{
     IR_Module *module;
     IR_Function *func;
     IR_Block *block;
-    IR_Block *continue_block;
-    IR_Block *break_block;
+    IR_LoopStack loop_stack;
     IR_Block *true_block;
     IR_Block *false_block;
 } IR_Context;
 
 extern const IR_Value ir_no_value;
+
+IR_Context ir_init_ctx();
+void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block*break_block);
+void ir_pop_loop_ctx(IR_Context *ctx);
+IR_LoopContext *ir_loop_ctx(IR_Context *ctx);
 
 IR_Value ir_mem_value(int mem_reg, Type *type);
 IR_Value ir_reg_value(int reg, Type *type);

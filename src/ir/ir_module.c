@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 IR_OpInfo op_info[] = {
     [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},
     [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
@@ -23,6 +24,41 @@ IR_OpInfo op_info[] = {
     [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b000} // IR_CALL uses handled seperately
 };
 const IR_Value ir_no_value = (IR_Value){IR_UNDEFINED, 0, 0, 0};
+
+IR_Context ir_init_ctx() {
+    IR_Context ctx;
+    ctx.module = NULL;
+    ctx.func = NULL;
+    ctx.block = NULL;
+    ctx.true_block = NULL;
+    ctx.false_block = NULL;
+    ctx.loop_stack.size = 0;
+    ctx.loop_stack.capacity = 4;
+    ctx.loop_stack.data = malloc(sizeof(IR_LoopContext) * ctx.loop_stack.capacity);
+    if (!ctx.loop_stack.data) {
+        printf("Failed to allocate for IR Context Loop Stack\n");
+        exit(1);
+    }
+    return ctx;
+}
+
+void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break_block) {
+    IR_LoopStack *s = &ctx->loop_stack;
+    if (s->size >= s->capacity) {
+        s->capacity *= 2;
+        IR_LoopContext *new_data = realloc(s->data, sizeof(IR_LoopContext) * s->capacity);
+        if (!new_data) {
+            printf("Failed to reallocate for IR Context Loop Stack\n");
+            free(s->data);
+            exit(1);
+        }
+        s->data = new_data;
+    }
+    s->data[s->size++] = (IR_LoopContext){continue_block, break_block};
+}
+
+void ir_pop_loop_ctx(IR_Context *ctx) { ctx->loop_stack.size--; }
+IR_LoopContext *ir_loop_ctx(IR_Context *ctx) { return &ctx->loop_stack.data[ctx->loop_stack.size - 1]; }
 
 IR_Value ir_mem_value(int mem_reg, Type *type) {
     IR_Value v;

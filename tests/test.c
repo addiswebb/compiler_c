@@ -1,6 +1,12 @@
 int main() {
-    if (1 && 0 && 1) {
-        return 5;
+    int a = 0;
+    int n = 10;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            a++;
+            if (j / 4 == 1) break;
+        }
+        continue;
     }
-    return 3;
+    return a;
 }

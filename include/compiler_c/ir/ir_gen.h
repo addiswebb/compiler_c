@@ -15,9 +15,6 @@ static void ir_gen_statement(IR_Context *ctx,const Node *stmt);
 static void ir_gen_return(IR_Context *ctx, const Node *_return);
 static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func);
 
-void ir_set_loop_blocks(IR_Context *ctx, IR_Block *continue_block, IR_Block *break_block);
-void ir_reset_loop_blocks(IR_Context *ctx);
-
 int ir_within_cond(IR_Context *ctx);
 void ir_set_cond_block(IR_Context *ctx, IR_Block *true_block, IR_Block *false_block);
 void ir_reset_cond_block(IR_Context *ctx);

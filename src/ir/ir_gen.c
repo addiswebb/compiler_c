@@ -171,7 +171,7 @@ static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
     IR_Block *block_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
 
-    ir_set_loop_blocks(ctx, block_block, end_block);
+    ir_push_loop_ctx(ctx, block_block, end_block);
 
     ir_set_cond_block(ctx, block_block, end_block);
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _while->_while.cond);
@@ -185,7 +185,7 @@ static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
 
     ir_append_block(ctx, end_block);
 
-    ir_reset_loop_blocks(ctx);
+    ir_pop_loop_ctx(ctx);
 }
 static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_gen_block_item(ctx, _for->_for.init);
@@ -196,9 +196,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     IR_Block *end_block = ir_new_block();
 
     // Update ctx for continue/break statements
-    ctx->continue_block = iter_block;
-    ctx->break_block = end_block;
-    ir_set_loop_blocks(ctx, iter_block, end_block);
+    ir_push_loop_ctx(ctx, iter_block, end_block);
 
     ir_set_cond_block(ctx, block_block, end_block);
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
@@ -217,7 +215,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
 
     ir_append_block(ctx, end_block);
     // Reset ctx for continue/break statements
-    ir_reset_loop_blocks(ctx);
+    ir_pop_loop_ctx(ctx);
 }
 
 static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
@@ -283,10 +281,10 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     case N_LITERAL:
         return;
     case N_BREAK:
-        ir_branch(ctx, ctx->break_block);
+        ir_branch(ctx, ir_loop_ctx(ctx)->break_block);
         return;
     case N_CONTINUE:
-        ir_branch(ctx, ctx->continue_block);
+        ir_branch(ctx, ir_loop_ctx(ctx)->continue_block);
         return;
     default:
         // given invalid statement? probably an expression
@@ -336,6 +334,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
     IR_Module *module = ir_new_module();
     ctx->module = module;
     for (int i = 0; i < tu->translation_unit.count; i++) {
+        Node *n = tu->translation_unit.declarations[i];
         switch (tu->translation_unit.declarations[i]->kind) {
         case N_FUNCTION:
             ir_append_function(ctx->module, ir_gen_function(ctx, tu->translation_unit.declarations[i]));
@@ -350,14 +349,6 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
     return module;
 }
 
-void ir_set_loop_blocks(IR_Context *ctx, IR_Block *continue_block, IR_Block *break_block) {
-    ctx->continue_block = continue_block;
-    ctx->break_block = break_block;
-}
-void ir_reset_loop_blocks(IR_Context *ctx) {
-    ctx->continue_block = NULL;
-    ctx->break_block = NULL;
-}
 int ir_within_cond(IR_Context *ctx) { return ctx->false_block && ctx->true_block; }
 
 void ir_set_cond_block(IR_Context *ctx, IR_Block *true_block, IR_Block *false_block) {
