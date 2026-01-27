@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -78,6 +79,21 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             return val;
         }
         IR_Value lhs = ir_gen_rvalue(ctx, expr->binary.lhs);
+
+        if (expr->binary.op == TK_OR_OR || expr->binary.op == TK_AND_AND) {
+            IR_Value zero = ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){type_int, 0}), type_int);
+            IR_Value cond_reg = ir_cmp(ctx, NEQ, lhs, zero);
+
+            if (ir_within_cond(ctx)) {
+                if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, cond_reg, NULL, ctx->false_block);
+                if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, cond_reg, ctx->true_block, NULL);
+            }
+
+            IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
+            cond_reg = ir_cmp(ctx, NEQ, rhs, zero);
+            return cond_reg;
+        }
+
         IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
         if (is_comparison_op(expr->binary.op)) {
             return ir_cmp(ctx, ir_cmp_op(expr->binary.op), lhs, rhs);
@@ -151,15 +167,16 @@ static void ir_gen_compound(IR_Context *ctx, const Node *comp) {
 }
 
 static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
-    IR_Block *cond_block = ir_add_block(ctx); // cond:
+    IR_Block *cond_block = ir_add_block(ctx);
     IR_Block *block_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
 
-    // Update ctx for continue/break statements
-    ctx->continue_block = block_block;
-    ctx->break_block = end_block;
+    ir_set_loop_blocks(ctx, block_block, end_block);
 
+    ir_set_cond_block(ctx, block_block, end_block);
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _while->_while.cond);
+    ir_reset_cond_block(ctx);
+
     ir_branch_cond(ctx, cond_reg, block_block, end_block);
 
     ir_append_block(ctx, block_block);
@@ -167,6 +184,8 @@ static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
     ir_branch(ctx, cond_block);
 
     ir_append_block(ctx, end_block);
+
+    ir_reset_loop_blocks(ctx);
 }
 static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_gen_block_item(ctx, _for->_for.init);
@@ -179,8 +198,12 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     // Update ctx for continue/break statements
     ctx->continue_block = iter_block;
     ctx->break_block = end_block;
+    ir_set_loop_blocks(ctx, iter_block, end_block);
 
+    ir_set_cond_block(ctx, block_block, end_block);
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
+    ir_reset_cond_block(ctx);
+
     ir_branch_cond(ctx, cond_reg, block_block, end_block);
 
     ir_append_block(ctx, block_block);
@@ -193,13 +216,18 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_branch(ctx, cond_block);
 
     ir_append_block(ctx, end_block);
+    // Reset ctx for continue/break statements
+    ir_reset_loop_blocks(ctx);
 }
 
 static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
     IR_Block *if_true_block = ir_new_block();
     IR_Block *else_block = ir_new_block();
 
+    // Context true/false blocks should only be used within (cond) part
+    ir_set_cond_block(ctx, if_true_block, else_block);
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _if->_if.cond);
+    ir_reset_cond_block(ctx);
 
     ir_branch_cond(ctx, cond_reg, if_true_block, else_block);
     ir_append_block(ctx, if_true_block);
@@ -320,4 +348,24 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
         }
     }
     return module;
+}
+
+void ir_set_loop_blocks(IR_Context *ctx, IR_Block *continue_block, IR_Block *break_block) {
+    ctx->continue_block = continue_block;
+    ctx->break_block = break_block;
+}
+void ir_reset_loop_blocks(IR_Context *ctx) {
+    ctx->continue_block = NULL;
+    ctx->break_block = NULL;
+}
+int ir_within_cond(IR_Context *ctx) { return ctx->false_block && ctx->true_block; }
+
+void ir_set_cond_block(IR_Context *ctx, IR_Block *true_block, IR_Block *false_block) {
+    ctx->true_block = true_block;
+    ctx->false_block = false_block;
+}
+
+void ir_reset_cond_block(IR_Context *ctx) {
+    ctx->true_block = NULL;
+    ctx->false_block = NULL;
 }

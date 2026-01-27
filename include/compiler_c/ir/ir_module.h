@@ -223,6 +223,8 @@ typedef struct{
     IR_Block *block;
     IR_Block *continue_block;
     IR_Block *break_block;
+    IR_Block *true_block;
+    IR_Block *false_block;
 } IR_Context;
 
 extern const IR_Value ir_no_value;

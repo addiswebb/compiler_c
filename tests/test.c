@@ -1,9 +1,6 @@
 int main() {
-    int n = 10;
-    int a = 0;
-    for (int i = 0; i < n; i++) {
-        a = a + 2;
-        continue;
+    if (1 && 0 && 1) {
+        return 5;
     }
-    return a;
+    return 3;
 }

@@ -279,7 +279,12 @@ static void print_ir_call(IR_Context *ctx, const IR_Instruction *instr) {
 static void print_ir_br_cond(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    BR_COND ");
     print_ir_value(&instr->ops[0]);
-    printf(" %d %d\n", instr->br_cond.t_block->id, instr->br_cond.f_block->id);
+    if (instr->br_cond.t_block) printf(" L%d ", instr->br_cond.t_block->id);
+    else printf(" # ");
+    if (instr->br_cond.f_block) printf("L%d", instr->br_cond.f_block->id);
+    else printf("#");
+    printf("\n");
+    // printf(" %d %d\n", instr->br_cond.t_block->id, instr->br_cond.f_block->id);
 }
 
 static void print_ir_cmp(IR_Context *ctx, const IR_Instruction *instr) {

@@ -149,8 +149,8 @@ void ir_compute_func_io(IR_Function *f) {
             add_successor(f, b, end_instr->br.block);
             break;
         case IR_BR_COND:
-            add_successor(f, b, end_instr->br_cond.f_block);
-            add_successor(f, b, end_instr->br_cond.t_block);
+            if (end_instr->br_cond.f_block) add_successor(f, b, end_instr->br_cond.f_block);
+            if (end_instr->br_cond.t_block) add_successor(f, b, end_instr->br_cond.t_block);
             break;
         case IR_RET:
             break;
@@ -344,6 +344,9 @@ void ir_analysis(IR_Context *ctx) {
             compute_bitset(f, rpo);
 
             lifetimes = compute_lifetimes(ctx, f, reg_count, rpo);
+            // for (int j = 0; j < reg_count; j++) {
+            //     printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
+            // }
             qsort(lifetimes, reg_count, sizeof(Lifetime), cmp);
         }
 
