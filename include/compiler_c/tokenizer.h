@@ -104,7 +104,7 @@ bool is_arithmetic_op(const TokenType type);
 bool is_bitwise_op(const TokenType type);
 bool is_comparison_op(const TokenType type);
 bool is_logical_op(const TokenType type);
-TokenType get_underlying_op(const TokenType type);
+TokenType get_underlying_op(TokenType type);
 
 int associativity(TokenType type);
 int precedence(TokenType type);

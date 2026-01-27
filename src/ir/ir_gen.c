@@ -67,9 +67,13 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         }
         return ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
     case N_BINARY:
-        if (expr->binary.op == TK_EQ) {
+        if (is_assignment_op(expr->binary.op)) {
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
+            if (expr->binary.op != TK_EQ) {
+                val =
+                    ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), addr, val, expr->type);
+            }
             ir_store(ctx, addr, val, expr->type);
             return val;
         }
@@ -179,13 +183,12 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
 }
 
 static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
-    int current_block = ctx->block->id;
     IR_Block *if_true_block = ir_new_block();
     IR_Block *else_block = ir_new_block();
 
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _if->_if.cond);
 
-    ir_branch_cond(use_block(ctx, current_block), cond_reg, if_true_block, else_block);
+    ir_branch_cond(ctx, cond_reg, if_true_block, else_block);
     ir_append_block(ctx, if_true_block);
     ir_gen_statement(ctx, _if->_if.if_true);
     ir_branch(ctx, else_block);

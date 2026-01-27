@@ -251,6 +251,5 @@ IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
 int ir_get_func_def(const IR_Context *ctx, const char *name);
 IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name);
 IR_Block *current_block(const IR_Function *func);
-IR_Context *use_block(IR_Context *ctx, int block_id);
 
 #endif

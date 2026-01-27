@@ -228,7 +228,6 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
     case N_RETURN:
         semantic_analysis(p, nm, node->_return.expr);
         if (node->_return.expr->type != type_int) {
-            printf("1\n");
             node->_return.expr = cast_node(nm, node->_return.expr, type_int);
         }
         break;

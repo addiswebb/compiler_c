@@ -362,10 +362,3 @@ void ir_free_module(IR_Module *module) {
 }
 
 IR_Block *current_block(const IR_Function *func) { return func->blocks[func->block_count - 1]; }
-
-IR_Context *use_block(IR_Context *ctx, int block_id) {
-    ctx->block = ctx->func->blocks[block_id];
-    return ctx;
-}
-
-void compute_stack_lifetimes(IR_Context *ctx) {}
