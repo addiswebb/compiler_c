@@ -234,12 +234,12 @@ void x86_emit_binary(FILE *fp, int dst_offset, int lhs_offset, int rhs_offset, I
                 printf("Tried to modulo int with unsupported size\n");
                 exit(1);
             }
-        case AND:
+        case BW_AND:
             fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
             fprintf(fp, "    and%s %d(%%rbp), %s\n", op_suffix, rhs_offset, reg);
             fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
             return;
-        case OR:
+        case BW_OR:
             fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
             fprintf(fp, "    or%s %d(%%rbp), %s\n", op_suffix, rhs_offset, reg);
             fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);

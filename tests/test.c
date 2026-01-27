@@ -1,4 +1,8 @@
 int main() {
-    char str[6] = "hello";
-    return str[0];
+    int x = 1;
+    int y = 2;
+    if (x && y) {
+        return 5;
+    }
+    return 0;
 }
