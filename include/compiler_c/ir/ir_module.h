@@ -221,6 +221,8 @@ typedef struct{
     IR_Module *module;
     IR_Function *func;
     IR_Block *block;
+    IR_Block *continue_block;
+    IR_Block *break_block;
 } IR_Context;
 
 extern const IR_Value ir_no_value;

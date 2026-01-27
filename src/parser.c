@@ -66,7 +66,7 @@ Token *p_consume_n(Parser *p, const int n) {
     }
     Token *token = &p->src->data[p->index];
     p->index += n;
-    if(DEBUG_CONSUME){
+    if (DEBUG_CONSUME) {
         print_token(token);
     }
     return token;
@@ -175,7 +175,8 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         if (is_type_token(p_peek(p)->type)) {
             Node *type_node = p_parse_type(p, nm, NULL);
             p_consume_a(p, TK_CLOSE_PAREN);
-            if (is_unary_operator(p_peek(p)->type) || is_binary_operator(p_peek(p)->type) || p_peek(p)->type == TK_SEMI || p_peek(p)->type == TK_CLOSE_PAREN) {
+            if (is_unary_operator(p_peek(p)->type) || is_binary_operator(p_peek(p)->type) || p_peek(p)->type == TK_SEMI ||
+                p_peek(p)->type == TK_CLOSE_PAREN) {
                 return type_node;
             }
             node = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
@@ -494,6 +495,18 @@ Node *p_parse_return(Parser *p, NodeManager *nm) {
     p_consume_semi(p);
     return node;
 }
+Node *p_parse_continue(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_CONTINUE);
+    p_consume(p); // -> continue
+    p_consume_semi(p);
+    return node;
+}
+Node *p_parse_break(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_BREAK);
+    p_consume(p); // -> break
+    p_consume_semi(p);
+    return node;
+}
 
 Node *p_parse_var_assign(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_BINARY);
@@ -521,6 +534,10 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
         return p_parse_while_loop(p, nm);
     case TK_FOR:
         return p_parse_for_loop(p, nm);
+    case TK_CONTINUE:
+        return p_parse_continue(p, nm);
+    case TK_BREAK:
+        return p_parse_break(p, nm);
     case TK_RETURN:
         return p_parse_return(p, nm);
     case TK_IDENTIFIER:

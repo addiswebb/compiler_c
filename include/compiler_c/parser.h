@@ -141,6 +141,8 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm);
     Where [expr] is optional.
 */
 Node *p_parse_return(Parser*p, NodeManager *nm);
+Node *p_parse_continue(Parser*p, NodeManager *nm);
+Node *p_parse_break(Parser*p, NodeManager *nm);
 
 Node *p_parse_var_assign(Parser *p, NodeManager *nm);
 

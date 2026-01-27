@@ -5,14 +5,50 @@
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $32, %rsp
+    subq $48, %rsp
 main_0:
-    movl $1, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
+    movl $10, %eax
+    movl %eax, -32(%rbp)
+    movl -32(%rbp), %eax
     movl %eax, -8(%rbp)
-    movl $2, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
+    movl $0, %eax
+    movl %eax, -32(%rbp)
+    movl -32(%rbp), %eax
     movl %eax, -16(%rbp)
-    movl -8(%rbp), %xmm0
+    movl $0, %eax
+    movl %eax, -32(%rbp)
+    movl -32(%rbp), %eax
+    movl %eax, -24(%rbp)
+main_1:
+    movl -24(%rbp), %eax
+    cmpl -8(%rbp), %eax
+    setl %al
+    movzbl %al, %eax
+    movl %eax, -32(%rbp)
+    movl -32(%rbp), %eax
+    testl %eax, %eax
+    jz main_4
+main_2:
+    movl $2, %eax
+    movl %eax, -32(%rbp)
+    movl -16(%rbp), %eax
+    addl -32(%rbp), %eax
+    movl %eax, -32(%rbp)
+    movl -32(%rbp), %eax
+    movl %eax, -16(%rbp)
+    jmp main_3
+    jmp main_3
+main_3:
+    movl $1, %eax
+    movl %eax, -32(%rbp)
+    movl -24(%rbp), %eax
+    movl %eax, -40(%rbp)
+    movl -24(%rbp), %eax
+    addl -32(%rbp), %eax
+    movl %eax, -24(%rbp)
+    jmp main_1
+main_4:
+    movl -16(%rbp), %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret

@@ -155,6 +155,10 @@ static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
     IR_Block *block_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
 
+    // Update ctx for continue/break statements
+    ctx->continue_block = block_block;
+    ctx->break_block = end_block;
+
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _while->_while.cond);
     ir_branch_cond(ctx, cond_reg, block_block, end_block);
 
@@ -167,16 +171,25 @@ static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
 static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_gen_block_item(ctx, _for->_for.init);
 
-    IR_Block *cond_block = ir_add_block(ctx); // cond:
+    IR_Block *cond_block = ir_add_block(ctx);
     IR_Block *block_block = ir_new_block();
+    IR_Block *iter_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
+
+    // Update ctx for continue/break statements
+    ctx->continue_block = iter_block;
+    ctx->break_block = end_block;
 
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
     ir_branch_cond(ctx, cond_reg, block_block, end_block);
 
     ir_append_block(ctx, block_block);
     ir_gen_statement(ctx, _for->_for.block);
+
+    ir_branch(ctx, iter_block);
+    ir_append_block(ctx, iter_block);
     ir_gen_rvalue(ctx, _for->_for.iter);
+
     ir_branch(ctx, cond_block);
 
     ir_append_block(ctx, end_block);
@@ -240,6 +253,12 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
         return;
     case N_IDENTIFIER:
     case N_LITERAL:
+        return;
+    case N_BREAK:
+        ir_branch(ctx, ctx->break_block);
+        return;
+    case N_CONTINUE:
+        ir_branch(ctx, ctx->continue_block);
         return;
     default:
         // given invalid statement? probably an expression

@@ -263,6 +263,10 @@ void x86_emit_binary(FILE *fp, int dst_offset, int lhs_offset, int rhs_offset, I
             fprintf(fp, "    sar%s %%cl, %s\n", op_suffix, reg);
             fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
             return;
+        case L_AND:
+        case L_OR:
+            printf("Logical operators && and || should not be given to x86 gen\n");
+            exit(1);
         }
     case T_FLOAT:
         fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", op_suffix, lhs_offset);
