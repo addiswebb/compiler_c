@@ -124,7 +124,7 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         fprintf(fp, "    ret\n");
         return;
     case IR_BR:
-        fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.label);
+        fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.block->id);
         return;
     case IR_CMP:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", instr->ops[1].stack_offset);
@@ -155,7 +155,8 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
     case IR_BR_COND:
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", instr->ops[0].stack_offset);
         fprintf(fp, "    testl %%eax, %%eax\n");
-        fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_label);
+        if (instr->br_cond.f_block) fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_block->id);
+        if (instr->br_cond.t_block) fprintf(fp, "    jnz %s_%d\n", ctx->func->name, instr->br_cond.t_block->id);
         break;
     }
 }
@@ -174,7 +175,7 @@ static void x86_gen_function(FILE *fp, IR_Context *ctx) {
     fprintf(fp, "    subq $%d, %%rsp\n", aligned_stack_size);
     for (int i = 0; i < ctx->func->block_count; i++) {
         fprintf(fp, "%s_%d:\n", ctx->func->name, i);
-        ctx->block = &ctx->func->blocks[i];
+        ctx->block = ctx->func->blocks[i];
         x86_gen_block(fp, ctx);
     }
 }

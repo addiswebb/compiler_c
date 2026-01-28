@@ -22,6 +22,8 @@ typedef enum {
     N_CAST,
     N_INDEX,
     N_TYPE,
+    N_CONTINUE,
+    N_BREAK,
 } NodeKind;
 
 typedef enum{
@@ -131,6 +133,12 @@ struct Node {
             Node *identifier;
             Node *index;
         } index;
+        struct{
+            Node *loop;
+        }_break;
+        struct{
+            Node *loop;
+        }_continue;
     };
 };
 

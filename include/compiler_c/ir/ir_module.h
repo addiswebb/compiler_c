@@ -20,8 +20,10 @@ typedef enum{
     MUL,
     DIV,
     MOD,
-    AND,
-    OR,
+    BW_AND,
+    L_AND,
+    BW_OR,
+    L_OR,
     XOR,
     SHR,
     SHL,
@@ -87,6 +89,7 @@ typedef struct{
 */
 
 extern IR_OpInfo op_info[];
+typedef struct IR_Block IR_Block;
 
 typedef struct {
     IR_OP op;
@@ -100,8 +103,8 @@ typedef struct {
         struct { IR_BINOP_OP op; Type *type; } binop;
         struct { IR_CMP_OP op; } cmp;
         struct { int callee; IR_Var *args; int arg_count; Type *type; } call;
-        struct { int label; } br;
-        struct { int t_label, f_label; } br_cond;
+        struct { IR_Block *block; } br;
+        struct { IR_Block *t_block, *f_block; } br_cond;
         struct { Type *from, *to; } cast;
         struct { int offset; } addr;
         struct { int size; } alloca;
@@ -146,13 +149,14 @@ typedef struct{
     IR_Value *v;
 } Lifetime;
 
-typedef struct {
+struct IR_Block {
+    int id;
     IR_Instruction *instructions;
     int count;
     int capacity;
     IR_BlockCFG cfg;
     IR_BlockLiveness live;
-} IR_Block;
+};
 
 typedef struct {
     int var_count;
@@ -164,7 +168,7 @@ typedef struct {
 
 typedef struct {
     const char *name;
-    IR_Block *blocks;
+    IR_Block **blocks;
     int block_count;
     int block_capacity;
     int next_reg;
@@ -212,14 +216,32 @@ typedef struct {
     IR_Const_Pool const_pool;
 } IR_Module;
 
+typedef struct{
+    IR_Block *continue_block;
+    IR_Block *break_block;
+} IR_LoopContext;
+
+typedef struct{
+    IR_LoopContext *data;
+    int size;
+    int capacity;
+} IR_LoopStack;
 
 typedef struct{
     IR_Module *module;
     IR_Function *func;
     IR_Block *block;
+    IR_LoopStack loop_stack;
+    IR_Block *true_block;
+    IR_Block *false_block;
 } IR_Context;
 
 extern const IR_Value ir_no_value;
+
+IR_Context ir_init_ctx();
+void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block*break_block);
+void ir_pop_loop_ctx(IR_Context *ctx);
+IR_LoopContext *ir_loop_ctx(IR_Context *ctx);
 
 IR_Value ir_mem_value(int mem_reg, Type *type);
 IR_Value ir_reg_value(int reg, Type *type);
@@ -238,17 +260,16 @@ IR_Module *ir_new_module();
 IR_Function *ir_new_function(IR_Context *ctx,const char *name);
 void ir_new_func_def(IR_Module *module, IR_Function *func);
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
-static IR_Block *ir_new_block();
+IR_Block *ir_new_block();
 
-int ir_add_block(IR_Context *ctx);
+IR_Block *ir_add_block(IR_Context *ctx);
 void ir_append_function(IR_Module *module, IR_Function *func);
 void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction);
 IR_Value ir_append_const(IR_Module *module, IR_Const *new_const);
-static int ir_append_block(IR_Context *ctx, IR_Block *block);
+IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
 
 int ir_get_func_def(const IR_Context *ctx, const char *name);
 IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name);
 IR_Block *current_block(const IR_Function *func);
-
 
 #endif

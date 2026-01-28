@@ -9,7 +9,7 @@ void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v);
 
 int ir_reg_bitset(IR_Function *f);
 void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlot *mem_slots);
-void add_successor(IR_Function *func, int from, int to);
+void add_successor(IR_Function *func, IR_Block *from, IR_Block *to);
 
 Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f,int defined, int *rpo);
 void compute_reverse_postorder(IR_Function *func, int *rpo);

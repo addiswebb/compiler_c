@@ -123,12 +123,12 @@ int compile(Compiler *compiler) {
     init_parser(&compiler->p, &compiler->tk.tokens, compiler->tk.tokens.size);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
 
-    semantic_analysis(&compiler->p, &compiler->nm, &compiler->nm.nodes[0]);
+    semantic_analysis(&compiler->p, &compiler->nm, &compiler->nm.nodes[0], NULL);
 
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 
     if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {
-        IR_Context ctx = {NULL, NULL, NULL};
+        IR_Context ctx = ir_init_ctx();
         IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
 
         if (compiler->flags & COMP_FLAG_IR) {

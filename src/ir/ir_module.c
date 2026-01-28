@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 IR_OpInfo op_info[] = {
     [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},
     [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
@@ -23,6 +24,41 @@ IR_OpInfo op_info[] = {
     [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b000} // IR_CALL uses handled seperately
 };
 const IR_Value ir_no_value = (IR_Value){IR_UNDEFINED, 0, 0, 0};
+
+IR_Context ir_init_ctx() {
+    IR_Context ctx;
+    ctx.module = NULL;
+    ctx.func = NULL;
+    ctx.block = NULL;
+    ctx.true_block = NULL;
+    ctx.false_block = NULL;
+    ctx.loop_stack.size = 0;
+    ctx.loop_stack.capacity = 4;
+    ctx.loop_stack.data = malloc(sizeof(IR_LoopContext) * ctx.loop_stack.capacity);
+    if (!ctx.loop_stack.data) {
+        printf("Failed to allocate for IR Context Loop Stack\n");
+        exit(1);
+    }
+    return ctx;
+}
+
+void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break_block) {
+    IR_LoopStack *s = &ctx->loop_stack;
+    if (s->size >= s->capacity) {
+        s->capacity *= 2;
+        IR_LoopContext *new_data = realloc(s->data, sizeof(IR_LoopContext) * s->capacity);
+        if (!new_data) {
+            printf("Failed to reallocate for IR Context Loop Stack\n");
+            free(s->data);
+            exit(1);
+        }
+        s->data = new_data;
+    }
+    s->data[s->size++] = (IR_LoopContext){continue_block, break_block};
+}
+
+void ir_pop_loop_ctx(IR_Context *ctx) { ctx->loop_stack.size--; }
+IR_LoopContext *ir_loop_ctx(IR_Context *ctx) { return &ctx->loop_stack.data[ctx->loop_stack.size - 1]; }
 
 IR_Value ir_mem_value(int mem_reg, Type *type) {
     IR_Value v;
@@ -141,18 +177,14 @@ IR_Module *ir_new_module() {
 */
 IR_Block *ir_new_block() {
     IR_Block *block = malloc(sizeof(IR_Block));
-    if (!block) {
-        printf("Failed to allocate new block\n");
-        exit(1);
-    }
     block->capacity = 4;
     block->count = 0;
+    block->id = -1;
     block->instructions = malloc(sizeof(IR_Instruction) * block->capacity);
     if (!block->instructions) {
         printf("Failed to allocate for new block\n");
         exit(1);
     }
-
     return block;
 }
 
@@ -168,7 +200,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
     func->stack_size = 0;
     func->block_capacity = 4;
     func->block_count = 0;
-    func->blocks = malloc(sizeof(IR_Block) * func->block_capacity);
+    func->blocks = malloc(sizeof(IR_Block *) * func->block_capacity);
     if (!func->blocks) {
         printf("Failed to allocate IR_Blocks\n");
         free(func);
@@ -213,23 +245,23 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
     return func;
 }
 
-int ir_add_block(IR_Context *ctx) { return ir_append_block(ctx, ir_new_block()); }
+IR_Block *ir_add_block(IR_Context *ctx) { return ir_append_block(ctx, ir_new_block()); }
 
-int ir_append_block(IR_Context *ctx, IR_Block *block) {
+IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block) {
     IR_Function *func = ctx->func;
     if (func->block_count >= func->block_capacity) {
         func->block_capacity *= 2;
-        IR_Block *new_blocks = realloc(func->blocks, sizeof(IR_Block) * func->block_capacity);
+        IR_Block **new_blocks = realloc(func->blocks, sizeof(IR_Block *) * func->block_capacity);
         if (!new_blocks) {
             printf("Failed to reallocate for new Ir block");
             exit(1);
         }
         func->blocks = new_blocks;
     }
-    func->blocks[func->block_count++] = *block;
-    free(block);
-    ctx->block = &func->blocks[func->block_count - 1];
-    return func->block_count - 1;
+    block->id = func->block_count;
+    func->blocks[func->block_count++] = block;
+    ctx->block = func->blocks[func->block_count - 1];
+    return block;
 }
 
 void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
@@ -354,7 +386,7 @@ void ir_free_module(IR_Module *module) {
     for (int i = 0; i < module->func_count; i++) {
         IR_Function *func = module->functions[i];
         for (int j = 0; j < func->block_count; j++) {
-            free(func->blocks[j].instructions);
+            free(func->blocks[j]->instructions);
         }
         free(func->locals);
         free(func->scopes);
@@ -365,6 +397,4 @@ void ir_free_module(IR_Module *module) {
     free(module);
 }
 
-IR_Block *current_block(const IR_Function *func) { return &func->blocks[func->block_count - 1]; }
-
-void compute_stack_lifetimes(IR_Context *ctx) {}
+IR_Block *current_block(const IR_Function *func) { return func->blocks[func->block_count - 1]; }

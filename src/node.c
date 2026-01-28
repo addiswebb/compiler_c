@@ -207,6 +207,12 @@ void print_node_type(const NodeKind type) {
     case N_TYPE:
         printf("Type");
         break;
+    case N_CONTINUE:
+        printf("Continue");
+        break;
+    case N_BREAK:
+        printf("Break");
+        break;
     }
 }
 
@@ -372,6 +378,12 @@ void print_node(const Node *node, const int depth) {
         printf(": [type= ");
         print_type(node->type);
         printf("]\n");
+        break;
+    case N_CONTINUE:
+        printf("\n");
+        break;
+    case N_BREAK:
+        printf("\n");
         break;
     }
 }

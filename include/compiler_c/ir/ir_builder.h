@@ -11,8 +11,8 @@ IR_Value ir_binary(IR_Context *ctx, IR_BINOP_OP op, IR_Value dst, IR_Value lhs_r
 IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg,IR_Value rhs_reg );
 IR_Value ir_call(IR_Context *ctx, const Node *expr);
 IR_Value ir_return(IR_Context *ctx,IR_Value reg);
-IR_Value ir_branch(IR_Context *ctx, int label);
-IR_Value ir_branch_cond(IR_Context *ctx,IR_Value cond_reg, int t_label, int f_label);
+IR_Value ir_branch(IR_Context *ctx, IR_Block *block);
+IR_Value ir_branch_cond(IR_Context *ctx,IR_Value cond_reg, IR_Block *t_block, IR_Block *f_block);
 IR_Value ir_cast(IR_Context *ctx,IR_Value src, Type *to, Type *from);
 IR_Value ir_address(IR_Context *ctx,IR_Value src, int offset);
 IR_Value ir_alloca(IR_Context *ctx, IR_Value dst, int size, int al);

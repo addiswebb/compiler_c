@@ -151,35 +151,57 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
 * All Binary operators:
     * Arithmetic:  \[ `+`, `-`, `*`, `/` \]
     * Bitwise:  \[ `&`, `|`, `^`, `<<`, `>>` \]
+    * Comparitive: \[ `<`, `>`, `<=`, `>=`, `==`, `!=` \]
+    * Logical: \[ `&&`, `||` \]
     * Assignment
-        * Any operator appended with `=`, assigns the value of the operation.
+        * Any arithmetic or bitwise operator appended by `=`, assigns the value of the operation e.g `+=`.
 * All Unary operators:
     * Arithmetic:  \[ `+`, `-`, `!`, `++`, `--` \]
     * Bitwise: \[ `~` ]
-* If/Else branching
-* For Loops
-* While Loops
+    * sizeof
+* Control Flow
+    * If/Else branching
+    * For Loops
+    * While Loops
+    * Nested branches
 * Functions
     * Passing Parameters
-* Pointers/Addresses 
+* Pointers & Addresses 
+    *   [Pointer,int] Arithmetic
 * Type conversion
-    * `(int)x`, `(float)y`
-* Arrays using '[]'
-    * Indexing an array
+    * `(int)x`, `(float *)y`
+* Arrays
+    * Declaring arrays
+    * C Strings
+    * Indexing with `[]`
     
 ## To be Implemented (Ordered from next to never...)
+* Array Initialization
+    * Using `= {};`
+        * Empty, undersized, oversized, size inference
+    * Allow infered size allocation `int[]`
+    * Compound literals `(Type){}`
+* Pointers
+    * [Pointer,Pointer] Arithmetic
+    * Function pointers
 * Advanced Control Flow:
     * switch, case, continue, break, goto,
 * Structs and Unions, Enums
     * Member access using `.` and `->`
+    * Designated Initializers `.member = value`
+    * Padding rules
+    * Bitfield in structs
+        * `unsigned int flag : 1; // 1 bit`
 * Variants
     * Unsigned
 * Qualifiers
     * const, volatile, extern
 * typedef
-* sizeof()
 * preprocessor
     * `#define`, `#include` etc for conditional compilation.
+* Inline functions
+* Labels as values? (part of GCC, not standard C)
+* Volatile/Atomic memory
 * Create a standard library
     * `printf`
     * `malloc`

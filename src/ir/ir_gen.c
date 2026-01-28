@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -67,13 +68,32 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         }
         return ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
     case N_BINARY:
-        if (expr->binary.op == TK_EQ) {
+        if (is_assignment_op(expr->binary.op)) {
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
+            if (expr->binary.op != TK_EQ) {
+                val =
+                    ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), addr, val, expr->type);
+            }
             ir_store(ctx, addr, val, expr->type);
             return val;
         }
         IR_Value lhs = ir_gen_rvalue(ctx, expr->binary.lhs);
+
+        if (expr->binary.op == TK_OR_OR || expr->binary.op == TK_AND_AND) {
+            IR_Value zero = ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){type_int, 0}), type_int);
+            IR_Value cond_reg = ir_cmp(ctx, NEQ, lhs, zero);
+
+            if (ir_within_cond(ctx)) {
+                if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, cond_reg, NULL, ctx->false_block);
+                if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, cond_reg, ctx->true_block, NULL);
+            }
+
+            IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
+            cond_reg = ir_cmp(ctx, NEQ, rhs, zero);
+            return cond_reg;
+        }
+
         IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
         if (is_comparison_op(expr->binary.op)) {
             return ir_cmp(ctx, ir_cmp_op(expr->binary.op), lhs, rhs);
@@ -147,54 +167,77 @@ static void ir_gen_compound(IR_Context *ctx, const Node *comp) {
 }
 
 static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
-    const int cond_id = ir_add_block(ctx); // cond:
+    IR_Block *cond_block = ir_add_block(ctx);
+    IR_Block *block_block = ir_new_block();
+    IR_Block *end_block = ir_new_block();
+
+    ir_push_loop_ctx(ctx, block_block, end_block);
+
+    ir_set_cond_block(ctx, block_block, end_block);
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _while->_while.cond);
-    const int block_id = cond_id + 1;
-    const int end_id = cond_id + 2;
-    ir_branch_cond(ctx, cond_reg, block_id, end_id);
-    ir_add_block(ctx); // block:
+    ir_reset_cond_block(ctx);
+
+    ir_branch_cond(ctx, cond_reg, block_block, end_block);
+
+    ir_append_block(ctx, block_block);
     ir_gen_statement(ctx, _while->_while.block);
-    ir_branch(ctx, cond_id);
-    ir_add_block(ctx); // end:
+    ir_branch(ctx, cond_block);
+
+    ir_append_block(ctx, end_block);
+
+    ir_pop_loop_ctx(ctx);
 }
 static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_gen_block_item(ctx, _for->_for.init);
 
-    const int cond_id = ir_add_block(ctx); // cond:
-    const int block_id = cond_id + 1;
-    const int end_id = cond_id + 2;
-    const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
+    IR_Block *cond_block = ir_add_block(ctx);
+    IR_Block *block_block = ir_new_block();
+    IR_Block *iter_block = ir_new_block();
+    IR_Block *end_block = ir_new_block();
 
-    ir_branch_cond(ctx, cond_reg, block_id, end_id);
-    ir_add_block(ctx); // block:
+    // Update ctx for continue/break statements
+    ir_push_loop_ctx(ctx, iter_block, end_block);
+
+    ir_set_cond_block(ctx, block_block, end_block);
+    const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
+    ir_reset_cond_block(ctx);
+
+    ir_branch_cond(ctx, cond_reg, block_block, end_block);
+
+    ir_append_block(ctx, block_block);
     ir_gen_statement(ctx, _for->_for.block);
+
+    ir_branch(ctx, iter_block);
+    ir_append_block(ctx, iter_block);
     ir_gen_rvalue(ctx, _for->_for.iter);
-    ir_branch(ctx, cond_id);
-    ir_add_block(ctx); // end:
+
+    ir_branch(ctx, cond_block);
+
+    ir_append_block(ctx, end_block);
+    // Reset ctx for continue/break statements
+    ir_pop_loop_ctx(ctx);
 }
 
 static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
+    IR_Block *if_true_block = ir_new_block();
+    IR_Block *else_block = ir_new_block();
+
+    // Context true/false blocks should only be used within (cond) part
+    ir_set_cond_block(ctx, if_true_block, else_block);
     const IR_Value cond_reg = ir_gen_rvalue(ctx, _if->_if.cond);
-    const int if_true_id = ctx->func->block_count;
-    const int if_false_id = if_true_id + 1; // if no else, then this is the end block
-    ir_branch_cond(ctx, cond_reg, if_true_id, if_false_id);
-    ir_add_block(ctx); // IF true block
+    ir_reset_cond_block(ctx);
+
+    ir_branch_cond(ctx, cond_reg, if_true_block, else_block);
+    ir_append_block(ctx, if_true_block);
     ir_gen_statement(ctx, _if->_if.if_true);
-    if (_if->_if.if_false == NULL) { // No else, means branch to the end after compound
-        ir_branch(ctx, if_false_id);
-        ir_add_block(ctx); // IF else or endblock
-    } else {
-        if (_if->_if.if_false->kind == N_IF) {
-            ir_branch(ctx, if_false_id);
-            ir_add_block(ctx); // IF else or endblock
+    ir_branch(ctx, else_block);
+    ir_append_block(ctx, else_block);
+    if (_if->_if.if_false) {                   // IF there is an else {}
+        if (_if->_if.if_false->kind == N_IF) { // -> ELSE IF {}
             ir_gen_if_statement(ctx, _if->_if.if_false);
         } else {
-            const int end_id = if_false_id + 1;
-            ir_branch(ctx, end_id);
-            ir_add_block(ctx); // IF else or endblock
             ir_gen_statement(ctx, _if->_if.if_false);
-            ir_branch(ctx, end_id);
-            ir_add_block(ctx); // end
+            ir_branch(ctx, ir_add_block(ctx));
         }
     }
 }
@@ -236,6 +279,12 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
         return;
     case N_IDENTIFIER:
     case N_LITERAL:
+        return;
+    case N_BREAK:
+        ir_branch(ctx, ir_loop_ctx(ctx)->break_block);
+        return;
+    case N_CONTINUE:
+        ir_branch(ctx, ir_loop_ctx(ctx)->continue_block);
         return;
     default:
         // given invalid statement? probably an expression
@@ -285,6 +334,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
     IR_Module *module = ir_new_module();
     ctx->module = module;
     for (int i = 0; i < tu->translation_unit.count; i++) {
+        Node *n = tu->translation_unit.declarations[i];
         switch (tu->translation_unit.declarations[i]->kind) {
         case N_FUNCTION:
             ir_append_function(ctx->module, ir_gen_function(ctx, tu->translation_unit.declarations[i]));
@@ -297,4 +347,16 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
         }
     }
     return module;
+}
+
+int ir_within_cond(IR_Context *ctx) { return ctx->false_block && ctx->true_block; }
+
+void ir_set_cond_block(IR_Context *ctx, IR_Block *true_block, IR_Block *false_block) {
+    ctx->true_block = true_block;
+    ctx->false_block = false_block;
+}
+
+void ir_reset_cond_block(IR_Context *ctx) {
+    ctx->true_block = NULL;
+    ctx->false_block = NULL;
 }

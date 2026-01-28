@@ -8,7 +8,6 @@
 #define LEFT_ASSOCIATIVITY 1
 #define RIGHT_ASSOCIATIVITY 0
 
-
 #define BUFFER_SIZE 1024
 
 typedef struct {
@@ -16,7 +15,7 @@ typedef struct {
     int size;
 } Buffer;
 
-#define KEYWORDS_N 14
+#define KEYWORDS_N 16
 extern const char* KEYWORDS[KEYWORDS_N];
 
 /*
@@ -28,7 +27,9 @@ extern const char* KEYWORDS[KEYWORDS_N];
 */
 typedef enum {
     // Keywords
+    TK_BREAK,
     TK_CHAR,
+    TK_CONTINUE,
     TK_DOUBLE,
     TK_ELSE,
     TK_EXIT,
@@ -104,7 +105,7 @@ bool is_arithmetic_op(const TokenType type);
 bool is_bitwise_op(const TokenType type);
 bool is_comparison_op(const TokenType type);
 bool is_logical_op(const TokenType type);
-TokenType get_underlying_op(const TokenType type);
+TokenType get_underlying_op(TokenType type);
 
 int associativity(TokenType type);
 int precedence(TokenType type);

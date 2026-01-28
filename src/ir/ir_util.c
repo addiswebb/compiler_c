@@ -1,5 +1,6 @@
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,15 +53,19 @@ IR_BINOP_OP ir_binary_op(const TokenType type) {
     case TK_MOD:
         return MOD;
     case TK_AND:
-        return AND;
+        return BW_AND;
     case TK_OR:
-        return OR;
+        return BW_OR;
     case TK_XOR:
         return XOR;
     case TK_SHL:
         return SHL;
     case TK_SHR:
         return SHR;
+    case TK_AND_AND:
+        return L_AND;
+    case TK_OR_OR:
+        return L_OR;
     default:
         printf("Given an unsupported token to convert to IR Binary op: ");
         print_token_type(type);
@@ -108,11 +113,11 @@ static void print_binary_op(IR_BINOP_OP op) {
     case MOD:
         printf("MOD");
         break;
-    case AND:
+    case BW_AND:
         printf("AND");
         break;
-    case OR:
-        printf("OR");
+    case BW_OR:
+        printf("BW_OR");
         break;
     case XOR:
         printf("XOR");
@@ -122,6 +127,12 @@ static void print_binary_op(IR_BINOP_OP op) {
         break;
     case SHL:
         printf("SHL");
+        break;
+    case L_AND:
+        printf("L_AND");
+        break;
+    case L_OR:
+        printf("L_OR");
         break;
     }
 }
@@ -268,7 +279,12 @@ static void print_ir_call(IR_Context *ctx, const IR_Instruction *instr) {
 static void print_ir_br_cond(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    BR_COND ");
     print_ir_value(&instr->ops[0]);
-    printf(" %d %d\n", instr->br_cond.t_label, instr->br_cond.f_label);
+    if (instr->br_cond.t_block) printf(" L%d ", instr->br_cond.t_block->id);
+    else printf(" # ");
+    if (instr->br_cond.f_block) printf("L%d", instr->br_cond.f_block->id);
+    else printf("#");
+    printf("\n");
+    // printf(" %d %d\n", instr->br_cond.t_block->id, instr->br_cond.f_block->id);
 }
 
 static void print_ir_cmp(IR_Context *ctx, const IR_Instruction *instr) {
@@ -347,7 +363,7 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
         print_ir_call(ctx, instr);
         break;
     case IR_BR:
-        printf("    BR %d\n", instr->br.label);
+        printf("    BR %d\n", instr->br.block->id);
         break;
     case IR_BR_COND:
         print_ir_br_cond(ctx, instr);
@@ -383,7 +399,7 @@ static void print_ir_function(IR_Context *ctx, const IR_Function *func) {
     printf("%s: [max_reg: %d]\n ", func->name, func->max_reg);
     for (int i = 0; i < func->block_count; i++) {
         printf("L%d:\n", i);
-        print_ir_block(ctx, &func->blocks[i]);
+        print_ir_block(ctx, func->blocks[i]);
     }
 }
 

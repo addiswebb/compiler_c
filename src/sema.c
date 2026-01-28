@@ -62,6 +62,9 @@ Type *check_unary_op(Node *unaryop) {
         if (expr->type != type_invalid && expr->type->size) return type_int;
         printf("Tried to get the sizeof something without a size\n");
         exit(1);
+    case TK_INCR:
+    case TK_DECR:
+        return expr->type;
     default:
         break;
     }
@@ -135,12 +138,12 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     if (rhs->type != common) binop->binary.rhs = cast_node(nm, rhs, common);
     return common;
 }
-void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
+void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
     if (!node) return;
     switch (node->kind) {
     case N_TRANSLATION_UNIT:
         for (int i = 0; i < node->translation_unit.count; i++) {
-            semantic_analysis(p, nm, node->translation_unit.declarations[i]);
+            semantic_analysis(p, nm, node->translation_unit.declarations[i], loop);
         }
         node->type = type_void;
         break;
@@ -148,32 +151,32 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
         for (int i = 0; i < node->func.param_count; i++) {
             p_append_var_decl(p, node->func.params[i]);
         }
-        semantic_analysis(p, nm, node->func.body);
+        semantic_analysis(p, nm, node->func.body, loop);
         p->var_decl_count -= node->func.param_count;
         break;
     case N_COMPOUND:
         for (int i = 0; i < node->compound.count; i++) {
-            semantic_analysis(p, nm, node->compound.items[i]);
+            semantic_analysis(p, nm, node->compound.items[i], loop);
         }
         break;
     case N_VAR_DECL:
         if (!node->var_decl.expr) break;
-        semantic_analysis(p, nm, node->var_decl.expr);
+        semantic_analysis(p, nm, node->var_decl.expr, loop);
         if (node->var_decl.expr->type != node->type) {
             node->var_decl.expr = cast_node(nm, node->var_decl.expr, node->type);
         }
         break;
     case N_UNARY:
-        semantic_analysis(p, nm, node->unary.expr);
+        semantic_analysis(p, nm, node->unary.expr, loop);
         node->type = check_unary_op(node);
         break;
     case N_BINARY:
-        semantic_analysis(p, nm, node->binary.lhs);
-        semantic_analysis(p, nm, node->binary.rhs);
+        semantic_analysis(p, nm, node->binary.lhs, loop);
+        semantic_analysis(p, nm, node->binary.rhs, loop);
         node->type = check_binary_op(nm, node->binary.op, node);
         break;
     case N_CAST:
-        semantic_analysis(p, nm, node->cast.expr);
+        semantic_analysis(p, nm, node->cast.expr, loop);
         if (is_valid_cast(node->cast.expr->type, node->cast.to)) {
             node->cast.from = node->cast.expr->type;
             node->type = node->cast.to;
@@ -194,7 +197,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
         }
         node->type = func_def->type;
         for (int i = 0; i < func_def->func.param_count; i++) {
-            semantic_analysis(p, nm, node->func_call.params[i]);
+            semantic_analysis(p, nm, node->func_call.params[i], loop);
             if (func_def->func.params[i]->type != node->func_call.params[i]->type) {
                 node->func_call.params[i] = cast_node(nm, node->func_call.params[i], func_def->func.params[i]->type);
             }
@@ -204,33 +207,32 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
         node->type = p_get_var_decl(p, node->identifier.name)->type;
         break;
     case N_IF:
-        semantic_analysis(p, nm, node->_if.cond);
+        semantic_analysis(p, nm, node->_if.cond, loop);
         if (node->_if.cond->type != type_int) {
             node->_if.cond = cast_node(nm, node->_if.cond, type_int);
         }
-        semantic_analysis(p, nm, node->_if.if_true);
-        semantic_analysis(p, nm, node->_if.if_false);
+        semantic_analysis(p, nm, node->_if.if_true, loop);
+        semantic_analysis(p, nm, node->_if.if_false, loop);
         break;
     case N_WHILE:
-        semantic_analysis(p, nm, node->_while.cond);
+        semantic_analysis(p, nm, node->_while.cond, node);
         if (node->_while.cond->type != type_int) {
             node->_while.cond = cast_node(nm, node->_while.cond, type_int);
         }
-        semantic_analysis(p, nm, node->_while.block);
+        semantic_analysis(p, nm, node->_while.block, node);
         break;
     case N_FOR:
-        semantic_analysis(p, nm, node->_for.init);
-        semantic_analysis(p, nm, node->_for.cond);
+        semantic_analysis(p, nm, node->_for.init, node);
+        semantic_analysis(p, nm, node->_for.cond, node);
         if (node->_for.cond->type != type_int) {
             node->_for.cond = cast_node(nm, node->_for.cond, type_int);
         }
-        semantic_analysis(p, nm, node->_for.iter);
-        semantic_analysis(p, nm, node->_for.block);
+        semantic_analysis(p, nm, node->_for.iter, node);
+        semantic_analysis(p, nm, node->_for.block, node);
         break;
     case N_RETURN:
-        semantic_analysis(p, nm, node->_return.expr);
+        semantic_analysis(p, nm, node->_return.expr, loop);
         if (node->_return.expr->type != type_int) {
-            printf("1\n");
             node->_return.expr = cast_node(nm, node->_return.expr, type_int);
         }
         break;
@@ -269,11 +271,10 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
             node->literal.s.len = node->literal.len + 1;
             break;
         }
-
         break;
     case N_INDEX:
-        semantic_analysis(p, nm, node->index.index);
-        semantic_analysis(p, nm, node->index.identifier);
+        semantic_analysis(p, nm, node->index.index, loop);
+        semantic_analysis(p, nm, node->index.identifier, loop);
         if (node->index.index->type != type_long) {
             node->index.index = cast_node(nm, node->index.index, type_long);
         }
@@ -281,5 +282,19 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node) {
         break;
     case N_TYPE:
         break;
+    case N_CONTINUE:
+        if (loop) {
+            node->_continue.loop = loop;
+            break;
+        }
+        printf("Cannot call continue outside of a loop\n");
+        exit(1);
+    case N_BREAK:
+        if (loop) {
+            node->_break.loop = loop;
+            break;
+        }
+        printf("Cannot call break outside of a loop\n");
+        exit(1);
     }
 }
