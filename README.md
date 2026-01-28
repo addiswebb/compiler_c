@@ -148,6 +148,11 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
     * Shadowing
 * Types:
     * Int, Float, Char, Double, Short, Long
+* Literals 
+    * Octal, Hexadecimal, Decimal, Binary
+    * Floating Point
+    * Strings
+    * Char
 * All Binary operators:
     * Arithmetic:  \[ `+`, `-`, `*`, `/` \]
     * Bitwise:  \[ `&`, `|`, `^`, `<<`, `>>` \]
@@ -186,6 +191,8 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
     * Function pointers
 * Advanced Control Flow:
     * switch, case, continue, break, goto,
+* Literals
+    * Handle overflows and multi char literal `char a = 'abcd';`
 * Structs and Unions, Enums
     * Member access using `.` and `->`
     * Designated Initializers `.member = value`

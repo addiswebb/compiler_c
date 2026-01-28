@@ -1,4 +1,5 @@
 #include "compiler_c/node.h"
+#include "compiler_c/parse/parse_util.h"
 #include "compiler_c/sema.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
@@ -306,7 +307,8 @@ Node *p_parse_type(Parser *p, NodeManager *nm, Node *var_decl) {
         p_consume(p); // [
         // Only works for a[5], not a[b + 1] (can fix later)
         // Todo; allow for const expressions like [5 + 6] or smt
-        const int len = atoi(p_consume_a(p, TK_INT_LITERAL)->value);
+        Token *t = p_consume_a(p, TK_INT_LITERAL);
+        const int len = parse_int(t->value, t->size);
         p_consume_a(p, TK_CLOSE_SQUARE);
         type = get_array_type(type, len);
     }

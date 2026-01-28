@@ -315,20 +315,51 @@ static void t_consume_string_literal(Tokenizer *tk) {
 void t_tokenize(Tokenizer *tk) {
     while (!t_is_eof(tk)) {
         const char c = t_peek(tk);
-        if (is_digit(c)) {
+        bool starts_with_decimal = c == '.';
+        if (is_digit(c) || c == '.') {
+            int is_float = 0;
             t_consume(tk);
-            while (is_digit(t_peek(tk))) {
-                t_consume(tk);
-            }
-            if (t_peek(tk) == '.' && is_digit(t_peek_next(tk))) {
-                t_consume(tk);
+            if (c == '0') {
+                switch (t_peek(tk)) {
+                case 'x':
+                    t_consume(tk);
+                    while (is_hex(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    break;
+                case 'b':
+                    t_consume(tk);
+                    while (is_binary(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                case '.':
+                    is_float = true;
+                    while (is_digit(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    break;
+                default:
+                    while (is_oct(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    printf("tokenized an oct literal\n");
+                    break;
+                }
+            } else {
                 while (is_digit(t_peek(tk))) {
                     t_consume(tk);
                 }
-                t_push_buffer(tk, TK_FLT_LITERAL);
-            } else {
-                t_push_buffer(tk, TK_INT_LITERAL);
+                if (t_peek(tk) == '.') {
+                    t_consume(tk);
+                    is_float = true;
+                    while (is_digit(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    printf("tokenized a floating point literal\n");
+                    break;
+                }
             }
+            t_push_buffer(tk, is_float ? TK_FLT_LITERAL : TK_INT_LITERAL);
         } else if (is_alpha(c)) {
             t_consume(tk);
             while (is_alpha_num(t_peek(tk))) {

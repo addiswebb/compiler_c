@@ -1,5 +1,6 @@
 #include "compiler_c/sema.h"
 #include "compiler_c/node.h"
+#include "compiler_c/parse/parse_util.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
 
@@ -246,7 +247,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         switch (node->literal.kind) {
         case L_INT:
             node->type = type_int;
-            node->literal.i = atoi(data);
+            node->literal.i = parse_int(data, node->literal.len);
             free(data);
             break;
         case L_FLOAT:
