@@ -1,3 +1,4 @@
+#include "compiler_c/parse/parser.h"
 #include "compiler_c/node.h"
 #include "compiler_c/parse/parse_util.h"
 #include "compiler_c/sema.h"
@@ -193,6 +194,28 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         exit(1);
     }
 }
+Node *p_parse_init_list(Parser *p, NodeManager *nm) {
+    Node *node = new_init_list_node(nm);
+    p_consume(p); // '{'
+    while (p_peek(p)->type != TK_CLOSE_CURLY) {
+        p_append_element(node, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
+        if (p_peek(p)->type == TK_COMMA) p_consume(p);
+        else break;
+    }
+    p_consume_a(p, TK_CLOSE_CURLY); // '}'
+    return node;
+}
+Node *new_init_list_node(NodeManager *nm) {
+    Node *node = new_node(nm, N_INIT_LIST);
+    node->init_list.count = 0;
+    node->init_list.capacity = 4;
+    node->init_list.elements = malloc(sizeof(Node) * node->init_list.capacity);
+    if (!node->init_list.elements) {
+        printf("Failed to create new init list node\n");
+        exit(1);
+    }
+    return node;
+}
 
 Node *new_function_node(NodeManager *nm) {
     Node *node = new_node(nm, N_FUNCTION);
@@ -220,6 +243,7 @@ Node *new_function_call_node(NodeManager *nm, Node *identifier, int param_count)
 }
 
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
+    if (p_peek(p)->type == TK_OPEN_CURLY) return p_parse_init_list(p, nm);
     Node *primary = p_parse_primary_expression(p, nm);
     if (p_peek(p)->type == TK_INCR || p_peek(p)->type == TK_DECR) {
         Node *node = new_node(nm, N_UNARY);
@@ -428,6 +452,17 @@ void p_append_var_decl(Parser *p, Node *var) {
         }
     }
     p->var_decls[p->var_decl_count++] = (P_Var_Decl){var->var_decl.name, var->type, var};
+}
+void p_append_element(Node *init_list, Node *element) {
+    if (init_list->init_list.count >= init_list->init_list.capacity) {
+        init_list->init_list.capacity *= 2;
+        Node **new_elements = realloc(init_list->init_list.elements, sizeof(Node *) * init_list->init_list.capacity);
+        if (!new_elements) {
+            printf("Failed to append s");
+            exit(1);
+        }
+    }
+    init_list->init_list.elements[init_list->init_list.count++] = element;
 }
 Node *p_get_var_decl(Parser *p, const char *name) {
     for (int i = 0; i < p->var_decl_count; i++) {

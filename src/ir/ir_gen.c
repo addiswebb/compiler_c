@@ -243,9 +243,25 @@ static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
 }
 
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
-    const IR_Value dst = ir_new_var(ctx->func, var_decl->var_decl.name, var_decl->type);
+    IR_Value dst = ir_new_var(ctx->func, var_decl->var_decl.name, var_decl->type);
     if (!var_decl->var_decl.expr) return;
-
+    if (var_decl->var_decl.expr->kind == N_INIT_LIST) {
+        Node *l = var_decl->var_decl.expr;
+        Type *type = var_decl->type->base;
+        IR_Value zero = ir_append_const(ctx->module, &(IR_Const){type, 0});
+        for (int i = 0; i < var_decl->type->array_len; i++) {
+            IR_Value v;
+            Node *e = l->init_list.elements[i];
+            if (i < l->init_list.count) {
+                v = ir_gen_rvalue(ctx, e);
+            } else {
+                v = ir_const(ctx, zero, type);
+            }
+            dst.offset = type->align * i;
+            ir_store(ctx, dst, v, type);
+        }
+        return;
+    }
     const IR_Value addr = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
     if (var_decl->type->kind == T_ARRAY) {
         ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);

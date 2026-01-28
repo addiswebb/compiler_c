@@ -213,6 +213,9 @@ void print_node_type(const NodeKind type) {
     case N_BREAK:
         printf("Break");
         break;
+    case N_INIT_LIST:
+        printf("Init List");
+        break;
     }
 }
 
@@ -384,6 +387,12 @@ void print_node(const Node *node, const int depth) {
         break;
     case N_BREAK:
         printf("\n");
+        break;
+    case N_INIT_LIST:
+        printf(": [count= %d]\n", node->init_list.count);
+        for (int i = 0; i < node->init_list.count; i++) {
+            print_node(node->init_list.elements[i], depth + 1);
+        }
         break;
     }
 }

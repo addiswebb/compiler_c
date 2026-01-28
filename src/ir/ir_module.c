@@ -64,6 +64,7 @@ IR_Value ir_mem_value(int mem_reg, Type *type) {
     IR_Value v;
     v.kind = IR_MEM;
     v.mem = mem_reg;
+    v.offset = 0;
     v.size = type->size;
     v.align = type->align;
     return v;
@@ -118,6 +119,7 @@ IR_Value ir_next_virtual_slot(IR_Function *func, int size, int align) {
     v.size = size;
     v.align = align;
     v.mem = func->local_count;
+    v.offset = 0;
     return v;
 }
 // Returns the IR_Value of the next virtual register (8,8 stack slot);

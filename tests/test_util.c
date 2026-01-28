@@ -1,4 +1,4 @@
-#include "../util.h"
+#include "compiler_c/util.h"
 #include <stdio.h>
 
 void test_num_str(char *str) {

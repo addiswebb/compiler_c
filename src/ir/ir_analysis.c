@@ -1,6 +1,7 @@
 #include "compiler_c/ir/ir_analysis.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
+#include "compiler_c/type.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -272,7 +273,9 @@ void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlo
                     a->stack_offset = a->reg >= 0 ? -(lts[a->reg].stack_offset + 8) : -(a->reg * 8 - 8);
                     break;
                 case IR_MEM:
-                    a->stack_offset = -(mem_slots[a->mem].offset + 8);
+                    int val = -(mem_slots[a->mem].offset + 8 - a->offset);
+                    printf("%d +  8 - %d = %d\n", mem_slots[a->mem].offset, a->offset, val);
+                    a->stack_offset = val;
                     break;
                 case IR_STACK:
                 case IR_LITERAL:
@@ -317,9 +320,9 @@ IR_StackSlot *local_stack_allocation(IR_Function *f, int *frame_size, int *slot_
         Type *t = f->locals[j].type;
         int k = f->locals[j].reg.mem;
         mem_slots[k].size = align(t->size, 8);
-        mem_slots[k].align = t->align;
+        mem_slots[k].align = 8;
         mem_slots[k].id = *slot_count;
-        mem_slots[k].offset = *frame_size;
+        mem_slots[k].offset = t->kind == T_ARRAY ? *frame_size + t->size - t->base->size : *frame_size;
         mem_slots[k].free_at = -1;
         *frame_size += mem_slots[k].size;
     }

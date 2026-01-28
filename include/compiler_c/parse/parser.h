@@ -69,6 +69,7 @@ Node *init_translation_unit(NodeManager *nm);
     And allocates an array for its statements
 */
 Node *new_compound_node(NodeManager *nm);
+Node *new_init_list_node(NodeManager *nm);
 Node *new_function_node(NodeManager *nm);
 Node *new_function_call_node(NodeManager *nm, Node *identifier, int param_count);
 
@@ -80,6 +81,7 @@ Node *new_function_call_node(NodeManager *nm, Node *identifier, int param_count)
 */
 Node *p_parse_primary_expression(Parser *p, NodeManager *nm);
 
+Node *p_parse_init_list(Parser *p, NodeManager *nm);
 /*
     Consumes
     `[term]+`
@@ -107,6 +109,8 @@ void p_add_call_param(Node *func, Node *param);
 
 void p_append_func_def(Parser *p, Node *func);
 Node *p_get_func_def(Parser *p, const char* name);
+
+void p_append_element(Node *init_list, Node *element);
 
 void p_append_var_decl(Parser *p, Node *var);
 Node *p_get_var_decl(Parser *p, const char* name);

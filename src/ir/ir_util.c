@@ -417,6 +417,7 @@ void print_ir_value(const IR_Value *v) {
         break;
     case IR_MEM:
         printf("v%d", v->mem);
+        if (v->offset > 0) printf(":%d", v->offset);
         break;
     case IR_STACK:
         printf("[%d]", v->stack_offset);

@@ -62,7 +62,10 @@ typedef struct{
             int stack_slot;
             int stack_offset;
         };
-        int mem;
+        struct{
+            int mem;
+            int offset;
+        };
         int const_index;
     };
     int size;

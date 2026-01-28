@@ -342,7 +342,6 @@ void t_tokenize(Tokenizer *tk) {
                     while (is_oct(t_peek(tk))) {
                         t_consume(tk);
                     }
-                    printf("tokenized an oct literal\n");
                     break;
                 }
             } else {
@@ -355,7 +354,6 @@ void t_tokenize(Tokenizer *tk) {
                     while (is_digit(t_peek(tk))) {
                         t_consume(tk);
                     }
-                    printf("tokenized a floating point literal\n");
                     break;
                 }
             }

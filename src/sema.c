@@ -161,6 +161,28 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         break;
     case N_VAR_DECL:
         if (!node->var_decl.expr) break;
+        if (node->var_decl.expr->kind == N_INIT_LIST) {
+            Node *init_list = node->var_decl.expr;
+            if (node->type->kind != T_ARRAY) {
+                printf("Initializer can currently only be used for Arrays\n");
+                exit(1);
+            }
+            if (node->type->array_len < init_list->init_list.count) {
+                printf("Expected %d initializers for ", node->type->array_len);
+                print_type(node->type);
+                printf(" got %d\n", init_list->init_list.count);
+                exit(1);
+            }
+            for (int i = 0; i < init_list->init_list.count; i++) {
+                Node *e = init_list->init_list.elements[i];
+                semantic_analysis(p, nm, e, loop);
+                if (e->type != node->type->base) {
+                    init_list->init_list.elements[i] = cast_node(nm, e, node->type->base);
+                }
+            }
+            break;
+        }
+
         semantic_analysis(p, nm, node->var_decl.expr, loop);
         if (node->var_decl.expr->type != node->type) {
             node->var_decl.expr = cast_node(nm, node->var_decl.expr, node->type);
@@ -295,6 +317,9 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             break;
         }
         printf("Cannot call break outside of a loop\n");
+        exit(1);
+    case N_INIT_LIST:
+        printf("Semantic parser should never reach a Init List node\n");
         exit(1);
     }
 }

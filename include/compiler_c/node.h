@@ -24,6 +24,7 @@ typedef enum {
     N_TYPE,
     N_CONTINUE,
     N_BREAK,
+    N_INIT_LIST,
 } NodeKind;
 
 typedef enum{
@@ -45,6 +46,7 @@ struct Node {
             int capacity;
             int count;
         } translation_unit;
+        // type name(params) [body]
         struct {
             const char *name;
             int param_count;
@@ -52,6 +54,7 @@ struct Node {
             Node **params;
             Node *body;
         } func;
+        // { [block_item]+ }
         struct {
             Node **items;
             int capacity;
@@ -129,16 +132,25 @@ struct Node {
             Type *from;
             Type *to;
         } cast;
+        // identifier[index]
         struct {
             Node *identifier;
             Node *index;
         } index;
+        // break;
         struct{
             Node *loop;
         }_break;
+        // continue;
         struct{
             Node *loop;
         }_continue;
+        // { [element]+ }
+        struct{
+            int count;
+            int capacity;
+            Node **elements;
+        }init_list;
     };
 };
 
