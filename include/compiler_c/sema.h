@@ -1,7 +1,7 @@
 #ifndef COMPILER_C_SEMA_H
 #define COMPILER_C_SEMA_H
 #include "compiler_c/node.h"
-#include "compiler_c/parser.h"
+#include "compiler_c/parse/parser.h"
 #include "compiler_c/type.h"
 bool is_lvalue(Node *n);
 

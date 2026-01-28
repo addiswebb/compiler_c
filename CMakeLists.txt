@@ -7,13 +7,14 @@ endif()
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "") # works
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 add_executable(compiler_c
     src/main.c
     src/compiler.c
     src/tokenizer.c
-    src/parser.c
+    src/parse/parser.c
+    src/parse/parse_util.c
     src/node.c
     src/util.c
     src/x86/x86_gen.c

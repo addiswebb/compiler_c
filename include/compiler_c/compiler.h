@@ -1,7 +1,7 @@
 #ifndef COMPILER_C_COMPILER_H
 #define COMPILER_C_COMPILER_H
+#include "compiler_c/parse/parser.h"
 #include "node.h"
-#include "parser.h"
 #include "tokenizer.h"
 
 typedef struct {

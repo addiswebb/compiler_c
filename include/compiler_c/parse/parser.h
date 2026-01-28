@@ -1,12 +1,11 @@
 #ifndef COMPILER_C_PARSER_H
 #define COMPILER_C_PARSER_H
-#define DEBUG_CONSUME 0
 
-#include "node.h"
-#include "tokenizer.h"
-
+#include "compiler_c/node.h"
+#include "compiler_c/type.h"
 #include <stdbool.h>
 
+#define DEBUG_CONSUME 0
 #define DEFAULT_STATEMENTS_PER_BLOCK 8
 
 typedef struct{

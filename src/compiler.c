@@ -1,7 +1,6 @@
 #include "compiler_c/ir/ir_analysis.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
-#include "compiler_c/parser.h"
 #include <compiler_c/compiler.h>
 #include <compiler_c/sema.h>
 #include <compiler_c/tokenizer.h>
@@ -16,7 +15,6 @@ Compiler init_compiler(const int argc, char *argv[]) {
         printf("Improper Usage,\n  compiler [input]\n");
         exit(1);
     }
-
     if (argc == 2 && strcmp(argv[1], "-h") == 0) {
         printf("compiler [input]\n");
         printf("\t-o [output] : Set output file path\n");
