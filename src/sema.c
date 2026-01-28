@@ -65,7 +65,12 @@ Type *check_unary_op(Node *unaryop) {
     default:
         break;
     }
-    printf("Invalid operand type for the given unary operator\n");
+    printf("Invalid operand type ");
+    print_type(expr->type);
+    printf("for the given unary operator ");
+    print_token_type(unaryop->unary.op);
+    printf("\n");
+
     return type_invalid;
 }
 
