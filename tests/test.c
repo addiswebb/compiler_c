@@ -1,8 +1,5 @@
 int main() {
-    int x[5] = {1, 2, 3, 4, 5};
-    int sum = 0;
-    for (int i = 0; i < 5; i++) {
-        sum += x[i];
-    }
-    return sum;
+    char str2[6] = {1};
+    int a = 5;
+    return str2[0] + a;
 }
