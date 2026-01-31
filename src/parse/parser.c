@@ -528,6 +528,7 @@ Node *p_parse_return(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_RETURN);
     p_consume(p); // -> return
     node->_return.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+    node->type = p->func_defs[p->func_def_count - 1].type;
     p_consume_semi(p);
     return node;
 }
@@ -576,6 +577,7 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
         return p_parse_break(p, nm);
     case TK_RETURN:
         return p_parse_return(p, nm);
+    case TK_MULTIPLY:
     case TK_IDENTIFIER:
         Node *n = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
         p_consume_semi(p);
@@ -643,8 +645,8 @@ Node *p_parse_function(Parser *p, NodeManager *nm) {
         else break;
     }
     p_consume_a(p, TK_CLOSE_PAREN);
-    node->func.body = p_parse_compound(p, nm);
     p_append_func_def(p, node);
+    node->func.body = p_parse_compound(p, nm);
     return node;
 }
 

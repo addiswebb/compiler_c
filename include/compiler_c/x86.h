@@ -16,6 +16,7 @@ void x86_emit_unary(FILE *fp, int dst_reg, int expr_reg, IR_UNARY_OP op, Type *t
 void x86_emit_cast(FILE *fp, int src_reg, int dst_reg, Type *from, Type *to);
 void x86_emit_const(FILE *fp, int dst_reg, Type *t, IR_Const *c, int pool_index);
 void x86_emit_store(FILE *fp, int src_reg, int dst_reg, Type *t);
+void x86_emit_store_mem(FILE *fp, int src_offset, int dst_offset, Type *t);
 void x86_emit_load(FILE *fp, int addr_reg, int dst_reg, Type *t);
 
 static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);

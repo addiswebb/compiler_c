@@ -85,7 +85,7 @@ bool is_valid_cast(Type *from, Type *to) {
     if (from->kind == T_ARRAY) {
         // Can only cast array->pointer (pointer decay)
         return to->kind == T_POINTER && from->base == to->base;
-    }
+    } else if (to->kind == T_POINTER) return to->base == from;
     return true;
 }
 

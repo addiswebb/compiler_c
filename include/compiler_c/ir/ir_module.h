@@ -41,7 +41,7 @@ typedef enum{
 typedef enum {
     IR_CONST,
     IR_UNOP,IR_BINOP,
-    IR_LOAD, IR_STORE, IR_RET, IR_CALL,
+    IR_LOAD, IR_STORE, IR_STORE_MEM, IR_RET, IR_CALL,
     IR_BR, IR_BR_COND,
     IR_CMP,
     IR_CAST,

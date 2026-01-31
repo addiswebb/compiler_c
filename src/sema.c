@@ -8,7 +8,8 @@
 #include <string.h>
 
 // Is this node assignable?
-bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER; }
+bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER || is_deref(n); }
+bool is_deref(Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY && is_lvalue(n->unary.expr); }
 
 Type *token_to_type(TokenType t) {
     switch (t) {
@@ -125,17 +126,33 @@ Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop) {
 
 Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     Type *common;
-    Node *lhs = binop->binary.lhs;
-    Node *rhs = binop->binary.rhs;
-    if (lhs->type == rhs->type) return lhs->type;
-    if (lhs->type->kind == T_FLOAT || rhs->type->kind == T_FLOAT) {
+    Node **lhs = &binop->binary.lhs;
+    Node **rhs = &binop->binary.rhs;
+    // Decay array -> pointer
+    if ((*lhs)->type->kind == T_ARRAY) {
+        *lhs = cast_node(nm, (*lhs), get_pointer_type((*lhs)->type->base));
+    } else if ((*rhs)->type->kind == T_ARRAY) {
+        *rhs = cast_node(nm, (*rhs), get_pointer_type((*rhs)->type->base));
+    }
+    // Check for pointer - pointer, only allowed binop with two pointers
+    if ((*lhs)->type == (*rhs)->type) return (*lhs)->type;
+
+    if ((*lhs)->type->kind == T_FLOAT || (*rhs)->type->kind == T_FLOAT) {
         common = type_float;
+    }
+
+    if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_INT) {
+        if ((*rhs)->type != type_long) *rhs = cast_node(nm, (*rhs), type_long);
+        return (*lhs)->type;
+    } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_POINTER) {
+        if ((*lhs)->type != type_long) *lhs = cast_node(nm, (*lhs), type_long);
+        return (*rhs)->type;
     } else {
         common = type_int;
     }
 
-    if (lhs->type != common) binop->binary.lhs = cast_node(nm, lhs, common);
-    if (rhs->type != common) binop->binary.rhs = cast_node(nm, rhs, common);
+    if ((*lhs)->type != common) *lhs = cast_node(nm, (*lhs), common);
+    if ((*rhs)->type != common) *rhs = cast_node(nm, (*rhs), common);
     return common;
 }
 void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {

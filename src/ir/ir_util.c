@@ -246,6 +246,14 @@ static void print_ir_load(IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
+static void print_ir_store_mem(IR_Context *ctx, const IR_Instruction *instr) {
+    printf("    ");
+    printf("STORE_MEM:%c ", ir_type_suffix(instr->store.type));
+    print_ir_value(&instr->ops[1]);
+    printf(" -> ");
+    print_ir_value(&instr->ops[0]);
+    printf("\n");
+}
 static void print_ir_store(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     printf("STORE:%c ", ir_type_suffix(instr->store.type));
@@ -284,7 +292,6 @@ static void print_ir_br_cond(IR_Context *ctx, const IR_Instruction *instr) {
     if (instr->br_cond.f_block) printf("L%d", instr->br_cond.f_block->id);
     else printf("#");
     printf("\n");
-    // printf(" %d %d\n", instr->br_cond.t_block->id, instr->br_cond.f_block->id);
 }
 
 static void print_ir_cmp(IR_Context *ctx, const IR_Instruction *instr) {
@@ -385,6 +392,9 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
         break;
     case IR_MEMCPY:
         print_ir_memcpy(ctx, instr);
+        break;
+    case IR_STORE_MEM:
+        print_ir_store_mem(ctx, instr);
         break;
     }
 }

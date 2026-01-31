@@ -1,5 +1,6 @@
 int main() {
-    char str2[6] = {1};
-    int a = 5;
-    return str2[0] + a;
+    int a = 10;
+    int *b = &a;
+    *b = 5;
+    return a;
 }

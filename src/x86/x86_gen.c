@@ -75,6 +75,10 @@ static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruc
 static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_store(fp, instr->ops[1].stack_offset, instr->ops[0].stack_offset, instr->store.type);
 }
+
+static void x86_gen_store_instruction_mem(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_store_mem(fp, instr->ops[1].stack_offset, instr->ops[0].stack_offset, instr->store.type);
+}
 static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_load(fp, instr->ops[1].stack_offset, instr->ops[0].stack_offset, instr->load.type);
 }
@@ -98,6 +102,9 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         return;
     case IR_STORE:
         x86_gen_store_instruction(fp, ctx, instr);
+        return;
+    case IR_STORE_MEM:
+        x86_gen_store_instruction_mem(fp, ctx, instr);
         return;
     case IR_CALL:
         x86_gen_call_instruction(fp, ctx, instr);

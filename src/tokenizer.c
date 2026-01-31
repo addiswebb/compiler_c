@@ -142,6 +142,9 @@ static void t_push_buffer(Tokenizer *tk, const TokenType type) {
     }
     memcpy(buf_dupe, tk->buf.buf, sizeof(char) * tk->buf.size);
     ta_push(&tk->tokens, (Token){type, buf_dupe, tk->buf.size});
+    if (DEBUG_TOKENIZER) {
+        printf("Buf: %.10s\n", tk->buf.buf);
+    }
     t_buffer_reset(tk);
 }
 
@@ -334,6 +337,7 @@ void t_tokenize(Tokenizer *tk) {
                     }
                 case '.':
                     is_float = true;
+                    t_consume(tk);
                     while (is_digit(t_peek(tk))) {
                         t_consume(tk);
                     }
@@ -349,12 +353,12 @@ void t_tokenize(Tokenizer *tk) {
                     t_consume(tk);
                 }
                 if (t_peek(tk) == '.') {
+                    printf("0");
                     t_consume(tk);
                     is_float = true;
                     while (is_digit(t_peek(tk))) {
                         t_consume(tk);
                     }
-                    break;
                 }
             }
             t_push_buffer(tk, is_float ? TK_FLT_LITERAL : TK_INT_LITERAL);

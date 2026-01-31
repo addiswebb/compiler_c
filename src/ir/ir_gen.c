@@ -4,6 +4,7 @@
 
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
+#include "compiler_c/sema.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
 #include <compiler_c/ir/ir_builder.h>
@@ -43,7 +44,9 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_INDEX:
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_IDENTIFIER:
-        return ir_gen_lvalue(ctx, expr);
+        IR_Value v = ir_gen_lvalue(ctx, expr);
+        // if (expr->type->kind == T_ARRAY) v = ir_address(ctx, v, 0);
+        return v;
     case N_LITERAL:
         IR_Const c;
         c.type = expr->type;
@@ -75,7 +78,9 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                 val =
                     ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), addr, val, expr->type);
             }
-            ir_store(ctx, addr, val, expr->type);
+            if (is_deref(expr->binary.lhs)) ir_store_mem(ctx, addr, val, expr->binary.lhs->unary.expr->type);
+            else ir_store(ctx, addr, val, expr->type);
+
             return val;
         }
         IR_Value lhs = ir_gen_rvalue(ctx, expr->binary.lhs);
@@ -98,6 +103,15 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         if (is_comparison_op(expr->binary.op)) {
             return ir_cmp(ctx, ir_cmp_op(expr->binary.op), lhs, rhs);
         } else {
+            if (expr->binary.lhs->type->kind == T_POINTER && expr->binary.rhs->type->kind == T_INT) {
+                IR_Value c =
+                    ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){type_long, expr->binary.lhs->type->base->size}), type_long);
+                rhs = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), rhs, c, type_long);
+            } else if (expr->binary.rhs->type->kind == T_POINTER && expr->binary.lhs->type->kind == T_INT) {
+                IR_Value c =
+                    ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){type_long, expr->binary.rhs->type->base->size}), type_long);
+                lhs = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), lhs, c, type_long);
+            }
             return ir_binary(ctx, ir_binary_op(expr->binary.op), ir_next_virtual_reg(ctx->func), lhs, rhs, expr->type);
         }
     case N_UNARY:
@@ -129,7 +143,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             const IR_Value addr = ir_gen_lvalue(ctx, expr->unary.expr);
             return ir_address(ctx, addr, 0);
         } else if (expr->unary.op == TK_MULTIPLY) { // * deref
-            const IR_Value addr = ir_gen_lvalue(ctx, expr->unary.expr);
+            const IR_Value addr = ir_gen_rvalue(ctx, expr->unary.expr);
             return ir_load(ctx, addr, expr->type);
         } else if (expr->unary.op == TK_SIZEOF) {
             return ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){type_int, expr->unary.expr->type->size}), type_int);

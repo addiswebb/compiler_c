@@ -4,6 +4,7 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/type.h"
 bool is_lvalue(Node *n);
+bool is_deref(Node *n);
 
 Type *token_to_type(TokenType t);
 Type *check_unary_op(Node *unaryop);

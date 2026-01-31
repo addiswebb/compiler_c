@@ -292,12 +292,12 @@ void x86_emit_binary(FILE *fp, int dst_offset, int lhs_offset, int rhs_offset, I
     case T_POINTER:
         switch (op) {
         case ADD:
-            fprintf(fp, "    lea %d(%%rbp), %%rax\n", lhs_offset);
+            fprintf(fp, "    movq %d(%%rbp), %%rax\n", lhs_offset);
             fprintf(fp, "    addq %d(%%rbp), %%rax\n", rhs_offset);
             fprintf(fp, "    movq %%rax, %d(%%rbp)\n", dst_offset);
             return;
         case SUB:
-            fprintf(fp, "    lea %d(%%rbp), %%rax\n", lhs_offset);
+            fprintf(fp, "    movq %d(%%rbp), %%rax\n", lhs_offset);
             fprintf(fp, "    subq %d(%%rbp), %%rax\n", rhs_offset);
             fprintf(fp, "    movq %%rax, %d(%%rbp)\n", dst_offset);
             return;
@@ -386,8 +386,8 @@ void x86_emit_cast(FILE *fp, int src_offset, int dst_offset, Type *from, Type *t
         return;
     }
     if (from->kind == T_ARRAY && to->kind == T_POINTER) {
-        fprintf(fp, "    mov%s %d(%%rbp), %s\n", from_op_suffix, src_offset, from_reg);
-        fprintf(fp, "    mov%s %s, %d(%%rbp)\n", from_op_suffix, from_reg, dst_offset);
+        fprintf(fp, "    lea %d(%%rbp), %s\n", src_offset, from_reg);
+        fprintf(fp, "    movq %s, %d(%%rbp)\n", from_reg, dst_offset);
         return;
     }
     // char/short/int/long/ -> char/short/int/long
@@ -475,9 +475,16 @@ void x86_emit_const(FILE *fp, int dst_offset, Type *t, IR_Const *c, int pool_ind
 void x86_emit_store(FILE *fp, int src_offset, int dst_offset, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
-
     fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, src_offset, reg);
     fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+}
+void x86_emit_store_mem(FILE *fp, int src_offset, int dst_offset, Type *t) {
+    const char *reg = x86_rax_reg(t);
+    const char *v = x86_rbx_reg(t);
+    const char *op_suffix = x86_op_suffix(t);
+    fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, dst_offset, reg);
+    fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, src_offset, v);
+    fprintf(fp, "    mov%s %s, (%s)\n", op_suffix, v, reg);
 }
 void x86_emit_load(FILE *fp, int addr_offset, int dst_offset, Type *t) {
     const char *reg = x86_rax_reg(t);

@@ -28,6 +28,16 @@ IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     ir_append_instruction(ctx->block, &i);
     return i.ops[0];
 }
+IR_Value ir_store_mem(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
+    IR_Instruction i;
+    i.op = IR_STORE_MEM;
+    i.ops[1] = src;
+    i.store.type = type;
+    i.ops[0] = dst;
+    i.op_count = 2;
+    ir_append_instruction(ctx->block, &i);
+    return i.ops[0];
+}
 IR_Value ir_const(IR_Context *ctx, IR_Value c, Type *type) {
     IR_Instruction i;
     i.op = IR_CONST;
