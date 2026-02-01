@@ -163,7 +163,6 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         fprintf(fp, "    movl %d(%%rbp), %%eax\n", instr->ops[0].stack_offset);
         fprintf(fp, "    testl %%eax, %%eax\n");
         if (instr->br_cond.f_block) fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_block->id);
-        if (instr->br_cond.t_block) fprintf(fp, "    jnz %s_%d\n", ctx->func->name, instr->br_cond.t_block->id);
         break;
     }
 }

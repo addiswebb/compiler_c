@@ -335,6 +335,7 @@ void t_tokenize(Tokenizer *tk) {
                     while (is_binary(t_peek(tk))) {
                         t_consume(tk);
                     }
+                    break;
                 case '.':
                     is_float = true;
                     t_consume(tk);
@@ -353,7 +354,6 @@ void t_tokenize(Tokenizer *tk) {
                     t_consume(tk);
                 }
                 if (t_peek(tk) == '.') {
-                    printf("0");
                     t_consume(tk);
                     is_float = true;
                     while (is_digit(t_peek(tk))) {
@@ -466,6 +466,7 @@ bool is_assignment_op(const TokenType type) {
     case TK_MOD_EQ:
     case TK_OR_EQ:
     case TK_AND_EQ:
+    case TK_XOR_EQ:
     case TK_SHL_EQ:
     case TK_SHR_EQ:
         return true;
@@ -554,6 +555,8 @@ TokenType get_underlying_op(const TokenType type) {
         return TK_OR;
     case TK_AND_EQ:
         return TK_AND;
+    case TK_XOR_EQ:
+        return TK_XOR;
     case TK_SHL_EQ:
         return TK_SHL;
     case TK_SHR_EQ:

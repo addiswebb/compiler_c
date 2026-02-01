@@ -8,8 +8,8 @@
 #include <string.h>
 
 // Is this node assignable?
-bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER || is_deref(n); }
-bool is_deref(Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY && is_lvalue(n->unary.expr); }
+bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER || n->kind == N_INDEX || is_deref(n); }
+bool is_deref(Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY; }
 
 Type *token_to_type(TokenType t) {
     switch (t) {
@@ -316,6 +316,9 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         semantic_analysis(p, nm, node->index.identifier, loop);
         if (node->index.index->type != type_long) {
             node->index.index = cast_node(nm, node->index.index, type_long);
+        }
+        if (node->index.identifier->type->kind != T_POINTER) {
+            node->index.identifier = cast_node(nm, node->index.identifier, get_pointer_type(node->index.identifier->type->base));
         }
         node->type = node->index.identifier->type->base;
         break;

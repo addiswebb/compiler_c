@@ -8,19 +8,13 @@
 #include <string.h>
 
 IR_OpInfo op_info[] = {
-    [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},
-    [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_STORE] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_RET] = {.def_mask = 0b000, .use_mask = 0b001},
-    [IR_BR] = {.def_mask = 0b000, .use_mask = 0b000},
-    [IR_BR_COND] = {.def_mask = 0b000, .use_mask = 0b001},
-    [IR_CMP] = {.def_mask = 0b001, .use_mask = 0b110},
-    [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},
-    [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b010},
-    [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
-    [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},   [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_STORE] = {.def_mask = 0b001, .use_mask = 0b010},   [IR_STORE_MEM] = {.def_mask = 0b000, .use_mask = 0b011},
+    [IR_RET] = {.def_mask = 0b000, .use_mask = 0b001},     [IR_BR] = {.def_mask = 0b000, .use_mask = 0b000},
+    [IR_BR_COND] = {.def_mask = 0b000, .use_mask = 0b001}, [IR_CMP] = {.def_mask = 0b001, .use_mask = 0b110},
+    [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},    [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},  [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b010},
+    [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},   [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
     [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b000} // IR_CALL uses handled seperately
 };
 const IR_Value ir_no_value = (IR_Value){IR_UNDEFINED, 0, 0, 0};
@@ -179,14 +173,39 @@ IR_Module *ir_new_module() {
 */
 IR_Block *ir_new_block() {
     IR_Block *block = malloc(sizeof(IR_Block));
+
     block->capacity = 4;
     block->count = 0;
     block->id = -1;
     block->instructions = malloc(sizeof(IR_Instruction) * block->capacity);
+
+    block->cfg.succ = NULL;
+    block->cfg.succ_count = 0;
+
+    block->cfg.pred = NULL;
+    block->cfg.pred_count = 0;
+
+    block->live.live_in.capacity = 0;
+    block->live.live_in.num_bits = 0;
+    block->live.live_in.data = NULL;
+
+    block->live.live_out.capacity = 0;
+    block->live.live_out.num_bits = 0;
+    block->live.live_out.data = NULL;
+
+    block->live.def.capacity = 0;
+    block->live.def.num_bits = 0;
+    block->live.def.data = NULL;
+
+    block->live.use.capacity = 0;
+    block->live.use.num_bits = 0;
+    block->live.use.data = NULL;
+
     if (!block->instructions) {
         printf("Failed to allocate for new block\n");
         exit(1);
     }
+    printf("new block: %d\n", block->id);
     return block;
 }
 
@@ -244,6 +263,9 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
 
     ctx->func = func;
     ir_add_block(ctx);
+    if (ctx->func->blocks[0]) {
+        printf("yes\n");
+    }
     return func;
 }
 
@@ -262,6 +284,9 @@ IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block) {
     }
     block->id = func->block_count;
     func->blocks[func->block_count++] = block;
+    if (func->blocks[func->block_count - 1]) {
+        printf("GOOD\n");
+    }
     ctx->block = func->blocks[func->block_count - 1];
     return block;
 }

@@ -31,6 +31,8 @@ static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
             offset_reg = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), size_reg, index, type_int);
         }
         return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ptr_reg, offset_reg, type_void_ptr);
+    case N_CAST:
+        return ir_gen_rvalue(ctx, expr);
     default:
         break;
     }
@@ -44,9 +46,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_INDEX:
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_IDENTIFIER:
-        IR_Value v = ir_gen_lvalue(ctx, expr);
-        // if (expr->type->kind == T_ARRAY) v = ir_address(ctx, v, 0);
-        return v;
+        return ir_gen_lvalue(ctx, expr);
     case N_LITERAL:
         IR_Const c;
         c.type = expr->type;
@@ -75,8 +75,9 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
             if (expr->binary.op != TK_EQ) {
-                val =
-                    ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), addr, val, expr->type);
+                IR_Value binop_val = is_deref(expr->binary.lhs) ? ir_load(ctx, addr, expr->binary.lhs->unary.expr->type) : addr;
+                val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
+                                expr->type);
             }
             if (is_deref(expr->binary.lhs)) ir_store_mem(ctx, addr, val, expr->binary.lhs->unary.expr->type);
             else ir_store(ctx, addr, val, expr->type);
@@ -141,6 +142,9 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             return expr->unary.associativity ? store_dst : binary_dst;
         } else if (expr->unary.op == TK_AND) { // & ref
             const IR_Value addr = ir_gen_lvalue(ctx, expr->unary.expr);
+            if (expr->unary.expr->kind == N_INDEX) {
+                return addr;
+            }
             return ir_address(ctx, addr, 0);
         } else if (expr->unary.op == TK_MULTIPLY) { // * deref
             const IR_Value addr = ir_gen_rvalue(ctx, expr->unary.expr);
@@ -234,7 +238,8 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
 
 static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
     IR_Block *if_true_block = ir_new_block();
-    IR_Block *else_block = ir_new_block();
+    IR_Block *end_block = ir_new_block();
+    IR_Block *else_block = _if->_if.if_false ? ir_new_block() : end_block;
 
     // Context true/false blocks should only be used within (cond) part
     ir_set_cond_block(ctx, if_true_block, else_block);
@@ -244,16 +249,18 @@ static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
     ir_branch_cond(ctx, cond_reg, if_true_block, else_block);
     ir_append_block(ctx, if_true_block);
     ir_gen_statement(ctx, _if->_if.if_true);
-    ir_branch(ctx, else_block);
-    ir_append_block(ctx, else_block);
-    if (_if->_if.if_false) {                   // IF there is an else {}
+    ir_branch(ctx, end_block);
+    if (_if->_if.if_false) { // IF there is an else {}
+        ir_append_block(ctx, else_block);
         if (_if->_if.if_false->kind == N_IF) { // -> ELSE IF {}
             ir_gen_if_statement(ctx, _if->_if.if_false);
+            // Might need end block context
         } else {
             ir_gen_statement(ctx, _if->_if.if_false);
-            ir_branch(ctx, ir_add_block(ctx));
+            ir_branch(ctx, end_block);
         }
     }
+    ir_append_block(ctx, end_block);
 }
 
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
@@ -334,6 +341,9 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     }
 
     IR_Function *fn = ir_new_function(ctx, func->func.name);
+    if (fn->blocks[0]) {
+        printf("OK\n");
+    }
     if (func->func.body->kind != N_COMPOUND) {
         printf("Function body is not a compound,\n");
         exit(1);

@@ -145,32 +145,34 @@ Node *new_compound_node(NodeManager *nm) {
     `(expr)`
 */
 Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
-    Node *node = NULL;
+    Node *primary = NULL;
     Token *tk;
     if (is_unary_operator(p_peek(p)->type)) {
-        node = new_node(nm, N_UNARY);
-        node->unary.op = p_consume(p)->type;
-        node->unary.associativity = RIGHT_ASSOCIATIVITY;
-        node->unary.expr = p_parse_primary_expression(p, nm);
-        return node;
+        primary = new_node(nm, N_UNARY);
+        primary->unary.op = p_consume(p)->type;
+        primary->unary.associativity = RIGHT_ASSOCIATIVITY;
+        primary->unary.expr = p_parse_primary_expression(p, nm);
+        return primary;
     }
+
     switch (p_peek(p)->type) {
     case TK_INT_LITERAL:
     case TK_FLT_LITERAL:
     case TK_CHAR_LITERAL:
     case TK_STRING_LITERAL:
-        node = new_node(nm, N_LITERAL);
+        primary = new_node(nm, N_LITERAL);
         tk = p_consume(p);
-        node->literal.kind = literal_kind(tk->type);
-        node->literal.raw_rata = tk->value;
-        node->literal.len = tk->size;
-        return node;
+        primary->literal.kind = literal_kind(tk->type);
+        primary->literal.raw_rata = tk->value;
+        primary->literal.len = tk->size;
+        return primary;
     case TK_IDENTIFIER:
-        node = new_node(nm, N_IDENTIFIER);
+        primary = new_node(nm, N_IDENTIFIER);
         tk = p_consume(p);
-        node->identifier.name = tk->value;
-        node->identifier.len = tk->size;
-        return node;
+        primary->identifier.name = tk->value;
+        primary->identifier.len = tk->size;
+        // return primary;
+        break;
     case TK_OPEN_PAREN:
         p_consume_a(p, TK_OPEN_PAREN);
         if (is_type_token(p_peek(p)->type)) {
@@ -180,19 +182,52 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
                 p_peek(p)->type == TK_CLOSE_PAREN) {
                 return type_node;
             }
-            node = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-            node = cast_node_unchecked(nm, node, type_node->type);
+            primary = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+            primary = cast_node_unchecked(nm, primary, type_node->type);
         } else {
-            node = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+            primary = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
             p_consume_a(p, TK_CLOSE_PAREN);
         }
-        return node;
+        return primary;
     default:
         printf("Expected term got ");
         print_token_type(p_peek(p)->type);
         printf("\n");
         exit(1);
     }
+
+    if (p_peek(p)->type == TK_OPEN_SQUARE) {
+        p_consume(p); // '['
+        if (!is_lvalue(primary)) {
+            print_node_type(primary->kind);
+            printf(" is not a an ltype, needed for indexing\n");
+            exit(1);
+        }
+        Node *node = new_node(nm, N_INDEX);
+        node->index.index = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+        node->index.identifier = primary;
+        primary = node;
+        p_consume_a(p, TK_CLOSE_SQUARE);
+    } else if (p_peek(p)->type == TK_OPEN_PAREN) {
+        p_consume(p); // '('
+        if (primary->kind != N_IDENTIFIER) {
+            print_node_type(primary->kind);
+            printf(" is not a function\n");
+            exit(1);
+        }
+        Node *func_def = p_get_func_def(p, primary->identifier.name);
+        Node *func_call = new_function_call_node(nm, primary, func_def->func.param_count);
+
+        for (int i = 0; i < func_def->func.param_count; i++) {
+            p_add_call_param(func_call, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
+            if (i != func_def->func.param_count - 1) {
+                p_consume_a(p, TK_COMMA);
+            }
+        }
+        p_consume_a(p, TK_CLOSE_PAREN);
+        primary = func_call;
+    }
+    return primary;
 }
 Node *p_parse_init_list(Parser *p, NodeManager *nm) {
     Node *node = new_init_list_node(nm);
@@ -251,38 +286,6 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
         node->unary.associativity = LEFT_ASSOCIATIVITY;
         node->unary.expr = primary;
         primary = node;
-    }
-
-    if (p_peek(p)->type == TK_OPEN_SQUARE) {
-        p_consume(p); // '['
-        if (!is_lvalue(primary)) {
-            print_node_type(primary->kind);
-            printf(" is not a an ltype, needed for indexing\n");
-            exit(1);
-        }
-        Node *node = new_node(nm, N_INDEX);
-        node->index.index = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-        node->index.identifier = primary;
-        primary = node;
-        p_consume_a(p, TK_CLOSE_SQUARE);
-    } else if (p_peek(p)->type == TK_OPEN_PAREN) {
-        p_consume(p); // '('
-        if (primary->kind != N_IDENTIFIER) {
-            print_node_type(primary->kind);
-            printf(" is not a function\n");
-            exit(1);
-        }
-        Node *func_def = p_get_func_def(p, primary->identifier.name);
-        Node *func_call = new_function_call_node(nm, primary, func_def->func.param_count);
-
-        for (int i = 0; i < func_def->func.param_count; i++) {
-            p_add_call_param(func_call, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
-            if (i != func_def->func.param_count - 1) {
-                p_consume_a(p, TK_COMMA);
-            }
-        }
-        p_consume_a(p, TK_CLOSE_PAREN);
-        primary = func_call;
     }
 
     while (is_binary_operator(p_peek(p)->type) && !p_is_last_token(p) && precedence(p_peek(p)->type) >= min_prec) {
