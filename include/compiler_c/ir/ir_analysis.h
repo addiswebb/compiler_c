@@ -1,10 +1,12 @@
 #ifndef COMPILER_C_IR_ANALYSIS_H
 #define COMPILER_C_IR_ANALYSIS_H
 
+#define DEBUG_IR_LIFETIMES 0
+
 #include "compiler_c/ir/ir_module.h"
 
 void ir_analysis(IR_Context *ctx);
-void bitset_add_defined(BitSet *defined, IR_Value *v);
+int bitset_add_defined(BitSet *defined, IR_Value *v);
 void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v);
 
 int ir_reg_bitset(IR_Function *f);

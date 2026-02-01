@@ -27,8 +27,8 @@ static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         if (elem_size == 1) {
             offset_reg = index;
         } else {
-            IR_Value size_reg = ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){expr->type, elem_size}), type_int);
-            offset_reg = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), size_reg, index, type_int);
+            IR_Value size_reg = ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){type_long, elem_size}), type_long);
+            offset_reg = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), index, size_reg, type_long);
         }
         return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ptr_reg, offset_reg, type_void_ptr);
     case N_CAST:
@@ -74,12 +74,13 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         if (is_assignment_op(expr->binary.op)) {
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
+            bool dereference = expr->binary.lhs->kind == N_INDEX || is_deref(expr->binary.lhs);
             if (expr->binary.op != TK_EQ) {
-                IR_Value binop_val = is_deref(expr->binary.lhs) ? ir_load(ctx, addr, expr->binary.lhs->unary.expr->type) : addr;
+                IR_Value binop_val = dereference ? ir_load(ctx, addr, expr->binary.lhs->unary.expr->type) : addr;
                 val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
                                 expr->type);
             }
-            if (is_deref(expr->binary.lhs)) ir_store_mem(ctx, addr, val, expr->binary.lhs->unary.expr->type);
+            if (dereference) ir_store_mem(ctx, addr, val, expr->binary.lhs->unary.expr->type);
             else ir_store(ctx, addr, val, expr->type);
 
             return val;
@@ -108,7 +109,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                 IR_Value c =
                     ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){type_long, expr->binary.lhs->type->base->size}), type_long);
                 rhs = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), rhs, c, type_long);
-            } else if (expr->binary.rhs->type->kind == T_POINTER && expr->binary.lhs->type->kind == T_INT) {
+            } else if (expr->binary.lhs->type->kind == T_INT && expr->binary.rhs->type->kind == T_POINTER) {
                 IR_Value c =
                     ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){type_long, expr->binary.rhs->type->base->size}), type_long);
                 lhs = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), lhs, c, type_long);
@@ -341,9 +342,6 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     }
 
     IR_Function *fn = ir_new_function(ctx, func->func.name);
-    if (fn->blocks[0]) {
-        printf("OK\n");
-    }
     if (func->func.body->kind != N_COMPOUND) {
         printf("Function body is not a compound,\n");
         exit(1);

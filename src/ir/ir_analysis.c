@@ -29,16 +29,19 @@ void bitset_add(BitSet *s, int reg) {
         printf("%d is too large a register for this bitset\n", reg);
         exit(1);
     }
+    assert(reg >= 0);
     int word = reg / 32;
     int offset = reg % 32;
     s->data[word] |= (1 << offset);
 }
 void bitset_remove(BitSet *s, int reg) {
+    assert(reg >= 0);
     int word = reg / 32;
     int offset = reg % 32;
     s->data[word] &= ~(1 << offset);
 }
 int bitset_has(BitSet *s, int reg) {
+    assert(reg >= 0);
     int word = reg / 32;
     int offset = reg % 32;
     return (s->data[word] & (1 << offset)) != 0;
@@ -112,8 +115,14 @@ void compute_reverse_postorder(IR_Function *func, int *rpo) {
     }
 }
 
-void bitset_add_defined(BitSet *defined, IR_Value *v) {
-    if (v->kind == IR_REG) bitset_add(defined, v->reg);
+int bitset_add_defined(BitSet *defined, IR_Value *v) {
+    if (v->kind == IR_REG) {
+        if (!bitset_has(defined, v->reg)) {
+            bitset_add(defined, v->reg);
+            return 1;
+        }
+    }
+    return 0;
 }
 void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v) {
     if (v->kind == IR_REG) {
@@ -124,67 +133,44 @@ void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v) {
 }
 
 void ir_init_func_cfg(IR_Function *f) {
-    printf("a\n");
     for (int j = 0; j < f->block_count; j++) {
-        printf(" a: %d:%d\n", f->block_count, j);
-        printf(" b0\n");
-        printf("test %d\n", f->blocks[0]->id);
         IR_Block *b = f->blocks[j];
-        printf(" b1\n");
 
         b->cfg.succ = NULL;
         b->cfg.succ_count = 0;
 
         b->cfg.pred = NULL;
         b->cfg.pred_count = 0;
-        printf(" b\n");
 
         bitset_init(&b->live.live_in, f->max_reg);
-        printf(" c\n");
         bitset_init(&b->live.live_out, f->max_reg);
-        printf(" d\n");
         bitset_init(&b->live.def, f->max_reg);
-        printf(" e\n");
         bitset_init(&b->live.use, f->max_reg);
     }
-    printf("b\n");
 }
 
 void ir_compute_func_io(IR_Function *f) {
-    printf(" 0\n");
     for (int j = 0; j < f->block_count; j++) {
         IR_Block *b = f->blocks[j];
-        printf(" 1\n");
 
         if (b->count == 0) continue;
-        printf(" 2\n");
         IR_Instruction *end_instr = &b->instructions[b->count - 1];
-        printf(" 3\n");
-        printf("IR_OP: %d\n", end_instr->op);
         switch (end_instr->op) {
         case IR_BR:
-            printf("  1\n");
             add_successor(f, b, end_instr->br.block);
             break;
         case IR_BR_COND:
-            printf("  2\n");
             if (end_instr->br_cond.f_block) add_successor(f, b, end_instr->br_cond.f_block);
             if (end_instr->br_cond.t_block) add_successor(f, b, end_instr->br_cond.t_block);
             break;
         case IR_RET:
-            printf("  3\n");
             break;
         default:
-            printf("  4\n");
             if (j < f->block_count - 1) {
-                // printf("Adding fallthrough successor\n");
                 // TODO: give this more thought, can it fail...?
                 add_successor(f, b, f->blocks[j + 1]);
             }
-            // printf("Block %d falls through\n", j);
-            // exit(1);
         }
-        printf(" 4\n");
     }
 }
 
@@ -195,10 +181,11 @@ int ir_reg_bitset(IR_Function *f) {
         for (int k = 0; k < b->count; k++) {
             IR_Instruction *instr = &b->instructions[k];
             for (int i = 0; i < instr->op_count; i++) {
+                if (instr->ops[i].reg < 0) continue;
                 if (instr->ops[i].kind == IR_LITERAL || instr->ops[i].kind == IR_MEM) continue;
                 if (op_info[instr->op].def_mask & (1 << i)) {
-                    bitset_add_defined(&b->live.def, &instr->ops[i]);
-                    defined++;
+                    // TODO: consider sideeffects of defined not overwriting. (should be alr...)
+                    if (bitset_add_defined(&b->live.def, &instr->ops[i])) defined++;
                 }
                 if (op_info[instr->op].use_mask & (1 << i)) {
                     bitset_add_used(&b->live.def, &b->live.use, &instr->ops[i]);
@@ -351,16 +338,12 @@ IR_StackSlot *local_stack_allocation(IR_Function *f, int *frame_size, int *slot_
 }
 
 void ir_analysis(IR_Context *ctx) {
-    printf("%d func count\n", ctx->module->func_count);
     for (int i = 0; i < ctx->module->func_count; i++) {
-        printf("1\n");
         IR_Function *f = ctx->module->functions[i];
         // Initialize Control Flow Graph Variables per block
         ir_init_func_cfg(f);
-        printf("2\n");
         // Compute Function dependecies (successors, predecessors)
         ir_compute_func_io(f);
-        printf("3\n");
 
         Lifetime *lifetimes = NULL;
         int *rpo = malloc(f->block_count * sizeof(int));
@@ -372,8 +355,10 @@ void ir_analysis(IR_Context *ctx) {
             compute_bitset(f, rpo);
 
             lifetimes = compute_lifetimes(ctx, f, reg_count, rpo);
-            for (int j = 0; j < reg_count; j++) {
-                printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
+            if (DEBUG_IR_LIFETIMES) {
+                for (int j = 0; j < reg_count; j++) {
+                    printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
+                }
             }
             qsort(lifetimes, reg_count, sizeof(Lifetime), cmp);
         }
@@ -414,6 +399,7 @@ Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f, int defined, int *r
                 IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
                 bool is_call_arg = k >= +instr->op_count;
                 if (a->kind == IR_REG) {
+                    if (a->reg < 0) continue;
                     if (op_info[instr->op].def_mask & (1 << k)) {
                         lts[instr->ops[k].reg] = (Lifetime){instr->ops[k].reg, pc, -1, 0, 0, &instr->ops[k]};
                     }

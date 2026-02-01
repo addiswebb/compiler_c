@@ -112,7 +112,7 @@ Token *p_consume_semi(Parser *p) {
 */
 Node *init_translation_unit(NodeManager *nm) {
     Node *node = new_node(nm, N_TRANSLATION_UNIT);
-    node->translation_unit.declarations = malloc(sizeof(*node->translation_unit.declarations) * DEFAULT_STATEMENTS_PER_BLOCK);
+    node->translation_unit.declarations = malloc(sizeof(Node **) * DEFAULT_STATEMENTS_PER_BLOCK);
     if (node->translation_unit.declarations == NULL) {
         printf("Failed to initialize translation unit");
         exit(1);
@@ -128,7 +128,7 @@ Node *init_translation_unit(NodeManager *nm) {
 */
 Node *new_compound_node(NodeManager *nm) {
     Node *node = new_node(nm, N_COMPOUND);
-    node->compound.items = malloc(sizeof(*node->compound.items) * DEFAULT_STATEMENTS_PER_BLOCK);
+    node->compound.items = malloc(sizeof(Node **) * DEFAULT_STATEMENTS_PER_BLOCK);
     if (node->translation_unit.declarations == NULL) {
         printf("Failed to create new compound node");
         exit(1);

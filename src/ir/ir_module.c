@@ -205,7 +205,6 @@ IR_Block *ir_new_block() {
         printf("Failed to allocate for new block\n");
         exit(1);
     }
-    printf("new block: %d\n", block->id);
     return block;
 }
 
@@ -263,9 +262,6 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
 
     ctx->func = func;
     ir_add_block(ctx);
-    if (ctx->func->blocks[0]) {
-        printf("yes\n");
-    }
     return func;
 }
 
@@ -284,9 +280,6 @@ IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block) {
     }
     block->id = func->block_count;
     func->blocks[func->block_count++] = block;
-    if (func->blocks[func->block_count - 1]) {
-        printf("GOOD\n");
-    }
     ctx->block = func->blocks[func->block_count - 1];
     return block;
 }
