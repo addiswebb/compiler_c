@@ -19,8 +19,15 @@ static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         if (expr->unary.op != TK_MULTIPLY) break;
         return ir_gen_rvalue(ctx, expr->unary.expr);
     case N_INDEX:
-        printf("Recieved Index node at ir-gen\n");
-        exit(1);
+        Node deref;
+        deref.kind = N_UNARY;
+        Node bin;
+        bin.kind = N_BINARY;
+        bin.binary.lhs = expr->index.identifier;
+        bin.binary.op = TK_PLUS;
+        bin.binary.rhs = expr->index.index;
+        bin.type = expr->index.index->type;
+        return ir_gen_rvalue(ctx, &bin);
     case N_CAST:
         return ir_gen_rvalue(ctx, expr);
     default:
@@ -180,6 +187,7 @@ static void ir_gen_compound(IR_Context *ctx, const Node *comp) {
 }
 
 static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
+    ir_begin_scope(ctx->func);
     IR_Block *cond_block = ir_add_block(ctx);
     IR_Block *block_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
@@ -199,8 +207,10 @@ static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
     ir_append_block(ctx, end_block);
 
     ir_pop_loop_ctx(ctx);
+    ir_end_scope(ctx->func);
 }
 static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
+    ir_begin_scope(ctx->func);
     ir_gen_block_item(ctx, _for->_for.init);
 
     IR_Block *cond_block = ir_add_block(ctx);
@@ -229,9 +239,11 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_append_block(ctx, end_block);
     // Reset ctx for continue/break statements
     ir_pop_loop_ctx(ctx);
+    ir_end_scope(ctx->func);
 }
 
 static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
+    ir_begin_scope(ctx->func);
     IR_Block *if_true_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
     IR_Block *else_block = _if->_if.if_false ? ir_new_block() : end_block;
@@ -256,6 +268,7 @@ static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
         }
     }
     ir_append_block(ctx, end_block);
+    ir_end_scope(ctx->func);
 }
 
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {

@@ -360,7 +360,7 @@ int ir_get_func_def(const IR_Context *ctx, const char *name) {
 IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name) {
     IR_Function *func = ctx->func;
     for (int i = func->scope_count - 1; i >= 0; i--) {
-        for (int j = 0; j < func->scopes[i].var_count; j++) {
+        for (int j = func->scopes[i].var_count - 1; j >= 0; j--) {
             int k = func->scopes[i].var_indices[j];
             if (strcmp(func->locals[k].name, name) == 0) {
                 return func->locals[k].reg;

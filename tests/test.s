@@ -5,63 +5,188 @@
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $64, %rsp
+    subq $208, %rsp
 main_0:
-    movl $1, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    movl %eax, -16(%rbp)
-    movl $2, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    movl %eax, -12(%rbp)
-    movl $3, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
+    movl $10, %eax
+    movl %eax, -200(%rbp)
+    movl $10, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
     movl %eax, -8(%rbp)
-    lea -16(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movl $1, %eax
-    movl %eax, -48(%rbp)
-    movslq -48(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movl $4, %eax
-    movq %rax, -56(%rbp)
-    movq -48(%rbp), %rax
-    imulq -56(%rbp)
-    movq %rax, -48(%rbp)
-    movq -40(%rbp), %rax
-    addq -48(%rbp), %rax
-    movq %rax, -40(%rbp)
+    movl $10, %eax
+    movl %eax, -200(%rbp)
     movl $5, %eax
-    movl %eax, -48(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movl -56(%rbp), %eax
-    addl -48(%rbp), %eax
-    movl %eax, -48(%rbp)
-    movq -40(%rbp), %rax
-    movl -48(%rbp), %ebx
-    movl %ebx, (%rax)
-    lea -16(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movl $1, %eax
-    movl %eax, -48(%rbp)
-    movslq -48(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movl $4, %eax
-    movq %rax, -56(%rbp)
-    movq -48(%rbp), %rax
-    imulq -56(%rbp)
-    movq %rax, -48(%rbp)
-    movq -40(%rbp), %rax
-    addq -48(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movl (%rax), %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    setne %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    movl %eax, -24(%rbp)
+    movl $3, %eax
+    movl %eax, -200(%rbp)
+    movl $5, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    setl %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
     movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
+    movl $5, %eax
+    movl %eax, -200(%rbp)
+    movl $5, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    setle %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    movl %eax, -56(%rbp)
+    movl $7, %eax
+    movl %eax, -200(%rbp)
+    movl $3, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    setg %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    movl %eax, -72(%rbp)
+    movl $5, %eax
+    movl %eax, -200(%rbp)
+    movl $5, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    setge %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    movl %eax, -88(%rbp)
+    movl $2, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    negl %eax
+    movl %eax, -200(%rbp)
+    movl $0, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    setl %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    movl %eax, -104(%rbp)
+    movl $1, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    negl %eax
+    movl %eax, -200(%rbp)
+    movl $5, %eax
+    movl %eax, -208(%rbp)
+    movl -208(%rbp), %eax
+    negl %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    setg %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    movl %eax, -120(%rbp)
+    movl $3, %eax
+    movl %eax, -200(%rbp)
+    movl $5, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    movl %eax, -136(%rbp)
+    movl $4, %eax
+    movl %eax, -200(%rbp)
+    movl $4, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    setne %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    movl %eax, -152(%rbp)
+    movl $5, %eax
+    movl %eax, -200(%rbp)
+    movl $3, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    setl %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    movl %eax, -168(%rbp)
+    movl $2, %eax
+    movl %eax, -200(%rbp)
+    movl $8, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    cmpl -208(%rbp), %eax
+    setg %al
+    movzbl %al, %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    movl %eax, -184(%rbp)
+    movl -8(%rbp), %eax
+    addl -24(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    addl -40(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    addl -56(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    addl -72(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    addl -88(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    addl -104(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    addl -120(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    addl -136(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    addl -152(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    addl -168(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
+    addl -184(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl $4, %eax
+    movl %eax, -208(%rbp)
+    movl -200(%rbp), %eax
+    addl -208(%rbp), %eax
+    movl %eax, -200(%rbp)
+    movl -200(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp
     ret

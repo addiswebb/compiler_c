@@ -1,3 +1,5 @@
+// RUN: %S/../build/compiler_c.exe %s -a -o %t
+// RUN: %t
 // courtesy of ChatGPT :)
 int main() {
     /* Arithmetic operators */
