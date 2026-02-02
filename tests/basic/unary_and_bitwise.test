@@ -1,0 +1,13 @@
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t.exe
+// RUN: pwsh -c "%t.exe ; %check_exit 19 $LASTEXITCODE"
+
+int main() {
+    int a = 5;    // 0101
+    int b = 12;   // 1100
+    a = ~a;       // -6 (two's complement)
+    b <<= 1;      // 24
+    a += b;       // 18
+    a++;          // 19
+    return a;
+}

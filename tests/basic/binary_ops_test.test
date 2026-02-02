@@ -1,5 +1,7 @@
-// RUN: %S/../build/compiler_c.exe %s -a -o %t
-// RUN: %t
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t.exe
+// RUN: pwsh -c "%t.exe ; %check_exit 53 $LASTEXITCODE"
+
 // courtesy of ChatGPT :)
 int main() {
     /* Arithmetic operators */

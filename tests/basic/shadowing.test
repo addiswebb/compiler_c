@@ -1,0 +1,12 @@
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t.exe
+// RUN: pwsh -c "%t.exe ; %check_exit 3 $LASTEXITCODE"
+
+int main() {
+    int x = 3;
+    {
+        int x = 10;   // shadow outer x
+        x += 5;       // x = 15
+    }
+    return x;         // outer x = 3
+}

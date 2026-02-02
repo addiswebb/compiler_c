@@ -182,7 +182,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
                 p_peek(p)->type == TK_CLOSE_PAREN) {
                 return type_node;
             }
-            primary = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+            primary = p_parse_primary_expression(p, nm);
             primary = cast_node_unchecked(nm, primary, type_node->type);
         } else {
             primary = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);

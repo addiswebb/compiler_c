@@ -1,3 +1,7 @@
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t.exe
+// RUN: pwsh -c "%t.exe ; %check_exit 389 $LASTEXITCODE"
+
 // Comprehensive compiler feature test
 // Returns a deterministic integer result
 

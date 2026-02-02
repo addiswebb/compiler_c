@@ -134,20 +134,24 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     } else if ((*rhs)->type->kind == T_ARRAY) {
         *rhs = cast_node(nm, (*rhs), get_pointer_type((*rhs)->type->base));
     }
+    // Integer promotion
+    if(is_arithmetic_op(binop->binary.op)){
+        if((*lhs)->type->kind == T_INT && (*lhs)->type->size < type_int->size) *lhs = cast_node(nm, (*lhs), type_int);
+        if((*rhs)->type->kind == T_INT && (*rhs)->type->size < type_int->size) *rhs = cast_node(nm, (*rhs), type_int);
+    }
     // Check for pointer - pointer, only allowed binop with two pointers
     if ((*lhs)->type == (*rhs)->type) return (*lhs)->type;
 
     if ((*lhs)->type->kind == T_FLOAT || (*rhs)->type->kind == T_FLOAT) {
-        common = type_float;
-    }
-
-    if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_INT) {
+        common = (*lhs)->type->size > (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
+    } else if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_INT) {
         if ((*rhs)->type != type_long) *rhs = cast_node(nm, (*rhs), type_long);
         return (*lhs)->type;
     } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_POINTER) {
         if ((*lhs)->type != type_long) *lhs = cast_node(nm, (*lhs), type_long);
         return (*rhs)->type;
     } else {
+        printf("int common\n");
         common = type_int;
     }
 
