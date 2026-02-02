@@ -19,18 +19,8 @@ static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         if (expr->unary.op != TK_MULTIPLY) break;
         return ir_gen_rvalue(ctx, expr->unary.expr);
     case N_INDEX:
-        const IR_Value index = ir_gen_rvalue(ctx, expr->index.index);
-        const IR_Value ptr_reg = ir_gen_lvalue(ctx, expr->index.identifier);
-        const int elem_size = expr->index.identifier->type->base->size;
-
-        IR_Value offset_reg;
-        if (elem_size == 1) {
-            offset_reg = index;
-        } else {
-            IR_Value size_reg = ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){type_long, elem_size}), type_long);
-            offset_reg = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), index, size_reg, type_long);
-        }
-        return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ptr_reg, offset_reg, type_void_ptr);
+        printf("Recieved Index node at ir-gen\n");
+        exit(1);
     case N_CAST:
         return ir_gen_rvalue(ctx, expr);
     default:
@@ -77,10 +67,14 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             bool dereference = expr->binary.lhs->kind == N_INDEX || is_deref(expr->binary.lhs);
             if (expr->binary.op != TK_EQ) {
                 IR_Value binop_val = dereference ? ir_load(ctx, addr, expr->binary.lhs->unary.expr->type) : addr;
+                if (expr->type->kind == T_POINTER) {
+                    printf("Cannot x= pointers rn\n");
+                    exit(1);
+                }
                 val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
                                 expr->type);
             }
-            if (dereference) ir_store_mem(ctx, addr, val, expr->binary.lhs->unary.expr->type);
+            if (dereference) ir_store_mem(ctx, addr, val, expr->type);
             else ir_store(ctx, addr, val, expr->type);
 
             return val;

@@ -42,21 +42,21 @@ main_0:
     addl -48(%rbp), %eax
     movl %eax, -48(%rbp)
     movq -40(%rbp), %rax
-    movq -48(%rbp), %rbx
-    movq %rbx, (%rax)
-    movl $2, %eax
-    movl %eax, -40(%rbp)
-    movslq -40(%rbp), %rax
-    movq %rax, -40(%rbp)
+    movl -48(%rbp), %ebx
+    movl %ebx, (%rax)
     lea -16(%rbp), %rax
+    movq %rax, -40(%rbp)
+    movl $1, %eax
+    movl %eax, -48(%rbp)
+    movslq -48(%rbp), %rax
     movq %rax, -48(%rbp)
     movl $4, %eax
     movq %rax, -56(%rbp)
-    movq -40(%rbp), %rax
-    imulq -56(%rbp)
-    movq %rax, -40(%rbp)
     movq -48(%rbp), %rax
-    addq -40(%rbp), %rax
+    imulq -56(%rbp)
+    movq %rax, -48(%rbp)
+    movq -40(%rbp), %rax
+    addq -48(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movl (%rax), %eax

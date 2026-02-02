@@ -482,9 +482,9 @@ void x86_emit_store_mem(FILE *fp, int src_offset, int dst_offset, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *v = x86_rbx_reg(t);
     const char *op_suffix = x86_op_suffix(t);
-    fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, dst_offset, reg);
+    fprintf(fp, "    movq %d(%%rbp), %%rax\n", dst_offset);
     fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, src_offset, v);
-    fprintf(fp, "    mov%s %s, (%s)\n", op_suffix, v, reg);
+    fprintf(fp, "    mov%s %s, (%%rax)\n", op_suffix, v);
 }
 void x86_emit_load(FILE *fp, int addr_offset, int dst_offset, Type *t) {
     const char *reg = x86_rax_reg(t);

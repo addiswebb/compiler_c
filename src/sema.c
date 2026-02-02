@@ -312,15 +312,15 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         }
         break;
     case N_INDEX:
-        semantic_analysis(p, nm, node->index.index, loop);
-        semantic_analysis(p, nm, node->index.identifier, loop);
-        if (node->index.index->type != type_long) {
-            node->index.index = cast_node(nm, node->index.index, type_long);
-        }
-        if (node->index.identifier->type->kind != T_POINTER) {
-            node->index.identifier = cast_node(nm, node->index.identifier, get_pointer_type(node->index.identifier->type->base));
-        }
-        node->type = node->index.identifier->type->base;
+        Node *deref = new_node(nm, N_UNARY);
+        Node *bin = new_node(nm, N_BINARY);
+        bin->binary.lhs = node->index.identifier;
+        bin->binary.op = TK_PLUS;
+        bin->binary.rhs = node->index.index;
+        deref->unary.expr = bin;
+        deref->unary.op = TK_MULTIPLY;
+        *node = *deref;
+        semantic_analysis(p, nm, node, loop);
         break;
     case N_TYPE:
         break;
