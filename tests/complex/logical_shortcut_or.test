@@ -1,0 +1,14 @@
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t.exe
+// RUN: pwsh -c "%t.exe ; %check_exit 2 $LASTEXITCODE"
+
+int main() {
+    int x = 0;
+    int y = 1;
+
+    if (x || ++y) { // x is 0, so ++y is evaluated
+        x = y;      // x = 2
+    }
+
+    return x; // 2
+}

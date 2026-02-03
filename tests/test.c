@@ -1,7 +1,1 @@
-int main() {
-    int x = 5;
-    x = - -x;   // double negation -> 5
-    x = ~x + 1; // two's complement -> -5
-    x++;        // -4
-    return x;
-}
+int main() { return 1 || 0; }

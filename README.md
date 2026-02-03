@@ -179,18 +179,22 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
     * Declaring arrays
     * C Strings
     * Indexing with `[]`
+* Array Initialization
+    * Using `= {};`
+        * Empty, Undersized, Oversized
+* Advanced Control Flow
+    * continue, break
     
 ## To be Implemented (Ordered from next to never...)
 * Array Initialization
-    * Using `= {};`
-        * Empty, undersized, oversized, size inference
+    * size inference
     * Allow infered size allocation `int[]`
     * Compound literals `(Type){}`
 * Pointers
     * [Pointer,Pointer] Arithmetic
     * Function pointers
 * Advanced Control Flow:
-    * switch, case, continue, break, goto,
+    * switch, case,  goto,
 * Literals
     * Handle overflows and multi char literal `char a = 'abcd';`
 * Structs and Unions, Enums

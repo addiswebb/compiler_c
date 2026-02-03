@@ -90,16 +90,21 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
 
         if (expr->binary.op == TK_OR_OR || expr->binary.op == TK_AND_AND) {
             IR_Value zero = ir_const(ctx, ir_append_const(ctx->module, &(IR_Const){type_int, 0}), type_int);
-            IR_Value cond_reg = ir_cmp(ctx, NEQ, lhs, zero);
+            IR_Value lhs_cmp = ir_cmp(ctx, NEQ, lhs, zero);
 
             if (ir_within_cond(ctx)) {
-                if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, cond_reg, NULL, ctx->false_block);
-                if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, cond_reg, ctx->true_block, NULL);
+                if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, lhs_cmp, NULL, ctx->false_block);
+                if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, lhs_cmp, ctx->true_block, NULL);
             }
 
             IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
-            cond_reg = ir_cmp(ctx, NEQ, rhs, zero);
-            return cond_reg;
+            IR_Value rhs_cmp = ir_cmp(ctx, NEQ, rhs, zero);
+            // No need to cmp both results, if we reach here it means lhs is 1 or rhs represents (lhs op rhs)
+            // Early out
+            if (ir_within_cond(ctx)) return rhs_cmp;
+
+            // Otherwise generate the whole || or && result
+            return ir_binary(ctx, expr->binary.op == TK_OR_OR ? BW_OR : BW_AND, ir_next_virtual_reg(ctx->func), lhs_cmp, rhs_cmp, type_int);
         }
 
         IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);

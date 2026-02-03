@@ -5,7 +5,7 @@
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $80, %rsp
+    subq $96, %rsp
 main_0:
     movl $5, %eax
     movl %eax, -72(%rbp)
@@ -44,14 +44,17 @@ main_0:
     movzbl %al, %eax
     movl %eax, -72(%rbp)
     movl $1, %eax
-    movl %eax, -72(%rbp)
+    movl %eax, -88(%rbp)
     movl -24(%rbp), %eax
-    andl -72(%rbp), %eax
-    movl %eax, -72(%rbp)
-    movl -72(%rbp), %eax
+    andl -88(%rbp), %eax
+    movl %eax, -88(%rbp)
+    movl -88(%rbp), %eax
     cmpl -80(%rbp), %eax
     setne %al
     movzbl %al, %eax
+    movl %eax, -80(%rbp)
+    movl -72(%rbp), %eax
+    orl -80(%rbp), %eax
     movl %eax, -72(%rbp)
     movl -72(%rbp), %eax
     movl %eax, -56(%rbp)

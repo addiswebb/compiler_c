@@ -272,11 +272,14 @@ main_0:
     cmpl -56(%rbp), %eax
     setle %al
     movzbl %al, %eax
-    movl %eax, -360(%rbp)
-    movl -360(%rbp), %eax
+    movl %eax, -376(%rbp)
+    movl -376(%rbp), %eax
     cmpl -368(%rbp), %eax
     setne %al
     movzbl %al, %eax
+    movl %eax, -368(%rbp)
+    movl -360(%rbp), %eax
+    andl -368(%rbp), %eax
     movl %eax, -360(%rbp)
     movl $0, %eax
     movl %eax, -368(%rbp)
@@ -291,11 +294,14 @@ main_0:
     cmpl -56(%rbp), %eax
     setne %al
     movzbl %al, %eax
-    movl %eax, -360(%rbp)
-    movl -360(%rbp), %eax
+    movl %eax, -376(%rbp)
+    movl -376(%rbp), %eax
     cmpl -368(%rbp), %eax
     setne %al
     movzbl %al, %eax
+    movl %eax, -368(%rbp)
+    movl -360(%rbp), %eax
+    orl -368(%rbp), %eax
     movl %eax, -360(%rbp)
     movl -360(%rbp), %eax
     testl %eax, %eax
