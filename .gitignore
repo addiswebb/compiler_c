@@ -1,3 +1,5 @@
 /build
 /.cache
 tests/test.exe
+/tests/basic/Output
+/tests/complex/Output
