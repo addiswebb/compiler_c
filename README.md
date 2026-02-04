@@ -135,7 +135,7 @@ for (init; cond; iter) `true`
     * `true` is any `statement` most commonly `{compound}`
     
 ### `return` statement
-Returns control flow to callee, also returns a value. If no `value` is given, returns `0`.
+Returns control flow to callee, also returns a value. If no value is given, returns `0`.
 ```c
     return [`value`]?;
 ```
@@ -182,13 +182,13 @@ Returns control flow to callee, also returns a value. If no `value` is given, re
 * Array Initialization
     * Using `= {};`
         * Empty, Undersized, Oversized
+    * size inference
+    * Allow infered size allocation `int[]`
 * Advanced Control Flow
     * continue, break
     
 ## To be Implemented (Ordered from next to never...)
 * Array Initialization
-    * size inference
-    * Allow infered size allocation `int[]`
     * Compound literals `(Type){}`
 * Pointers
     * [Pointer,Pointer] Arithmetic
