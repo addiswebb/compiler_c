@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *KEYWORDS[KEYWORDS_N] = {"break", "char",  "continue", "double", "else",   "exit",  "if",   "int",
-                                    "for",   "float", "long",     "return", "sizeof", "short", "void", "while"};
+const char *KEYWORDS[KEYWORDS_N] = {"break", "char", "continue", "double", "else",  "exit",   "float", "for",  "if",
+                                    "int",   "long", "return",   "sizeof", "short", "struct", "void",  "while"};
 
 static void t_buffer_reset(Tokenizer *tk) {
     tk->buf.size = 0;
@@ -849,6 +849,9 @@ void print_token_type(const TokenType type) {
         break;
     case TK_CONTINUE:
         printf("continue");
+        break;
+    case TK_STRUCT:
+        printf("struct");
         break;
     }
 }

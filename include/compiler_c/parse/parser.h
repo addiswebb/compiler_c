@@ -92,13 +92,6 @@ Node *p_parse_expression(Parser *p,NodeManager *nm,int min_prec);
 Node *p_parse_block_item(Parser *p, NodeManager *nm);
 
 /*
-    Consumes
-    `(type) identifier = [= expr]?;`
-    Where [= expr] is optional
-*/
-Node *p_parse_var_declaration(Parser *p, NodeManager *nm);
-
-/*
     Appends a declaration to the given translation unit,
     Resizes its declaration array if necessary.
 */
@@ -174,13 +167,14 @@ Node *p_parse_compound(Parser *p, NodeManager *nm);
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm);
+Node *p_parse_function(Parser *p, NodeManager *nm, Node *type);
 
-bool is_function_ahead(Parser *p);
-
-Node *p_parse_declaration(Parser *p, NodeManager *nm);
+Node *p_parse_external_declaration(Parser *p, NodeManager *nm);
+Node *p_parse_block_declaration(Parser *p, NodeManager *nm);
+Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type);
 
 Node *p_parse_translation_unit(Parser* p, NodeManager *nm);
-Node *p_parse_type(Parser *p, NodeManager *nm, Node *var_decl);
+Type *p_parse_type(Parser *p, NodeManager *nm);
+Type *p_parse_struct(Parser *p, NodeManager *nm);
 
 #endif // COMPILER_C_PARSER_H

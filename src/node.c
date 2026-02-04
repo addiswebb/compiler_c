@@ -104,59 +104,6 @@ LiteralKind literal_kind(TokenType type) {
         exit(1);
     }
 }
-void print_type(Type *type) {
-    if (!type) {
-        printf("NULL");
-    }
-    switch (type->kind) {
-    case T_INVALID:
-        printf("[INVALID TYPE]");
-        break;
-    case T_ARRAY:
-        print_type(type->base);
-        printf("[%d]", type->array_len);
-        break;
-    case T_INT:
-        switch (type->size) {
-        case 1:
-            printf("char");
-            break;
-        case 2:
-            printf("short");
-            break;
-        case 4:
-            printf("int");
-            break;
-        case 8:
-            printf("long");
-            break;
-        default:
-            printf("Tried to type of int, with invalid size\n");
-            exit(1);
-        }
-        break;
-    case T_FLOAT:
-        switch (type->size) {
-        case 4:
-            printf("float");
-            break;
-        case 8:
-            printf("double");
-            break;
-        default:
-            printf("Tried to type of float, with invalid size\n");
-            exit(1);
-        }
-        break;
-    case T_POINTER:
-        printf("*");
-        print_type(type->base);
-        break;
-    default:
-        printf("Not handling other types in print_type\n");
-        exit(1);
-    }
-}
 void print_node_type(const NodeKind type) {
     switch (type) {
     case N_TRANSLATION_UNIT:

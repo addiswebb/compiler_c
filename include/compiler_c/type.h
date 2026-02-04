@@ -11,6 +11,7 @@ typedef enum {
     T_POINTER,
     T_ARRAY,
     T_VOID,
+    T_STRUCT,
     T_INVALID,
 } TypeKind;
 
@@ -22,13 +23,30 @@ typedef struct{
     Type *types;
 } TypePool;
 
+typedef struct{
+    char *name;
+    Type *type;
+    int offset;
+}StructField;
+
 struct Type{
     TypeKind kind;
     int size;
     int align;
     bool is_signed;
     Type *base;
-    int array_len;
+    union{
+        // T_ARRAY
+        int array_len;
+        // T_STRUCT
+        struct{
+            char *name;
+            int count;
+            int capacity;
+            StructField* fields;
+            bool complete;
+        }_struct;
+    };
 };
 
 extern Type *type_char;
@@ -59,10 +77,15 @@ Type *init_type(TypeKind type, int size);
 
 Type *new_type();
 Type *get_pointer_type(Type *type);
+Type *get_struct_type(const char *name);
 Type *new_pointer_type(Type *type);
 
 Type *new_array_type(Type *type, int len);
 Type *get_array_type(Type *type, int len);
 Type *infer_array_length(Type *arr_type, int len);
+
+void append_struct_field(Type *_struct, StructField *field);
+
+void print_type(Type* type);
 
 #endif // COMPILER_C_TYPE_H

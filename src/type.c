@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 Type *type_char;
 Type *type_short;
@@ -100,4 +101,110 @@ Type *get_pointer_type(Type *type) {
     }
 
     return new_pointer_type(type);
+}
+
+Type *get_struct_type(const char *name) {
+    for (int i = 0; i < typepool.count; i++) {
+        if (typepool.types[i].kind == T_STRUCT && strcmp(name, typepool.types[i]._struct.name) == 0) {
+            return &typepool.types[i];
+        }
+    }
+    return NULL;
+}
+
+void append_struct_field(Type *s, StructField *f) {
+    if (s->_struct.count >= s->_struct.capacity) {
+        s->_struct.capacity *= 2;
+        StructField *new_fields = realloc(s->_struct.fields, sizeof(StructField) * s->_struct.capacity);
+        if (!new_fields) {
+            printf("Failed to reallocated for struct fields\n");
+            exit(1);
+        }
+        s->_struct.fields = new_fields;
+    }
+    s->_struct.fields[s->_struct.count++] = *f;
+    int f_size = align(f->type->size, f->type->align);
+    s->size += f_size;
+    if (f_size > s->align) s->align = f_size;
+    printf("Offset[%d] from t_size[%d] t_align[%d] size[%d]from ", s->size, f->type->size, f->type->align, f_size);
+    print_type(f->type);
+    printf("\n");
+}
+
+void print_type(Type *type) {
+    if (!type) {
+        printf("NULL");
+    }
+    switch (type->kind) {
+    case T_INVALID:
+        printf("[INVALID TYPE]");
+        break;
+    case T_ARRAY:
+        print_type(type->base);
+        printf("[%d]", type->array_len);
+        break;
+    case T_INT:
+        switch (type->size) {
+        case 1:
+            printf("char");
+            break;
+        case 2:
+            printf("short");
+            break;
+        case 4:
+            printf("int");
+            break;
+        case 8:
+            printf("long");
+            break;
+        default:
+            printf("Tried to type of int, with invalid size\n");
+            exit(1);
+        }
+        break;
+    case T_FLOAT:
+        switch (type->size) {
+        case 4:
+            printf("float");
+            break;
+        case 8:
+            printf("double");
+            break;
+        default:
+            printf("Tried to type of float, with invalid size\n");
+            exit(1);
+        }
+        break;
+    case T_POINTER:
+        printf("*");
+        print_type(type->base);
+        break;
+    case T_STRUCT:
+        printf("struct %s {", type->_struct.name);
+        for (int i = 0; i < type->_struct.count; i++) {
+            print_type(type->_struct.fields[i].type);
+            printf(" %s, ", type->_struct.fields[i].name);
+        }
+        printf("}");
+        break;
+    default:
+        printf("Not handling other types in print_type\n");
+        exit(1);
+    }
+}
+
+void print_struct_type(Type *s) {
+    printf("struct");
+    if (s->_struct.name != NULL) {
+        printf("%s", s->_struct.name);
+    }
+    if (s->_struct.complete) {
+        printf(" {\n");
+        for (int i = 0; i < s->_struct.count; i++) {
+            printf("    ");
+            print_type(s->_struct.fields[i].type);
+            printf("; [%d]\n", s->_struct.fields[i].offset);
+        }
+        printf("}\n");
+    }
 }

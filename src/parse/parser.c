@@ -171,12 +171,12 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         tk = p_consume(p);
         primary->identifier.name = tk->value;
         primary->identifier.len = tk->size;
-        // return primary;
         break;
     case TK_OPEN_PAREN:
         p_consume_a(p, TK_OPEN_PAREN);
         if (is_type_token(p_peek(p)->type)) {
-            Node *type_node = p_parse_type(p, nm, NULL);
+            Node *type_node = new_node(nm, N_TYPE);
+            type_node->type = p_parse_type(p, nm);
             p_consume_a(p, TK_CLOSE_PAREN);
             if (is_unary_operator(p_peek(p)->type) || is_binary_operator(p_peek(p)->type) || p_peek(p)->type == TK_SEMI ||
                 p_peek(p)->type == TK_CLOSE_PAREN) {
@@ -258,6 +258,7 @@ Node *new_function_node(NodeManager *nm) {
     node->func.param_count = 0;
     node->func.param_capacity = 4;
     node->func.params = malloc(sizeof(Node) * node->func.param_capacity);
+    node->func.type = NULL;
     if (!node->func.params) {
         printf("Failed to create new function node\n");
         exit(1);
@@ -307,16 +308,22 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     statement
 */
 Node *p_parse_block_item(Parser *p, NodeManager *nm) {
-    if (is_type_token(p_peek(p)->type)) return p_parse_var_declaration(p, nm);
+    if (is_type_token(p_peek(p)->type) || p_peek(p)->type == TK_STRUCT) return p_parse_block_declaration(p, nm);
     else return p_parse_statement(p, nm);
 }
+Node *p_parse_block_declaration(Parser *p, NodeManager *nm);
 /*
     Give the var decl node, if the var name/identifier is needed, otherwise NULL
 */
-Node *p_parse_type(Parser *p, NodeManager *nm, Node *var_decl) {
-    Node *node = new_node(nm, N_TYPE);
-    node->type = token_to_type(p_consume(p)->type);
-    if (node->type == type_invalid) {
+Type *p_parse_type(Parser *p, NodeManager *nm) {
+    Type *type = type_invalid;
+    if (p_peek(p)->type == TK_STRUCT) {
+        type = p_parse_struct(p, nm);
+    } else {
+        Token *t = p_peek(p);
+        type = token_to_type(p_consume(p)->type);
+    }
+    if (type == type_invalid) {
         printf("Tried to parse an unknown type\n");
         exit(1);
     }
@@ -326,43 +333,66 @@ Node *p_parse_type(Parser *p, NodeManager *nm, Node *var_decl) {
         p_consume(p);
     }
     for (int i = 0; i < ptrs; i++)
-        node->type = get_pointer_type(node->type);
+        type = get_pointer_type(type);
 
-    if (var_decl) var_decl->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
-
-    if (p_peek(p)->type == TK_OPEN_SQUARE) {
-        p_consume(p); // [
-        int len = -1; // -1 for infered size
-        if (p_peek(p)->type != TK_CLOSE_SQUARE) {
-            // Only works for a[5], not a[b + 1] (can fix later)
-            // Todo; allow for const expressions like [5 + 6] or smt
-            Token *t = p_consume_a(p, TK_INT_LITERAL);
-            len = parse_int(t->value, t->size);
-        }
-        p_consume_a(p, TK_CLOSE_SQUARE);
-        node->type = get_array_type(node->type, len);
-    }
-    return node;
+    return type;
 }
-/*
-    Consumes
-    `(type) identifier = [= expr]?;`
-    Where [= expr] is optional
-*/
-Node *p_parse_var_declaration(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_VAR_DECL);
-    node->var_decl.type = p_parse_type(p, nm, node);
-    node->type = node->var_decl.type->type;
 
-    if (p_peek(p)->type == TK_EQ) {
-        p_consume(p);
-        node->var_decl.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-    } else {
-        node->var_decl.expr = NULL;
+Type *p_parse_struct(Parser *p, NodeManager *nm) {
+    Type struct_t; //= new_type();
+    struct_t.kind = T_STRUCT;
+    struct_t.base = NULL;
+    struct_t.align = 0;
+    struct_t.size = 0;
+    struct_t.array_len = 0;
+    struct_t.is_signed = 0;
+    struct_t._struct.complete = false;
+    struct_t._struct.name = NULL;
+    struct_t._struct.capacity = 0;
+    struct_t._struct.count = 0;
+    struct_t._struct.fields = NULL;
+    p_consume_a(p, TK_STRUCT);
+    if (p_peek(p)->type == TK_IDENTIFIER) {
+        // TODO: add a null terminator plz
+        struct_t._struct.name = p_consume(p)->value;
     }
-    p_consume_semi(p);
-    p_append_var_decl(p, node);
-    return node;
+    if (p_peek(p)->type == TK_OPEN_CURLY) {
+        struct_t._struct.capacity = 4;
+        struct_t._struct.fields = malloc(sizeof(StructField) * struct_t._struct.capacity);
+        if (!struct_t._struct.fields) {
+            printf("Failed to allocate for struct fields\n");
+            exit(1);
+        }
+        p_consume(p); // {
+        while (p_peek(p)->type != TK_CLOSE_CURLY) {
+            StructField f;
+            char *name;
+            Type *t = p_parse_type(p, nm);
+            f.name = p_consume_a(p, TK_IDENTIFIER)->value;
+            f.type = t;
+            f.offset = struct_t.size;
+            append_struct_field(&struct_t, &f);
+            p_consume_semi(p);
+        }
+        p_consume(p); // }
+        struct_t._struct.complete = true;
+    }
+    Type *s = get_struct_type(struct_t._struct.name);
+    if (s) {
+        if (struct_t._struct.complete) {
+            if (s->_struct.complete) {
+                // If the struct is already defined elsewhere,
+                printf("Redefinition of struct %s\n", struct_t._struct.name);
+                exit(1);
+            }
+            *s = struct_t;
+        }
+        return s;
+    } else {
+        Type *t = new_type();
+        *t = struct_t;
+        return t;
+    }
 }
 
 /*
@@ -619,30 +649,16 @@ Node *p_parse_compound(Parser *p, NodeManager *nm) {
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm) {
+Node *p_parse_function(Parser *p, NodeManager *nm, Node *type) {
     Node *node = new_function_node(nm);
-    node->type = token_to_type(p_consume(p)->type);
-    node->func.name = p_consume(p)->value;
+    node->func.name = p_consume_a(p, TK_IDENTIFIER)->value;
+    node->func.type = type;
+    node->type = type->type;
 
     p_consume_a(p, TK_OPEN_PAREN);
     while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
         Node *param = new_node(nm, N_VAR_DECL);
-        param->type = token_to_type(p_peek(p)->type);
-        if (!param->type) {
-            printf("Expected type got ");
-            print_token_type(p_peek(p)->type);
-            printf("\n");
-            exit(1);
-        }
-        p_consume(p);
-        int ptrs = 0;
-        while (p_peek(p)->type == TK_MULTIPLY) {
-            ptrs++;
-            p_consume(p);
-        }
-        for (int i = 0; i < ptrs; i++) {
-            param->type = get_pointer_type(param->type);
-        }
+        param->type = p_parse_type(p, nm);
         param->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
         param->var_decl.expr = NULL;
         p_append_param(node, param);
@@ -655,16 +671,70 @@ Node *p_parse_function(Parser *p, NodeManager *nm) {
     return node;
 }
 
-bool is_function_ahead(Parser *p) {
-    return (p_peek(p)->type == TK_INT || p_peek(p)->type == TK_FLOAT) && p_peek_n(p, 1)->type == TK_IDENTIFIER &&
-           p_peek_n(p, 2)->type == TK_OPEN_PAREN;
+Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl) {
+    if (type_decl->type->kind == T_STRUCT) {
+        if (p_peek(p)->type != TK_IDENTIFIER) {
+            p_consume_semi(p);
+            return type_decl;
+        }
+        if (!type_decl->type->_struct.complete) {
+            printf("Cannot instantiate incomplete type\n");
+            exit(1);
+        }
+    }
+    Node *var_decl = new_node(nm, N_VAR_DECL);
+    var_decl->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
+
+    if (p_peek(p)->type == TK_OPEN_SQUARE) {
+        p_consume(p); // [
+        int len = -1; // -1 for infered size
+        if (p_peek(p)->type != TK_CLOSE_SQUARE) {
+            // Only works for a[5], not a[b + 1] (can fix later)
+            // Todo; allow for const expressions like [5 + 6] or smt
+            Token *t = p_consume_a(p, TK_INT_LITERAL);
+            len = parse_int(t->value, t->size);
+        }
+        p_consume_a(p, TK_CLOSE_SQUARE);
+        type_decl->type = get_array_type(type_decl->type, len);
+    }
+    var_decl->var_decl.type = type_decl;
+    var_decl->type = type_decl->type;
+
+    if (p_peek(p)->type == TK_EQ) {
+        p_consume(p);
+        var_decl->var_decl.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+    } else {
+        // Forward declaration
+        var_decl->var_decl.expr = NULL;
+    }
+    p_consume_semi(p);
+    p_append_var_decl(p, var_decl);
+    return var_decl;
 }
 
-Node *p_parse_declaration(Parser *p, NodeManager *nm) {
-    if (is_function_ahead(p)) {
-        return p_parse_function(p, nm);
+// Either function or type/var declaration
+Node *p_parse_external_declaration(Parser *p, NodeManager *nm) {
+    Node *type_decl = new_node(nm, N_TYPE);
+    type_decl->type = p_parse_type(p, nm);
+
+    if (p_peek(p)->type == TK_IDENTIFIER && p_peek_next(p)->type == TK_OPEN_PAREN) {
+        return p_parse_function(p, nm, type_decl);
+    } else {
+        return p_parse_declaration(p, nm, type_decl);
     }
-    return p_parse_var_declaration(p, nm);
+}
+
+Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
+    Node *type_decl = new_node(nm, N_TYPE);
+    type_decl->type = p_parse_type(p, nm);
+
+    if (p_peek(p)->type == TK_IDENTIFIER && p_peek_next(p)->type == TK_OPEN_PAREN) {
+        // return p_parse_function(p, nm, type_decl);
+        printf("Function prototypes within blocks is unsupported\n");
+        exit(1);
+    } else {
+        return p_parse_declaration(p, nm, type_decl);
+    }
 }
 
 Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
@@ -676,7 +746,7 @@ Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
     }
 
     while (!p_is_last_token(p)) {
-        p_append_declaration(root, p_parse_declaration(p, nm));
+        p_append_declaration(root, p_parse_external_declaration(p, nm));
     }
     return root;
 }

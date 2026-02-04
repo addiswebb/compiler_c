@@ -48,6 +48,7 @@ struct Node {
         } translation_unit;
         // type name(params) [body]
         struct {
+            Node *type;
             const char *name;
             int param_count;
             int param_capacity;
@@ -178,7 +179,6 @@ bool is_valid_cast(Type *from, Type *to);
 
 
 LiteralKind literal_kind(TokenType type);
-void print_type(Type* type);
 void print_node_type(NodeKind type);
 
 void print_indent(int depth);
