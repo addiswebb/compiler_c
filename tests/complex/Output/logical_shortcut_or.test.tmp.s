@@ -25,19 +25,16 @@ main_0:
     movl -48(%rbp), %eax
     testl %eax, %eax
     movl $1, %eax
+    movl %eax, -48(%rbp)
+    movl -24(%rbp), %eax
     movl %eax, -56(%rbp)
     movl -24(%rbp), %eax
-    movl %eax, -64(%rbp)
-    movl -24(%rbp), %eax
-    addl -56(%rbp), %eax
+    addl -48(%rbp), %eax
     movl %eax, -24(%rbp)
     movl -24(%rbp), %eax
     cmpl -40(%rbp), %eax
     setne %al
     movzbl %al, %eax
-    movl %eax, -40(%rbp)
-    movl -48(%rbp), %eax
-    orl -40(%rbp), %eax
     movl %eax, -40(%rbp)
     movl -40(%rbp), %eax
     testl %eax, %eax

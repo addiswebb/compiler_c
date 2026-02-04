@@ -33,7 +33,7 @@ void init_types() {
     type_invalid = init_type(T_INVALID, -1);
 
     typepool.count = 0;
-    typepool.capacity = 4;
+    typepool.capacity = 32;
     typepool.types = malloc(sizeof(Type) * typepool.capacity);
     if (!typepool.types) {
         printf("Failed to allocate for global type pool\n");
@@ -54,13 +54,8 @@ Type *init_type(TypeKind type, int size) {
 }
 Type *new_type() {
     if (typepool.count >= typepool.capacity) {
-        typepool.capacity *= 2;
-        Type *new_pool = realloc(typepool.types, sizeof(Type) * typepool.capacity);
-        if (!new_pool) {
-            printf("Failed to realloc for type pool\n");
-            exit(1);
-        }
-        typepool.types = new_pool;
+        printf("Too many types\n");
+        exit(1);
     }
     return &typepool.types[typepool.count++];
 }
@@ -72,6 +67,11 @@ Type *new_array_type(Type *type, int len) {
     arr_type->align = type->align;
     arr_type->base = type;
     arr_type->array_len = len;
+    return arr_type;
+}
+Type *infer_array_length(Type *arr_type, int len) {
+    arr_type->array_len = len;
+    arr_type->size = len * arr_type->base->size;
     return arr_type;
 }
 Type *new_pointer_type(Type *type) {

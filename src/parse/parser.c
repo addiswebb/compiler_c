@@ -315,8 +315,8 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm) {
 */
 Node *p_parse_type(Parser *p, NodeManager *nm, Node *var_decl) {
     Node *node = new_node(nm, N_TYPE);
-    Type *type = token_to_type(p_consume(p)->type);
-    if (type == type_invalid) {
+    node->type = token_to_type(p_consume(p)->type);
+    if (node->type == type_invalid) {
         printf("Tried to parse an unknown type\n");
         exit(1);
     }
@@ -326,20 +326,22 @@ Node *p_parse_type(Parser *p, NodeManager *nm, Node *var_decl) {
         p_consume(p);
     }
     for (int i = 0; i < ptrs; i++)
-        type = get_pointer_type(type);
+        node->type = get_pointer_type(node->type);
 
     if (var_decl) var_decl->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
 
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p); // [
-        // Only works for a[5], not a[b + 1] (can fix later)
-        // Todo; allow for const expressions like [5 + 6] or smt
-        Token *t = p_consume_a(p, TK_INT_LITERAL);
-        const int len = parse_int(t->value, t->size);
+        int len = -1; // -1 for infered size
+        if (p_peek(p)->type != TK_CLOSE_SQUARE) {
+            // Only works for a[5], not a[b + 1] (can fix later)
+            // Todo; allow for const expressions like [5 + 6] or smt
+            Token *t = p_consume_a(p, TK_INT_LITERAL);
+            len = parse_int(t->value, t->size);
+        }
         p_consume_a(p, TK_CLOSE_SQUARE);
-        type = get_array_type(type, len);
+        node->type = get_array_type(node->type, len);
     }
-    node->type = type;
     return node;
 }
 /*

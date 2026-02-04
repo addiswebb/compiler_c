@@ -1,1 +1,11 @@
-int main() { return 1 || 0; }
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t.exe
+// RUN: pwsh -c "%t.exe ; %check_exit 14 $LASTEXITCODE"
+
+int main() {
+    char str[] = "abc";
+    str[0] = 'z';
+    int nums[3] = {1, 2, 3};
+    nums[1] *= 5;                       // nums[1] = 10
+    return nums[0] + nums[1] + nums[2]; // 1 + 10 + 3 = 14
+}

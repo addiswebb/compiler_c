@@ -63,5 +63,6 @@ Type *new_pointer_type(Type *type);
 
 Type *new_array_type(Type *type, int len);
 Type *get_array_type(Type *type, int len);
+Type *infer_array_length(Type *arr_type, int len);
 
 #endif // COMPILER_C_TYPE_H

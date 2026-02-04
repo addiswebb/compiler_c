@@ -17,13 +17,15 @@ const char *x86_rax_reg(Type *t) {
         case 8:
             return "%rax";
         default:
-            printf("Tried to get int register of unsupported size\n");
+            printf("Tried to get int register of unsupported size %d\n", t->size);
             exit(1);
         }
     }
     if (t->kind == T_POINTER) return "%rax";
     if (t->kind == T_ARRAY) return "%rax";
-    printf("Tried to get %%rax register of unsupported type\n");
+    printf("Tried to get %%rax register of unsupported type ");
+    print_type(t);
+    printf("\n");
     exit(1);
 }
 

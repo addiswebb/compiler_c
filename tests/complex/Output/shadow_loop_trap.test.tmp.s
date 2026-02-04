@@ -5,7 +5,7 @@
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $80, %rsp
+    subq $64, %rsp
 main_0:
     movl $3, %eax
     movl %eax, -56(%rbp)
@@ -52,19 +52,16 @@ main_2:
     testl %eax, %eax
     jz main_4
     movl $1, %eax
-    movl %eax, -72(%rbp)
+    movl %eax, -56(%rbp)
     movl -24(%rbp), %eax
-    cmpl -72(%rbp), %eax
+    cmpl -56(%rbp), %eax
     sete %al
     movzbl %al, %eax
-    movl %eax, -72(%rbp)
-    movl -72(%rbp), %eax
+    movl %eax, -56(%rbp)
+    movl -56(%rbp), %eax
     cmpl -64(%rbp), %eax
     setne %al
     movzbl %al, %eax
-    movl %eax, -64(%rbp)
-    movl -56(%rbp), %eax
-    andl -64(%rbp), %eax
     movl %eax, -56(%rbp)
     movl $0, %eax
     movl %eax, -64(%rbp)
@@ -76,19 +73,16 @@ main_2:
     movl -56(%rbp), %eax
     testl %eax, %eax
     movl $1, %eax
-    movl %eax, -72(%rbp)
+    movl %eax, -56(%rbp)
     movl -40(%rbp), %eax
-    cmpl -72(%rbp), %eax
+    cmpl -56(%rbp), %eax
     sete %al
     movzbl %al, %eax
-    movl %eax, -72(%rbp)
-    movl -72(%rbp), %eax
+    movl %eax, -56(%rbp)
+    movl -56(%rbp), %eax
     cmpl -64(%rbp), %eax
     setne %al
     movzbl %al, %eax
-    movl %eax, -64(%rbp)
-    movl -56(%rbp), %eax
-    orl -64(%rbp), %eax
     movl %eax, -56(%rbp)
     movl -56(%rbp), %eax
     testl %eax, %eax

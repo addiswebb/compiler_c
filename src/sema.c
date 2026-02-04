@@ -190,10 +190,17 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
                 printf("Initializer can currently only be used for Arrays\n");
                 exit(1);
             }
-            if (node->type->array_len < init_list->init_list.count) {
-                printf("Expected %d initializers for ", node->type->array_len);
+            // Infer the size from the initializer list
+            if (node->type->array_len == -1) {
+                if (!init_list || init_list->init_list.count < 1) {
+                    printf("Infered array must be initialized, and cannot be empty.\n");
+                    exit(1);
+                }
+                node->type = infer_array_length(node->type, init_list->init_list.count);
+            } else if (node->type->array_len < init_list->init_list.count) {
+                printf("Expected initializer list of length %d for ", node->type->array_len);
                 print_type(node->type);
-                printf(" got %d\n", init_list->init_list.count);
+                printf(", got %d\n", init_list->init_list.count);
                 exit(1);
             }
             for (int i = 0; i < init_list->init_list.count; i++) {
@@ -205,8 +212,20 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             }
             break;
         }
-
         semantic_analysis(p, nm, node->var_decl.expr, loop);
+        if (node->var_decl.expr->kind == N_LITERAL && node->var_decl.expr->literal.kind == L_STRING) {
+            if (node->var_decl.expr->literal.kind == L_STRING) {
+                Node *str = node->var_decl.expr;
+                if (node->type->kind != T_ARRAY && node->type->base == type_char) {
+                    printf("Cannot initialize ");
+                    print_type(node->type);
+                    printf(" with String Literal\n");
+                    exit(1);
+                }
+                // Infer array length
+                if (node->type->array_len == -1) node->type = str->type;
+            }
+        }
         if (node->var_decl.expr->type != node->type) {
             node->var_decl.expr = cast_node(nm, node->var_decl.expr, node->type);
         }
@@ -324,7 +343,10 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             node->index.index = cast_node(nm, node->index.index, type_long);
         }
         if (node->index.identifier->type->kind != T_POINTER) {
-            node->index.identifier = cast_node(nm, node->index.identifier, get_pointer_type(node->index.identifier->type->base));
+            Type *base = node->index.identifier->type->base;
+            Node *ident = node->index.identifier;
+            Type *pointer_type = get_pointer_type(node->index.identifier->type->base);
+            node->index.identifier = cast_node(nm, node->index.identifier, pointer_type);
         }
         node->type = node->index.identifier->type->base;
         break;
