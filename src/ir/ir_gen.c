@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +29,15 @@ static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         bin.binary.rhs = expr->index.index;
         bin.type = expr->index.index->type;
         return ir_gen_rvalue(ctx, &bin);
+    case N_MEMBER_ACCESS:
+        // a.b
+        Node *identifier;
+        if (expr->member_access.identifier->kind == N_IDENTIFIER) {
+            identifier = expr->member_access.identifier;
+        } else if (expr->member_access.identifier->kind == N_UNARY && expr->member_access.identifier->unary.op == TK_MULTIPLY) {
+            identifier = expr->member_access.identifier->unary.expr;
+        }
+        return ir_address(ctx, ir_gen_lvalue(ctx, identifier), expr->member_access.offset);
     case N_CAST:
         return ir_gen_rvalue(ctx, expr);
     default:
@@ -40,6 +50,7 @@ static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
 
 IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
+    case N_MEMBER_ACCESS:
     case N_INDEX:
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_IDENTIFIER:
@@ -71,7 +82,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         if (is_assignment_op(expr->binary.op)) {
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
-            bool dereference = expr->binary.lhs->kind == N_INDEX || is_deref(expr->binary.lhs);
+            bool dereference = expr->binary.lhs->kind == N_INDEX || expr->binary.lhs->kind == N_MEMBER_ACCESS || is_deref(expr->binary.lhs);
             if (expr->binary.op != TK_EQ) {
                 IR_Value binop_val = dereference ? ir_load(ctx, addr, expr->binary.lhs->unary.expr->type) : addr;
                 if (expr->type->kind == T_POINTER) {
@@ -388,6 +399,8 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
         switch (tu->translation_unit.declarations[i]->kind) {
         case N_FUNCTION:
             ir_append_function(ctx->module, ir_gen_function(ctx, tu->translation_unit.declarations[i]));
+            break;
+        case N_TYPE:
             break;
         case N_VAR_DECL:
             // Add support for globals eventually

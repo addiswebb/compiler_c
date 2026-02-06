@@ -158,6 +158,7 @@ struct Node {
             TokenType op;
             Node *identifier;
             Node *member;
+            int offset;
         }member_access;
     };
 };

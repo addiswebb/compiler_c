@@ -8,7 +8,7 @@
 #include <string.h>
 
 // Is this node assignable?
-bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER || n->kind == N_INDEX || is_deref(n); }
+bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER || n->kind == N_INDEX || n->kind == N_MEMBER_ACCESS || is_deref(n); }
 bool is_deref(Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY; }
 
 Type *token_to_type(TokenType t) {
@@ -383,9 +383,11 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
                 printf("Can only access members of a struct\n");
                 exit(1);
             }
-            Type *member_t = get_member(struct_t, node->member_access.member->identifier.name)->type;
+            StructField *member = get_member(struct_t, node->member_access.member->identifier.name);
+            Type *member_t = member->type;
             node->member_access.member->type = member_t;
             node->member_access.identifier->type = struct_t;
+            node->member_access.offset = member->offset;
             node->type = member_t;
         } else if (node->member_access.member->kind == N_MEMBER_ACCESS) {
             semantic_analysis(p, nm, node->member_access.member, loop);

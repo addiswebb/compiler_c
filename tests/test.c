@@ -3,7 +3,7 @@ struct A {
     int b;
 };
 int main() {
-    struct A *d;
-    int x = d->c;
-    return 0;
+    struct A a;
+    a.b = 12;
+    return a.b;
 }
