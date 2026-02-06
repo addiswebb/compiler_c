@@ -19,10 +19,6 @@ IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     i.op = IR_STORE;
     i.ops[1] = src;
     i.store.type = type;
-    // if (dst.kind != IR_MEM) {
-    //     printf("Store destination must be a var memory slot\n");
-    //     exit(1);
-    // }
     i.ops[0] = dst;
     i.op_count = 2;
     ir_append_instruction(ctx->block, &i);

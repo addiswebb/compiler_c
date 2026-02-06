@@ -57,6 +57,8 @@ typedef enum {
     TK_AND, TK_AND_AND, TK_AND_EQ,
     TK_OR, TK_OR_OR, TK_OR_EQ,
     TK_XOR, TK_XOR_EQ,
+    // Member Access
+    TK_DOT, TK_ARROW,
     // Semantics
     TK_OPEN_PAREN, TK_CLOSE_PAREN,
     TK_OPEN_CURLY, TK_CLOSE_CURLY,

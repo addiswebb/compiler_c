@@ -25,6 +25,7 @@ typedef enum {
     N_CONTINUE,
     N_BREAK,
     N_INIT_LIST,
+    N_MEMBER_ACCESS,
 } NodeKind;
 
 typedef enum{
@@ -152,6 +153,12 @@ struct Node {
             int capacity;
             Node **elements;
         }init_list;
+        // a->b, a.b
+        struct{
+            TokenType op;
+            Node *identifier;
+            Node *member;
+        }member_access;
     };
 };
 

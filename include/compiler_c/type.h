@@ -86,6 +86,8 @@ Type *infer_array_length(Type *arr_type, int len);
 
 void append_struct_field(Type *_struct, StructField *field);
 
+Type struct_type();
+StructField *get_member(Type *t, const char *name);
 void print_type(Type* type);
 
 #endif // COMPILER_C_TYPE_H

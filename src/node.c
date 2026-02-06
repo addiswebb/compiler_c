@@ -82,6 +82,7 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
 }
 
 bool is_valid_cast(Type *from, Type *to) {
+    if (from->kind == T_INVALID || to->kind == T_INVALID) return false;
     if (from->kind == T_ARRAY) {
         // Can only cast array->pointer (pointer decay)
         return to->kind == T_POINTER && from->base == to->base;
@@ -100,7 +101,7 @@ LiteralKind literal_kind(TokenType type) {
     case TK_STRING_LITERAL:
         return L_STRING;
     default:
-        printf("Given Tokentype which is not a literal\n");
+        printf("Given a non literal token\n");
         exit(1);
     }
 }
@@ -162,6 +163,9 @@ void print_node_type(const NodeKind type) {
         break;
     case N_INIT_LIST:
         printf("Init List");
+        break;
+    case N_MEMBER_ACCESS:
+        printf("Member Access");
         break;
     }
 }
@@ -340,6 +344,15 @@ void print_node(const Node *node, const int depth) {
         for (int i = 0; i < node->init_list.count; i++) {
             print_node(node->init_list.elements[i], depth + 1);
         }
+        break;
+    case N_MEMBER_ACCESS:
+        printf(": [type= ");
+        print_type(node->type);
+        printf(", op=");
+        print_token_type(node->member_access.op);
+        printf("]\n");
+        print_node(node->member_access.identifier, depth + 1);
+        print_node(node->member_access.member, depth + 1);
         break;
     }
 }

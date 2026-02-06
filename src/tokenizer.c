@@ -203,6 +203,7 @@ static int is_op_start(char c) {
     case '|':
     case '&':
     case '^':
+    case '.':
         return 1;
     default:
         return 0;
@@ -218,6 +219,7 @@ static TokenMatch t_match_operator(Tokenizer *tk) {
         return eq ? (TokenMatch){TK_PLUS_EQ, 2} : (TokenMatch){TK_PLUS, 1};
     case '-':
         if (next == '-') return (TokenMatch){TK_DECR, 2};
+        if (next == '>') return (TokenMatch){TK_ARROW, 2};
         return eq ? (TokenMatch){TK_MINUS_EQ, 2} : (TokenMatch){TK_MINUS, 1};
     case '*':
         return eq ? (TokenMatch){TK_MULTIPLY_EQ, 2} : (TokenMatch){TK_MULTIPLY, 1};
@@ -247,6 +249,8 @@ static TokenMatch t_match_operator(Tokenizer *tk) {
             return t_peek_n(tk, 2) == '=' ? (TokenMatch){TK_SHR_EQ, 3} : (TokenMatch){TK_SHR, 2};
         }
         return eq ? (TokenMatch){TK_GE, 2} : (TokenMatch){TK_GT, 1};
+    case '.':
+        return (TokenMatch){TK_DOT, 1};
     default:
         printf("Unknown operator");
         exit(1);
@@ -319,7 +323,10 @@ void t_tokenize(Tokenizer *tk) {
     while (!t_is_eof(tk)) {
         const char c = t_peek(tk);
         bool starts_with_decimal = c == '.';
-        if (is_digit(c) || c == '.') {
+        if (c == '.' && !is_digit(t_peek_next(tk))) {
+            t_consume(tk);
+            t_push_buffer(tk, TK_DOT);
+        } else if (is_digit(c) || c == '.') {
             int is_float = 0;
             t_consume(tk);
             if (c == '0') {
@@ -377,12 +384,10 @@ void t_tokenize(Tokenizer *tk) {
             t_consume_char_literal(tk);
         } else if (t_peek(tk) == '\"') {
             t_consume_string_literal(tk);
+        } else if (is_op_start(c)) {
+            t_consume_operator(tk);
         } else {
-            if (is_op_start(c)) {
-                t_consume_operator(tk);
-            } else {
-                t_consume_special_char(tk);
-            }
+            t_consume_special_char(tk);
         }
     }
 }
@@ -852,6 +857,12 @@ void print_token_type(const TokenType type) {
         break;
     case TK_STRUCT:
         printf("struct");
+        break;
+    case TK_DOT:
+        printf(".");
+        break;
+    case TK_ARROW:
+        printf("->");
         break;
     }
 }

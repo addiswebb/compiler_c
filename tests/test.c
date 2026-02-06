@@ -1,5 +1,9 @@
-int test(int c) { return c * 10; }
+struct A {
+    char c;
+    int b;
+};
 int main() {
-    int a[3] = {1, 2, 3};
-    return test(a[2]);
+    struct A *d;
+    int x = d->c;
+    return 0;
 }

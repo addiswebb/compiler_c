@@ -171,6 +171,20 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         tk = p_consume(p);
         primary->identifier.name = tk->value;
         primary->identifier.len = tk->size;
+        if (p_peek(p)->type == TK_DOT || p_peek(p)->type == TK_ARROW) {
+            Node *member_access = new_node(nm, N_MEMBER_ACCESS);
+            member_access->member_access.op = p_consume(p)->type;
+            member_access->member_access.identifier = primary;
+            member_access->member_access.member = p_parse_primary_expression(p, nm);
+            if (!(member_access->member_access.member->kind == N_IDENTIFIER ||
+                  member_access->member_access.member->kind == N_MEMBER_ACCESS)) {
+                printf("Expected member identifier got ");
+                print_node(member_access->member_access.member, 0);
+                printf("\n");
+                exit(1);
+            }
+            primary = member_access;
+        }
         break;
     case TK_OPEN_PAREN:
         p_consume_a(p, TK_OPEN_PAREN);
@@ -339,18 +353,7 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
 }
 
 Type *p_parse_struct(Parser *p, NodeManager *nm) {
-    Type struct_t; //= new_type();
-    struct_t.kind = T_STRUCT;
-    struct_t.base = NULL;
-    struct_t.align = 0;
-    struct_t.size = 0;
-    struct_t.array_len = 0;
-    struct_t.is_signed = 0;
-    struct_t._struct.complete = false;
-    struct_t._struct.name = NULL;
-    struct_t._struct.capacity = 0;
-    struct_t._struct.count = 0;
-    struct_t._struct.fields = NULL;
+    Type struct_t = struct_type();
     p_consume_a(p, TK_STRUCT);
     if (p_peek(p)->type == TK_IDENTIFIER) {
         // TODO: add a null terminator plz
@@ -370,11 +373,11 @@ Type *p_parse_struct(Parser *p, NodeManager *nm) {
             Type *t = p_parse_type(p, nm);
             f.name = p_consume_a(p, TK_IDENTIFIER)->value;
             f.type = t;
-            f.offset = struct_t.size;
             append_struct_field(&struct_t, &f);
             p_consume_semi(p);
         }
         p_consume(p); // }
+        struct_t.size = align(struct_t.size, struct_t.align);
         struct_t._struct.complete = true;
     }
     Type *s = get_struct_type(struct_t._struct.name);

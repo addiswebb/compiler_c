@@ -369,5 +369,41 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
     case N_INIT_LIST:
         printf("Semantic parser should never reach a Init List node\n");
         exit(1);
+    case N_MEMBER_ACCESS:
+        if (node->member_access.member->kind == N_IDENTIFIER) {
+            Type *struct_t = p_get_var_decl(p, node->member_access.identifier->identifier.name)->type;
+            if (node->member_access.op == TK_ARROW) {
+                if (struct_t->kind != T_POINTER) {
+                    printf("Can only deref member access '->' on a struct pointer\n");
+                    exit(1);
+                }
+                struct_t = struct_t->base;
+            }
+            if (struct_t->kind != T_STRUCT) {
+                printf("Can only access members of a struct\n");
+                exit(1);
+            }
+            Type *member_t = get_member(struct_t, node->member_access.member->identifier.name)->type;
+            node->member_access.member->type = member_t;
+            node->member_access.identifier->type = struct_t;
+            node->type = member_t;
+        } else if (node->member_access.member->kind == N_MEMBER_ACCESS) {
+            semantic_analysis(p, nm, node->member_access.member, loop);
+            node->type = node->member_access.member->type;
+        } else {
+            printf("Invalid member access node\n");
+            exit(1);
+        }
+
+        // [a->b] -> [*(a).b]
+        if (node->member_access.op == TK_ARROW) {
+            Node *deref = new_node(nm, N_UNARY);
+            deref->unary.op = TK_MULTIPLY;
+            deref->unary.expr = node->member_access.identifier;
+            deref->unary.associativity = RIGHT_ASSOCIATIVITY;
+            node->member_access.identifier = deref;
+            node->member_access.op = TK_DOT;
+        }
+        break;
     }
 }

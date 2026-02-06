@@ -122,13 +122,37 @@ void append_struct_field(Type *s, StructField *f) {
         }
         s->_struct.fields = new_fields;
     }
+    s->size = align(s->size, f->type->align);
+    f->offset = s->size;
     s->_struct.fields[s->_struct.count++] = *f;
-    int f_size = align(f->type->size, f->type->align);
-    s->size += f_size;
-    if (f_size > s->align) s->align = f_size;
-    printf("Offset[%d] from t_size[%d] t_align[%d] size[%d]from ", s->size, f->type->size, f->type->align, f_size);
-    print_type(f->type);
-    printf("\n");
+    s->size += align(f->type->size, f->type->align);
+    if (f->type->align > s->align) s->align = f->type->align;
+}
+
+Type struct_type() {
+    Type s;
+    s.kind = T_STRUCT;
+    s.base = NULL;
+    s.align = 0;
+    s.size = 0;
+    s.array_len = 0;
+    s.is_signed = 0;
+    s._struct.complete = false;
+    s._struct.name = NULL;
+    s._struct.capacity = 0;
+    s._struct.count = 0;
+    s._struct.fields = NULL;
+    return s;
+}
+
+StructField *get_member(Type *t, const char *name) {
+    for (int i = 0; i < t->_struct.count; i++) {
+        if (strcmp(name, t->_struct.fields[i].name) == 0) {
+            return &t->_struct.fields[i];
+        }
+    }
+    printf("No member named \"%s\" in struct %s\n", name, t->_struct.name);
+    exit(1);
 }
 
 void print_type(Type *type) {
