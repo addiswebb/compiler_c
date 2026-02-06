@@ -361,8 +361,8 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
                 val = new_val;
             }
             f.value = val++;
+            f._enum_t = NULL;
             append_enum_field(&enum_t, &f);
-            p_append_enum_const(p, &f);
             if (p_peek(p)->type == TK_COMMA) p_consume(p);
             else break;
         }
@@ -383,6 +383,10 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
     } else {
         Type *t = new_type();
         *t = enum_t;
+        for (int i = 0; i < enum_t._enum.count; i++) {
+            enum_t._enum.fields[i]._enum_t = t;
+            p_append_enum_const(p, &enum_t._enum.fields[i]);
+        }
         return t;
     }
 }
@@ -521,7 +525,9 @@ Node *p_get_func_def(Parser *p, const char *name) {
 
 void p_append_func_def(Parser *p, Node *func) { p_append_symbol(p, &(Symbol){func->func.name, FUNC, .func_def = func}); }
 void p_append_var_decl(Parser *p, Node *var) { p_append_symbol(p, &(Symbol){var->var_decl.name, VAR, .var_decl = var}); }
-void p_append_enum_const(Parser *p, EnumField *e) { p_append_symbol(p, &(Symbol){e->name, ENUM, .enum_field = *e}); }
+void p_append_enum_const(Parser *p, EnumField *e) { 
+    p_append_symbol(p, &(Symbol){e->name, ENUM, .enum_field = *e}); 
+}
 
 void p_append_element(Node *init_list, Node *element) {
     if (init_list->init_list.count >= init_list->init_list.capacity) {

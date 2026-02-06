@@ -131,7 +131,6 @@ void append_enum_field(Type *e, EnumField *f) {
         }
         e->_enum.fields = new_fields;
     }
-    e->size += type_int->size;
     e->_enum.fields[e->_struct.count++] = *f;
 }
 void append_struct_field(Type *s, StructField *f) {
@@ -170,11 +169,11 @@ Type struct_type() {
 Type enum_type() {
     Type e;
     e.kind = T_ENUM;
-    e.base = NULL;
-    e.align = 0;
-    e.size = 0;
+    e.base = type_int;
+    e.align = 4;
+    e.size = 4;
     e.array_len = 0;
-    e.is_signed = 0;
+    e.is_signed = true;
     e._enum.complete = false;
     e._enum.name = NULL;
     e._enum.capacity = 0;
@@ -242,19 +241,25 @@ void print_type(Type *type) {
         print_type(type->base);
         break;
     case T_STRUCT:
-        printf("struct %s {", type->_struct.name);
-        for (int i = 0; i < type->_struct.count; i++) {
-            print_type(type->_struct.fields[i].type);
-            printf(" %s, ", type->_struct.fields[i].name);
+        printf("struct %s ", type->_struct.name);
+        if (DEBUG_STRUCT_DETAILED) {
+            printf("{");
+            for (int i = 0; i < type->_struct.count; i++) {
+                print_type(type->_struct.fields[i].type);
+                printf(" %s, ", type->_struct.fields[i].name);
+            }
+            printf("}");
         }
-        printf("}");
         break;
     case T_ENUM:
-        printf("enum %s {", type->_enum.name);
-        for (int i = 0; i < type->_enum.count; i++) {
-            printf(" %s = %d, ", type->_enum.fields[i].name, type->_enum.fields[i].value);
+        printf("enum %s ", type->_enum.name);
+        if (DEBUG_ENUM_DETAILED) {
+            printf("{");
+            for (int i = 0; i < type->_enum.count; i++) {
+                printf(" %s = %d, ", type->_enum.fields[i].name, type->_enum.fields[i].value);
+            }
+            printf("}");
         }
-        printf("}");
         break;
     default:
         printf("Not handling other types in print_type\n");

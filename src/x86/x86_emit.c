@@ -92,6 +92,7 @@ const char *x86_rdx_reg(Type *t) {
             exit(1);
         }
     }
+
     if (t->kind == T_POINTER) return "%rdx";
     if (t->kind == T_ARRAY) return "%rdx";
     printf("Tried to get %%rdx register of unsupported type\n");

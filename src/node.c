@@ -210,6 +210,7 @@ void print_node(const Node *node, const int depth) {
             break;
         }
         switch (node->type->kind) {
+        case T_ENUM:
         case T_INT:
             switch (node->type->size) {
             case 1:
@@ -225,7 +226,8 @@ void print_node(const Node *node, const int depth) {
                 printf("value= %lld]\n", node->literal.i);
                 break;
             default:
-                printf("Given invalid size of int to print node_flat\n");
+                printf("size: %d\n", node->type->size);
+                printf("Given invalid size of int to print int literal\n");
                 exit(1);
             }
             break;

@@ -1,11 +1,13 @@
 #ifndef COMPILER_C_TYPE_H
 #define COMPILER_C_TYPE_H
 
+#define DEBUG_ENUM_DETAILED 0
+#define DEBUG_STRUCT_DETAILED 0
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 typedef enum {
-    // Yet to be symatically analysed
     T_INT,
     T_FLOAT,
     T_POINTER,
@@ -33,6 +35,7 @@ typedef struct{
 typedef struct{
     char *name;
     int value;
+    Type* _enum_t;
 }EnumField;
 struct Type{
     TypeKind kind;

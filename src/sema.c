@@ -129,8 +129,12 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     Type *common;
     Node **lhs = &binop->binary.lhs;
     Node **rhs = &binop->binary.rhs;
-    Type *l_type = (*lhs)->type;
-    Type *r_type = (*lhs)->type;
+    if ((*lhs)->type->kind == T_ENUM) {
+        *lhs = cast_node(nm, (*lhs), type_int);
+    }
+    if ((*rhs)->type->kind == T_ENUM) {
+        *rhs = cast_node(nm, (*rhs), type_int);
+    }
     // Decay array -> pointer
     if ((*lhs)->type->kind == T_ARRAY) {
         *lhs = cast_node(nm, (*lhs), get_pointer_type((*lhs)->type->base));
@@ -300,7 +304,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             node->kind = N_LITERAL;
             node->literal.kind = L_INT;
             node->literal.i = (int64_t)s->enum_field.value;
-            node->type = type_int;
+            node->type = s->enum_field._enum_t;
             break;
         case VAR:
             node->type = s->var_decl->type;
@@ -452,5 +456,27 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             node->member_access.op = TK_DOT;
         }
         break;
+    }
+}
+
+void lower_enums(NodeManager *nm) {
+    for (int i = 0; i < nm->count; i++) {
+        Node *n = &nm->nodes[i];
+        if (n->type->kind == T_ENUM) {
+            n->type = type_int;
+        }
+        if (n->kind == N_CAST) {
+            if (n->cast.from && n->cast.from->kind == T_ENUM) {
+                n->cast.from = type_int;
+            }
+            if (n->cast.to && n->cast.to->kind == T_ENUM) {
+                n->cast.to = type_int;
+                n->type = type_int;
+            }
+            // Optimize out no op (cast from=x, to=x)
+            if (n->cast.from == n->type) {
+                *n = *n->cast.expr;
+            }
+        }
     }
 }
