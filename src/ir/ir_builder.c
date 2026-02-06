@@ -90,9 +90,9 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
         exit(1);
     }
     for (int j = 0; j < i.call.arg_count; j++) {
-        i.call.args[j].reg = ir_gen_rvalue(ctx, expr->func.params[j]);
-        i.call.args[j].name = expr->func.params[j]->var_decl.name;
-        i.call.args[j].type = expr->func.params[j]->type;
+        i.call.args[j].reg = ir_gen_rvalue(ctx, expr->func_call.params[j]);
+        i.call.args[j].name = expr->func_call.params[j]->var_decl.name;
+        i.call.args[j].type = expr->func_call.params[j]->type;
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 1;
