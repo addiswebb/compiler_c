@@ -50,7 +50,7 @@ static void x86_gen_alloca_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
 static void x86_gen_addr_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->ops[1].kind) {
     case IR_STACK:
-        fprintf(fp, "    lea %d(%%rbp), %%rax\n", instr->ops[1].stack_offset - instr->addr.offset);
+        fprintf(fp, "    lea %d(%%rbp), %%rax\n", instr->ops[1].stack_offset + instr->addr.offset);
         break;
     case IR_LITERAL:
         fprintf(fp, "    lea .LC%d(%%rip), %%rax\n", instr->ops[1].const_index);

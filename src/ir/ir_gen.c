@@ -291,18 +291,26 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     IR_Value dst = ir_new_var(ctx->func, var_decl->var_decl.name, var_decl->type);
     if (!var_decl->var_decl.expr) return;
     if (var_decl->var_decl.expr->kind == N_INIT_LIST) {
+        bool is_array = var_decl->type->kind == T_ARRAY;
+        int len = is_array ? var_decl->type->array_len : var_decl->type->_struct.count;
+
         Node *l = var_decl->var_decl.expr;
-        Type *type = var_decl->type->base;
-        IR_Value zero = ir_append_const(ctx->module, &(IR_Const){type, 0});
-        for (int i = 0; i < var_decl->type->array_len; i++) {
-            IR_Value v;
+        Type *type;
+        IR_Value zero;
+        IR_Value v;
+        if (is_array) {
+            type = var_decl->type->base;
+            zero = ir_append_const(ctx->module, &(IR_Const){type, 0});
+        }
+        for (int i = 0; i < len; i++) {
+            if (!is_array) type = var_decl->type->_struct.fields[i].type;
             Node *e = l->init_list.elements[i];
-            if (i < l->init_list.count) {
-                v = ir_gen_rvalue(ctx, e);
-            } else {
+            if (i < l->init_list.count) v = ir_gen_rvalue(ctx, e);
+            else {
+                if (!is_array) zero = ir_append_const(ctx->module, &(IR_Const){e->type, 0});
                 v = ir_const(ctx, zero, type);
             }
-            dst.offset = type->align * i;
+            dst.offset = is_array ? type->align * i : var_decl->type->_struct.fields[i].offset;
             ir_store(ctx, dst, v, type);
         }
         return;

@@ -192,8 +192,12 @@ static const char ir_type_suffix(Type *type) {
         return 'a';
     case T_POINTER:
         return 'p';
+    case T_STRUCT:
+        return 's';
     default:
-        printf("Not handling this type ir_type_suffix\n");
+        printf("Not handling this type ir_type_suffix: ");
+        print_type(type);
+        printf("\n");
         exit(1);
     }
 }

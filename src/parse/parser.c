@@ -145,6 +145,7 @@ Node *new_compound_node(NodeManager *nm) {
     `(expr)`
 */
 Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
+    if (p_peek(p)->type == TK_OPEN_CURLY) return p_parse_init_list(p, nm);
     Node *primary = NULL;
     Token *tk;
     if (is_unary_operator(p_peek(p)->type)) {
@@ -293,7 +294,6 @@ Node *new_function_call_node(NodeManager *nm, Node *identifier, int param_count)
 }
 
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
-    if (p_peek(p)->type == TK_OPEN_CURLY) return p_parse_init_list(p, nm);
     Node *primary = p_parse_primary_expression(p, nm);
     if (p_peek(p)->type == TK_INCR || p_peek(p)->type == TK_DECR) {
         Node *node = new_node(nm, N_UNARY);
@@ -322,7 +322,7 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     statement
 */
 Node *p_parse_block_item(Parser *p, NodeManager *nm) {
-    if (is_type_token(p_peek(p)->type) || p_peek(p)->type == TK_STRUCT) return p_parse_block_declaration(p, nm);
+    if (is_type_token(p_peek(p)->type)) return p_parse_block_declaration(p, nm);
     else return p_parse_statement(p, nm);
 }
 Node *p_parse_block_declaration(Parser *p, NodeManager *nm);

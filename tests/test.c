@@ -3,7 +3,6 @@ struct A {
     int b;
 };
 int main() {
-    struct A a;
-    a.b = 12;
+    struct A a = (struct A){1, 5};
     return a.b;
 }

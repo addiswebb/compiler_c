@@ -186,29 +186,47 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         if (!node->var_decl.expr) break;
         if (node->var_decl.expr->kind == N_INIT_LIST) {
             Node *init_list = node->var_decl.expr;
-            if (node->type->kind != T_ARRAY) {
-                printf("Initializer can currently only be used for Arrays\n");
-                exit(1);
-            }
-            // Infer the size from the initializer list
-            if (node->type->array_len == -1) {
-                if (!init_list || init_list->init_list.count < 1) {
-                    printf("Infered array must be initialized, and cannot be empty.\n");
+            switch (node->type->kind) {
+            case T_ARRAY:
+                // Infer the size from the initializer list
+                if (node->type->array_len == -1) {
+                    if (!init_list || init_list->init_list.count < 1) {
+                        printf("Infered array must be initialized, and cannot be empty.\n");
+                        exit(1);
+                    }
+                    node->type = infer_array_length(node->type, init_list->init_list.count);
+                } else if (node->type->array_len < init_list->init_list.count) {
+                    printf("Expected initializer list of length %d for ", node->type->array_len);
+                    print_type(node->type);
+                    printf(", got %d\n", init_list->init_list.count);
                     exit(1);
                 }
-                node->type = infer_array_length(node->type, init_list->init_list.count);
-            } else if (node->type->array_len < init_list->init_list.count) {
-                printf("Expected initializer list of length %d for ", node->type->array_len);
-                print_type(node->type);
-                printf(", got %d\n", init_list->init_list.count);
-                exit(1);
-            }
-            for (int i = 0; i < init_list->init_list.count; i++) {
-                Node *e = init_list->init_list.elements[i];
-                semantic_analysis(p, nm, e, loop);
-                if (e->type != node->type->base) {
-                    init_list->init_list.elements[i] = cast_node(nm, e, node->type->base);
+                for (int i = 0; i < init_list->init_list.count; i++) {
+                    Node *e = init_list->init_list.elements[i];
+                    semantic_analysis(p, nm, e, loop);
+                    if (e->type != node->type->base) {
+                        init_list->init_list.elements[i] = cast_node(nm, e, node->type->base);
+                    }
                 }
+                break;
+            case T_STRUCT:
+                if (init_list->init_list.count > node->type->_struct.count) {
+                    printf("Expected initializer list of length %d for ", node->type->array_len);
+                    print_type(node->type);
+                    printf(", got %d\n", init_list->init_list.count);
+                    exit(1);
+                }
+                for (int i = 0; i < init_list->init_list.count; i++) {
+                    Node *e = init_list->init_list.elements[i];
+                    semantic_analysis(p, nm, e, loop);
+                    if (e->type != node->type->_struct.fields[i].type) {
+                        init_list->init_list.elements[i] = cast_node(nm, e, node->type->_struct.fields[i].type);
+                    }
+                }
+                break;
+            default:
+                printf("Initializer list can only be used for struct and arrays");
+                exit(1);
             }
             break;
         }
@@ -240,6 +258,10 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         node->type = check_binary_op(nm, node->binary.op, node);
         break;
     case N_CAST:
+        if (node->cast.expr->kind == N_INIT_LIST) {
+            printf("Unable to handle casting initializer lists to structs\n");
+            exit(1);
+        }
         semantic_analysis(p, nm, node->cast.expr, loop);
         if (is_valid_cast(node->cast.expr->type, node->cast.to)) {
             node->cast.from = node->cast.expr->type;

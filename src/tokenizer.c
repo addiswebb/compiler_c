@@ -401,6 +401,7 @@ bool is_type_token(const TokenType tk) {
     case TK_FLOAT:
     case TK_DOUBLE:
     case TK_VOID:
+    case TK_STRUCT:
         return true;
     default:
         return false;
