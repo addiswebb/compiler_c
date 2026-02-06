@@ -16,7 +16,7 @@ typedef struct {
     int size;
 } Buffer;
 
-#define KEYWORDS_N 17
+#define KEYWORDS_N 18
 extern const char* KEYWORDS[KEYWORDS_N];
 
 /*
@@ -25,6 +25,7 @@ extern const char* KEYWORDS[KEYWORDS_N];
     2. KEYWORDS_N ++
     3. add to KEYWORDS array
     4. Update print_token_type
+    // Keep alphabetical order for KEYWORDS and TokenType
 */
 typedef enum {
     // Keywords
@@ -33,6 +34,7 @@ typedef enum {
     TK_CONTINUE,
     TK_DOUBLE,
     TK_ELSE,
+    TK_ENUM,
     TK_EXIT,
     TK_FLOAT,
     TK_FOR,

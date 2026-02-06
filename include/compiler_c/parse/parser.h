@@ -20,17 +20,48 @@ typedef struct{
     Node *decl;
 } P_Var_Decl;
 
+typedef struct{
+    const char *new_def;
+    Type *type;
+}Typedef;
+
+typedef enum {
+    ENUM,
+    VAR,
+    FUNC,
+    TYPEDEF,
+    ANY,
+} SymbolKind;
+
+typedef struct{
+    const char *name;
+    SymbolKind kind;
+    union{
+        Node *var_decl;
+        Node *func_def;
+        EnumField enum_field;
+        Typedef _typedef;
+    };
+}Symbol;
+
+typedef struct{
+    int count;
+    int capacity;
+    Symbol *symbols;
+}SymbolTable;
+
 typedef struct {
     int index;
     int size;
     TokenArray *src;
     bool expect_semi;
-    P_Func_Def *func_defs;
-    int func_def_count;
-    int func_def_capacity;
-    P_Var_Decl *var_decls;
-    int var_decl_count;
-    int var_decl_capacity;
+    SymbolTable st;
+    // P_Func_Def *func_defs;
+    // int func_def_count;
+    // int func_def_capacity;
+    // P_Var_Decl *var_decls;
+    // int var_decl_count;
+    // int var_decl_capacity;
 } Parser;
 
 Parser new_parser();
@@ -100,6 +131,7 @@ void p_append_declaration(Node *root, Node *decl);
 void p_append_param(Node *func, Node *param);
 void p_add_call_param(Node *func, Node *param);
 
+Symbol *p_get_symbol(Parser *p, const char *name, SymbolKind kind);
 void p_append_func_def(Parser *p, Node *func);
 Node *p_get_func_def(Parser *p, const char* name);
 
@@ -108,6 +140,8 @@ void p_append_element(Node *init_list, Node *element);
 void p_append_var_decl(Parser *p, Node *var);
 Node *p_get_var_decl(Parser *p, const char* name);
 
+EnumField *p_get_enum_const(Parser *p, const char* name);
+void p_append_enum_const(Parser *p, EnumField *e);
 /*
     Appends a block item to the given compound node,
     Resizes its statement array if necessary.
@@ -175,6 +209,8 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type);
 
 Node *p_parse_translation_unit(Parser* p, NodeManager *nm);
 Type *p_parse_type(Parser *p, NodeManager *nm);
+Type *p_parse_enum(Parser *p, NodeManager *nm);
 Type *p_parse_struct(Parser *p, NodeManager *nm);
 
+Node *current_func_definition(Parser *p);
 #endif // COMPILER_C_PARSER_H

@@ -5,6 +5,7 @@
 #include "compiler_c/type.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 // Is this node assignable?
@@ -175,7 +176,6 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             p_append_var_decl(p, node->func.params[i]);
         }
         semantic_analysis(p, nm, node->func.body, loop);
-        p->var_decl_count -= node->func.param_count;
         break;
     case N_COMPOUND:
         for (int i = 0; i < node->compound.count; i++) {
@@ -290,7 +290,30 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         }
         break;
     case N_IDENTIFIER:
-        node->type = p_get_var_decl(p, node->identifier.name)->type;
+        Symbol *s = p_get_symbol(p, node->identifier.name, ANY);
+        if (!s) {
+            printf("Failed to find symbol %s\n", node->identifier.name);
+            exit(1);
+        }
+        switch (s->kind) {
+        case ENUM:
+            node->kind = N_LITERAL;
+            node->literal.kind = L_INT;
+            node->literal.i = (int64_t)s->enum_field.value;
+            node->type = type_int;
+            break;
+        case VAR:
+            node->type = s->var_decl->type;
+            break;
+        case TYPEDEF:
+            // Maybe reference a N_TYPE node instead
+            node->type = s->_typedef.type;
+            break;
+        case FUNC:
+        case ANY:
+            printf("Should be unreachable\n");
+            exit(1);
+        }
         break;
     case N_IF:
         semantic_analysis(p, nm, node->_if.cond, loop);

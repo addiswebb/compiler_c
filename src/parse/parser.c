@@ -11,37 +11,18 @@
 
 #define DEFAULT_STATEMENTS_PER_BLOCK 8
 
-Parser new_parser() {
-    Parser parser;
-    parser.size = 0;
-    parser.index = 0;
-    parser.src = NULL;
-    parser.func_def_capacity = 0;
-    parser.func_def_count = 0;
-    parser.func_defs = NULL;
-    parser.var_decl_count = 0;
-    parser.var_decl_capacity = 0;
-    parser.var_decls = NULL;
-    return parser;
-}
+Parser new_parser() { return (Parser){0}; }
 
 void init_parser(Parser *p, TokenArray *src, const int size) {
     p->size = size;
     p->src = src;
     p->index = 0;
     p->expect_semi = true;
-    p->func_def_capacity = 4;
-    p->func_def_count = 0;
-    p->func_defs = malloc(sizeof(P_Func_Def) * p->func_def_capacity);
-    if (!p->func_defs) {
-        printf("Failed to allocate for func_defs\n");
-        exit(1);
-    }
-    p->var_decl_capacity = 4;
-    p->var_decl_count = 0;
-    p->var_decls = malloc(sizeof(P_Var_Decl) * p->var_decl_capacity);
-    if (!p->var_decls) {
-        printf("Failed to allocate for var_decls\n");
+    p->st.capacity = 4;
+    p->st.count = 0;
+    p->st.symbols = malloc(sizeof(Symbol) * p->st.capacity);
+    if (!p->st.symbols) {
+        printf("Failed to allocate for symbol table");
         exit(1);
     }
 }
@@ -333,6 +314,8 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
     Type *type = type_invalid;
     if (p_peek(p)->type == TK_STRUCT) {
         type = p_parse_struct(p, nm);
+    } else if (p_peek(p)->type == TK_ENUM) {
+        type = p_parse_enum(p, nm);
     } else {
         Token *t = p_peek(p);
         type = token_to_type(p_consume(p)->type);
@@ -352,6 +335,57 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
     return type;
 }
 
+Type *p_parse_enum(Parser *p, NodeManager *nm) {
+    Type enum_t = enum_type();
+    p_consume_a(p, TK_ENUM);
+    if (p_peek(p)->type == TK_IDENTIFIER) {
+        // TODO: add a null terminator plz
+        enum_t._enum.name = p_consume(p)->value;
+    }
+    if (p_peek(p)->type == TK_OPEN_CURLY) {
+        enum_t._enum.capacity = 4;
+        enum_t._enum.fields = malloc(sizeof(EnumField) * enum_t._enum.capacity);
+        if (!enum_t._enum.fields) {
+            printf("Failed to allocate for enum fields\n");
+            exit(1);
+        }
+        p_consume(p); // {
+        int val = 0;
+        while (p_peek(p)->type != TK_CLOSE_CURLY) {
+            EnumField f;
+            f.name = p_consume_a(p, TK_IDENTIFIER)->value;
+            if (p_peek(p)->type == TK_EQ) {
+                p_consume(p);
+                Token *t = p_consume_a(p, TK_INT_LITERAL);
+                int new_val = parse_int(t->value, t->size);
+                val = new_val;
+            }
+            f.value = val++;
+            append_enum_field(&enum_t, &f);
+            p_append_enum_const(p, &f);
+            if (p_peek(p)->type == TK_COMMA) p_consume(p);
+            else break;
+        }
+        p_consume(p); // }
+        enum_t._enum.complete = true;
+    }
+    Type *s = get_enum_type(enum_t._enum.name);
+    if (s) {
+        if (enum_t._enum.complete) {
+            if (s->_enum.complete) {
+                // If the enum is already defined elsewhere,
+                printf("Redefinition of enum %s\n", enum_t._enum.name);
+                exit(1);
+            }
+            *s = enum_t;
+        }
+        return s;
+    } else {
+        Type *t = new_type();
+        *t = enum_t;
+        return t;
+    }
+}
 Type *p_parse_struct(Parser *p, NodeManager *nm) {
     Type struct_t = struct_type();
     p_consume_a(p, TK_STRUCT);
@@ -369,7 +403,6 @@ Type *p_parse_struct(Parser *p, NodeManager *nm) {
         p_consume(p); // {
         while (p_peek(p)->type != TK_CLOSE_CURLY) {
             StructField f;
-            char *name;
             Type *t = p_parse_type(p, nm);
             f.name = p_consume_a(p, TK_IDENTIFIER)->value;
             f.type = t;
@@ -458,39 +491,38 @@ void p_add_call_param(Node *func, Node *param) {
     }
 }
 
-void p_append_func_def(Parser *p, Node *func) {
-    if (p->func_def_count >= p->func_def_capacity) {
-        p->func_def_capacity *= 2;
-        p->func_defs = realloc(p->func_defs, sizeof(P_Func_Def) * p->func_def_capacity);
-        if (!p->func_defs) {
-            printf("Failed to realloc for func defs");
+void p_append_symbol(Parser *p, Symbol *s) {
+    if (p->st.count >= p->st.capacity) {
+        p->st.capacity *= 2;
+        Symbol *new_symbols = realloc(p->st.symbols, sizeof(Symbol) * p->st.capacity);
+        if (!new_symbols) {
+            printf("Failed to realloc for symbol table size: %d\n", p->st.capacity);
             exit(1);
         }
+        p->st.symbols = new_symbols;
     }
-    p->func_defs[p->func_def_count++] = (P_Func_Def){func->func.name, func->type, func};
+    p->st.symbols[p->st.count++] = *s;
+}
+Symbol *p_get_symbol(Parser *p, const char *name, SymbolKind kind) {
+    for (int i = 0; i < p->st.count; i++) {
+        if ((kind == ANY || p->st.symbols[i].kind == kind) && strcmp(p->st.symbols[i].name, name) == 0) {
+            return &p->st.symbols[i];
+        }
+    }
+    return NULL;
 }
 
 Node *p_get_func_def(Parser *p, const char *name) {
-    for (int i = 0; i < p->func_def_count; i++) {
-        if (strcmp(p->func_defs[i].name, name) == 0) {
-            return p->func_defs[i].def;
-        }
-    }
+    Symbol *s = p_get_symbol(p, name, FUNC);
+    if (s) return s->func_def;
     printf("Tried to call %s which does not exist\n", name);
     exit(1);
 }
 
-void p_append_var_decl(Parser *p, Node *var) {
-    if (p->var_decl_count >= p->var_decl_capacity) {
-        p->var_decl_capacity *= 2;
-        p->var_decls = realloc(p->var_decls, sizeof(P_Var_Decl) * p->var_decl_capacity);
-        if (!p->var_decls) {
-            printf("Failed to realloc for var decl\n");
-            exit(1);
-        }
-    }
-    p->var_decls[p->var_decl_count++] = (P_Var_Decl){var->var_decl.name, var->type, var};
-}
+void p_append_func_def(Parser *p, Node *func) { p_append_symbol(p, &(Symbol){func->func.name, FUNC, .func_def = func}); }
+void p_append_var_decl(Parser *p, Node *var) { p_append_symbol(p, &(Symbol){var->var_decl.name, VAR, .var_decl = var}); }
+void p_append_enum_const(Parser *p, EnumField *e) { p_append_symbol(p, &(Symbol){e->name, ENUM, .enum_field = *e}); }
+
 void p_append_element(Node *init_list, Node *element) {
     if (init_list->init_list.count >= init_list->init_list.capacity) {
         init_list->init_list.capacity *= 2;
@@ -503,12 +535,16 @@ void p_append_element(Node *init_list, Node *element) {
     init_list->init_list.elements[init_list->init_list.count++] = element;
 }
 Node *p_get_var_decl(Parser *p, const char *name) {
-    for (int i = 0; i < p->var_decl_count; i++) {
-        if (strcmp(p->var_decls[i].name, name) == 0) {
-            return p->var_decls[i].decl;
-        }
-    }
+    Symbol *s = p_get_symbol(p, name, VAR);
+    if (s) return s->var_decl;
     printf("Tried to find variable %s which does not exist\n", name);
+    exit(1);
+}
+
+EnumField *p_get_enum_const(Parser *p, const char *name) {
+    Symbol *s = p_get_symbol(p, name, ENUM);
+    if (s) return &s->enum_field;
+    printf("Tried to find enum constant %s which does not exist\n", name);
     exit(1);
 }
 /*
@@ -562,11 +598,19 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
     return node;
 }
 
+Node *current_func_definition(Parser *p) {
+    for (int i = p->st.count - 1; i >= 0; i--) {
+        if (p->st.symbols[i].kind == FUNC) return p->st.symbols[i].func_def;
+    }
+    printf("Cannot return outside of a function\n");
+    exit(1);
+}
+
 Node *p_parse_return(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_RETURN);
     p_consume(p); // -> return
     node->_return.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-    node->type = p->func_defs[p->func_def_count - 1].type;
+    node->type = current_func_definition(p)->type;
     p_consume_semi(p);
     return node;
 }
@@ -675,7 +719,7 @@ Node *p_parse_function(Parser *p, NodeManager *nm, Node *type) {
 }
 
 Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl) {
-    if (type_decl->type->kind == T_STRUCT) {
+    if (type_decl->type->kind == T_STRUCT || type_decl->type->kind == T_ENUM) {
         if (p_peek(p)->type != TK_IDENTIFIER) {
             p_consume_semi(p);
             return type_decl;

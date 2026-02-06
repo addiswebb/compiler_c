@@ -12,6 +12,7 @@ typedef enum {
     T_ARRAY,
     T_VOID,
     T_STRUCT,
+    T_ENUM,
     T_INVALID,
 } TypeKind;
 
@@ -29,6 +30,10 @@ typedef struct{
     int offset;
 }StructField;
 
+typedef struct{
+    char *name;
+    int value;
+}EnumField;
 struct Type{
     TypeKind kind;
     int size;
@@ -46,6 +51,14 @@ struct Type{
             StructField* fields;
             bool complete;
         }_struct;
+        // T_ENUM
+        struct{
+            char *name;
+            int count;
+            int capacity;
+            EnumField *fields;
+            bool complete;
+        }_enum;
     };
 };
 
@@ -77,16 +90,21 @@ Type *init_type(TypeKind type, int size);
 
 Type *new_type();
 Type *get_pointer_type(Type *type);
+
+Type *get_enum_type(const char *name);
 Type *get_struct_type(const char *name);
+
 Type *new_pointer_type(Type *type);
 
 Type *new_array_type(Type *type, int len);
 Type *get_array_type(Type *type, int len);
 Type *infer_array_length(Type *arr_type, int len);
 
-void append_struct_field(Type *_struct, StructField *field);
+void append_enum_field(Type *e, EnumField *f);
+void append_struct_field(Type *s, StructField *f);
 
 Type struct_type();
+Type enum_type();
 StructField *get_member(Type *t, const char *name);
 void print_type(Type* type);
 

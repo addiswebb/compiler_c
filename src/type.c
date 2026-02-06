@@ -103,6 +103,15 @@ Type *get_pointer_type(Type *type) {
     return new_pointer_type(type);
 }
 
+Type *get_enum_type(const char *name) {
+    for (int i = 0; i < typepool.count; i++) {
+        if (typepool.types[i].kind == T_ENUM && strcmp(name, typepool.types[i]._struct.name) == 0) {
+            return &typepool.types[i];
+        }
+    }
+    return NULL;
+}
+
 Type *get_struct_type(const char *name) {
     for (int i = 0; i < typepool.count; i++) {
         if (typepool.types[i].kind == T_STRUCT && strcmp(name, typepool.types[i]._struct.name) == 0) {
@@ -112,6 +121,19 @@ Type *get_struct_type(const char *name) {
     return NULL;
 }
 
+void append_enum_field(Type *e, EnumField *f) {
+    if (e->_enum.count >= e->_enum.capacity) {
+        e->_enum.capacity *= 2;
+        EnumField *new_fields = realloc(e->_enum.fields, sizeof(StructField) * e->_enum.capacity);
+        if (!new_fields) {
+            printf("Failed to reallocated for struct fields\n");
+            exit(1);
+        }
+        e->_enum.fields = new_fields;
+    }
+    e->size += type_int->size;
+    e->_enum.fields[e->_struct.count++] = *f;
+}
 void append_struct_field(Type *s, StructField *f) {
     if (s->_struct.count >= s->_struct.capacity) {
         s->_struct.capacity *= 2;
@@ -143,6 +165,22 @@ Type struct_type() {
     s._struct.count = 0;
     s._struct.fields = NULL;
     return s;
+}
+
+Type enum_type() {
+    Type e;
+    e.kind = T_ENUM;
+    e.base = NULL;
+    e.align = 0;
+    e.size = 0;
+    e.array_len = 0;
+    e.is_signed = 0;
+    e._enum.complete = false;
+    e._enum.name = NULL;
+    e._enum.capacity = 0;
+    e._enum.count = 0;
+    e._enum.fields = NULL;
+    return e;
 }
 
 StructField *get_member(Type *t, const char *name) {
@@ -208,6 +246,13 @@ void print_type(Type *type) {
         for (int i = 0; i < type->_struct.count; i++) {
             print_type(type->_struct.fields[i].type);
             printf(" %s, ", type->_struct.fields[i].name);
+        }
+        printf("}");
+        break;
+    case T_ENUM:
+        printf("enum %s {", type->_enum.name);
+        for (int i = 0; i < type->_enum.count; i++) {
+            printf(" %s = %d, ", type->_enum.fields[i].name, type->_enum.fields[i].value);
         }
         printf("}");
         break;

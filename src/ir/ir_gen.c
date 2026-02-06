@@ -409,6 +409,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
             ir_append_function(ctx->module, ir_gen_function(ctx, tu->translation_unit.declarations[i]));
             break;
         case N_TYPE:
+            // Handled by parser or smt
             break;
         case N_VAR_DECL:
             // Add support for globals eventually
