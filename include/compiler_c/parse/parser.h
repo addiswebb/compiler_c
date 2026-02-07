@@ -126,8 +126,10 @@ void p_append_param(Node *func, Node *param);
 void p_add_call_param(Node *func, Node *param);
 
 Symbol *p_get_symbol(Parser *p, const char *name, SymbolKind kind);
+void p_append_typedef(Parser *p, Typedef *t);
 void p_append_func_def(Parser *p, Node *func);
 Node *p_get_func_def(Parser *p, const char* name);
+Typedef *p_get_typedef(Parser *p, const char *name);
 
 void p_append_element(Node *init_list, Node *element);
 
@@ -209,6 +211,7 @@ Node *p_parse_function(Parser *p, NodeManager *nm, Node *type);
 Node *p_parse_external_declaration(Parser *p, NodeManager *nm);
 Node *p_parse_block_declaration(Parser *p, NodeManager *nm);
 Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type);
+Node *p_parse_typedef(Parser *p, NodeManager *nm);
 
 Node *p_parse_translation_unit(Parser* p, NodeManager *nm);
 Type *p_parse_type(Parser *p, NodeManager *nm);
@@ -216,4 +219,7 @@ Type *p_parse_enum(Parser *p, NodeManager *nm);
 Type *p_parse_struct(Parser *p, NodeManager *nm);
 
 Node *current_func_definition(Parser *p);
+
+bool is_type_token(Parser *p, Token *t);
+Type *token_to_type(Parser *p, Token*t);
 #endif // COMPILER_C_PARSER_H

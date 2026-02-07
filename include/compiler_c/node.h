@@ -24,6 +24,7 @@ typedef enum {
     N_CAST,
     N_INDEX,
     N_TYPE,
+    N_TYPEDEF,
     N_CONTINUE,
     N_BREAK,
     N_INIT_LIST,
@@ -175,6 +176,10 @@ struct Node {
             Node *test;
             int i;
         }_case;
+        // typedef Type Symbol
+        struct{
+            Node *symbol;
+        }_typedef;
     };
 };
 

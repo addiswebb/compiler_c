@@ -1,13 +1,13 @@
-#include <compiler_c/tokenizer.h>
-#include <compiler_c/util.h>
+#include "compiler_c/tokenizer.h"
+#include "compiler_c/util.h"
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-const char *KEYWORDS[KEYWORDS_N] = {"break", "case", "char", "continue", "double", "else",  "enum",   "exit",   "float", "for",
-                                    "if",    "int",  "long", "return",   "sizeof", "short", "struct", "switch", "void",  "while"};
+const char *KEYWORDS[KEYWORDS_N] = {"break", "case",   "char",   "continue", "default", "double", "else",   "enum",
+                                    "exit",  "float",  "for",    "if",       "int",     "long",   "return", "sizeof",
+                                    "short", "struct", "switch", "typedef",  "void",    "while"};
 
 static void t_buffer_reset(Tokenizer *tk) {
     tk->buf.size = 0;
@@ -164,7 +164,7 @@ static void t_parse_and_push_buffer(Tokenizer *tk) {
     }
     if (!is_keyword) {
         token.type = TK_IDENTIFIER;
-        token.value = strdup(tk->buf.buf);
+        token.value = _strdup(tk->buf.buf);
     }
     ta_push(&tk->tokens, token);
 }
@@ -392,23 +392,6 @@ void t_tokenize(Tokenizer *tk) {
         } else {
             t_consume_special_char(tk);
         }
-    }
-}
-
-bool is_type_token(const TokenType tk) {
-    switch (tk) {
-    case TK_CHAR:
-    case TK_SHORT:
-    case TK_INT:
-    case TK_LONG:
-    case TK_FLOAT:
-    case TK_DOUBLE:
-    case TK_VOID:
-    case TK_STRUCT:
-    case TK_ENUM:
-        return true;
-    default:
-        return false;
     }
 }
 
@@ -880,6 +863,12 @@ void print_token_type(const TokenType type) {
         break;
     case TK_COLON:
         printf("\':\'");
+        break;
+    case TK_DEFAULT:
+        printf("Default");
+        break;
+    case TK_TYPEDEF:
+        printf("Typedef");
         break;
     }
 }

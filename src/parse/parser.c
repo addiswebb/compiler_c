@@ -170,7 +170,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         break;
     case TK_OPEN_PAREN:
         p_consume_a(p, TK_OPEN_PAREN);
-        if (is_type_token(p_peek(p)->type)) {
+        if (is_type_token(p, p_peek(p))) {
             Node *type_node = new_node(nm, N_TYPE);
             type_node->type = p_parse_type(p, nm);
             p_consume_a(p, TK_CLOSE_PAREN);
@@ -303,7 +303,7 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     statement
 */
 Node *p_parse_block_item(Parser *p, NodeManager *nm) {
-    if (is_type_token(p_peek(p)->type)) return p_parse_block_declaration(p, nm);
+    if (is_type_token(p, p_peek(p))) return p_parse_block_declaration(p, nm);
     else return p_parse_statement(p, nm);
 }
 Node *p_parse_block_declaration(Parser *p, NodeManager *nm);
@@ -318,7 +318,7 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
         type = p_parse_enum(p, nm);
     } else {
         Token *t = p_peek(p);
-        type = token_to_type(p_consume(p)->type);
+        type = token_to_type(p, p_consume(p));
     }
     if (type == type_invalid) {
         printf("Tried to parse an unknown type\n");
@@ -516,6 +516,12 @@ Symbol *p_get_symbol(Parser *p, const char *name, SymbolKind kind) {
     return NULL;
 }
 
+Typedef *p_get_typedef(Parser *p, const char *name) {
+    Symbol *s = p_get_symbol(p, name, TYPEDEF);
+    if (s) return &s->_typedef;
+    printf("Tried to get the typedef of %s, which does not exist\n", name);
+    exit(1);
+}
 Node *p_get_func_def(Parser *p, const char *name) {
     Symbol *s = p_get_symbol(p, name, FUNC);
     if (s) return s->func_def;
@@ -523,6 +529,7 @@ Node *p_get_func_def(Parser *p, const char *name) {
     exit(1);
 }
 
+void p_append_typedef(Parser *p, Typedef *t) { p_append_symbol(p, &(Symbol){t->new_def, TYPEDEF, ._typedef = *t}); }
 void p_append_func_def(Parser *p, Node *func) { p_append_symbol(p, &(Symbol){func->func.name, FUNC, .func_def = func}); }
 void p_append_var_decl(Parser *p, Node *var) { p_append_symbol(p, &(Symbol){var->var_decl.name, VAR, .var_decl = var}); }
 void p_append_enum_const(Parser *p, EnumField *e) { p_append_symbol(p, &(Symbol){e->name, ENUM, .enum_field = *e}); }
@@ -585,9 +592,16 @@ Node *p_parse_while_loop(Parser *p, NodeManager *nm) {
     return node;
 }
 Node *p_parse_case(Parser *p, NodeManager *nm) {
-    p_consume_a(p, TK_CASE);
     Node *node = new_node(nm, N_CASE);
-    node->_case.test = p_parse_primary_expression(p, nm);
+    if (p_peek(p)->type == TK_CASE) {
+        p_consume_a(p, TK_CASE);
+        node->_case.test = p_parse_primary_expression(p, nm);
+    } else {
+        // Default default
+        p_consume_a(p, TK_DEFAULT);
+        node->_case.test = NULL;
+        node->_case.i = -1;
+    }
     p_consume_a(p, TK_COLON);
     return node;
 }
@@ -626,7 +640,7 @@ Node *p_parse_switch_statement(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_OPEN_CURLY);
     while (p_peek(p)->type != TK_CLOSE_CURLY) {
         Node *item;
-        if (p_peek(p)->type == TK_CASE) {
+        if (p_peek(p)->type == TK_CASE || p_peek(p)->type == TK_DEFAULT) {
             item = p_parse_case(p, nm);
             p_append_case(node, item);
         } else {
@@ -820,6 +834,10 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl) {
 
 // Either function or type/var declaration
 Node *p_parse_external_declaration(Parser *p, NodeManager *nm) {
+    // Handle other storage class specifiers here later
+    if (p_peek(p)->type == TK_TYPEDEF) {
+        return p_parse_typedef(p, nm);
+    }
     Node *type_decl = new_node(nm, N_TYPE);
     type_decl->type = p_parse_type(p, nm);
 
@@ -828,6 +846,19 @@ Node *p_parse_external_declaration(Parser *p, NodeManager *nm) {
     } else {
         return p_parse_declaration(p, nm, type_decl);
     }
+}
+Node *p_parse_typedef(Parser *p, NodeManager *nm) {
+    p_consume_a(p, TK_TYPEDEF);
+    Node *node = new_node(nm, N_TYPEDEF);
+    node->type = p_parse_type(p, nm);
+    node->_typedef.symbol = new_node(nm, N_IDENTIFIER);
+    Token *t = p_consume_a(p, TK_IDENTIFIER);
+    // TODO: add null terminator maybe
+    node->_typedef.symbol->identifier.name = t->value;
+    node->_typedef.symbol->identifier.len = t->size;
+    p_consume_semi(p);
+    p_append_typedef(p, &(Typedef){.type = node->type, .new_def = t->value});
+    return node;
 }
 
 Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
@@ -855,4 +886,45 @@ Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
         p_append_declaration(root, p_parse_external_declaration(p, nm));
     }
     return root;
+}
+bool is_type_token(Parser *p, Token *t) {
+    switch (t->type) {
+    case TK_CHAR:
+    case TK_SHORT:
+    case TK_INT:
+    case TK_LONG:
+    case TK_FLOAT:
+    case TK_DOUBLE:
+    case TK_VOID:
+    case TK_STRUCT:
+    case TK_ENUM:
+        return true;
+    case TK_IDENTIFIER:
+        return p_get_symbol(p, t->value, TYPEDEF) != NULL;
+    default:
+        return false;
+    }
+}
+
+Type *token_to_type(Parser *p, Token *t) {
+    switch (t->type) {
+    case TK_CHAR:
+        return type_char;
+    case TK_SHORT:
+        return type_short;
+    case TK_INT:
+        return type_int;
+    case TK_LONG:
+        return type_long;
+    case TK_FLOAT:
+        return type_float;
+    case TK_DOUBLE:
+        return type_double;
+    case TK_VOID:
+        return type_void;
+    case TK_IDENTIFIER:
+        return p_get_typedef(p, t->value)->type;
+    default:
+        return type_invalid;
+    }
 }

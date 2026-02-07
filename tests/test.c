@@ -1,10 +1,9 @@
+typedef struct {
+    int a;
+    char b;
+} A;
+
 int main() {
-    int a = 4;
-    switch (a) {
-    case 1:
-        return 5;
-    case 2:
-        return 1;
-    }
-    return 0;
+    A x = {10, 'a'};
+    return x.a;
 }

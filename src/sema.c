@@ -12,27 +12,6 @@
 bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER || n->kind == N_INDEX || n->kind == N_MEMBER_ACCESS || is_deref(n); }
 bool is_deref(Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY; }
 
-Type *token_to_type(TokenType t) {
-    switch (t) {
-    case TK_CHAR:
-        return type_char;
-    case TK_SHORT:
-        return type_short;
-    case TK_INT:
-        return type_int;
-    case TK_LONG:
-        return type_long;
-    case TK_FLOAT:
-        return type_float;
-    case TK_DOUBLE:
-        return type_double;
-    case TK_VOID:
-        return type_void;
-    default:
-        return type_invalid;
-    }
-}
-
 Type *check_unary_op(Node *unaryop) {
     Node *expr = unaryop->unary.expr;
     TypeKind kind = expr->type->kind;
@@ -462,10 +441,13 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         break;
     case N_CASE:
         semantic_analysis(p, nm, node->_case.test, loop);
+        if (!node->_case.test) break;
         if (node->_case.test->type->kind != T_INT) {
             printf("Not ready to handle non int test cases\n");
             exit(1);
         }
+        break;
+    case N_TYPEDEF:
         break;
     }
 }

@@ -16,7 +16,7 @@ typedef struct {
     int size;
 } Buffer;
 
-#define KEYWORDS_N 20
+#define KEYWORDS_N 22
 extern const char* KEYWORDS[KEYWORDS_N];
 
 /*
@@ -33,6 +33,7 @@ typedef enum {
     TK_CASE,
     TK_CHAR,
     TK_CONTINUE,
+    TK_DEFAULT,
     TK_DOUBLE,
     TK_ELSE,
     TK_ENUM,
@@ -47,6 +48,7 @@ typedef enum {
     TK_SHORT,
     TK_STRUCT,
     TK_SWITCH,
+    TK_TYPEDEF,
     TK_VOID,
     TK_WHILE,
     // Unary Operators
@@ -105,7 +107,6 @@ void print_token_type(TokenType type);
 
 void print_token(const Token *token);
 
-bool is_type_token(const TokenType tk);
 bool is_unary_operator(const TokenType type);
 bool is_binary_operator(const TokenType type);
 bool is_assignment_op(const TokenType type);

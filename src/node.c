@@ -173,6 +173,9 @@ void print_node_type(const NodeKind type) {
     case N_CASE:
         printf("Case");
         break;
+    case N_TYPEDEF:
+        printf("Typedef");
+        break;
     }
 }
 
@@ -368,8 +371,16 @@ void print_node(const Node *node, const int depth) {
         print_node(node->_switch.block, depth + 1);
         break;
     case N_CASE:
-        printf(": [index=%d]\n", node->_case.i);
-        print_node(node->_case.test, depth + 1);
+        if (node->_case.test) {
+            printf(": [index=%d]\n", node->_case.i);
+            print_node(node->_case.test, depth + 1);
+        } else printf(": Default\n");
+        break;
+    case N_TYPEDEF:
+        printf(": [type= ");
+        print_type(node->type);
+        printf(", identifier]\n");
+        print_node(node->_typedef.symbol, depth + 1);
         break;
     }
 }
