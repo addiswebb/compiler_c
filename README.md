@@ -186,6 +186,10 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * Allow infered size allocation `int[]`
 * Advanced Control Flow
     * continue, break
+* Structs, Enums
+    * `struct A {}` `enum B {}`
+    * Member access using `.` and `->`
+    * Padding rules
     
 ## To be Implemented (Ordered from next to never...)
 * Array Initialization
@@ -198,9 +202,7 @@ Returns control flow to callee, also returns a value. If no value is given, retu
 * Literals
     * Handle overflows and multi char literal `char a = 'abcd';`
 * Structs and Unions, Enums
-    * Member access using `.` and `->`
     * Designated Initializers `.member = value`
-    * Padding rules
     * Bitfield in structs
         * `unsigned int flag : 1; // 1 bit`
 * Variants
