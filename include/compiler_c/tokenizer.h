@@ -16,7 +16,7 @@ typedef struct {
     int size;
 } Buffer;
 
-#define KEYWORDS_N 18
+#define KEYWORDS_N 20
 extern const char* KEYWORDS[KEYWORDS_N];
 
 /*
@@ -30,6 +30,7 @@ extern const char* KEYWORDS[KEYWORDS_N];
 typedef enum {
     // Keywords
     TK_BREAK,
+    TK_CASE,
     TK_CHAR,
     TK_CONTINUE,
     TK_DOUBLE,
@@ -45,6 +46,7 @@ typedef enum {
     TK_SIZEOF,
     TK_SHORT,
     TK_STRUCT,
+    TK_SWITCH,
     TK_VOID,
     TK_WHILE,
     // Unary Operators
@@ -66,7 +68,7 @@ typedef enum {
     TK_OPEN_CURLY, TK_CLOSE_CURLY,
     TK_OPEN_SQUARE, TK_CLOSE_SQUARE,
     TK_COMMA,
-    TK_SEMI,
+    TK_SEMI, TK_COLON,
     // Other
     TK_INT_LITERAL, TK_FLT_LITERAL, TK_CHAR_LITERAL, TK_STRING_LITERAL,
     TK_EXPR,

@@ -13,6 +13,8 @@ typedef enum {
     N_IF,
     N_WHILE,
     N_FOR,
+    N_SWITCH,
+    N_CASE,
     N_RETURN,
     N_UNARY,
     N_BINARY,
@@ -160,6 +162,19 @@ struct Node {
             Node *member;
             int offset;
         }member_access;
+        // switch(cond) {}
+        struct{
+            Node *test;
+            Node *block;
+            Node **cases;
+            int count;
+            int capacity;
+        }_switch;
+        // case test:
+        struct{
+            Node *test;
+            int i;
+        }_case;
     };
 };
 

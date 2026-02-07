@@ -167,6 +167,12 @@ void print_node_type(const NodeKind type) {
     case N_MEMBER_ACCESS:
         printf("Member Access");
         break;
+    case N_SWITCH:
+        printf("Switch");
+        break;
+    case N_CASE:
+        printf("Case");
+        break;
     }
 }
 
@@ -355,6 +361,15 @@ void print_node(const Node *node, const int depth) {
         printf("]\n");
         print_node(node->member_access.identifier, depth + 1);
         print_node(node->member_access.member, depth + 1);
+        break;
+    case N_SWITCH:
+        printf(": [cases= %d]\n", node->_switch.count);
+        print_node(node->_switch.test, depth + 1);
+        print_node(node->_switch.block, depth + 1);
+        break;
+    case N_CASE:
+        printf(": [index=%d]\n", node->_case.i);
+        print_node(node->_case.test, depth + 1);
         break;
     }
 }

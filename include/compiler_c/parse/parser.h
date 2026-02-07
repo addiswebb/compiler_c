@@ -56,12 +56,6 @@ typedef struct {
     TokenArray *src;
     bool expect_semi;
     SymbolTable st;
-    // P_Func_Def *func_defs;
-    // int func_def_count;
-    // int func_def_capacity;
-    // P_Var_Decl *var_decls;
-    // int var_decl_count;
-    // int var_decl_capacity;
 } Parser;
 
 Parser new_parser();
@@ -160,6 +154,15 @@ Node *p_parse_if_statement(Parser *p, NodeManager *nm);
 */
 Node *p_parse_while_loop(Parser *p, NodeManager *nm);
 
+void p_append_case(Node *s, Node *c);
+
+/*
+    Consumes
+    `switch ([cond]) {[case LABEL:/statement]}
+*/
+Node *p_parse_switch_statement(Parser *p, NodeManager *nm);
+
+Node *p_parse_case(Parser *p, NodeManager *nm);
 /*
     Consumes
     `for ([init];[cond]; [end]) {[compound]}`

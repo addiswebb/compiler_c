@@ -525,9 +525,7 @@ Node *p_get_func_def(Parser *p, const char *name) {
 
 void p_append_func_def(Parser *p, Node *func) { p_append_symbol(p, &(Symbol){func->func.name, FUNC, .func_def = func}); }
 void p_append_var_decl(Parser *p, Node *var) { p_append_symbol(p, &(Symbol){var->var_decl.name, VAR, .var_decl = var}); }
-void p_append_enum_const(Parser *p, EnumField *e) { 
-    p_append_symbol(p, &(Symbol){e->name, ENUM, .enum_field = *e}); 
-}
+void p_append_enum_const(Parser *p, EnumField *e) { p_append_symbol(p, &(Symbol){e->name, ENUM, .enum_field = *e}); }
 
 void p_append_element(Node *init_list, Node *element) {
     if (init_list->init_list.count >= init_list->init_list.capacity) {
@@ -586,7 +584,60 @@ Node *p_parse_while_loop(Parser *p, NodeManager *nm) {
     node->_while.block = p_parse_statement(p, nm);
     return node;
 }
+Node *p_parse_case(Parser *p, NodeManager *nm) {
+    p_consume_a(p, TK_CASE);
+    Node *node = new_node(nm, N_CASE);
+    node->_case.test = p_parse_primary_expression(p, nm);
+    p_consume_a(p, TK_COLON);
+    return node;
+}
 
+void p_append_case(Node *s, Node *c) {
+    if (s->_switch.count >= s->_switch.capacity) {
+        s->_switch.capacity *= 2;
+        Node **new_cases = realloc(s->_switch.cases, sizeof(Node *) * s->_switch.capacity);
+        if (!new_cases) {
+            printf("Failed to realloc for switch cases\n");
+            exit(1);
+        }
+        s->_switch.cases = new_cases;
+    }
+    c->_case.i = s->_switch.block->compound.count;
+    s->_switch.cases[s->_switch.count++] = c;
+}
+
+Node *p_parse_switch_statement(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_SWITCH);
+    node->_switch.capacity = 4;
+    node->_switch.count = 0;
+    node->_switch.cases = malloc(sizeof(Node *) * node->_switch.capacity);
+    if (!node->_switch.cases) {
+        printf("Failed to alloc for switch cases\n");
+        exit(1);
+    }
+
+    p_consume_a(p, TK_SWITCH);
+    p_consume_a(p, TK_OPEN_PAREN);
+    node->_switch.test = p_parse_primary_expression(p, nm);
+    p_consume_a(p, TK_CLOSE_PAREN);
+
+    node->_switch.block = new_compound_node(nm);
+
+    p_consume_a(p, TK_OPEN_CURLY);
+    while (p_peek(p)->type != TK_CLOSE_CURLY) {
+        Node *item;
+        if (p_peek(p)->type == TK_CASE) {
+            item = p_parse_case(p, nm);
+            p_append_case(node, item);
+        } else {
+            item = p_parse_block_item(p, nm);
+        }
+        p_append_block_item(node->_switch.block, item);
+    }
+    p_consume_a(p, TK_CLOSE_CURLY);
+
+    return node;
+}
 Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_FOR);
     p_consume_a(p, TK_FOR);
@@ -659,6 +710,8 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
         return p_parse_while_loop(p, nm);
     case TK_FOR:
         return p_parse_for_loop(p, nm);
+    case TK_SWITCH:
+        return p_parse_switch_statement(p, nm);
     case TK_CONTINUE:
         return p_parse_continue(p, nm);
     case TK_BREAK:

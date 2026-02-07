@@ -456,6 +456,17 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             node->member_access.op = TK_DOT;
         }
         break;
+    case N_SWITCH:
+        semantic_analysis(p, nm, node->_switch.test, loop);
+        semantic_analysis(p, nm, node->_switch.block, loop);
+        break;
+    case N_CASE:
+        semantic_analysis(p, nm, node->_case.test, loop);
+        if (node->_case.test->type->kind != T_INT) {
+            printf("Not ready to handle non int test cases\n");
+            exit(1);
+        }
+        break;
     }
 }
 
