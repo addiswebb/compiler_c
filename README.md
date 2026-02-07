@@ -186,6 +186,7 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * Allow infered size allocation `int[]`
 * Advanced Control Flow
     * continue, break
+    * switch, case,
 * Structs, Enums
     * `struct A {}` `enum B {}`
     * Member access using `.` and `->`
@@ -198,11 +199,11 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * [Pointer,Pointer] Arithmetic
     * Function pointers
 * Advanced Control Flow:
-    * switch, case,  goto,
+    * goto & labels
 * Literals
     * Handle overflows and multi char literal `char a = 'abcd';`
 * Structs and Unions, Enums
-    * Designated Initializers `.member = value`
+    * Designated Initializers `.member = value` [C99+]
     * Bitfield in structs
         * `unsigned int flag : 1; // 1 bit`
 * Variants
