@@ -272,7 +272,7 @@ void print_node(const Node *node, const int depth) {
         if (node->func.param_count > 0) {
             printf(" { ");
             for (int i = 0; i < node->func.param_count; i++) {
-                printf("int %s ", node->func.params[i]->var_decl.name);
+                printf("int %s ", node->func.params[i]->var_decl.identifier->identifier.name);
             }
             printf("}");
         }
@@ -282,7 +282,7 @@ void print_node(const Node *node, const int depth) {
     case N_VAR_DECL:
         printf(": [type= ");
         print_type(node->type);
-        printf(", name= %s]\n", node->var_decl.name);
+        printf(", name= %s]\n", node->var_decl.identifier->identifier.name);
         if (node->var_decl.expr) print_node(node->var_decl.expr, depth + 1);
         break;
     case N_RETURN:

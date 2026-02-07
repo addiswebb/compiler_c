@@ -392,7 +392,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             node->_break.loop = loop;
             break;
         }
-        printf("Cannot call break outside of a loop\n");
+        printf("Cannot call break outside of a loop or switch statement\n");
         exit(1);
     case N_INIT_LIST:
         printf("Semantic parser should never reach a Init List node\n");
@@ -436,13 +436,13 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         }
         break;
     case N_SWITCH:
-        semantic_analysis(p, nm, node->_switch.test, loop);
-        semantic_analysis(p, nm, node->_switch.block, loop);
+        semantic_analysis(p, nm, node->_switch.test, node);
+        semantic_analysis(p, nm, node->_switch.block, node);
         break;
     case N_CASE:
         semantic_analysis(p, nm, node->_case.test, loop);
         if (!node->_case.test) break;
-        if (node->_case.test->type->kind != T_INT) {
+        if (!(node->_case.test->type->kind == T_INT || node->_case.test->type->kind == T_ENUM)) {
             printf("Not ready to handle non int test cases\n");
             exit(1);
         }

@@ -154,18 +154,26 @@ void ir_compute_func_io(IR_Function *f) {
         IR_Block *b = f->blocks[j];
 
         if (b->count == 0) continue;
-        IR_Instruction *end_instr = &b->instructions[b->count - 1];
-        switch (end_instr->op) {
-        case IR_BR:
-            add_successor(f, b, end_instr->br.block);
-            break;
-        case IR_BR_COND:
-            if (end_instr->br_cond.f_block) add_successor(f, b, end_instr->br_cond.f_block);
-            if (end_instr->br_cond.t_block) add_successor(f, b, end_instr->br_cond.t_block);
-            break;
-        case IR_RET:
-            break;
-        default:
+        bool found = false;
+        for (int i = 0; i < b->count; i++) {
+            // IR_Instruction *end_instr = &b->instructions[b->count - 1];
+            IR_Instruction *instr = &b->instructions[i];
+            switch (instr->op) {
+            case IR_BR:
+                add_successor(f, b, instr->br.block);
+                found = true;
+                break;
+            case IR_BR_COND:
+                if (instr->br_cond.f_block) add_successor(f, b, instr->br_cond.f_block);
+                if (instr->br_cond.t_block) add_successor(f, b, instr->br_cond.t_block);
+                found = true;
+                break;
+            case IR_RET:
+            default:
+                break;
+            }
+        }
+        if (!found) {
             if (j < f->block_count - 1) {
                 // TODO: give this more thought, can it fail...?
                 add_successor(f, b, f->blocks[j + 1]);

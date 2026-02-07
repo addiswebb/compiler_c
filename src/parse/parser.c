@@ -531,7 +531,9 @@ Node *p_get_func_def(Parser *p, const char *name) {
 
 void p_append_typedef(Parser *p, Typedef *t) { p_append_symbol(p, &(Symbol){t->new_def, TYPEDEF, ._typedef = *t}); }
 void p_append_func_def(Parser *p, Node *func) { p_append_symbol(p, &(Symbol){func->func.name, FUNC, .func_def = func}); }
-void p_append_var_decl(Parser *p, Node *var) { p_append_symbol(p, &(Symbol){var->var_decl.name, VAR, .var_decl = var}); }
+void p_append_var_decl(Parser *p, Node *var) {
+    p_append_symbol(p, &(Symbol){var->var_decl.identifier->identifier.name, VAR, .var_decl = var});
+}
 void p_append_enum_const(Parser *p, EnumField *e) { p_append_symbol(p, &(Symbol){e->name, ENUM, .enum_field = *e}); }
 
 void p_append_element(Node *init_list, Node *element) {
@@ -539,7 +541,7 @@ void p_append_element(Node *init_list, Node *element) {
         init_list->init_list.capacity *= 2;
         Node **new_elements = realloc(init_list->init_list.elements, sizeof(Node *) * init_list->init_list.capacity);
         if (!new_elements) {
-            printf("Failed to append s");
+            printf("Failed to append element to initlist\n");
             exit(1);
         }
     }
@@ -597,10 +599,8 @@ Node *p_parse_case(Parser *p, NodeManager *nm) {
         p_consume_a(p, TK_CASE);
         node->_case.test = p_parse_primary_expression(p, nm);
     } else {
-        // Default default
         p_consume_a(p, TK_DEFAULT);
         node->_case.test = NULL;
-        node->_case.i = -1;
     }
     p_consume_a(p, TK_COLON);
     return node;
@@ -779,7 +779,7 @@ Node *p_parse_function(Parser *p, NodeManager *nm, Node *type) {
     while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
         Node *param = new_node(nm, N_VAR_DECL);
         param->type = p_parse_type(p, nm);
-        param->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
+        param->var_decl.identifier = p_parse_decl_identifier(p, nm);
         param->var_decl.expr = NULL;
         p_append_param(node, param);
         if (p_peek(p)->type == TK_COMMA) p_consume(p);
@@ -788,6 +788,17 @@ Node *p_parse_function(Parser *p, NodeManager *nm, Node *type) {
     p_consume_a(p, TK_CLOSE_PAREN);
     p_append_func_def(p, node);
     node->func.body = p_parse_compound(p, nm);
+    return node;
+}
+
+Node *p_parse_decl_identifier(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_IDENTIFIER);
+    bool expect_closing_paren = p_peek(p)->type == TK_OPEN_PAREN;
+    if (expect_closing_paren) p_consume(p); // (
+    Token *t = p_consume_a(p, TK_IDENTIFIER);
+    node->identifier.name = t->value;
+    node->identifier.len = t->size;
+    if (expect_closing_paren) p_consume_a(p, TK_CLOSE_PAREN);
     return node;
 }
 
@@ -803,7 +814,7 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl) {
         }
     }
     Node *var_decl = new_node(nm, N_VAR_DECL);
-    var_decl->var_decl.name = p_consume_a(p, TK_IDENTIFIER)->value;
+    var_decl->var_decl.identifier = p_parse_decl_identifier(p, nm);
 
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p); // [
@@ -851,13 +862,9 @@ Node *p_parse_typedef(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_TYPEDEF);
     Node *node = new_node(nm, N_TYPEDEF);
     node->type = p_parse_type(p, nm);
-    node->_typedef.symbol = new_node(nm, N_IDENTIFIER);
-    Token *t = p_consume_a(p, TK_IDENTIFIER);
-    // TODO: add null terminator maybe
-    node->_typedef.symbol->identifier.name = t->value;
-    node->_typedef.symbol->identifier.len = t->size;
+    node->_typedef.symbol = p_parse_decl_identifier(p, nm);
     p_consume_semi(p);
-    p_append_typedef(p, &(Typedef){.type = node->type, .new_def = t->value});
+    p_append_typedef(p, &(Typedef){.type = node->type, .new_def = node->_typedef.symbol->identifier.name});
     return node;
 }
 

@@ -187,11 +187,8 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
 }
 
 static void ir_gen_block_item(IR_Context *ctx, const Node *item) {
-    if (item->kind == N_VAR_DECL) {
-        ir_gen_var_decl(ctx, item);
-    } else {
-        ir_gen_statement(ctx, item);
-    }
+    if (item->kind == N_VAR_DECL) ir_gen_var_decl(ctx, item);
+    else ir_gen_statement(ctx, item);
 }
 
 static void ir_gen_compound(IR_Context *ctx, const Node *comp) {
@@ -225,6 +222,47 @@ static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
     ir_pop_loop_ctx(ctx);
     ir_end_scope(ctx->func);
 }
+static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
+    IR_Value test = ir_gen_rvalue(ctx, _switch->_switch.test);
+    if (_switch->_switch.count == 0) return;
+    IR_Block **cases = malloc(sizeof(IR_Block *) * _switch->_switch.count);
+    if (!cases) {
+        printf("Failed to allocate for ir_gen_switch cases\n");
+        exit(1);
+    }
+    IR_Block *default_block = ir_new_block();
+    IR_Block *end_block = ir_new_block();
+    int block_index = 0;
+    for (int i = 0; i < _switch->_switch.count; i++) {
+        // Is a case x:
+        if (_switch->_switch.cases[i]->_case.test) {
+            cases[block_index++] = ir_new_block();
+            IR_Value test_case = ir_gen_rvalue(ctx, _switch->_switch.cases[i]->_case.test);
+            IR_Value cmp_reg = ir_cmp(ctx, NEQ, test, test_case);
+            // branch for fallthrough to the next test.
+            ir_branch_cond(ctx, cmp_reg, NULL, cases[block_index - 1]);
+        }
+    }
+    ir_branch(ctx, default_block);
+
+    ir_begin_scope(ctx->func);
+    ir_push_loop_ctx(ctx, NULL, end_block);
+    int j = 0;
+    for (int i = 0; i < _switch->_switch.block->compound.count; i++) {
+        Node *node = _switch->_switch.block->compound.items[i];
+        if (node->kind == N_CASE) {
+            if (node->_case.test) ir_append_block(ctx, cases[j++]);
+            else ir_append_block(ctx, default_block);
+        } else {
+            ir_gen_block_item(ctx, node);
+        }
+    }
+    ir_pop_loop_ctx(ctx);
+    ir_end_scope(ctx->func);
+
+    ir_append_block(ctx, end_block);
+}
+
 static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_begin_scope(ctx->func);
     ir_gen_block_item(ctx, _for->_for.init);
@@ -288,7 +326,7 @@ static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
 }
 
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
-    IR_Value dst = ir_new_var(ctx->func, var_decl->var_decl.name, var_decl->type);
+    IR_Value dst = ir_new_var(ctx->func, var_decl->var_decl.identifier->identifier.name, var_decl->type);
     if (!var_decl->var_decl.expr) return;
     if (var_decl->var_decl.expr->kind == N_INIT_LIST) {
         bool is_array = var_decl->type->kind == T_ARRAY;
@@ -327,20 +365,17 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
 static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     switch (stmt->kind) {
     case N_RETURN:
-        ir_gen_return(ctx, stmt);
-        return;
+        return ir_gen_return(ctx, stmt);
     case N_COMPOUND:
-        ir_gen_compound(ctx, stmt);
-        return;
+        return ir_gen_compound(ctx, stmt);
     case N_IF:
-        ir_gen_if_statement(ctx, stmt);
-        return;
+        return ir_gen_if_statement(ctx, stmt);
     case N_WHILE:
-        ir_gen_while_loop(ctx, stmt);
-        return;
+        return ir_gen_while_loop(ctx, stmt);
     case N_FOR:
-        ir_gen_for_loop(ctx, stmt);
-        return;
+        return ir_gen_for_loop(ctx, stmt);
+    case N_SWITCH:
+        return ir_gen_switch_statement(ctx, stmt);
     case N_FUNCTION_CALL:
     case N_BINARY:
     case N_UNARY:
@@ -381,7 +416,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     ir_begin_scope(fn);
     // handle (params)
     for (int i = 0; i < func->func.param_count; i++) {
-        ir_new_var(ctx->func, func->func.params[i]->var_decl.name, func->func.params[i]->type);
+        ir_new_var(ctx->func, func->func.params[i]->var_decl.identifier->identifier.name, func->func.params[i]->type);
         ir_store(ctx, ir_mem_value(i, func->func.params[i]->type), ir_reg_value(-func->func.param_count + i, func->func.params[i]->type),
                  func->func.params[i]->type);
     }

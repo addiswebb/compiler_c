@@ -121,7 +121,7 @@ struct Node {
         // type name = expr;
         struct {
             Node *type;
-            char *name;
+            Node *identifier;
             Node *expr;
         } var_decl;
         // identifier(params*)

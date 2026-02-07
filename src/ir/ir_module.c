@@ -48,7 +48,10 @@ void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break
         }
         s->data = new_data;
     }
-    s->data[s->size++] = (IR_LoopContext){continue_block, break_block};
+    IR_Block *new_continue_block = continue_block;
+    // Try retrieve current continue block, if provided with NULL (switch statement has no continue block to jump to)
+    if (!continue_block) new_continue_block = s->size < 1 ? NULL : s->data[s->size - 1].continue_block;
+    s->data[s->size++] = (IR_LoopContext){new_continue_block, break_block};
 }
 
 void ir_pop_loop_ctx(IR_Context *ctx) { ctx->loop_stack.size--; }

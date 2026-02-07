@@ -1,0 +1,10 @@
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t.exe
+// RUN: pwsh -c "%t.exe ; %check_exit 7 $LASTEXITCODE"
+
+typedef int T;
+
+int main() {
+    T x = 7;
+    return x;
+}

@@ -210,6 +210,7 @@ Node *p_parse_function(Parser *p, NodeManager *nm, Node *type);
 
 Node *p_parse_external_declaration(Parser *p, NodeManager *nm);
 Node *p_parse_block_declaration(Parser *p, NodeManager *nm);
+Node *p_parse_decl_identifier(Parser *p, NodeManager *nm);
 Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type);
 Node *p_parse_typedef(Parser *p, NodeManager *nm);
 
