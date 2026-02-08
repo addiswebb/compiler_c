@@ -5,7 +5,7 @@ import os
 
 import lit.formats
 
-config.name = "compiler_cc"
+config.name = "compiler_c"
 
 config.test_format = lit.formats.ShTest()
 
