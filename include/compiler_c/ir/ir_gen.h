@@ -4,6 +4,7 @@
 #include "compiler_c/ir/ir_module.h"
 
 static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr);
+IR_Literal ir_gen_literal(const Node *node);
 IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr);
 static void ir_gen_block_item(IR_Context *ctx, const Node *item);
 static void ir_gen_compound(IR_Context *ctx, const Node *comp);

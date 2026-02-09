@@ -2,6 +2,7 @@
 #define COMPILER_C_IR_MODULE_H
 
 #include "compiler_c/node.h"
+#include "compiler_c/parse/parser.h"
 #include "compiler_c/type.h"
 #include <stdint.h>
 
@@ -51,22 +52,47 @@ typedef enum {
 } IR_OP;
 
 typedef enum{
-     IR_UNDEFINED, IR_REG, IR_MEM, IR_STACK, IR_LITERAL
+     IR_UNDEFINED, IR_REG, IR_MEM, IR_STACK, IR_LITERAL, IR_GLOBAL
 }IR_ValueKind;
 
 typedef struct{
+    Type *type;
+    union{
+        int64_t i;
+        double f;
+        struct {
+            const char* data;
+            int len;
+        }s;
+    };
+}IR_Literal;
+
+typedef struct{
+    const char *name;
+    Type *type;
+    IR_Literal val;
+    Storage storage;
+    Linkage linkage;
+}IR_Global;
+
+typedef struct {
     IR_ValueKind kind;
     union{
+        // IR_REG
         struct{
             int reg;
             int stack_slot;
             int stack_offset;
         };
+        // IR_STACK
         struct{
             int mem;
             int offset;
         };
+        // IR_LITERAL
         int const_index;
+        // IR_GLOBAL
+        IR_Global *global;
     };
     int size;
     int align;
@@ -82,14 +108,6 @@ typedef struct{
     uint8_t def_mask;
     uint8_t use_mask;
 } IR_OpInfo;
-/*
-    IR_BR, IR_BR_COND,
-    IR_CMP,
-    IR_CAST,
-    IR_ADDR,
-    IR_ALLOCA,
-    IR_MEMCPY,
-*/
 
 extern IR_OpInfo op_info[];
 typedef struct IR_Block IR_Block;
@@ -186,6 +204,8 @@ typedef struct {
     IR_StackSlot *stack_slots;
     int stack_slot_count;
     int stack_slot_capacity;
+    Linkage linkage;
+    Storage storage;
 } IR_Function;
 
 typedef struct{
@@ -194,22 +214,16 @@ typedef struct{
 } IR_Func_Def;
 
 typedef struct{
-    Type *type;
-    union{
-        int64_t i;
-        double f;
-        struct {
-            const char* data;
-            int len;
-        }s;
-    };
-}IR_Const;
+    int count;
+    int capacity;
+    IR_Literal *consts;
+}IR_Const_Pool;
 
 typedef struct{
     int count;
     int capacity;
-    IR_Const *consts;
-}IR_Const_Pool;
+    IR_Global *globals;
+}IR_Global_Pool;
 
 typedef struct {
     IR_Function **functions;
@@ -217,6 +231,7 @@ typedef struct {
     int func_capacity;
     IR_Func_Def *defs;
     IR_Const_Pool const_pool;
+    IR_Global_Pool global_pool;
 } IR_Module;
 
 typedef struct{
@@ -268,7 +283,8 @@ IR_Block *ir_new_block();
 IR_Block *ir_add_block(IR_Context *ctx);
 void ir_append_function(IR_Module *module, IR_Function *func);
 void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction);
-IR_Value ir_append_const(IR_Module *module, IR_Const *new_const);
+void ir_append_global(IR_Module *module, const char *name, Type *type, IR_Literal *literal, Linkage linkage, Storage storage);
+IR_Value ir_append_const(IR_Module *module, IR_Literal *literal);
 IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
 
 int ir_get_func_def(const IR_Context *ctx, const char *name);

@@ -298,8 +298,10 @@ void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlo
                 case IR_UNDEFINED:
                     printf("An undefined IR value made it to analysis!!\n");
                     exit(1);
+                case IR_GLOBAL:
+                    break;
                 }
-                a->kind = IR_STACK;
+                if (a->kind != IR_GLOBAL) a->kind = IR_STACK;
             }
         }
     }
@@ -314,6 +316,7 @@ void verify_completion(IR_Function *f) {
             for (int k = 0; k < value_count; k++) {
                 IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
                 if (a->kind == IR_LITERAL && instr->op != IR_CALL) continue;
+                if (a->kind == IR_GLOBAL) continue;
                 if (a->kind != IR_STACK) {
                     print_ir_value(a);
                     printf(" was not converted to stack offset\n");

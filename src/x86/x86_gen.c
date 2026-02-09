@@ -1,4 +1,5 @@
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/parse/parser.h"
 #include "compiler_c/type.h"
 #include "compiler_c/x86.h"
 
@@ -10,10 +11,11 @@
 static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->ops[1].kind) {
     case IR_STACK:
-        fprintf(fp, "    movq %d(%%rbp), %%rdx\n", instr->ops[1].stack_offset);
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%%rdx");
         break;
     case IR_LITERAL:
-        fprintf(fp, "    lea .LC%d(%%rip), %%rdx\n", instr->ops[1].const_index);
+    case IR_GLOBAL:
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%%rdx");
         break;
     case IR_REG:
     case IR_MEM:
@@ -24,10 +26,9 @@ static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
 
     switch (instr->ops[0].kind) {
     case IR_STACK:
-        fprintf(fp, "    lea %d(%%rbp), %%rcx\n", instr->ops[0].stack_offset);
-        break;
     case IR_LITERAL:
-        fprintf(fp, "    lea .LC%d(%%rip), %%rcx\n", instr->ops[0].const_index);
+    case IR_GLOBAL:
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%%rcx");
         break;
     case IR_REG:
     case IR_MEM:
@@ -40,54 +41,37 @@ static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
 }
 
 static void x86_gen_alloca_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    // printf("dst reg = %d", instr->ops[0].stack_offset);
-    // exit(1);
-    // below is incorrect(baked in offset!!)
-    // fprintf(fp, "    lea %d(%%rbp), %%rax\n", instr->ops[0].stack_offset);
-    // fprintf(fp, "    movq %%rax, %d(%%rbp)\n", instr->ops[0].stack_offset);
+    // stack allocations already handled
 }
 
 static void x86_gen_addr_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    switch (instr->ops[1].kind) {
-    case IR_STACK:
-        fprintf(fp, "    lea %d(%%rbp), %%rax\n", instr->ops[1].stack_offset + instr->addr.offset);
-        break;
-    case IR_LITERAL:
-        fprintf(fp, "    lea .LC%d(%%rip), %%rax\n", instr->ops[1].const_index);
-        break;
-    case IR_REG:
-    case IR_MEM:
-    case IR_UNDEFINED:
-        printf("Sanity check failed\n");
-        exit(1);
-    }
-    fprintf(fp, "    movq %%rax, %d(%%rbp)\n", instr->ops[0].stack_offset);
+    x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%%rax");
+    x86_emit_rx(fp, "mov", "q", "", "%%rax", &instr->ops[0]);
 }
 static void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     // char -> int : zero-extend
-    x86_emit_cast(fp, instr->ops[1].stack_offset, instr->ops[0].stack_offset, instr->cast.from, instr->cast.to);
+    x86_emit_cast(fp, &instr->ops[1], &instr->ops[0], instr->cast.from, instr->cast.to);
 }
 static void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    IR_Const *c = &ctx->module->const_pool.consts[instr->ops[1].const_index];
-    x86_emit_const(fp, instr->ops[0].stack_offset, instr->_const.type, c, instr->ops[1].const_index);
+    IR_Literal *c = &ctx->module->const_pool.consts[instr->ops[1].const_index];
+    x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
 }
 static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { x86_emit_call(fp, ctx, instr); }
 static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_store(fp, instr->ops[1].stack_offset, instr->ops[0].stack_offset, instr->store.type);
+    x86_emit_store(fp, &instr->ops[1], &instr->ops[0], instr->store.type);
 }
 
 static void x86_gen_store_instruction_mem(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_store_mem(fp, instr->ops[1].stack_offset, instr->ops[0].stack_offset, instr->store.type);
+    x86_emit_store_mem(fp, &instr->ops[1], &instr->ops[0], instr->store.type);
 }
 static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_load(fp, instr->ops[1].stack_offset, instr->ops[0].stack_offset, instr->load.type);
+    x86_emit_load(fp, &instr->ops[1], &instr->ops[0], instr->load.type);
 }
 static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_unary(fp, instr->ops[0].stack_offset, instr->ops[1].stack_offset, instr->unary.op, instr->unary.type);
+    x86_emit_unary(fp, &instr->ops[0], &instr->ops[1], instr->unary.op, instr->unary.type);
 }
 static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_binary(fp, instr->ops[0].stack_offset, instr->ops[1].stack_offset, instr->ops[2].stack_offset, instr->binop.op,
-                    instr->binop.type);
+    x86_emit_binary(fp, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->binop.op, instr->binop.type);
 }
 static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
@@ -125,7 +109,7 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         x86_gen_memcpy_instruction(fp, ctx, instr);
         break;
     case IR_RET:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", instr->ops[0].stack_offset);
+        x86_emit_xr(fp, "mov", "l", "", &instr->ops[0], "%eax");
         fprintf(fp, "    mov %%rbp, %%rsp\n");
         fprintf(fp, "    pop %%rbp\n");
         fprintf(fp, "    ret\n");
@@ -134,8 +118,8 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.block->id);
         return;
     case IR_CMP:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", instr->ops[1].stack_offset);
-        fprintf(fp, "    cmpl %d(%%rbp), %%eax\n", instr->ops[2].stack_offset);
+        x86_emit_xr(fp, "mov", "l", "", &instr->ops[1], "%eax");
+        x86_emit_xr(fp, "cmp", "l", "", &instr->ops[2], "%eax");
         switch (instr->cmp.op) {
         case LT:
             fprintf(fp, "    setl %%al\n");
@@ -157,10 +141,10 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
             break;
         }
         fprintf(fp, "    movzbl %%al, %%eax\n");
-        fprintf(fp, "    movl %%eax, %d(%%rbp)\n", instr->ops[0].stack_offset);
+        x86_emit_rx(fp, "mov", "l", "", "%eax", &instr->ops[0]);
         return;
     case IR_BR_COND:
-        fprintf(fp, "    movl %d(%%rbp), %%eax\n", instr->ops[0].stack_offset);
+        x86_emit_xr(fp, "mov", "l", "", &instr->ops[0], "%eax");
         fprintf(fp, "    testl %%eax, %%eax\n");
         if (instr->br_cond.f_block) fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_block->id);
         break;
@@ -175,6 +159,7 @@ static void x86_gen_function(FILE *fp, IR_Context *ctx) {
     const int stack_size = ctx->func->stack_size;
     const int aligned_stack_size = stack_size + 15 & ~15;
 
+    if (ctx->func->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", ctx->func->name);
     fprintf(fp, "%s:\n", ctx->func->name);
     fprintf(fp, "    push %%rbp\n");
     fprintf(fp, "    mov %%rsp, %%rbp\n");
@@ -190,7 +175,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
     if (ctx->module->const_pool.count > 0) {
         fprintf(fp, ".section .rodata\n");
         for (int i = 0; i < ctx->module->const_pool.count; i++) {
-            IR_Const *c = &ctx->module->const_pool.consts[i];
+            IR_Literal *c = &ctx->module->const_pool.consts[i];
             if (c->type == type_double) {
                 uint64_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
@@ -203,10 +188,37 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
                 fprintf(fp, ".LC%d:\n    .string \"%s\"\n", i, c->s.data);
             }
         }
-        fprintf(fp, ".section .text\n\n");
+    }
+    if (ctx->module->global_pool.count > 0) {
+        for (int i = 0; i < ctx->module->global_pool.count; i++) {
+            IR_Global *g = &ctx->module->global_pool.globals[i];
+            IR_Literal *c = &g->val;
+            if (g->storage == STORAGE_DATA) fprintf(fp, ".data\n");
+            if (g->storage == STORAGE_BSS) fprintf(fp, ".bss\n");
+
+            if (c->type == type_double) {
+                uint64_t bits;
+                memcpy(&bits, &c->f, sizeof(bits));
+                fprintf(fp, ".align 8\n%s:\n    .quad 0x%016llx\n", g->name, bits);
+            } else if (c->type == type_float) {
+                uint32_t bits;
+                memcpy(&bits, &c->f, sizeof(bits));
+                fprintf(fp, ".align 4\n%s:\n    .long 0x%08x\n", g->name, bits);
+            } else if (c->type->kind == T_ARRAY && c->type->base == type_char) {
+                fprintf(fp, "%s:\n    .string \"%s\"\n", g->name, c->s.data);
+            } else if (c->type == type_int) {
+                fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->name, (int)c->i);
+            } else if (c->type == type_char) {
+                fprintf(fp, ".align 4\n%s:\n    .byte %d\n", g->name, (char)c->i);
+            } else if (c->type == type_short) {
+                fprintf(fp, ".align 4\n%s:\n    .word %d\n", g->name, (short)c->i);
+            } else if (c->type == type_long) {
+                fprintf(fp, ".align 4\n%s:\n    .word %lld\n", g->name, c->i);
+            }
+        }
     }
 
-    fprintf(fp, ".global main\n");
+    fprintf(fp, "\n.text\n\n");
     for (int i = 0; i < ctx->module->func_count; i++) {
         ctx->func = ctx->module->functions[i];
         x86_gen_function(fp, ctx);

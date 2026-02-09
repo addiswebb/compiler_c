@@ -1,8 +1,50 @@
+#include "compiler_c/ir/ir_module.h"
 #include "compiler_c/type.h"
 #include "compiler_c/x86.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+
+void x86_operand(const IR_Value *v, char *buf, int n) {
+    switch (v->kind) {
+    case IR_STACK:
+        snprintf(buf, n, "%d(%%rbp)", v->stack_offset + v->offset);
+        return;
+    case IR_LITERAL:
+        snprintf(buf, n, ".LC%d(%%rip)", v->const_index);
+        return;
+    case IR_GLOBAL:
+        snprintf(buf, n, "%s(%%rip)", v->global->name);
+        return;
+    case IR_REG:
+    case IR_MEM:
+    case IR_UNDEFINED:
+        printf("Tried to gen assembly for undefined IR_Value\n");
+        exit(1);
+    }
+}
+
+void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst) {
+    char dst_buf[MAX_OPERAND_BUFFER_SIZE];
+    x86_operand(dst, dst_buf, sizeof(dst_buf));
+    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src, dst_buf);
+}
+
+void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst) {
+    char src_buf[MAX_OPERAND_BUFFER_SIZE];
+    x86_operand(src, src_buf, sizeof(src_buf));
+    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src_buf, dst);
+}
+
+void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst) {
+    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src, dst);
+}
+
+void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *operand) {
+    char operand_buf[MAX_OPERAND_BUFFER_SIZE];
+    x86_operand(operand, operand_buf, sizeof(operand_buf));
+    fprintf(fp, "    %s%s%s %s\n", instr, s1, s2, operand_buf);
+}
 
 const char *x86_rax_reg(Type *t) {
     if (t->kind == T_FLOAT) return "%xmm0";
@@ -167,29 +209,29 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
 }
 
-void x86_emit_binary(FILE *fp, int dst_offset, int lhs_offset, int rhs_offset, IR_BINOP_OP op, Type *t) {
+void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, IR_BINOP_OP op, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     switch (t->kind) {
     case T_INT:
         switch (op) {
         case ADD:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
-            fprintf(fp, "    add%s %d(%%rbp), %s\n", op_suffix, rhs_offset, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
+            x86_emit_xr(fp, "add", op_suffix, "", rhs, reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case SUB:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
-            fprintf(fp, "    sub%s %d(%%rbp), %s\n", op_suffix, rhs_offset, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
+            x86_emit_xr(fp, "sub", op_suffix, "", rhs, reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case MUL:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
-            fprintf(fp, "    imul%s %d(%%rbp)\n", op_suffix, rhs_offset);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
+            x86_emit_x(fp, "imul", op_suffix, "", rhs);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case DIV:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
             switch (t->size) {
             case 1:
                 fprintf(fp, "    cbw\n");
@@ -207,64 +249,64 @@ void x86_emit_binary(FILE *fp, int dst_offset, int lhs_offset, int rhs_offset, I
                 printf("Tried to divide int with unsupported size\n");
                 exit(1);
             }
-            fprintf(fp, "    idiv%s %d(%%rbp)\n", op_suffix, rhs_offset);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_x(fp, "idiv", op_suffix, "", rhs);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case MOD:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
             switch (t->size) {
             case 1:
                 fprintf(fp, "    cbw\n");
-                fprintf(fp, "    idivb %d(%%rbp)\n", rhs_offset);
-                fprintf(fp, "    movb %%ah, %d(%%rbp)\n", dst_offset);
+                x86_emit_x(fp, "idiv", "b", "", rhs);
+                x86_emit_rx(fp, "mov", "b", "", "%ah", dst);
                 return;
             case 2:
                 fprintf(fp, "    cwde\n");
-                fprintf(fp, "    idivw %d(%%rbp)\n", rhs_offset);
-                fprintf(fp, "    movw %%dx, %d(%%rbp)\n", dst_offset);
+                x86_emit_x(fp, "idiv", "w", "", rhs);
+                x86_emit_rx(fp, "mov", "w", "", "%dx", dst);
                 return;
             case 4:
                 fprintf(fp, "    cltd\n");
-                fprintf(fp, "    idivl %d(%%rbp)\n", rhs_offset);
-                fprintf(fp, "    movl %%edx, %d(%%rbp)\n", dst_offset);
+                x86_emit_x(fp, "idiv", "l", "", rhs);
+                x86_emit_rx(fp, "mov", "l", "", "%edx", dst);
                 return;
             case 8:
                 fprintf(fp, "    cqo\n");
-                fprintf(fp, "    idivq %d(%%rbp)\n", rhs_offset);
-                fprintf(fp, "    movq %%rdx, %d(%%rbp)\n", dst_offset);
+                x86_emit_x(fp, "idiv", "q", "", rhs);
+                x86_emit_rx(fp, "mov", "q", "", "%rdx", dst);
                 return;
             default:
                 printf("Tried to modulo int with unsupported size\n");
                 exit(1);
             }
         case BW_AND:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
-            fprintf(fp, "    and%s %d(%%rbp), %s\n", op_suffix, rhs_offset, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
+            x86_emit_xr(fp, "and", op_suffix, "", rhs, reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case BW_OR:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
-            fprintf(fp, "    or%s %d(%%rbp), %s\n", op_suffix, rhs_offset, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
+            x86_emit_xr(fp, "or", op_suffix, "", rhs, reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case XOR:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
-            fprintf(fp, "    xor%s %d(%%rbp), %s\n", op_suffix, rhs_offset, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
+            x86_emit_xr(fp, "xor", op_suffix, "", rhs, reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case SHL:
             const char *rcx_reg_l = x86_rcx_reg(t);
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, rhs_offset, rcx_reg_l);
-            fprintf(fp, "    shl%s %%cl, %s\n", op_suffix, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
+            x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg_l);
+            x86_emit_rr(fp, "shl", op_suffix, "", "%cl", reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case SHR:
             const char *rcx_reg_r = x86_rcx_reg(t);
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, lhs_offset, reg);
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, rhs_offset, rcx_reg_r);
-            fprintf(fp, "    sar%s %%cl, %s\n", op_suffix, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
+            x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg_r);
+            x86_emit_rr(fp, "sar", op_suffix, "", "%cl", reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case L_AND:
         case L_OR:
@@ -272,37 +314,37 @@ void x86_emit_binary(FILE *fp, int dst_offset, int lhs_offset, int rhs_offset, I
             exit(1);
         }
     case T_FLOAT:
-        fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", op_suffix, lhs_offset);
+        x86_emit_xr(fp, "mov", op_suffix, "", lhs, "%xmm0");
         switch (op) {
         case ADD:
-            fprintf(fp, "    add%s %d(%%rbp), %%xmm0\n", op_suffix, rhs_offset);
+            x86_emit_xr(fp, "add", op_suffix, "", rhs, "%xmm0");
             break;
         case SUB:
-            fprintf(fp, "    sub%s %d(%%rbp), %%xmm0\n", op_suffix, rhs_offset);
+            x86_emit_xr(fp, "sub", op_suffix, "", rhs, "%xmm0");
             break;
         case MUL:
-            fprintf(fp, "    mul%s %d(%%rbp), %%xmm0\n", op_suffix, rhs_offset);
+            x86_emit_xr(fp, "mul", op_suffix, "", rhs, "%xmm0");
             break;
         case DIV:
-            fprintf(fp, "    div%s %d(%%rbp), %%xmm0\n", op_suffix, rhs_offset);
+            x86_emit_xr(fp, "div", op_suffix, "", rhs, "%xmm0");
             break;
         default:
             printf("Tried to perform unsuported binary operation on type float\n");
             exit(1);
         }
-        fprintf(fp, "    mov%s %%xmm0, %d(%%rbp)\n", op_suffix, dst_offset);
+        x86_emit_rx(fp, "mov", op_suffix, "", "%xmm0", dst);
         break;
     case T_POINTER:
         switch (op) {
         case ADD:
-            fprintf(fp, "    movq %d(%%rbp), %%rax\n", lhs_offset);
-            fprintf(fp, "    addq %d(%%rbp), %%rax\n", rhs_offset);
-            fprintf(fp, "    movq %%rax, %d(%%rbp)\n", dst_offset);
+            x86_emit_xr(fp, "mov", "q", "", lhs, "%rax");
+            x86_emit_xr(fp, "add", "q", "", rhs, "%rax");
+            x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
             return;
         case SUB:
-            fprintf(fp, "    movq %d(%%rbp), %%rax\n", lhs_offset);
-            fprintf(fp, "    subq %d(%%rbp), %%rax\n", rhs_offset);
-            fprintf(fp, "    movq %%rax, %d(%%rbp)\n", dst_offset);
+            x86_emit_xr(fp, "mov", "q", "", lhs, "%rax");
+            x86_emit_xr(fp, "sub", "q", "", rhs, "%rax");
+            x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
             return;
         default:
             printf("Tried to perform unsupported binary op on pointer\n");
@@ -313,32 +355,32 @@ void x86_emit_binary(FILE *fp, int dst_offset, int lhs_offset, int rhs_offset, I
         exit(1);
     }
 }
-void x86_emit_unary(FILE *fp, int dst_offset, int expr_offset, IR_UNARY_OP op, Type *t) {
+void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNARY_OP op, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     switch (t->kind) {
     case T_INT:
         switch (op) {
         case POS:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, expr_offset, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case NEG:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, expr_offset, reg);
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
             fprintf(fp, "    neg%s %s\n", op_suffix, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case LNOT:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, expr_offset, reg);
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
             fprintf(fp, "    test%s %s, %s\n", op_suffix, reg, reg);
             fprintf(fp, "    sete %%al\n");
             fprintf(fp, "    movzb%s %%al, %s\n", op_suffix, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case BNOT:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, expr_offset, reg);
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
             fprintf(fp, "    not%s %s\n", op_suffix, reg);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         default:
             return;
@@ -346,24 +388,24 @@ void x86_emit_unary(FILE *fp, int dst_offset, int expr_offset, IR_UNARY_OP op, T
     case T_FLOAT:
         switch (op) {
         case POS:
-            fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", op_suffix, expr_offset);
-            fprintf(fp, "    mov%s %%xmm0, %d(%%rbp)\n", op_suffix, dst_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, "%xmm0");
+            x86_emit_rx(fp, "mov", op_suffix, "", "%xmm0", dst);
             return;
         case NEG:
-            fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", op_suffix, expr_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, "%xmm0");
             if (t->size == 4) fprintf(fp, "    xorps %%xmm1, %%xmm1\n");
             else fprintf(fp, "    xorpd %%xmm1, %%xmm1\n");
-            fprintf(fp, "    sub%s %%xmm0, %%xmm1\n", op_suffix);
-            fprintf(fp, "    mov%s %%xmm1, %d(%%rbp)\n", op_suffix, dst_offset);
+            x86_emit_rr(fp, "sub", op_suffix, "", "%xmm0", "%xmm1");
+            x86_emit_rx(fp, "mov", op_suffix, "", "%xmm1", dst);
             return;
         case LNOT: // float->int
-            fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", op_suffix, expr_offset);
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, "%xmm0");
             if (t->size == 4) fprintf(fp, "    xorps %%xmm1, %%xmm1\n");
             else fprintf(fp, "    xorpd %%xmm1, %%xmm1\n");
             fprintf(fp, "    ucomi%s %%xmm1, %%xmm0\n", op_suffix);
             fprintf(fp, "    sete %%al\n");
-            fprintf(fp, "    movzbl %%al, %%eax\n");
-            fprintf(fp, "    movl %%eax, %d(%%rbp)\n", dst_offset);
+            x86_emit_rr(fp, "movz", "b", "l", "%al", "%al");
+            x86_emit_rx(fp, "mov", "l", "", "%eax", dst);
             return;
         case BNOT:
             printf("Tried to perform Bitwise Not ~ on Type float\n");
@@ -376,7 +418,7 @@ void x86_emit_unary(FILE *fp, int dst_offset, int expr_offset, IR_UNARY_OP op, T
         exit(1);
     }
 }
-void x86_emit_cast(FILE *fp, int src_offset, int dst_offset, Type *from, Type *to) {
+void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to) {
     const char *from_reg = x86_rax_reg(from);
     const char *from_op_suffix = x86_op_suffix(from);
 
@@ -384,56 +426,57 @@ void x86_emit_cast(FILE *fp, int src_offset, int dst_offset, Type *from, Type *t
     const char *to_op_suffix = x86_op_suffix(to);
 
     if (from == to) {
-        fprintf(fp, "    mov%s %d(%%rbp), %s\n", from_op_suffix, src_offset, from_reg);
-        fprintf(fp, "    mov%s %s, %d(%%rbp)\n", from_op_suffix, from_reg, dst_offset);
+        x86_emit_xr(fp, "mov", "", from_op_suffix, src, from_reg);
+        x86_emit_rx(fp, "mov", "", from_op_suffix, from_reg, dst);
         return;
     }
     if (from->kind == T_ARRAY && to->kind == T_POINTER) {
-        fprintf(fp, "    lea %d(%%rbp), %s\n", src_offset, from_reg);
-        fprintf(fp, "    movq %s, %d(%%rbp)\n", from_reg, dst_offset);
+        x86_emit_xr(fp, "lea", "", "", src, from_reg);
+        x86_emit_rx(fp, "mov", "q", "", from_reg, dst);
         return;
     }
     // char/short/int/long/ -> char/short/int/long
     if (from->kind == T_INT && to->kind == T_INT) {
         if (from->size < to->size) {
-            fprintf(fp, "    movs%s%s %d(%%rbp), %s\n", from_op_suffix, to_op_suffix, src_offset, to_reg);
+            x86_emit_xr(fp, "mov", from_op_suffix, to_op_suffix, src, from_reg);
         } else {
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", from_op_suffix, src_offset, from_reg);
+            x86_emit_xr(fp, "mov", from_op_suffix, "", src, from_reg);
         }
-        fprintf(fp, "    mov%s %s, %d(%%rbp)\n", to_op_suffix, to_reg, dst_offset);
+        x86_emit_rx(fp, "mov", from_op_suffix, "", to_reg, dst);
         return;
     }
 
     // char/short/int/long -> float/double
     if (from->kind == T_INT && to->kind == T_FLOAT) {
-        fprintf(fp, "    movs%sq %d(%%rbp), %%rax\n", from_op_suffix, src_offset);
-        fprintf(fp, "    cvtsi2%s %%rax, %s\n", to_op_suffix, to_reg);
-        fprintf(fp, "    mov%s %s, %d(%%rbp)\n", to_op_suffix, to_reg, dst_offset);
+        // fprintf(fp, "    movs%sq %d(%%rbp), %%rax\n", from_op_suffix, src_offset);
+        x86_emit_xr(fp, "mov", from_op_suffix, "q", src, "%rax");
+        x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
+        x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         return;
     }
     // float/double -> char/short/int/long
     if (from->kind == T_FLOAT && to->kind == T_INT) {
         if (to->size == 8) {
-            fprintf(fp, "    cvtt%s2sq %d(%%rbp), %%rax\n", from_op_suffix, src_offset);
-            fprintf(fp, "    movq %%rax, %d(%%rbp)\n", dst_offset);
+            x86_emit_xr(fp, "cvtt", from_op_suffix, "2sq", src, "%rax");
+            x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
         } else {
-            fprintf(fp, "    cvtt%s2si %d(%%rbp), %%eax\n", from_op_suffix, src_offset);
-            fprintf(fp, "    mov%s %s, %d(%%rbp)\n", to_op_suffix, to_reg, dst_offset);
+            x86_emit_xr(fp, "cvtt", from_op_suffix, "2si", src, "%eax");
+            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         }
         return;
     }
     // float/double -> float/double
     if (from->kind == T_FLOAT && to->kind == T_FLOAT) {
-        fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", from_op_suffix, src_offset);
+        x86_emit_xr(fp, "mov", from_op_suffix, "", src, "%xmm0");
         fprintf(fp, "    cvt%s2%s %%xmm0, %%xmm1\n", from_op_suffix, to_op_suffix);
-        fprintf(fp, "    mov%s %%xmm1, %d(%%rbp)\n", to_op_suffix, dst_offset);
+        x86_emit_rx(fp, "mov", to_op_suffix, "", "%xmm1", dst);
         return;
     }
 
     printf("Cast node did literally nothing?\n");
     exit(1);
 }
-void x86_emit_const(FILE *fp, int dst_offset, Type *t, IR_Const *c, int pool_index) {
+void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, IR_Literal *c, int pool_index) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
 
@@ -473,28 +516,27 @@ void x86_emit_const(FILE *fp, int dst_offset, Type *t, IR_Const *c, int pool_ind
     default:
         printf("Tried to emit const of unsupported type\n");
     }
-    fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+    x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
 }
-void x86_emit_store(FILE *fp, int src_offset, int dst_offset, Type *t) {
+void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
-    fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, src_offset, reg);
-    fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+    x86_emit_xr(fp, "mov", op_suffix, "", src, reg);
+    x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
 }
-void x86_emit_store_mem(FILE *fp, int src_offset, int dst_offset, Type *t) {
+void x86_emit_store_mem(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *v = x86_rbx_reg(t);
     const char *op_suffix = x86_op_suffix(t);
-    fprintf(fp, "    movq %d(%%rbp), %%rax\n", dst_offset);
-    fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, src_offset, v);
-    fprintf(fp, "    mov%s %s, (%%rax)\n", op_suffix, v);
+    x86_emit_xr(fp, "mov", "q", "", dst, "%rax");
+    x86_emit_xr(fp, "mov", op_suffix, "", src, v);
+    x86_emit_rr(fp, "mov", op_suffix, "", v, "(%rax)");
 }
-void x86_emit_load(FILE *fp, int addr_offset, int dst_offset, Type *t) {
+void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
 
-    fprintf(fp, "    movq %d(%%rbp), %%rax\n", addr_offset);
-    fprintf(fp, "    mov%s (%%rax), %s\n", op_suffix, reg);
-    // fprintf(fp, "    mov%s %d(%%rbp), %s\n", op_suffix, addr_offset, reg);
-    fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+    x86_emit_xr(fp, "mov", "q", "", addr, "%rax");
+    x86_emit_rr(fp, "mov", op_suffix, "", "(%rax)", reg);
+    x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
 }

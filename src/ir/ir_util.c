@@ -203,7 +203,7 @@ static const char ir_type_suffix(Type *type) {
 }
 
 static void print_ir_const(IR_Context *ctx, const IR_Instruction *instr) {
-    IR_Const *c = &ctx->module->const_pool.consts[instr->ops[1].const_index];
+    IR_Literal *c = &ctx->module->const_pool.consts[instr->ops[1].const_index];
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = CONST ");
@@ -440,6 +440,9 @@ void print_ir_value(const IR_Value *v) {
         printf(".LC%d", v->const_index);
         break;
     case IR_UNDEFINED:
+        break;
+    case IR_GLOBAL:
+        printf("g[%s]", v->global->name);
         break;
     }
 }

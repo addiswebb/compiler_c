@@ -45,6 +45,7 @@ typedef enum{
 }StorageClass;
 
 typedef struct Node Node;
+typedef struct Symbol Symbol;
 
 struct Node {
     NodeKind kind;
@@ -66,6 +67,7 @@ struct Node {
             Node *body;
             StorageClass storage_class;
             bool has_initializer;
+            Symbol *symbol;
         } func;
         // { [block_item]+ }
         struct {
@@ -134,6 +136,7 @@ struct Node {
             StorageClass storage_class;
             bool has_initializer;
             bool is_global;
+            Symbol *symbol;
         } var_decl;
         // identifier(params*)
         struct {

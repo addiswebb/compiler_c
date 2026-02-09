@@ -173,6 +173,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         func_symbol->linkage = linkage;
         // if defined -> text, otherwise none
         func_symbol->storage = STORAGE_TEXT;
+        node->func.symbol = func_symbol;
         break;
     case N_COMPOUND:
         for (int i = 0; i < node->compound.count; i++) {
@@ -272,6 +273,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         }
         var_symbol->linkage = linkage;
         var_symbol->storage = var_storage;
+        node->var_decl.symbol = var_symbol;
         break;
     case N_UNARY:
         semantic_analysis(p, nm, node->unary.expr, loop);

@@ -2,6 +2,7 @@
 #define COMPILER_C_PARSER_H
 
 #include "compiler_c/node.h"
+#include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
 #include <stdbool.h>
 
@@ -34,7 +35,7 @@ typedef enum{
     STORAGE_TEXT,
 }Storage;
 
-typedef struct{
+typedef struct Symbol{
     const char *name;
     SymbolKind kind;
     Linkage linkage;

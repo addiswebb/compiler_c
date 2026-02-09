@@ -145,22 +145,30 @@ IR_Module *ir_new_module() {
     module->functions = malloc(sizeof(IR_Function *) * module->func_capacity);
     if (module->functions == NULL) {
         printf("Failed to allocate IR module functions\n");
-        free(module->functions);
         free(module);
         exit(1);
     }
     module->defs = malloc(sizeof(IR_Func_Def) * module->func_capacity);
     if (module->defs == NULL) {
         printf("Failed to allocate IR module function definitions\n");
-        free(module->defs);
         free(module->functions);
         free(module);
         exit(1);
     }
     module->const_pool.capacity = 4;
     module->const_pool.count = 0;
-    module->const_pool.consts = malloc(sizeof(IR_Const) * module->const_pool.capacity);
+    module->const_pool.consts = malloc(sizeof(IR_Literal) * module->const_pool.capacity);
     if (!module->const_pool.consts) {
+        printf("Failed to allocate IR module const pool\n");
+        free(module->defs);
+        free(module->functions);
+        free(module);
+        exit(1);
+    }
+    module->global_pool.capacity = 4;
+    module->global_pool.count = 0;
+    module->global_pool.globals = malloc(sizeof(IR_Literal) * module->global_pool.capacity);
+    if (!module->global_pool.globals) {
         printf("Failed to allocate IR module const pool\n");
         free(module->defs);
         free(module->functions);
@@ -301,23 +309,41 @@ void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
     block->instructions[block->count++] = *instruction;
 }
 
-IR_Value ir_append_const(IR_Module *module, IR_Const *new_const) {
+void ir_append_global(IR_Module *module, const char *name, Type *type, IR_Literal *literal, Linkage linkage, Storage storage) {
+    if (module->global_pool.count >= module->global_pool.capacity) {
+        module->global_pool.capacity *= 2;
+        IR_Global *new_globals = realloc(module->global_pool.globals, sizeof(IR_Global) * module->global_pool.capacity);
+        if (!new_globals) {
+            printf("Failed to reallocate for new ir_consts\n");
+            exit(1);
+        }
+        module->global_pool.globals = new_globals;
+    }
+    module->global_pool.globals[module->global_pool.count++] = (IR_Global){
+        .name = name,
+        .type = type,
+        .val = *literal,
+        .linkage = linkage,
+        .storage = storage,
+    };
+}
+IR_Value ir_append_const(IR_Module *module, IR_Literal *literal) {
     if (module->const_pool.count >= module->const_pool.capacity) {
         module->const_pool.capacity *= 2;
-        IR_Const *new_consts = realloc(module->const_pool.consts, sizeof(IR_Const) * module->const_pool.capacity);
+        IR_Literal *new_consts = realloc(module->const_pool.consts, sizeof(IR_Literal) * module->const_pool.capacity);
         if (!new_consts) {
             printf("Failed to reallocate for new ir_consts\n");
             exit(1);
         }
         module->const_pool.consts = new_consts;
     }
-    module->const_pool.consts[module->const_pool.count] = *new_const;
-    IR_Const *c = &module->const_pool.consts[module->const_pool.count];
+    module->const_pool.consts[module->const_pool.count] = *literal;
+    IR_Literal *c = &module->const_pool.consts[module->const_pool.count];
     IR_Value v;
     v.kind = IR_LITERAL;
     v.const_index = module->const_pool.count++;
-    v.size = new_const->type->size;
-    v.align = new_const->type->align;
+    v.size = literal->type->size;
+    v.align = literal->type->align;
     return v;
 }
 
@@ -360,18 +386,28 @@ int ir_get_func_def(const IR_Context *ctx, const char *name) {
     }
     return -1;
 }
+
+IR_Value ir_value_from_global(IR_Global *g) {
+    IR_Value v;
+    v.kind = IR_GLOBAL;
+    v.size = g->type->size;
+    v.align = g->type->align;
+    v.global = g;
+    return v;
+}
 IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name) {
     IR_Function *func = ctx->func;
     for (int i = func->scope_count - 1; i >= 0; i--) {
         for (int j = func->scopes[i].var_count - 1; j >= 0; j--) {
             int k = func->scopes[i].var_indices[j];
-            if (strcmp(func->locals[k].name, name) == 0) {
-                return func->locals[k].reg;
-            }
+            if (strcmp(func->locals[k].name, name) == 0) return func->locals[k].reg;
         }
     }
+    for (int i = 0; i < ctx->module->global_pool.count; i++) {
+        if (strcmp(ctx->module->global_pool.globals[i].name, name) == 0) return ir_value_from_global(&ctx->module->global_pool.globals[i]);
+    }
 
-    printf("Undefined local variable \'%s\' \n", name);
+    printf("Undefined local or global variable \'%s\' \n", name);
     exit(1);
 }
 

@@ -1,11 +1,6 @@
-// Comprehensive compiler feature test
-// Returns a deterministic integer result
-
-int a;
-int b = 10;
-extern int c;
+static int a = 10;
 
 int main() {
-    int d = 10;
+    int d = a + 10;
     return d;
 }
