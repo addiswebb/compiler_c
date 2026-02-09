@@ -16,7 +16,7 @@ typedef struct {
     int size;
 } Buffer;
 
-#define KEYWORDS_N 22
+#define KEYWORDS_N 24
 extern const char* KEYWORDS[KEYWORDS_N];
 
 /*
@@ -38,6 +38,7 @@ typedef enum {
     TK_ELSE,
     TK_ENUM,
     TK_EXIT,
+    TK_EXTERN,
     TK_FLOAT,
     TK_FOR,
     TK_IF,
@@ -46,6 +47,7 @@ typedef enum {
     TK_RETURN,
     TK_SIZEOF,
     TK_SHORT,
+    TK_STATIC,
     TK_STRUCT,
     TK_SWITCH,
     TK_TYPEDEF,

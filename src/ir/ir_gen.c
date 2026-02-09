@@ -437,6 +437,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
 
     IR_Module *module = ir_new_module();
     ctx->module = module;
+    
     for (int i = 0; i < tu->translation_unit.count; i++) {
         Node *n = tu->translation_unit.declarations[i];
         switch (tu->translation_unit.declarations[i]->kind) {

@@ -528,13 +528,20 @@ Node *p_get_func_def(Parser *p, const char *name) {
     printf("Tried to call %s which does not exist\n", name);
     exit(1);
 }
-
-void p_append_typedef(Parser *p, Typedef *t) { p_append_symbol(p, &(Symbol){t->new_def, TYPEDEF, ._typedef = *t}); }
-void p_append_func_def(Parser *p, Node *func) { p_append_symbol(p, &(Symbol){func->func.name, FUNC, .func_def = func}); }
-void p_append_var_decl(Parser *p, Node *var) {
-    p_append_symbol(p, &(Symbol){var->var_decl.identifier->identifier.name, VAR, .var_decl = var});
+void p_append_typedef(Parser *p, Typedef *t) {
+    p_append_symbol(p, &(Symbol){.name = t->new_def, .kind = TYPEDEF, .linkage = LINK_NONE, .storage = STORAGE_NONE, ._typedef = *t});
 }
-void p_append_enum_const(Parser *p, EnumField *e) { p_append_symbol(p, &(Symbol){e->name, ENUM, .enum_field = *e}); }
+void p_append_func_def(Parser *p, Node *f) {
+    p_append_symbol(p, &(Symbol){.name = f->func.name, .kind = FUNC, .linkage = LINK_NONE, .storage = STORAGE_NONE, .func_def = f});
+}
+void p_append_var_decl(Parser *p, Node *v) {
+    p_append_symbol(
+        p, &(Symbol){
+               .name = v->var_decl.identifier->identifier.name, .kind = VAR, .linkage = LINK_NONE, .storage = STORAGE_NONE, .var_decl = v});
+}
+void p_append_enum_const(Parser *p, EnumField *e) {
+    p_append_symbol(p, &(Symbol){.name = e->name, .kind = ENUM, .linkage = LINK_NONE, .storage = STORAGE_NONE, .enum_field = *e});
+}
 
 void p_append_element(Node *init_list, Node *element) {
     if (init_list->init_list.count >= init_list->init_list.capacity) {
@@ -769,7 +776,7 @@ Node *p_parse_compound(Parser *p, NodeManager *nm) {
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm, Node *type) {
+Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, StorageClass storage_class) {
     Node *node = new_function_node(nm);
     node->func.name = p_consume_a(p, TK_IDENTIFIER)->value;
     node->func.type = type;
@@ -786,8 +793,12 @@ Node *p_parse_function(Parser *p, NodeManager *nm, Node *type) {
         else break;
     }
     p_consume_a(p, TK_CLOSE_PAREN);
+    // Todo storage_specifier_to_linkage
+    // Todo, allow function declaration, but not definition
     p_append_func_def(p, node);
     node->func.body = p_parse_compound(p, nm);
+    node->func.has_initializer = true;
+    node->func.storage_class = storage_class;
     return node;
 }
 
@@ -802,19 +813,20 @@ Node *p_parse_decl_identifier(Parser *p, NodeManager *nm) {
     return node;
 }
 
-Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl) {
+Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, StorageClass storage_class, bool global) {
     if (type_decl->type->kind == T_STRUCT || type_decl->type->kind == T_ENUM) {
         if (p_peek(p)->type != TK_IDENTIFIER) {
             p_consume_semi(p);
             return type_decl;
         }
         if (!type_decl->type->_struct.complete) {
-            printf("Cannot instantiate incomplete type\n");
+            printf("Cannot instantiate an incomplete type\n");
             exit(1);
         }
     }
     Node *var_decl = new_node(nm, N_VAR_DECL);
     var_decl->var_decl.identifier = p_parse_decl_identifier(p, nm);
+    var_decl->var_decl.is_global = global;
 
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p); // [
@@ -834,10 +846,12 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl) {
     if (p_peek(p)->type == TK_EQ) {
         p_consume(p);
         var_decl->var_decl.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+        var_decl->var_decl.has_initializer = true;
     } else {
         // Forward declaration
         var_decl->var_decl.expr = NULL;
     }
+    var_decl->var_decl.storage_class = storage_class;
     p_consume_semi(p);
     p_append_var_decl(p, var_decl);
     return var_decl;
@@ -845,17 +859,28 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl) {
 
 // Either function or type/var declaration
 Node *p_parse_external_declaration(Parser *p, NodeManager *nm) {
-    // Handle other storage class specifiers here later
-    if (p_peek(p)->type == TK_TYPEDEF) {
+    StorageClass storage_class = NONE;
+    switch (p_peek(p)->type) {
+    case TK_TYPEDEF:
         return p_parse_typedef(p, nm);
+    case TK_EXTERN:
+        storage_class = EXTERN;
+        p_consume(p);
+        break;
+    case TK_STATIC:
+        storage_class = STATIC;
+        p_consume(p);
+        break;
+    default:
+        break;
     }
     Node *type_decl = new_node(nm, N_TYPE);
     type_decl->type = p_parse_type(p, nm);
 
     if (p_peek(p)->type == TK_IDENTIFIER && p_peek_next(p)->type == TK_OPEN_PAREN) {
-        return p_parse_function(p, nm, type_decl);
+        return p_parse_function(p, nm, type_decl, storage_class);
     } else {
-        return p_parse_declaration(p, nm, type_decl);
+        return p_parse_declaration(p, nm, type_decl, storage_class, true);
     }
 }
 Node *p_parse_typedef(Parser *p, NodeManager *nm) {
@@ -869,6 +894,19 @@ Node *p_parse_typedef(Parser *p, NodeManager *nm) {
 }
 
 Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
+    StorageClass storage_class = NONE;
+    switch (p_peek(p)->type) {
+    case TK_TYPEDEF:
+        return p_parse_typedef(p, nm);
+    case TK_EXTERN:
+        storage_class = EXTERN;
+        break;
+    case TK_STATIC:
+        storage_class = STATIC;
+        break;
+    default:
+        break;
+    }
     Node *type_decl = new_node(nm, N_TYPE);
     type_decl->type = p_parse_type(p, nm);
 
@@ -877,7 +915,7 @@ Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
         printf("Function prototypes within blocks is unsupported\n");
         exit(1);
     } else {
-        return p_parse_declaration(p, nm, type_decl);
+        return p_parse_declaration(p, nm, type_decl, storage_class, false);
     }
 }
 

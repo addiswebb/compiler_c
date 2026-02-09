@@ -268,6 +268,11 @@ void print_node(const Node *node, const int depth) {
     case N_FUNCTION:
         printf(": [name= %s, param_count= %d, return_type= ", node->func.name, node->func.param_count);
         print_type(node->type);
+        printf(", has_initializer=");
+        if (node->func.has_initializer) printf("true");
+        else printf("false");
+        if (node->func.storage_class == EXTERN) printf(", extern");
+        if (node->func.storage_class == STATIC) printf(", static");
         printf("]");
         if (node->func.param_count > 0) {
             printf(" { ");
@@ -282,7 +287,14 @@ void print_node(const Node *node, const int depth) {
     case N_VAR_DECL:
         printf(": [type= ");
         print_type(node->type);
-        printf(", name= %s]\n", node->var_decl.identifier->identifier.name);
+        printf(", name= %s", node->var_decl.identifier->identifier.name);
+        printf(", has_initializer=");
+        if (node->var_decl.has_initializer) printf("true");
+        else printf("false");
+        if (node->var_decl.storage_class == EXTERN) printf(", extern");
+        if (node->var_decl.storage_class == STATIC) printf(", static");
+        if (node->var_decl.is_global) printf(", global");
+        printf("]\n");
         if (node->var_decl.expr) print_node(node->var_decl.expr, depth + 1);
         break;
     case N_RETURN:

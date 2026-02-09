@@ -1,6 +1,7 @@
 #include "compiler_c/sema.h"
 #include "compiler_c/node.h"
 #include "compiler_c/parse/parse_util.h"
+#include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
 
@@ -159,6 +160,19 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             p_append_var_decl(p, node->func.params[i]);
         }
         semantic_analysis(p, nm, node->func.body, loop);
+        Linkage linkage = node->func.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
+        if (node->func.storage_class == EXTERN) {
+            printf("External Function cannot have a definition\n");
+            exit(1);
+        }
+        Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC);
+        if (!func_symbol) {
+            printf("Failed to find Function Symbol for \"%s\"\n", node->func.name);
+            exit(1);
+        }
+        func_symbol->linkage = linkage;
+        // if defined -> text, otherwise none
+        func_symbol->storage = STORAGE_TEXT;
         break;
     case N_COMPOUND:
         for (int i = 0; i < node->compound.count; i++) {
@@ -230,6 +244,34 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         if (node->var_decl.expr->type != node->type) {
             node->var_decl.expr = cast_node(nm, node->var_decl.expr, node->type);
         }
+
+        Linkage var_linkage;
+        Storage var_storage;
+        if (node->var_decl.is_global) {
+            var_storage = node->var_decl.has_initializer ? STORAGE_DATA : STORAGE_BSS;
+            var_linkage = node->var_decl.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
+        } else {
+            // local variable
+            var_storage = STORAGE_NONE;
+            if (node->var_decl.storage_class == NONE) var_linkage = LINK_NONE;
+            if (node->var_decl.storage_class == EXTERN) var_linkage = LINK_EXTERNAL;
+            if (node->var_decl.storage_class == STATIC) var_linkage = LINK_INTERNAL;
+        }
+
+        if (node->var_decl.storage_class == EXTERN) {
+            if (node->var_decl.has_initializer) {
+                printf("External variable cannot be initialized in the same statment\n");
+                exit(1);
+            }
+            var_storage = STORAGE_NONE;
+        }
+        Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR);
+        if (!var_symbol) {
+            printf("Failed to find Variable Symbol for \"%s\"\n", node->var_decl.identifier->identifier.name);
+            exit(1);
+        }
+        var_symbol->linkage = linkage;
+        var_symbol->storage = var_storage;
         break;
     case N_UNARY:
         semantic_analysis(p, nm, node->unary.expr, loop);

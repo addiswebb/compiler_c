@@ -9,18 +9,6 @@
 #define DEFAULT_STATEMENTS_PER_BLOCK 8
 
 typedef struct{
-    const char *name;
-    Type *type;
-    Node *def;
-} P_Func_Def;
-
-typedef struct{
-    const char *name;
-    Type *type;
-    Node *decl;
-} P_Var_Decl;
-
-typedef struct{
     const char *new_def;
     Type *type;
 }Typedef;
@@ -33,9 +21,24 @@ typedef enum {
     ANY,
 } SymbolKind;
 
+typedef enum{
+    LINK_NONE,
+    LINK_INTERNAL,
+    LINK_EXTERNAL
+}Linkage;
+
+typedef enum{
+    STORAGE_NONE,
+    STORAGE_DATA,
+    STORAGE_BSS,
+    STORAGE_TEXT,
+}Storage;
+
 typedef struct{
     const char *name;
     SymbolKind kind;
+    Linkage linkage;
+    Storage storage;
     union{
         Node *var_decl;
         Node *func_def;
@@ -126,6 +129,7 @@ void p_append_param(Node *func, Node *param);
 void p_add_call_param(Node *func, Node *param);
 
 Symbol *p_get_symbol(Parser *p, const char *name, SymbolKind kind);
+
 void p_append_typedef(Parser *p, Typedef *t);
 void p_append_func_def(Parser *p, Node *func);
 Node *p_get_func_def(Parser *p, const char* name);
@@ -206,12 +210,12 @@ Node *p_parse_compound(Parser *p, NodeManager *nm);
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm, Node *type);
+Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, StorageClass storage_class);
 
 Node *p_parse_external_declaration(Parser *p, NodeManager *nm);
 Node *p_parse_block_declaration(Parser *p, NodeManager *nm);
 Node *p_parse_decl_identifier(Parser *p, NodeManager *nm);
-Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type);
+Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, StorageClass storage_class, bool global);
 Node *p_parse_typedef(Parser *p, NodeManager *nm);
 
 Node *p_parse_translation_unit(Parser* p, NodeManager *nm);

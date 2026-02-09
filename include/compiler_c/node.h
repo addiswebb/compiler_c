@@ -38,6 +38,12 @@ typedef enum{
     L_STRING,
 } LiteralKind;
 
+typedef enum{
+    NONE,
+    EXTERN,
+    STATIC
+}StorageClass;
+
 typedef struct Node Node;
 
 struct Node {
@@ -58,6 +64,8 @@ struct Node {
             int param_capacity;
             Node **params;
             Node *body;
+            StorageClass storage_class;
+            bool has_initializer;
         } func;
         // { [block_item]+ }
         struct {
@@ -123,6 +131,9 @@ struct Node {
             Node *type;
             Node *identifier;
             Node *expr;
+            StorageClass storage_class;
+            bool has_initializer;
+            bool is_global;
         } var_decl;
         // identifier(params*)
         struct {
