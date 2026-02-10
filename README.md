@@ -187,12 +187,28 @@ Returns control flow to callee, also returns a value. If no value is given, retu
 * Advanced Control Flow
     * continue, break
     * switch, case,
-* Structs, Enums
-    * `struct A {}` `enum B {}`
+* Structs
+    * `struct A {}`
     * Member access using `.` and `->`
     * Padding rules
+*  Enums
+    * `enum B {}`
+    * Specify value `enum C { ONE = 1, TWO, }`
+* Storage Specifiers
+    * extern
+    * static
+* typedef
     
 ## To be Implemented (Ordered from next to never...)
+* Function ABI Calling Conventions
+    * Use registers for Parameters
+    * Overflow 6+ to stack
+    * Handle Structs
+        * sizeof(struct A) < 16b => use registers
+        *       ...        > 16b => use hidden pointer to copy on function stack 
+    * Caller/Callee save registers
+* Use physical registers
+    * Overflow to stack
 * Array Initialization
     * Compound literals `(Type){}`
 * Pointers
@@ -209,8 +225,7 @@ Returns control flow to callee, also returns a value. If no value is given, retu
 * Variants
     * Unsigned
 * Qualifiers
-    * const, volatile, extern
-* typedef
+    * const, volatile
 * preprocessor
     * `#define`, `#include` etc for conditional compilation.
 * Inline functions
