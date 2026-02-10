@@ -81,10 +81,11 @@ typedef struct {
         // IR_REG
         struct{
             int reg;
+        // IR_STACK
             int stack_slot;
             int stack_offset;
         };
-        // IR_STACK
+        // IR_MEM
         struct{
             int mem;
             int offset;

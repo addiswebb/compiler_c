@@ -1,8 +1,4 @@
 .section .rodata
-.data
-.align 4
-a:
-    .long 10
 
 .text
 
@@ -10,14 +6,19 @@ a:
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $32, %rsp
+    subq $16, %rsp
 main_0:
-    movl $10, %eax
-    movl %eax, -24(%rbp)
-    movl a(%rip), %eax
-    addl -24(%rbp), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
+    movl $5, %eax
+    movl %eax, -8(%rbp)
+    movl $6, %eax
+    movl %eax, -16(%rbp)
+    movl -8(%rbp), %eax
+    addl -16(%rbp), %eax
+    movl %eax, -8(%rbp)
+    movl $7, %eax
+    movl %eax, -16(%rbp)
+    movl -8(%rbp), %eax
+    addl -16(%rbp), %eax
     movl %eax, -8(%rbp)
     movl -8(%rbp), %eax
     mov %rbp, %rsp

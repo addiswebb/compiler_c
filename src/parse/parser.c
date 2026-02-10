@@ -852,8 +852,20 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, StorageCl
         var_decl->var_decl.expr = NULL;
     }
     var_decl->var_decl.storage_class = storage_class;
+    var_decl->var_decl.is_defined = storage_class != EXTERN;
     p_consume_semi(p);
-    p_append_var_decl(p, var_decl);
+    Symbol *s = p_get_symbol(p, var_decl->var_decl.identifier->identifier.name, VAR);
+    if (s) {
+        if (!s->var_decl->var_decl.is_defined && var_decl->var_decl.is_defined) {
+            s->var_decl = var_decl;
+        } else if (!var_decl->var_decl.is_defined && s->var_decl->var_decl.is_defined) return var_decl;
+        else {
+            // printf("Variable %s has already been defined\n", s->name);
+            // exit(1);
+            // TODO: handle declarations of the same var?
+        }
+    } else p_append_var_decl(p, var_decl);
+
     return var_decl;
 }
 

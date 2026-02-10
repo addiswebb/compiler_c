@@ -3,6 +3,7 @@
     Tracks any variables added afterwards, and pops them from the IR virtual stack when `ir_end_scope()` is called.
 */
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/type.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -319,10 +320,12 @@ void ir_append_global(IR_Module *module, const char *name, Type *type, IR_Litera
         }
         module->global_pool.globals = new_globals;
     }
+    IR_Literal l = literal ? *literal : (IR_Literal){.type = type_invalid, .i = 0};
+
     module->global_pool.globals[module->global_pool.count++] = (IR_Global){
         .name = name,
         .type = type,
-        .val = *literal,
+        .val = l,
         .linkage = linkage,
         .storage = storage,
     };

@@ -1,6 +1,5 @@
-static int a = 10;
+enum E { A = 5, B, C };
 
 int main() {
-    int d = a + 10;
-    return d;
+    return A + B + C; // 5 + 6 + 7 = 18
 }

@@ -136,6 +136,7 @@ struct Node {
             StorageClass storage_class;
             bool has_initializer;
             bool is_global;
+            bool is_defined;
             Symbol *symbol;
         } var_decl;
         // identifier(params*)

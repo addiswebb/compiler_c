@@ -8,7 +8,7 @@
 void x86_operand(const IR_Value *v, char *buf, int n) {
     switch (v->kind) {
     case IR_STACK:
-        snprintf(buf, n, "%d(%%rbp)", v->stack_offset + v->offset);
+        snprintf(buf, n, "%d(%%rbp)", v->stack_offset);
         return;
     case IR_LITERAL:
         snprintf(buf, n, ".LC%d(%%rip)", v->const_index);
@@ -438,18 +438,17 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
     // char/short/int/long/ -> char/short/int/long
     if (from->kind == T_INT && to->kind == T_INT) {
         if (from->size < to->size) {
-            x86_emit_xr(fp, "mov", from_op_suffix, to_op_suffix, src, from_reg);
+            x86_emit_xr(fp, "movs", from_op_suffix, to_op_suffix, src, to_reg);
         } else {
             x86_emit_xr(fp, "mov", from_op_suffix, "", src, from_reg);
         }
-        x86_emit_rx(fp, "mov", from_op_suffix, "", to_reg, dst);
+        x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         return;
     }
 
     // char/short/int/long -> float/double
     if (from->kind == T_INT && to->kind == T_FLOAT) {
-        // fprintf(fp, "    movs%sq %d(%%rbp), %%rax\n", from_op_suffix, src_offset);
-        x86_emit_xr(fp, "mov", from_op_suffix, "q", src, "%rax");
+        x86_emit_xr(fp, "movs", from_op_suffix, "q", src, "%rax");
         x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
         x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         return;

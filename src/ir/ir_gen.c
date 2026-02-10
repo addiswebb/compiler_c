@@ -334,12 +334,13 @@ static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     // Handle globals seperately to locals
     if (var_decl->var_decl.is_global) {
+        if (var_decl->var_decl.storage_class == EXTERN) return;
         IR_Literal x;
         IR_Literal *l = &x;
         if (var_decl->var_decl.has_initializer) {
             Node *x = var_decl->var_decl.expr;
             *l = ir_gen_literal(var_decl->var_decl.expr);
-        }
+        } else l = NULL;
         return ir_append_global(ctx->module, var_decl->var_decl.identifier->identifier.name, var_decl->type, l,
                                 var_decl->var_decl.symbol->linkage, var_decl->var_decl.symbol->storage);
     }
@@ -470,6 +471,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
             break;
         case N_TYPEDEF:
         case N_TYPE:
+            break;
         case N_VAR_DECL:
             ir_gen_var_decl(ctx, n);
             // Handled by parser or smt

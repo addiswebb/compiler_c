@@ -290,7 +290,6 @@ void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlo
                     break;
                 case IR_MEM:
                     a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
-
                     break;
                 case IR_STACK:
                 case IR_LITERAL:

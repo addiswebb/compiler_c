@@ -11,11 +11,11 @@
 static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->ops[1].kind) {
     case IR_STACK:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%%rdx");
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rdx");
         break;
     case IR_LITERAL:
     case IR_GLOBAL:
-        x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%%rdx");
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rdx");
         break;
     case IR_REG:
     case IR_MEM:
@@ -28,7 +28,7 @@ static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
     case IR_STACK:
     case IR_LITERAL:
     case IR_GLOBAL:
-        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%%rcx");
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rcx");
         break;
     case IR_REG:
     case IR_MEM:
@@ -45,8 +45,8 @@ static void x86_gen_alloca_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
 }
 
 static void x86_gen_addr_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%%rax");
-    x86_emit_rx(fp, "mov", "q", "", "%%rax", &instr->ops[0]);
+    x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rax");
+    x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
 }
 static void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     // char -> int : zero-extend
@@ -193,27 +193,38 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
         for (int i = 0; i < ctx->module->global_pool.count; i++) {
             IR_Global *g = &ctx->module->global_pool.globals[i];
             IR_Literal *c = &g->val;
+            if (g->storage == STORAGE_NONE) {
+                fprintf(fp, ".extern %s\n", g->name);
+                continue;
+            }
+            if (g->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", g->name);
             if (g->storage == STORAGE_DATA) fprintf(fp, ".data\n");
-            if (g->storage == STORAGE_BSS) fprintf(fp, ".bss\n");
-
-            if (c->type == type_double) {
-                uint64_t bits;
-                memcpy(&bits, &c->f, sizeof(bits));
-                fprintf(fp, ".align 8\n%s:\n    .quad 0x%016llx\n", g->name, bits);
-            } else if (c->type == type_float) {
-                uint32_t bits;
-                memcpy(&bits, &c->f, sizeof(bits));
-                fprintf(fp, ".align 4\n%s:\n    .long 0x%08x\n", g->name, bits);
-            } else if (c->type->kind == T_ARRAY && c->type->base == type_char) {
-                fprintf(fp, "%s:\n    .string \"%s\"\n", g->name, c->s.data);
-            } else if (c->type == type_int) {
-                fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->name, (int)c->i);
-            } else if (c->type == type_char) {
-                fprintf(fp, ".align 4\n%s:\n    .byte %d\n", g->name, (char)c->i);
-            } else if (c->type == type_short) {
-                fprintf(fp, ".align 4\n%s:\n    .word %d\n", g->name, (short)c->i);
-            } else if (c->type == type_long) {
-                fprintf(fp, ".align 4\n%s:\n    .word %lld\n", g->name, c->i);
+            if (g->storage == STORAGE_BSS) {
+                fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->type->align, g->name, g->type->size);
+            } else {
+                if (c->type == type_invalid) {
+                    printf("Recieved invalid type, probably an uninitialized global with incorrect storage specifier\n");
+                    exit(1);
+                }
+                if (c->type == type_double) {
+                    uint64_t bits;
+                    memcpy(&bits, &c->f, sizeof(bits));
+                    fprintf(fp, ".align 8\n%s:\n    .quad 0x%016llx\n", g->name, bits);
+                } else if (c->type == type_float) {
+                    uint32_t bits;
+                    memcpy(&bits, &c->f, sizeof(bits));
+                    fprintf(fp, ".align 4\n%s:\n    .long 0x%08x\n", g->name, bits);
+                } else if (c->type->kind == T_ARRAY && c->type->base == type_char) {
+                    fprintf(fp, ".align 8\n%s:\n    .string \"%s\"\n", g->name, c->s.data);
+                } else if (c->type == type_int) {
+                    fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->name, (int)c->i);
+                } else if (c->type == type_char) {
+                    fprintf(fp, "%s:\n    .byte %d\n", g->name, (char)c->i);
+                } else if (c->type == type_short) {
+                    fprintf(fp, ".align 2\n%s:\n    .word %d\n", g->name, (short)c->i);
+                } else if (c->type == type_long) {
+                    fprintf(fp, ".align 8\n%s:\n    .quad %lld\n", g->name, c->i);
+                }
             }
         }
     }
