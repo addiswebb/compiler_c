@@ -5,6 +5,87 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+const char *x86_reg(const IR_Value *v) {
+    switch (v->phys_reg.kind) {
+    case REG_GP:
+        switch (v->phys_reg.gp_reg) {
+        case RAX:
+            return "%rax";
+        case RBX:
+            return "%rbx";
+        case RCX:
+            return "%rcx";
+        case RDX:
+            return "%rdx";
+        case RSI:
+            return "%rsi";
+        case RDI:
+            return "%rdi";
+        case RBP:
+            return "%rbp";
+        case RSP:
+            return "%rsp";
+        case R8:
+            return "%r8";
+        case R9:
+            return "%r9";
+        case R10:
+            return "%r10";
+        case R11:
+            return "%r11";
+        case R12:
+            return "%r12";
+        case R13:
+            return "%r13";
+        case R14:
+            return "%r14";
+        case R15:
+            return "%r15";
+        case REG_NONE:
+            printf("Recieved REG_NONE\n");
+            exit(1);
+        }
+    case REG_XMM:
+        switch (v->phys_reg.xmm_reg) {
+        case XMM0:
+            return "%xmm0";
+        case XMM1:
+            return "%xmm1";
+        case XMM2:
+            return "%xmm2";
+        case XMM3:
+            return "%xmm3";
+        case XMM4:
+            return "%xmm4";
+        case XMM5:
+            return "%xmm5";
+        case XMM6:
+            return "%xmm6";
+        case XMM7:
+            return "%xmm7";
+        case XMM8:
+            return "%xmm8";
+        case XMM9:
+            return "%xmm9";
+        case XMM10:
+            return "%xmm10";
+        case XMM11:
+            return "%xmm11";
+        case XMM12:
+            return "%xmm12";
+        case XMM13:
+            return "%xmm13";
+        case XMM14:
+            return "%xmm14";
+        case XMM15:
+            return "%xmm15";
+        }
+        break;
+    }
+    printf("Corrupt x86 register given\n");
+    exit(1);
+}
+
 void x86_operand(const IR_Value *v, char *buf, int n) {
     switch (v->kind) {
     case IR_STACK:
@@ -16,7 +97,10 @@ void x86_operand(const IR_Value *v, char *buf, int n) {
     case IR_GLOBAL:
         snprintf(buf, n, "%s(%%rip)", v->global->name);
         return;
-    case IR_REG:
+    case IR_PHYS_REG:
+        snprintf(buf, n, "%s", x86_reg(v));
+        return;
+    case IR_VREG:
     case IR_MEM:
     case IR_UNDEFINED:
         printf("Tried to gen assembly for undefined IR_Value\n");

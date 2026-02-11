@@ -4,6 +4,7 @@
 #include "compiler_c/node.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/type.h"
+#include "compiler_c/analysis_types.h"
 #include <stdint.h>
 
 typedef enum{
@@ -52,7 +53,7 @@ typedef enum {
 } IR_OP;
 
 typedef enum{
-     IR_UNDEFINED, IR_REG, IR_MEM, IR_STACK, IR_LITERAL, IR_GLOBAL
+     IR_UNDEFINED, IR_PHYS_REG, IR_VREG, IR_MEM, IR_STACK, IR_LITERAL, IR_GLOBAL
 }IR_ValueKind;
 
 typedef struct{
@@ -75,10 +76,13 @@ typedef struct{
     Linkage linkage;
 }IR_Global;
 
-typedef struct {
+typedef struct PhysReg PhysReg;
+
+typedef struct IR_Value{
     IR_ValueKind kind;
     union{
-        // IR_REG
+        // TODO: seperate IR_REG and IR_STACK data
+        // IR_VREG
         struct{
             int reg;
         // IR_STACK
@@ -94,6 +98,8 @@ typedef struct {
         int const_index;
         // IR_GLOBAL
         IR_Global *global;
+        // IR_PHYS_REG
+        PhysReg phys_reg;
     };
     int size;
     int align;
@@ -140,7 +146,7 @@ typedef struct{
     int size;
     int align;
     int free_at;
-}IR_StackSlot;
+}StackSlot;
 
 typedef struct{
     int *data;
@@ -202,11 +208,12 @@ typedef struct {
     IR_Scope *scopes;
     int scope_count;
     int scope_capacity;
-    IR_StackSlot *stack_slots;
+    StackSlot *stack_slots;
     int stack_slot_count;
     int stack_slot_capacity;
     Linkage linkage;
     Storage storage;
+    int param_count;
 } IR_Function;
 
 typedef struct{
@@ -263,7 +270,7 @@ void ir_pop_loop_ctx(IR_Context *ctx);
 IR_LoopContext *ir_loop_ctx(IR_Context *ctx);
 
 IR_Value ir_mem_value(int mem_reg, Type *type);
-IR_Value ir_reg_value(int reg, Type *type);
+IR_Value ir_vreg_value(int reg, Type *type);
 
 IR_Value ir_literal_value(int const_index);
 

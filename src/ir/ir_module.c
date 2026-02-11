@@ -67,9 +67,9 @@ IR_Value ir_mem_value(int mem_reg, Type *type) {
     v.align = type->align;
     return v;
 }
-IR_Value ir_reg_value(int reg, Type *type) {
+IR_Value ir_vreg_value(int reg, Type *type) {
     IR_Value v;
-    v.kind = IR_REG;
+    v.kind = IR_VREG;
     v.reg = reg;
     v.stack_offset = 0;
     v.stack_slot = 0;
@@ -124,7 +124,7 @@ IR_Value ir_next_virtual_slot(IR_Function *func, int size, int align) {
 IR_Value ir_next_virtual_reg(IR_Function *func) {
     func->scopes[func->scope_count - 1].reg_count++;
     IR_Value v;
-    v.kind = IR_REG;
+    v.kind = IR_VREG;
     v.size = 8;
     v.align = 8;
     v.reg = func->next_reg++;
@@ -229,6 +229,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
     func->name = name;
     func->next_reg = 0;
     func->max_reg = 0;
+    func->param_count = 0;
     func->stack_size = 0;
     func->block_capacity = 4;
     func->block_count = 0;
@@ -262,7 +263,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
 
     func->stack_slot_capacity = 4;
     func->stack_slot_count = 0;
-    func->stack_slots = malloc(sizeof(IR_StackSlot) * func->stack_slot_capacity);
+    func->stack_slots = malloc(sizeof(StackSlot) * func->stack_slot_capacity);
     if (!func->stack_slots) {
         printf("Failed to allocated IR_Stack_Objects\n");
         free(func->blocks);
@@ -360,7 +361,7 @@ IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
         }
         func->locals = new_locals;
     }
-    const IR_Value next_var = ir_next_virtual_slot(func, align(type->size, 8), 8);
+    IR_Value next_var = ir_next_virtual_slot(func, align(type->size, 8), 8);
     func->locals[func->local_count++] = (IR_Var){name, next_var, type};
     if (func->scope_count > 0) {
         IR_Scope *scope = &func->scopes[func->scope_count - 1];

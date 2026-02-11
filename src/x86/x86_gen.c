@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
+
 static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->ops[1].kind) {
     case IR_STACK:
@@ -15,9 +16,10 @@ static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
         break;
     case IR_LITERAL:
     case IR_GLOBAL:
+    case IR_PHYS_REG:
         x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rdx");
         break;
-    case IR_REG:
+    case IR_VREG:
     case IR_MEM:
     case IR_UNDEFINED:
         printf("Sanity check failed\n");
@@ -28,9 +30,10 @@ static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
     case IR_STACK:
     case IR_LITERAL:
     case IR_GLOBAL:
+    case IR_PHYS_REG:
         x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rcx");
         break;
-    case IR_REG:
+    case IR_VREG:
     case IR_MEM:
     case IR_UNDEFINED:
         printf("Sanity check failed\n");

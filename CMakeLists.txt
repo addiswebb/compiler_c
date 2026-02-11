@@ -21,11 +21,11 @@ add_executable(compiler_c
     src/x86/x86_emit.c
     src/type.c
     src/ir/ir_gen.c
-    src/ir/ir_analysis.c
     src/ir/ir_util.c
     src/ir/ir_builder.c
     src/ir/ir_module.c
     src/sema.c
+    src/analysis.c
 )
 
 target_include_directories(compiler_c

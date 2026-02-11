@@ -442,8 +442,9 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     // handle (params)
     for (int i = 0; i < func->func.param_count; i++) {
         ir_new_var(ctx->func, func->func.params[i]->var_decl.identifier->identifier.name, func->func.params[i]->type);
-        ir_store(ctx, ir_mem_value(i, func->func.params[i]->type), ir_reg_value(-func->func.param_count + i, func->func.params[i]->type),
+        ir_store(ctx, ir_mem_value(i, func->func.params[i]->type), ir_vreg_value(-func->func.param_count + i, func->func.params[i]->type),
                  func->func.params[i]->type);
+        fn->param_count++;
     }
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.count; i++) {

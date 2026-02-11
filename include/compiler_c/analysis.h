@@ -1,16 +1,23 @@
-#ifndef COMPILER_C_IR_ANALYSIS_H
-#define COMPILER_C_IR_ANALYSIS_H
-
-#define DEBUG_IR_LIFETIMES 0
+#ifndef COMPILER_C_ANALYSIS_H
+#define COMPILER_C_ANALYSIS_H
 
 #include "compiler_c/ir/ir_module.h"
 
-void ir_analysis(IR_Context *ctx);
+#define DEBUG_LIFETIMES 0
+
+extern const GP_Reg sysv_int_param_regs[6];
+extern const XMM_Reg sysv_float_param_regs[8];
+
+void physical_gp_register(IR_Value *v, GP_Reg reg, int size);
+void physical_xmm_register(IR_Value *v, XMM_Reg reg, int size);
+void stack_offset(IR_Value *v, Lifetime *lts);
+
+void analysis(IR_Context *ctx);
 int bitset_add_defined(BitSet *defined, IR_Value *v);
 void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v);
 
-int ir_reg_bitset(IR_Function *f);
-void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlot *mem_slots);
+int reg_bitset(IR_Function *f);
+void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, StackSlot *mem_slots);
 void add_successor(IR_Function *func, IR_Block *from, IR_Block *to);
 
 Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f,int defined, int *rpo);

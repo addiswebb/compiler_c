@@ -8,7 +8,6 @@
 
 #define MAX_OPERAND_BUFFER_SIZE 64
 
-static int current_offset = 0;
 
 void x86_gen_module(FILE *fp, IR_Context *ctx);
 

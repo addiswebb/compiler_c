@@ -1,10 +1,15 @@
-#include "compiler_c/ir/ir_analysis.h"
+#include "compiler_c/analysis.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/type.h"
 
 #include <assert.h>
 #include <stdlib.h>
+
+const GP_Reg sysv_int_param_regs[6] = {RDI, RSI, RDX, RCX, R8, R9};
+const XMM_Reg sysv_float_param_regs[8] = {
+    XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7,
+};
 
 void bitset_init(BitSet *s, int reg_count) {
     s->num_bits = reg_count;
@@ -116,7 +121,7 @@ void compute_reverse_postorder(IR_Function *func, int *rpo) {
 }
 
 int bitset_add_defined(BitSet *defined, IR_Value *v) {
-    if (v->kind == IR_REG) {
+    if (v->kind == IR_VREG) {
         if (!bitset_has(defined, v->reg)) {
             bitset_add(defined, v->reg);
             return 1;
@@ -125,7 +130,7 @@ int bitset_add_defined(BitSet *defined, IR_Value *v) {
     return 0;
 }
 void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v) {
-    if (v->kind == IR_REG) {
+    if (v->kind == IR_VREG) {
         if (!bitset_has(defined, v->reg)) {
             bitset_add(used, v->reg);
         }
@@ -182,7 +187,7 @@ void ir_compute_func_io(IR_Function *f) {
     }
 }
 
-int ir_reg_bitset(IR_Function *f) {
+int reg_bitset(IR_Function *f) {
     int defined = 0;
     for (int j = 0; j < f->block_count; j++) {
         IR_Block *b = f->blocks[j];
@@ -240,12 +245,12 @@ void compute_bitset(IR_Function *f, int *rpo) {
 int cmp(const void *a, const void *b) { return ((Lifetime *)a)->start - ((Lifetime *)b)->start; }
 
 void linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, int *stack_size, int *slot_count) {
-    IR_StackSlot *slots = NULL;
+    StackSlot *slots = NULL;
     for (int i = 0; i < count; i++) {
         Lifetime *l = &lts[i];
         int found_slot = 0;
         for (int j = 0; j < *slot_count; j++) {
-            IR_StackSlot *s = &slots[j];
+            StackSlot *s = &slots[j];
             if (s->free_at <= l->start) {
                 s->free_at = l->end;
                 l->stack_slot = j;
@@ -255,7 +260,7 @@ void linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, int *stack
             }
         }
         if (!found_slot) {
-            IR_StackSlot *new_slots = realloc(slots, sizeof(IR_StackSlot) * (*slot_count + 1));
+            StackSlot *new_slots = realloc(slots, sizeof(StackSlot) * (*slot_count + 1));
             if (!new_slots) {
                 printf("Failed to realloc new_slots\n");
                 exit(1);
@@ -273,8 +278,52 @@ void linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, int *stack
     }
     if (slots) free(slots);
 }
+RegSize reg_size(int size) {
+    switch (size) {
+    case 1:
+        return REG_8;
+    case 2:
+        return REG_16;
+    case 4:
+        return REG_32;
+    case 8:
+        return REG_64;
+    default:
+        // Todo handle size of 3,5,6,7 for chars
+        printf("Given too large a size for a register, should have already been handled tho\n");
+        exit(1);
+    }
+}
+/*
+    Gets the correct register for a function parameter only currently.
+*/
+void physical_register(IR_Value *v) {
+    // int reg_index = v->reg;
+    // if (v->reg < 0) reg_index = -v->reg - 1;
 
-void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlot *mem_slots) {
+    // if (v->type == T_INT || v->type == T_POINTER) {
+    //     v->phys_reg.kind = REG_GP;
+    //     v->phys_reg.gp_reg = sysv_int_param_regs[reg_index];
+    // } else if (v->type == T_FLOAT) {
+    //     v->phys_reg.kind = REG_XMM;
+    //     v->phys_reg.xmm_reg = sysv_float_param_regs[reg_index];
+    // } else {
+    //     printf("Cannot use physical register with non int/float/pointer type");
+    //     exit(1);
+    // }
+    // v->phys_reg.size = reg_size(v->size);
+}
+void param_offset(IR_Value *v) {
+    v->kind = IR_STACK;
+    v->stack_offset = -(v->reg * 8 - 8);
+}
+
+void stack_offset(IR_Value *v, Lifetime *lts) {
+    v->kind = IR_STACK;
+    v->stack_offset = -(lts[v->reg].stack_offset + 8);
+}
+
+void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, StackSlot *mem_slots) {
     for (int i = 0; i < f->block_count; i++) {
         IR_Block *b = f->blocks[i];
         for (int j = 0; j < b->count; j++) {
@@ -283,24 +332,35 @@ void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, IR_StackSlo
             for (int k = 0; k < value_count; k++) {
                 IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
                 if (a->kind == IR_LITERAL) continue;
+                // offload the following switch to a function which correctly lowers IR_VREG, IR_MEM to IR_STACK
+                // leaving IR_GLOBAL, IR_LITERAL, IR_STACK
                 switch (a->kind) {
-                case IR_REG:
+                case IR_VREG:
                     // a->reg is negative for function parameters
-                    a->stack_offset = a->reg >= 0 ? -(lts[a->reg].stack_offset + 8) : -(a->reg * 8 - 8);
+                    if (a->reg < 0) {
+                        // if (a->size > 8) {
+                        //     printf("Size is huge lol, overflow to stack\n");
+                        //     exit(1);
+                        // }
+                        // physical_register(a);
+                        param_offset(a);
+                    } else {
+                        stack_offset(a, lts);
+                    }
                     break;
                 case IR_MEM:
                     a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
+                    a->kind = IR_STACK;
                     break;
                 case IR_STACK:
                 case IR_LITERAL:
+                case IR_GLOBAL:
+                case IR_PHYS_REG:
                     break;
                 case IR_UNDEFINED:
                     printf("An undefined IR value made it to analysis!!\n");
                     exit(1);
-                case IR_GLOBAL:
-                    break;
                 }
-                if (a->kind != IR_GLOBAL) a->kind = IR_STACK;
             }
         }
     }
@@ -326,9 +386,8 @@ void verify_completion(IR_Function *f) {
     }
 }
 
-IR_StackSlot *local_stack_allocation(IR_Function *f, int *frame_size, int *slot_count) {
-    IR_StackSlot *mem_slots = malloc(sizeof(IR_StackSlot) * f->local_count);
-    int mem_slot_count;
+StackSlot *locals_stack_allocation(IR_Function *f, int *frame_size, int *slot_count) {
+    StackSlot *mem_slots = malloc(sizeof(StackSlot) * f->local_count);
     if (!mem_slots) {
         printf("Failed to allocate memslots\n");
         exit(1);
@@ -347,7 +406,7 @@ IR_StackSlot *local_stack_allocation(IR_Function *f, int *frame_size, int *slot_
     return mem_slots;
 }
 
-void ir_analysis(IR_Context *ctx) {
+void analysis(IR_Context *ctx) {
     for (int i = 0; i < ctx->module->func_count; i++) {
         IR_Function *f = ctx->module->functions[i];
         // Initialize Control Flow Graph Variables per block
@@ -360,12 +419,12 @@ void ir_analysis(IR_Context *ctx) {
         int reg_count = 0;
         // If any registers were used, compute their lifetimes
         if (f->max_reg > 0) {
-            reg_count = ir_reg_bitset(f);
+            reg_count = reg_bitset(f);
             compute_reverse_postorder(f, rpo);
             compute_bitset(f, rpo);
 
             lifetimes = compute_lifetimes(ctx, f, reg_count, rpo);
-            if (DEBUG_IR_LIFETIMES) {
+            if (DEBUG_LIFETIMES) {
                 for (int j = 0; j < reg_count; j++) {
                     printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
                 }
@@ -376,7 +435,7 @@ void ir_analysis(IR_Context *ctx) {
         int frame_size = 0;
         int mem_slots_count = 0;
         // Allocate local variables
-        IR_StackSlot *mem_slots = local_stack_allocation(f, &frame_size, &mem_slots_count);
+        StackSlot *mem_slots = locals_stack_allocation(f, &frame_size, &mem_slots_count);
 
         int slot_count = 0;
         // Allocate virtual registers
@@ -408,7 +467,7 @@ Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f, int defined, int *r
             for (int k = 0; k < value_count; k++) {
                 IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
                 bool is_call_arg = k >= +instr->op_count;
-                if (a->kind == IR_REG) {
+                if (a->kind == IR_VREG) {
                     if (a->reg < 0) continue;
                     if (op_info[instr->op].def_mask & (1 << k)) {
                         lts[instr->ops[k].reg] = (Lifetime){instr->ops[k].reg, pc, -1, 0, 0, &instr->ops[k]};

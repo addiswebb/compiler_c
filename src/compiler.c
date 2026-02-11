@@ -1,4 +1,4 @@
-#include "compiler_c/ir/ir_analysis.h"
+#include "compiler_c/analysis.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
 #include <compiler_c/compiler.h>
@@ -134,7 +134,7 @@ int compile(Compiler *compiler) {
         if (compiler->flags & COMP_FLAG_IR) {
             print_ir_module(&ctx, module);
         }
-        ir_analysis(&ctx);
+        analysis(&ctx);
 
         if (compiler->flags & COMP_FLAG_IR) {
             for (int i = 0; i < module->func_count; i++) {

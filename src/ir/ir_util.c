@@ -425,7 +425,7 @@ void print_ir_module(IR_Context *ctx, const IR_Module *module) {
 
 void print_ir_value(const IR_Value *v) {
     switch (v->kind) {
-    case IR_REG:
+    case IR_VREG:
         if (v->reg >= 0) printf("r%d", v->reg);
         else printf("p%d", -v->reg);
         break;
@@ -443,6 +443,13 @@ void print_ir_value(const IR_Value *v) {
         break;
     case IR_GLOBAL:
         printf("g[%s]", v->global->name);
+        break;
+    case IR_PHYS_REG:
+        if (REG_GP) {
+            printf("%%gp[%d]", v->phys_reg.gp_reg);
+        } else {
+            printf("%%xmm[%d]", v->phys_reg.xmm_reg);
+        }
         break;
     }
 }
