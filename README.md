@@ -198,11 +198,16 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * extern
     * static
 * typedef
+* Function ABI Calling Conventions
+    * MS x64 ABI
+    * Use registers for Parameters
+    * Overflow 6/4+ to stack
     
 ## To be Implemented (Ordered from next to never...)
+* Refactor for consistency
+* Variadic Functions
 * Function ABI Calling Conventions
-    * Use registers for Parameters
-    * Overflow 6+ to stack
+    * SysV ABI
     * Handle Structs
         * sizeof(struct A) < 16b => use registers
         *       ...        > 16b => use hidden pointer to copy on function stack 
