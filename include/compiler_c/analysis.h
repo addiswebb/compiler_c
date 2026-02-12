@@ -5,11 +5,9 @@
 
 #define DEBUG_LIFETIMES 0
 
-extern const GP_Reg sysv_int_param_regs[6];
-extern const XMM_Reg sysv_float_param_regs[8];
-
 void physical_gp_register(IR_Value *v, GP_Reg reg, int size);
 void physical_xmm_register(IR_Value *v, XMM_Reg reg, int size);
+void param_offset(IR_Value *v);
 void stack_offset(IR_Value *v, Lifetime *lts);
 
 void analysis(IR_Context *ctx);

@@ -282,7 +282,7 @@ void print_node(const Node *node, const int depth) {
             printf("}");
         }
         printf("\n");
-        print_node(node->func.body, depth + 1);
+        if (node->func.has_initializer) print_node(node->func.body, depth + 1);
         break;
     case N_VAR_DECL:
         printf(": [type= ");

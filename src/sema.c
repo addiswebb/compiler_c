@@ -162,8 +162,11 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         semantic_analysis(p, nm, node->func.body, loop);
         Linkage func_linkage = node->func.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
         if (node->func.storage_class == EXTERN) {
-            printf("External Function cannot have a definition\n");
-            exit(1);
+            if (node->func.is_defined) {
+                printf("External Function cannot have a definition\n");
+                exit(1);
+            }
+            break;
         }
         Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC);
         if (!func_symbol) {

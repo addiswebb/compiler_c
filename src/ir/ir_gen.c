@@ -11,7 +11,6 @@
 #include <compiler_c/ir/ir_builder.h>
 #include <compiler_c/ir/ir_gen.h>
 #include <compiler_c/node.h>
-#include <time.h>
 
 static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
@@ -429,6 +428,9 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
         printf("Tried ir_gen_function but given node is not a function!\n");
         exit(1);
     }
+    if (!func->func.is_defined) {
+        return NULL;
+    }
 
     IR_Function *fn = ir_new_function(ctx, func->func.name);
     if (func->func.body->kind != N_COMPOUND) {
@@ -441,6 +443,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     ir_begin_scope(fn);
     // handle (params)
     for (int i = 0; i < func->func.param_count; i++) {
+        // Copy from registers intsead
         ir_new_var(ctx->func, func->func.params[i]->var_decl.identifier->identifier.name, func->func.params[i]->type);
         ir_store(ctx, ir_mem_value(i, func->func.params[i]->type), ir_vreg_value(-func->func.param_count + i, func->func.params[i]->type),
                  func->func.params[i]->type);
@@ -468,7 +471,18 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
         Node *n = tu->translation_unit.declarations[i];
         switch (tu->translation_unit.declarations[i]->kind) {
         case N_FUNCTION:
-            ir_append_function(ctx->module, ir_gen_function(ctx, n));
+            IR_Func_Def *func_def = ir_get_func_def(ctx, n->func.name);
+            if (func_def) {
+                if (func_def->is_defined) {
+                    if (n->func.has_initializer) {
+                        printf("Redefinition of %s\n", n->func.name);
+                        exit(1);
+                    }
+                    break;
+                }
+            } else func_def = ir_append_func_def(ctx, n->func.name, n->func.has_initializer);
+
+            if (n->func.has_initializer) ir_append_function(ctx, func_def, ir_gen_function(ctx, n));
             break;
         case N_TYPEDEF:
         case N_TYPE:

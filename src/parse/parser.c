@@ -793,12 +793,32 @@ Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, StorageClass stor
         else break;
     }
     p_consume_a(p, TK_CLOSE_PAREN);
-    // Todo storage_specifier_to_linkage
-    // Todo, allow function declaration, but not definition
-    p_append_func_def(p, node);
-    node->func.body = p_parse_compound(p, nm);
-    node->func.has_initializer = true;
+    if (p_peek(p)->type == TK_SEMI) {
+        p_consume(p);
+        node->func.has_initializer = false;
+        node->func.is_defined = false;
+    } else {
+        node->func.has_initializer = true;
+        node->func.is_defined = true;
+    }
     node->func.storage_class = storage_class;
+    Symbol *s = p_get_symbol(p, node->func.name, FUNC);
+    if (s) {
+        // If previous declaration was prototype, and current has {}
+        if (!s->func_def->func.is_defined && node->func.is_defined) {
+            node->func.body = p_parse_compound(p, nm);
+            s->func_def = node;
+            // If symbol is already defined, and current a prototype
+        } else if (!node->func.is_defined && s->func_def->func.is_defined) return node;
+        else {
+            // If symbol and current both have {}
+            printf("Redefinition of function %s\n", node->func.name);
+            exit(1);
+        }
+    } else {
+        p_append_func_def(p, node);
+        if (node->func.has_initializer) node->func.body = p_parse_compound(p, nm);
+    }
     return node;
 }
 
@@ -849,6 +869,7 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, StorageCl
         var_decl->var_decl.has_initializer = true;
     } else {
         // Forward declaration
+        var_decl->var_decl.has_initializer = false;
         var_decl->var_decl.expr = NULL;
     }
     var_decl->var_decl.storage_class = storage_class;
@@ -858,7 +879,7 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, StorageCl
     if (s) {
         if (!s->var_decl->var_decl.is_defined && var_decl->var_decl.is_defined) {
             s->var_decl = var_decl;
-        } else if (!var_decl->var_decl.is_defined && s->var_decl->var_decl.is_defined) return var_decl;
+        } else if (!var_decl->var_decl.is_defined && s->var_decl->var_decl.is_defined) return s->var_decl;
         else {
             // printf("Variable %s has already been defined\n", s->name);
             // exit(1);

@@ -6,9 +6,26 @@
 #include <assert.h>
 #include <stdlib.h>
 
-const GP_Reg sysv_int_param_regs[6] = {RDI, RSI, RDX, RCX, R8, R9};
-const XMM_Reg sysv_float_param_regs[8] = {
+const GP_Reg win64_caller_saved[7] = {RAX, RCX, RDX, R8, R9, R10, R11};
+const GP_Reg win64_callee_saved[8] = {RBX, RBP, RDI, RSI, R12, R13, R14, R15};
+const GP_Reg win64_int_param_regs[WIN64_PARAM_REGISTERS] = {RCX, RDX, R8, R9};
+const XMM_Reg win64_float_param_regs[8] = {
     XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7,
+};
+
+const char *gp_register_str[16][4] = {
+    [RAX] = {"%al", "%ax", "%eax", "%rax"},      [RBX] = {"%bl", "%bx", "%ebx", "%rbx"},      [RCX] = {"%cl", "%cx", "%ecx", "%rcx"},
+    [RDX] = {"%dl", "%dx", "%edx", "%rdx"},      [RSI] = {"%sil", "%si", "%esi", "%rsi"},     [RDI] = {"%dil", "%di", "%edi", "%rdi"},
+    [RBP] = {"%bpl", "%bp", "%ebp", "%rbp"},     [RSP] = {"%spl", "%sp", "%esp", "%rsp"},     [R8] = {"%r8b", "%r8w", "%r8d", "%r8"},
+    [R9] = {"%r9b", "%r9w", "%r9d", "%r9"},      [R10] = {"%r10b", "%r10w", "%r10d", "%r10"}, [R11] = {"%r11b", "%r11w", "%r11d", "%r11"},
+    [R12] = {"%r12b", "%r12w", "%r12d", "%r12"}, [R13] = {"%r13b", "%r13w", "%r13d", "%r13"}, [R14] = {"%r14b", "%r14w", "%r14d", "%r14"},
+    [R15] = {"%r15b", "%r15w", "%r15d", "%r15"},
+};
+
+const char *xmm_register_str[16] = {
+    [XMM0] = "%xmm0",   [XMM1] = "%xmm1",   [XMM2] = "%xmm2",   [XMM3] = "%xmm3",   [XMM4] = "%xmm4",   [XMM5] = "%xmm5",
+    [XMM6] = "%xmm6",   [XMM7] = "%xmm7",   [XMM8] = "%xmm8",   [XMM9] = "%xmm9",   [XMM10] = "%xmm10", [XMM11] = "%xmm11",
+    [XMM12] = "%xmm12", [XMM13] = "%xmm13", [XMM14] = "%xmm14", [XMM15] = "%xmm15",
 };
 
 void bitset_init(BitSet *s, int reg_count) {
@@ -298,12 +315,12 @@ RegSize reg_size(int size) {
     Gets the correct register for a function parameter only currently.
 */
 void physical_register(IR_Value *v) {
-    // int reg_index = v->reg;
-    // if (v->reg < 0) reg_index = -v->reg - 1;
-
+    int reg_index = v->reg;
+    if (v->reg < 0) reg_index = -v->reg - 1;
+    v->kind = IR_PHYS_REG;
     // if (v->type == T_INT || v->type == T_POINTER) {
-    //     v->phys_reg.kind = REG_GP;
-    //     v->phys_reg.gp_reg = sysv_int_param_regs[reg_index];
+    v->phys_reg.kind = REG_GP;
+    v->phys_reg.gp_reg = win64_int_param_regs[reg_index];
     // } else if (v->type == T_FLOAT) {
     //     v->phys_reg.kind = REG_XMM;
     //     v->phys_reg.xmm_reg = sysv_float_param_regs[reg_index];
@@ -311,11 +328,11 @@ void physical_register(IR_Value *v) {
     //     printf("Cannot use physical register with non int/float/pointer type");
     //     exit(1);
     // }
-    // v->phys_reg.size = reg_size(v->size);
+    v->phys_reg.size = reg_size(v->size);
 }
 void param_offset(IR_Value *v) {
     v->kind = IR_STACK;
-    v->stack_offset = -(v->reg * 8 - 8);
+    v->stack_offset = (-v->reg - 1) * 8 + 16;
 }
 
 void stack_offset(IR_Value *v, Lifetime *lts) {
@@ -338,12 +355,11 @@ void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, StackSlot *
                 case IR_VREG:
                     // a->reg is negative for function parameters
                     if (a->reg < 0) {
-                        // if (a->size > 8) {
-                        //     printf("Size is huge lol, overflow to stack\n");
-                        //     exit(1);
-                        // }
-                        // physical_register(a);
-                        param_offset(a);
+                        if (-a->reg - 1 < WIN64_PARAM_REGISTERS) {
+                            physical_register(a);
+                        } else {
+                            param_offset(a);
+                        }
                     } else {
                         stack_offset(a, lts);
                     }
@@ -375,7 +391,7 @@ void verify_completion(IR_Function *f) {
             for (int k = 0; k < value_count; k++) {
                 IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
                 if (a->kind == IR_LITERAL && instr->op != IR_CALL) continue;
-                if (a->kind == IR_GLOBAL) continue;
+                if (a->kind == IR_GLOBAL || a->kind == IR_PHYS_REG) continue;
                 if (a->kind != IR_STACK) {
                     print_ir_value(a);
                     printf(" was not converted to stack offset\n");

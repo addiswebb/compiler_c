@@ -6,84 +6,8 @@
 #include <stdlib.h>
 
 const char *x86_reg(const IR_Value *v) {
-    switch (v->phys_reg.kind) {
-    case REG_GP:
-        switch (v->phys_reg.gp_reg) {
-        case RAX:
-            return "%rax";
-        case RBX:
-            return "%rbx";
-        case RCX:
-            return "%rcx";
-        case RDX:
-            return "%rdx";
-        case RSI:
-            return "%rsi";
-        case RDI:
-            return "%rdi";
-        case RBP:
-            return "%rbp";
-        case RSP:
-            return "%rsp";
-        case R8:
-            return "%r8";
-        case R9:
-            return "%r9";
-        case R10:
-            return "%r10";
-        case R11:
-            return "%r11";
-        case R12:
-            return "%r12";
-        case R13:
-            return "%r13";
-        case R14:
-            return "%r14";
-        case R15:
-            return "%r15";
-        case REG_NONE:
-            printf("Recieved REG_NONE\n");
-            exit(1);
-        }
-    case REG_XMM:
-        switch (v->phys_reg.xmm_reg) {
-        case XMM0:
-            return "%xmm0";
-        case XMM1:
-            return "%xmm1";
-        case XMM2:
-            return "%xmm2";
-        case XMM3:
-            return "%xmm3";
-        case XMM4:
-            return "%xmm4";
-        case XMM5:
-            return "%xmm5";
-        case XMM6:
-            return "%xmm6";
-        case XMM7:
-            return "%xmm7";
-        case XMM8:
-            return "%xmm8";
-        case XMM9:
-            return "%xmm9";
-        case XMM10:
-            return "%xmm10";
-        case XMM11:
-            return "%xmm11";
-        case XMM12:
-            return "%xmm12";
-        case XMM13:
-            return "%xmm13";
-        case XMM14:
-            return "%xmm14";
-        case XMM15:
-            return "%xmm15";
-        }
-        break;
-    }
-    printf("Corrupt x86 register given\n");
-    exit(1);
+    if (v->phys_reg.kind == REG_GP) return gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size];
+    else return xmm_register_str[v->phys_reg.xmm_reg];
 }
 
 void x86_operand(const IR_Value *v, char *buf, int n) {
@@ -257,7 +181,6 @@ const char *x86_op_suffix(Type *t) {
     printf("Tried to op of unsupported type\n");
     exit(1);
 }
-
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     int dst_offset = instr->ops[0].stack_offset;
     Type *t = instr->call.type;
@@ -265,22 +188,49 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
 
+    int gp_index = 0;
+    int xmm_index = 0;
+    int spilled_count = instr->call.arg_count > PARAM_REGISTERS ? instr->call.arg_count - PARAM_REGISTERS : 0;
+    printf("Registers used %d/%d/%d\n", instr->call.arg_count - spilled_count, instr->call.arg_count, spilled_count);
+    // +8 for push rbp (call emits push rbp, mov rsp, rbp)
+    int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count + 8, 16);
+    int param_offset = SHADOW_SPACE;
+    if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
     for (int i = 0; i < instr->call.arg_count; i++) {
         IR_Var *v = &instr->call.args[i];
+        bool is_register_param = i < PARAM_REGISTERS;
         switch (v->type->kind) {
         case T_INT:
-            fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x86_rax_reg(v->type));
-            fprintf(fp, "    push %%rax\n");
+            if (is_register_param) {
+                const char *x = gp_register_str[win64_int_param_regs[gp_index++]][reg_size(v->type->size)];
+                fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x);
+            } else {
+                // fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x86_rax_reg(v->type));
+                const char *reg = x86_rax_reg(v->type);
+                fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, reg);
+                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", x86_op_suffix(v->type), reg, param_offset);
+                param_offset += 8;
+                // fprintf(fp, "    push %%rax\n");
+            }
             break;
         case T_FLOAT:
             const char *f_suffix = x86_op_suffix(v->type);
-            fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, v->reg.stack_offset);
-            fprintf(fp, "    sub $8, %%rsp\n");
-            fprintf(fp, "    mov%s %%xmm0, (%%rsp)\n", f_suffix);
+            if (is_register_param) {
+                fprintf(fp, "    mov%s %d(%%rbp), %s\n", f_suffix, v->reg.stack_offset,
+                        xmm_register_str[win64_float_param_regs[xmm_index++]]);
+            } else {
+                fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, v->reg.stack_offset);
+                fprintf(fp, "    subq $8, %%rsp\n");
+                fprintf(fp, "    mov%s %%xmm0, (%%rsp)\n", f_suffix);
+            }
             break;
         case T_POINTER:
-            fprintf(fp, "    movq %d(%%rbp), %%rax\n", v->reg.stack_offset);
-            fprintf(fp, "    push %%rax\n");
+            if (is_register_param) {
+                fprintf(fp, "    movq %d(%%rbp), %s\n", v->reg.stack_offset, gp_register_str[win64_int_param_regs[gp_index++]][REG_64]);
+            } else {
+                fprintf(fp, "    movq %d(%%rbp), %%rax\n", v->reg.stack_offset);
+                fprintf(fp, "    push %%rax\n");
+            }
             break;
         default:
             printf("Tried to emit call arg for unsupported type\n");
@@ -288,8 +238,10 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         }
     }
 
-    fprintf(fp, "    call %s\n", ctx->module->defs[instr->call.callee].name);
-    fprintf(fp, "    add $%d, %%rsp\n", instr->call.arg_count * 8);
+    fprintf(fp, "    call %s\n", instr->call.callee->name);
+    // int param_frame_size = (instr->call.arg_count - xmm_index - gp_index) * 8;
+    fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);
+
     fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
 }
 

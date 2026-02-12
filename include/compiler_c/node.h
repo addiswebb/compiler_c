@@ -67,6 +67,8 @@ struct Node {
             Node *body;
             StorageClass storage_class;
             bool has_initializer;
+            bool is_global;
+            bool is_defined;
             Symbol *symbol;
         } func;
         // { [block_item]+ }

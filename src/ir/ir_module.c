@@ -3,6 +3,7 @@
     Tracks any variables added afterwards, and pops them from the IR virtual stack when `ir_end_scope()` is called.
 */
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/parse/parser.h"
 #include "compiler_c/type.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -149,8 +150,10 @@ IR_Module *ir_new_module() {
         free(module);
         exit(1);
     }
-    module->defs = malloc(sizeof(IR_Func_Def) * module->func_capacity);
-    if (module->defs == NULL) {
+    module->func_def_capacity = 4;
+    module->func_def_count = 0;
+    module->func_defs = malloc(sizeof(IR_Func_Def) * module->func_def_capacity);
+    if (module->func_defs == NULL) {
         printf("Failed to allocate IR module function definitions\n");
         free(module->functions);
         free(module);
@@ -161,7 +164,7 @@ IR_Module *ir_new_module() {
     module->const_pool.consts = malloc(sizeof(IR_Literal) * module->const_pool.capacity);
     if (!module->const_pool.consts) {
         printf("Failed to allocate IR module const pool\n");
-        free(module->defs);
+        free(module->func_defs);
         free(module->functions);
         free(module);
         exit(1);
@@ -171,7 +174,7 @@ IR_Module *ir_new_module() {
     module->global_pool.globals = malloc(sizeof(IR_Literal) * module->global_pool.capacity);
     if (!module->global_pool.globals) {
         printf("Failed to allocate IR module const pool\n");
-        free(module->defs);
+        free(module->func_defs);
         free(module->functions);
         free(module->const_pool.consts);
         free(module);
@@ -382,13 +385,14 @@ IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
     return next_var;
 }
 
-int ir_get_func_def(const IR_Context *ctx, const char *name) {
-    for (int i = 0; i < ctx->module->func_count; i++) {
-        if (strcmp(ctx->module->defs[i].name, name) == 0) {
-            return i;
+IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name) {
+    for (int i = 0; i < ctx->module->func_def_count; i++) {
+        IR_Func_Def *f = &ctx->module->func_defs[i];
+        if (strcmp(ctx->module->func_defs[i].name, name) == 0) {
+            return &ctx->module->func_defs[i];
         }
     }
-    return -1;
+    return NULL;
 }
 
 IR_Value ir_value_from_global(IR_Global *g) {
@@ -415,34 +419,33 @@ IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name) {
     exit(1);
 }
 
-void ir_new_func_def(IR_Module *module, IR_Function *func) {
-    for (int i = 0; i < module->func_count; i++) {
-        if (strcmp(module->defs[i].name, func->name) == 0) {
-            printf("Function %s is already defined at [%d]", func->name, i);
-            exit(1);
-        }
-    }
-    IR_Func_Def def = {func->name, module->func_count};
-    module->defs[module->func_count] = def;
-}
-void ir_append_function(IR_Module *module, IR_Function *func) {
-    if (module->func_count >= module->func_capacity) {
-        module->func_capacity *= 2;
-        IR_Function **new_functions = realloc(module->functions, sizeof(IR_Function *) * module->func_capacity);
-        if (!new_functions) {
-            printf("Failed to allocate for new Ir Module");
-            exit(1);
-        }
-        IR_Func_Def *new_func_defs = realloc(module->defs, sizeof(IR_Func_Def) * module->func_capacity);
+IR_Func_Def *ir_append_func_def(IR_Context *ctx, const char *name, bool is_defined) {
+    if (ctx->module->func_def_count >= ctx->module->func_def_capacity) {
+        ctx->module->func_def_capacity *= 2;
+        IR_Func_Def *new_func_defs = realloc(ctx->module->func_defs, sizeof(IR_Func_Def) * ctx->module->func_def_capacity);
         if (!new_func_defs) {
-            printf("Failed to allocate for new Ir Module");
+            printf("Failed to realloc func_defs\n");
             exit(1);
         }
-        module->functions = new_functions;
-        module->defs = new_func_defs;
+        ctx->module->func_defs = new_func_defs;
     }
-    ir_new_func_def(module, func);
-    module->functions[module->func_count++] = func;
+    ctx->module->func_defs[ctx->module->func_def_count] = (IR_Func_Def){.name = name, .index = -1, .is_defined = is_defined};
+    ;
+    return &ctx->module->func_defs[ctx->module->func_def_count++];
+}
+void ir_append_function(IR_Context *ctx, IR_Func_Def *func_def, IR_Function *func) {
+    if (ctx->module->func_count >= ctx->module->func_capacity) {
+        ctx->module->func_capacity *= 2;
+        IR_Function **new_functions = realloc(ctx->module->functions, sizeof(IR_Function *) * ctx->module->func_capacity);
+        if (!new_functions) {
+            printf("Failed to realloc ir functions\n");
+            exit(1);
+        }
+        ctx->module->functions = new_functions;
+    }
+    func_def->index = ctx->module->func_count;
+    func_def->is_defined = true;
+    ctx->module->functions[ctx->module->func_count++] = func;
 }
 
 void ir_free_module(IR_Module *module) {

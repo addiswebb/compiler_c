@@ -276,7 +276,7 @@ static void print_ir_ret(IR_Context *ctx, const IR_Instruction *instr) {
 static void print_ir_call(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
-    printf(" = CALL:%c '%s', %d:[ ", ir_type_suffix(instr->call.type), ctx->module->defs[instr->call.callee].name, instr->call.arg_count);
+    printf(" = CALL:%c '%s', %d:[ ", ir_type_suffix(instr->call.type), instr->call.callee->name, instr->call.arg_count);
     for (int i = 0; i < instr->call.arg_count; i++) {
         print_type(instr->call.args[i].type);
         printf("=");
@@ -445,10 +445,10 @@ void print_ir_value(const IR_Value *v) {
         printf("g[%s]", v->global->name);
         break;
     case IR_PHYS_REG:
-        if (REG_GP) {
-            printf("%%gp[%d]", v->phys_reg.gp_reg);
+        if (v->phys_reg.kind == REG_GP) {
+            printf("%s", gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size]);
         } else {
-            printf("%%xmm[%d]", v->phys_reg.xmm_reg);
+            printf("%s", xmm_register_str[v->phys_reg.gp_reg]);
         }
         break;
     }

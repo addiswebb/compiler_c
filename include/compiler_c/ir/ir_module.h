@@ -119,6 +119,12 @@ typedef struct{
 extern IR_OpInfo op_info[];
 typedef struct IR_Block IR_Block;
 
+typedef struct{
+    const char *name;
+    int index;
+    bool is_defined;
+} IR_Func_Def;
+
 typedef struct {
     IR_OP op;
     IR_Value ops[3];
@@ -130,7 +136,7 @@ typedef struct {
         struct { IR_UNARY_OP op; Type *type; } unary;
         struct { IR_BINOP_OP op; Type *type; } binop;
         struct { IR_CMP_OP op; } cmp;
-        struct { int callee; IR_Var *args; int arg_count; Type *type; } call;
+        struct { IR_Func_Def* callee; IR_Var *args; int arg_count; Type *type; } call;
         struct { IR_Block *block; } br;
         struct { IR_Block *t_block, *f_block; } br_cond;
         struct { Type *from, *to; } cast;
@@ -216,10 +222,6 @@ typedef struct {
     int param_count;
 } IR_Function;
 
-typedef struct{
-    const char *name;
-    int index;
-} IR_Func_Def;
 
 typedef struct{
     int count;
@@ -237,7 +239,9 @@ typedef struct {
     IR_Function **functions;
     int func_count;
     int func_capacity;
-    IR_Func_Def *defs;
+    IR_Func_Def *func_defs;
+    int func_def_count;
+    int func_def_capacity;
     IR_Const_Pool const_pool;
     IR_Global_Pool global_pool;
 } IR_Module;
@@ -284,18 +288,18 @@ IR_Value ir_next_virtual_reg(IR_Function *func);
 
 IR_Module *ir_new_module();
 IR_Function *ir_new_function(IR_Context *ctx,const char *name);
-void ir_new_func_def(IR_Module *module, IR_Function *func);
+IR_Func_Def *ir_append_func_def(IR_Context *ctx, const char *name, bool is_defined);
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
 IR_Block *ir_new_block();
 
 IR_Block *ir_add_block(IR_Context *ctx);
-void ir_append_function(IR_Module *module, IR_Function *func);
+void ir_append_function(IR_Context *ctx,IR_Func_Def *func_def, IR_Function *func);
 void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction);
 void ir_append_global(IR_Module *module, const char *name, Type *type, IR_Literal *literal, Linkage linkage, Storage storage);
 IR_Value ir_append_const(IR_Module *module, IR_Literal *literal);
 IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
 
-int ir_get_func_def(const IR_Context *ctx, const char *name);
+IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);
 IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name);
 IR_Block *current_block(const IR_Function *func);
 

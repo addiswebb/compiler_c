@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->ops[1].kind) {
     case IR_STACK:
