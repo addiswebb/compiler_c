@@ -191,7 +191,6 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     int gp_index = 0;
     int xmm_index = 0;
     const int spilled_count = instr->call.arg_count > PARAM_REGISTERS ? instr->call.arg_count - PARAM_REGISTERS : 0;
-    printf("Registers used %d/%d/%d\n", instr->call.arg_count - spilled_count, instr->call.arg_count, spilled_count);
     // +8 for push rbp (call emits push rbp, mov rsp, rbp)
     const int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count + 8, 16);
     int param_offset = SHADOW_SPACE;

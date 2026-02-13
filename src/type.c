@@ -237,8 +237,8 @@ void print_type(Type *type) {
         }
         break;
     case T_POINTER:
-        printf("*");
         print_type(type->base);
+        printf("*");
         break;
     case T_STRUCT:
         printf("struct %s ", type->_struct.name);

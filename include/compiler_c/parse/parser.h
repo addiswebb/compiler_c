@@ -40,6 +40,7 @@ typedef struct Symbol{
     SymbolKind kind;
     Linkage linkage;
     Storage storage;
+    int scope_depth;
     union{
         Node *var_decl;
         Node *func_def;
@@ -59,17 +60,21 @@ typedef struct {
     int size;
     TokenArray *src;
     bool expect_semi;
-    SymbolTable st;
+    int scope_stack_count;
+    int scope_stack_capacity;
+    SymbolTable *scope_stack;
 } Parser;
 
 Parser new_parser();
 void init_parser(Parser *p,TokenArray* src, int size);
+void p_append_symbol_table(Parser *p);
 
 /*
 Is End of token array?
 */
 bool p_is_last_token(const Parser *p);
 
+Symbol *p_append_symbol(SymbolTable *st, const Symbol *s);
 Token *p_peek_n(const Parser *p, int n);
 Token *p_peek(const Parser *p);
 Token *p_peek_next(const Parser *p);
@@ -100,7 +105,7 @@ Node *init_translation_unit(NodeManager *nm);
 Node *new_compound_node(NodeManager *nm);
 Node *new_init_list_node(NodeManager *nm);
 Node *new_function_node(NodeManager *nm);
-Node *new_function_call_node(NodeManager *nm, Node *identifier, int param_count);
+Node *new_function_call_node(NodeManager *nm, Node *identifier);
 
 /*
     Consumes
@@ -131,14 +136,15 @@ void p_add_call_param(Node *func, Node *param);
 
 Symbol *p_get_symbol(const Parser *p, const char *name, SymbolKind kind);
 
+SymbolTable *current_symbol_table(Parser *p);
 void p_append_typedef(Parser *p, const Typedef *t);
-void p_append_func_def(Parser *p, Node *f);
+Symbol * p_append_func_def(Parser *p, Node *f);
 Node *p_get_func_def(const Parser *p, const char* name);
 Typedef *p_get_typedef(const Parser *p, const char *name);
 
 void p_append_element(Node *init_list, Node *element);
 
-void p_append_var_decl(Parser *p, Node *v);
+Symbol *p_append_var_decl(Parser *p, Node *v);
 Node *p_get_var_decl(const Parser *p, const char* name);
 
 EnumField *p_get_enum_const(const Parser *p, const char* name);
@@ -196,6 +202,8 @@ Node *p_parse_var_assign(Parser *p, NodeManager *nm);
     Never consumes `;`, other functions must consume it.
 */
 Node *p_parse_statement(Parser *p, NodeManager *nm);
+void p_push_scope(Parser *p);
+void p_pop_scope(Parser *p);
 
 /*
     Consumes

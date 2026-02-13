@@ -278,7 +278,8 @@ void print_node(const Node *node, const int depth) {
         if (node->func.param_count > 0) {
             printf(" { ");
             for (int i = 0; i < node->func.param_count; i++) {
-                printf("int %s ", node->func.params[i]->var_decl.identifier->identifier.name);
+                print_type(node->func.params[i]->type);
+                printf(" %s ", node->func.params[i]->var_decl.identifier->identifier.name);
             }
             printf("}");
         }

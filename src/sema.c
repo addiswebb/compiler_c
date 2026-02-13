@@ -37,7 +37,7 @@ Type *check_unary_op(const Node *unary_op) {
         printf("Tried to reference a non assignable term\n");
         exit(1);
     case TK_MULTIPLY:
-        if (expr->type->base != type_invalid) return expr->type->base;
+        if (expr->type->base && expr->type->base != type_invalid) return expr->type->base;
         printf("Tried to dereference some nonexistent term\n");
         exit(1);
     case TK_SIZEOF:
@@ -140,7 +140,7 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
         return (*rhs)->type;
     } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_INT) {
         common = (*lhs)->type->size >= (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
-    }else {
+    } else {
         printf("UNSURE HOW TO HANDLE COMMON CASE;\n");
         exit(1);
     }
@@ -159,6 +159,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         node->type = type_void;
         break;
     case N_FUNCTION:
+        p_push_scope(p);
         for (int i = 0; i < node->func.param_count; i++) {
             p_append_var_decl(p, node->func.params[i]);
         }
@@ -170,36 +171,34 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             }
             break;
         }
+        p_pop_scope(p);
         Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC);
-        if (!func_symbol) {
-            printf("Failed to find Function Symbol for \"%s\"\n", node->func.name);
-            exit(1);
-        }
-        func_symbol->linkage = node->func.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;;
-        // if defined -> text, otherwise none
-        func_symbol->storage = STORAGE_TEXT;
-        node->func.symbol = func_symbol;
+        if (func_symbol) {
+            if (func_symbol->func_def->func.storage_class == STATIC && node->func.storage_class != STATIC) {
+                printf("Linkage conflict between function declarations of %s\n", node->func.name);
+                exit(1);
+            }
+            // If previous declaration was prototype, and current has {}
+            if (!func_symbol->func_def->func.is_defined && node->func.is_defined) {
+                // Update func symbol to defined node
+                func_symbol->func_def = node;
+            } else if (node->func.is_defined && func_symbol->func_def->func.is_defined) {
+                // If symbol and current both have {}
+                printf("Redefinition of function %s\n", node->func.name);
+                exit(1);
+            }
+            node->func.symbol = func_symbol;
+        } else node->func.symbol = p_append_func_def(p, node);
         break;
     case N_COMPOUND:
+        p_push_scope(p);
         for (int i = 0; i < node->compound.count; i++) {
             semantic_analysis(p, nm, node->compound.items[i], loop);
         }
+        p_pop_scope(p);
         break;
     case N_VAR_DECL:
         // Skip extern nodes
-        Linkage var_linkage = LINK_NONE;
-        Storage var_storage = STORAGE_NONE;
-        if (node->var_decl.is_global) {
-            var_storage = node->var_decl.has_initializer ? STORAGE_DATA : STORAGE_BSS;
-            var_linkage = node->var_decl.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
-        } else {
-            // local variable
-            var_storage = STORAGE_NONE;
-            if (node->var_decl.storage_class == NONE) var_linkage = LINK_NONE;
-            if (node->var_decl.storage_class == EXTERN) var_linkage = LINK_EXTERNAL;
-            if (node->var_decl.storage_class == STATIC) var_linkage = LINK_INTERNAL;
-        }
-
         if (node->var_decl.storage_class == EXTERN) {
             if (node->var_decl.has_initializer) {
                 printf("External variable cannot be initialized in the same statement\n");
@@ -207,16 +206,22 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             }
         }
         Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR);
-        if (!var_symbol) {
-            printf("Failed to find Variable Symbol for \"%s\"\n", node->var_decl.identifier->identifier.name);
-            exit(1);
-        }
-        // Skip extern nodes (should find definition eventually...)
-        if (node->var_decl.storage_class != EXTERN) {
-            var_symbol->linkage = var_linkage;
-            var_symbol->storage = var_storage;
-        }
-        node->var_decl.symbol = var_symbol;
+        if (var_symbol) {
+            // If we are within a function and var_symbol is a also a local variable
+            if (p->scope_stack_count > 1) {
+                if (var_symbol->scope_depth == p->scope_stack_count - 1) {
+                    printf("Redeclaration of local variable %s\n", node->var_decl.identifier->identifier.name);
+                    exit(1);
+                }
+            } else if (!var_symbol->var_decl->var_decl.is_defined && node->var_decl.is_defined) {
+                var_symbol->var_decl = node;
+            } else if (var_symbol->var_decl->var_decl.is_defined && node->var_decl.is_defined) {
+                printf("Redefinition of global variable %s\n", node->var_decl.identifier->identifier.name);
+                exit(1);
+            }
+            node->var_decl.symbol = var_symbol;
+        } else node->var_decl.symbol = p_append_var_decl(p, node);
+
         if (!node->var_decl.expr) break;
         if (node->var_decl.expr->kind == N_INIT_LIST) {
             Node *init_list = node->var_decl.expr;
@@ -280,6 +285,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         if (node->var_decl.expr->type != node->type) {
             node->var_decl.expr = cast_node(nm, node->var_decl.expr, node->type);
         }
+
         break;
     case N_UNARY:
         semantic_analysis(p, nm, node->unary.expr, loop);
@@ -323,24 +329,24 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         }
         break;
     case N_IDENTIFIER:
-        Symbol *s = p_get_symbol(p, node->identifier.name, ANY);
-        if (!s) {
+        Symbol *ident_symbol = p_get_symbol(p, node->identifier.name, ANY);
+        if (!ident_symbol) {
             printf("Failed to find symbol %s\n", node->identifier.name);
             exit(1);
         }
-        switch (s->kind) {
+        switch (ident_symbol->kind) {
         case ENUM:
             node->kind = N_LITERAL;
             node->literal.kind = L_INT;
-            node->literal.i = (int64_t)s->enum_field.value;
-            node->type = s->enum_field._enum_t;
+            node->literal.i = (int64_t)ident_symbol->enum_field.value;
+            node->type = ident_symbol->enum_field._enum_t;
             break;
         case VAR:
-            node->type = s->var_decl->type;
+            node->type = ident_symbol->var_decl->type;
             break;
         case TYPEDEF:
             // Maybe reference an N_TYPE node instead
-            node->type = s->_typedef.type;
+            node->type = ident_symbol->_typedef.type;
             break;
         case FUNC:
         case ANY:
@@ -349,21 +355,26 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         }
         break;
     case N_IF:
+        p_push_scope(p);
         semantic_analysis(p, nm, node->_if.cond, loop);
         if (node->_if.cond->type != type_int) {
             node->_if.cond = cast_node(nm, node->_if.cond, type_int);
         }
         semantic_analysis(p, nm, node->_if.if_true, loop);
         semantic_analysis(p, nm, node->_if.if_false, loop);
+        p_pop_scope(p);
         break;
     case N_WHILE:
+        p_push_scope(p);
         semantic_analysis(p, nm, node->_while.cond, node);
         if (node->_while.cond->type != type_int) {
             node->_while.cond = cast_node(nm, node->_while.cond, type_int);
         }
         semantic_analysis(p, nm, node->_while.block, node);
+        p_pop_scope(p);
         break;
     case N_FOR:
+        p_push_scope(p);
         semantic_analysis(p, nm, node->_for.init, node);
         semantic_analysis(p, nm, node->_for.cond, node);
         if (node->_for.cond->type != type_int) {
@@ -371,6 +382,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         }
         semantic_analysis(p, nm, node->_for.iter, node);
         semantic_analysis(p, nm, node->_for.block, node);
+        p_pop_scope(p);
         break;
     case N_RETURN:
         semantic_analysis(p, nm, node->_return.expr, loop);
@@ -427,21 +439,26 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         node->type = node->index.identifier->type->base;
         break;
     case N_TYPE:
+        if (node->type->kind == T_ENUM) {
+            for (int i = 0; i < node->type->_enum.count; i++) {
+                p_append_enum_const(p, &node->type->_enum.fields[i]);
+            }
+        }
         break;
     case N_CONTINUE:
-        if (loop) {
-            node->_continue.loop = loop;
-            break;
+        if (!loop) {
+            printf("Cannot call continue outside of a loop\n");
+            exit(1);
         }
-        printf("Cannot call continue outside of a loop\n");
-        exit(1);
+        node->_continue.loop = loop;
+        break;
     case N_BREAK:
-        if (loop) {
-            node->_break.loop = loop;
-            break;
+        if (!loop) {
+            printf("Cannot call break outside of a loop or switch statement\n");
+            exit(1);
         }
-        printf("Cannot call break outside of a loop or switch statement\n");
-        exit(1);
+        node->_break.loop = loop;
+        break;
     case N_INIT_LIST:
         printf("Semantic parser should never reach a Init List node\n");
         exit(1);
@@ -484,8 +501,10 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         }
         break;
     case N_SWITCH:
+        p_push_scope(p);
         semantic_analysis(p, nm, node->_switch.test, node);
         semantic_analysis(p, nm, node->_switch.block, node);
+        p_pop_scope(p);
         break;
     case N_CASE:
         semantic_analysis(p, nm, node->_case.test, loop);

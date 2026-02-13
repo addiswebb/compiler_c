@@ -18,11 +18,32 @@ void init_parser(Parser *p, TokenArray *src, const int size) {
     p->src = src;
     p->index = 0;
     p->expect_semi = true;
-    p->st.capacity = 4;
-    p->st.count = 0;
-    p->st.symbols = malloc(sizeof(Symbol) * p->st.capacity);
-    if (!p->st.symbols) {
-        printf("Failed to allocate for symbol table");
+    p->scope_stack_capacity = 4;
+    p->scope_stack_count = 0;
+    p->scope_stack = malloc(sizeof(SymbolTable) * p->scope_stack_capacity);
+    if (!p->scope_stack) {
+        printf("Failed to allocate for symbol stack\n");
+        exit(1);
+    }
+    p_append_symbol_table(p);
+}
+
+void p_append_symbol_table(Parser *p) {
+    if (p->scope_stack_count >= p->scope_stack_capacity) {
+        p->scope_stack_capacity *= 2;
+        SymbolTable *new_stack = realloc(p->scope_stack, sizeof(SymbolTable) * p->scope_stack_capacity);
+        if (!new_stack) {
+            printf("Failed to realloc for symbol stack\n");
+            exit(1);
+        }
+        p->scope_stack = new_stack;
+    }
+    SymbolTable *st = &p->scope_stack[p->scope_stack_count++];
+    st->count = 0;
+    st->capacity = 4;
+    st->symbols = malloc(sizeof(Symbol) * st->capacity);
+    if (!st->symbols) {
+        printf("Failed to alloc for new symbol table\n");
         exit(1);
     }
 }
@@ -209,14 +230,12 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
             printf(" is not a function\n");
             exit(1);
         }
-        Node *func_def = p_get_func_def(p, primary->identifier.name);
-        Node *func_call = new_function_call_node(nm, primary, func_def->func.param_count);
+        Node *func_call = new_function_call_node(nm, primary);
 
-        for (int i = 0; i < func_def->func.param_count; i++) {
+        while (p_peek(p)->type != TK_CLOSE_PAREN) {
             p_add_call_param(func_call, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
-            if (i != func_def->func.param_count - 1) {
-                p_consume_a(p, TK_COMMA);
-            }
+            if (p_peek(p)->type == TK_COMMA) p_consume(p);
+            else break;
         }
         p_consume_a(p, TK_CLOSE_PAREN);
         primary = func_call;
@@ -259,12 +278,12 @@ Node *new_function_node(NodeManager *nm) {
     }
     return node;
 }
-Node *new_function_call_node(NodeManager *nm, Node *identifier, const int param_count) {
+Node *new_function_call_node(NodeManager *nm, Node *identifier) {
     Node *node = new_node(nm, N_FUNCTION_CALL);
     node->func_call.identifier = identifier;
-    node->func_call.param_capacity = param_count;
+    node->func_call.param_capacity = 4;
     node->func_call.param_count = 0;
-    node->func_call.params = malloc(sizeof(Node) * param_count);
+    node->func_call.params = malloc(sizeof(Node) * node->func_call.param_capacity);
     if (!node->func_call.params) {
         printf("Failed to create new function call node\n");
         exit(1);
@@ -353,7 +372,7 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
             if (p_peek(p)->type == TK_EQ) {
                 p_consume(p);
                 const Token *t = p_consume_a(p, TK_INT_LITERAL);
-                val = (int)parse_int(t->value, t->size);;
+                val = (int)parse_int(t->value, t->size);
             }
             f.value = val++;
             f._enum_t = NULL;
@@ -380,7 +399,6 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
         *t = enum_t;
         for (int i = 0; i < enum_t._enum.count; i++) {
             enum_t._enum.fields[i]._enum_t = t;
-            p_append_enum_const(p, &enum_t._enum.fields[i]);
         }
         return t;
     }
@@ -482,30 +500,37 @@ void p_append_param(Node *func, Node *param) {
 
 void p_add_call_param(Node *func, Node *param) {
     if (func->func_call.param_count >= func->func_call.param_capacity) {
-        printf("Tried adding too many call params to a function\n");
-        exit(1);
-    }
-    if (param != NULL) {
-        func->func_call.params[func->func_call.param_count++] = param;
-    }
-}
-
-void p_append_symbol(Parser *p, const Symbol *s) {
-    if (p->st.count >= p->st.capacity) {
-        p->st.capacity *= 2;
-        Symbol *new_symbols = realloc(p->st.symbols, sizeof(Symbol) * p->st.capacity);
-        if (!new_symbols) {
-            printf("Failed to realloc for symbol table size: %d\n", p->st.capacity);
+        func->func_call.param_capacity *= 2;
+        Node **new_params = realloc(func->func_call.params, sizeof(Node *) * func->func_call.param_capacity);
+        if (!new_params) {
+            printf("Failed to realloc new params for func call\n");
             exit(1);
         }
-        p->st.symbols = new_symbols;
+        func->func_call.params = new_params;
     }
-    p->st.symbols[p->st.count++] = *s;
+    func->func_call.params[func->func_call.param_count++] = param;
+}
+
+Symbol *p_append_symbol(SymbolTable *st, const Symbol *s) {
+    if (st->count >= st->capacity) {
+        st->capacity *= 2;
+        Symbol *new_symbols = realloc(st->symbols, sizeof(Symbol) * st->capacity);
+        if (!new_symbols) {
+            printf("Failed to realloc for symbol table size: %d\n", st->capacity);
+            exit(1);
+        }
+        st->symbols = new_symbols;
+    }
+    st->symbols[st->count++] = *s;
+    return &st->symbols[st->count - 1];
 }
 Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind) {
-    for (int i = 0; i < p->st.count; i++) {
-        if ((kind == ANY || p->st.symbols[i].kind == kind) && strcmp(p->st.symbols[i].name, name) == 0) {
-            return &p->st.symbols[i];
+    for (int i = p->scope_stack_count - 1; i >= 0; i--) {
+        SymbolTable *st = &p->scope_stack[i];
+        for (int j = 0; j < st->count; j++) {
+            if ((kind == ANY || st->symbols[j].kind == kind) && strcmp(st->symbols[j].name, name) == 0) {
+                return &st->symbols[j];
+            }
         }
     }
     return NULL;
@@ -523,19 +548,59 @@ Node *p_get_func_def(const Parser *p, const char *name) {
     printf("Tried to call %s which does not exist\n", name);
     exit(1);
 }
+SymbolTable *current_symbol_table(Parser *p) { return &p->scope_stack[p->scope_stack_count - 1]; }
+
 void p_append_typedef(Parser *p, const Typedef *t) {
-    p_append_symbol(p, &(Symbol){.name = t->new_def, .kind = TYPEDEF, .linkage = LINK_NONE, .storage = STORAGE_NONE, ._typedef = *t});
+    p_append_symbol(current_symbol_table(p), &(Symbol){.name = t->new_def,
+                                                       .kind = TYPEDEF,
+                                                       .linkage = LINK_NONE,
+                                                       .storage = STORAGE_NONE,
+                                                       ._typedef = *t,
+                                                       .scope_depth = p->scope_stack_count - 1});
 }
-void p_append_func_def(Parser *p, Node *f) {
-    p_append_symbol(p, &(Symbol){.name = f->func.name, .kind = FUNC, .linkage = LINK_NONE, .storage = STORAGE_NONE, .func_def = f});
+Symbol *p_append_func_def(Parser *p, Node *f) {
+    if (p->scope_stack_count > 2) {
+        printf("Declaring function inside a function???\n");
+        exit(1);
+    }
+    Linkage linkage = f->func.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
+    ;
+    // if defined -> text, otherwise none
+    Storage storage = STORAGE_TEXT;
+    return p_append_symbol(current_symbol_table(p), &(Symbol){.name = f->func.name,
+                                                              .kind = FUNC,
+                                                              .linkage = linkage,
+                                                              .storage = storage,
+                                                              .func_def = f,
+                                                              .scope_depth = p->scope_stack_count - 1});
 }
-void p_append_var_decl(Parser *p, Node *v) {
-    p_append_symbol(
-        p, &(Symbol){
-               .name = v->var_decl.identifier->identifier.name, .kind = VAR, .linkage = LINK_NONE, .storage = STORAGE_NONE, .var_decl = v});
+Symbol *p_append_var_decl(Parser *p, Node *v) {
+    Linkage linkage = LINK_NONE;
+    Storage storage = STORAGE_NONE;
+    if (v->var_decl.is_global) {
+        storage = v->var_decl.has_initializer ? STORAGE_DATA : STORAGE_BSS;
+        linkage = v->var_decl.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
+    } else {
+        // local variable
+        storage = STORAGE_NONE;
+        if (v->var_decl.storage_class == NONE) linkage = LINK_NONE;
+        if (v->var_decl.storage_class == EXTERN) linkage = LINK_EXTERNAL;
+        if (v->var_decl.storage_class == STATIC) linkage = LINK_INTERNAL;
+    }
+    return p_append_symbol(current_symbol_table(p), &(Symbol){.name = v->var_decl.identifier->identifier.name,
+                                                              .kind = VAR,
+                                                              .linkage = linkage,
+                                                              .storage = storage,
+                                                              .var_decl = v,
+                                                              .scope_depth = p->scope_stack_count - 1});
 }
 void p_append_enum_const(Parser *p, const EnumField *e) {
-    p_append_symbol(p, &(Symbol){.name = e->name, .kind = ENUM, .linkage = LINK_NONE, .storage = STORAGE_NONE, .enum_field = *e});
+    p_append_symbol(current_symbol_table(p), &(Symbol){.name = e->name,
+                                                       .kind = ENUM,
+                                                       .linkage = LINK_NONE,
+                                                       .storage = STORAGE_NONE,
+                                                       .enum_field = *e,
+                                                       .scope_depth = p->scope_stack_count - 1});
 }
 
 void p_append_element(Node *init_list, Node *element) {
@@ -673,8 +738,11 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
 }
 
 Node *current_func_definition(const Parser *p) {
-    for (int i = p->st.count - 1; i >= 0; i--) {
-        if (p->st.symbols[i].kind == FUNC) return p->st.symbols[i].func_def;
+    for (int i = p->scope_stack_count - 1; i >= 0; i--) {
+        SymbolTable *st = &p->scope_stack[i];
+        for (int j = 0; j < st->count; j++) {
+            if (st->symbols[j].kind == FUNC) return st->symbols[i].func_def;
+        }
     }
     printf("Cannot return outside of a function\n");
     exit(1);
@@ -684,7 +752,7 @@ Node *p_parse_return(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_RETURN);
     p_consume(p); // -> return
     node->_return.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-    node->type = current_func_definition(p)->type;
+    node->type = type_invalid;
     p_consume_semi(p);
     return node;
 }
@@ -750,6 +818,9 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
     }
 }
 
+void p_push_scope(Parser *p) { p_append_symbol_table(p); }
+void p_pop_scope(Parser *p) { free(p->scope_stack[--p->scope_stack_count].symbols); }
+
 /*
     Consumes
     `{[statement]*}`
@@ -798,23 +869,7 @@ Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, const StorageClas
         node->func.is_defined = true;
     }
     node->func.storage_class = storage_class;
-    Symbol *s = p_get_symbol(p, node->func.name, FUNC);
-    if (s) {
-        // If previous declaration was prototype, and current has {}
-        if (!s->func_def->func.is_defined && node->func.is_defined) {
-            node->func.body = p_parse_compound(p, nm);
-            s->func_def = node;
-            // If symbol is already defined, and current a prototype
-        } else if (!node->func.is_defined && s->func_def->func.is_defined) return node;
-        else {
-            // If symbol and current both have {}
-            printf("Redefinition of function %s\n", node->func.name);
-            exit(1);
-        }
-    } else {
-        p_append_func_def(p, node);
-        if (node->func.has_initializer) node->func.body = p_parse_compound(p, nm);
-    }
+    if (node->func.has_initializer) node->func.body = p_parse_compound(p, nm);
     return node;
 }
 
@@ -851,7 +906,7 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const Sto
             // Only works for a[5], not a[b + 1] (can fix later)
             // Todo; allow for const expressions like [5 + 6] or smt
             const Token *t = p_consume_a(p, TK_INT_LITERAL);
-            len = (int) parse_int(t->value, t->size);
+            len = (int)parse_int(t->value, t->size);
         }
         p_consume_a(p, TK_CLOSE_SQUARE);
         type_decl->type = get_array_type(type_decl->type, len);
@@ -871,17 +926,6 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const Sto
     var_decl->var_decl.storage_class = storage_class;
     var_decl->var_decl.is_defined = storage_class != EXTERN;
     p_consume_semi(p);
-    Symbol *s = p_get_symbol(p, var_decl->var_decl.identifier->identifier.name, VAR);
-    if (s) {
-        if (!s->var_decl->var_decl.is_defined && var_decl->var_decl.is_defined) {
-            s->var_decl = var_decl;
-        } else if (!var_decl->var_decl.is_defined && s->var_decl->var_decl.is_defined) return s->var_decl;
-        else {
-            // printf("Variable %s has already been defined\n", s->name);
-            // exit(1);
-            // TODO: handle declarations of the same var?
-        }
-    } else p_append_var_decl(p, var_decl);
 
     return var_decl;
 }
