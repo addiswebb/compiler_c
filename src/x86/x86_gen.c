@@ -3,12 +3,11 @@
 #include "compiler_c/type.h"
 #include "compiler_c/x86.h"
 
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
-static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     switch (instr->ops[1].kind) {
     case IR_STACK:
         x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rdx");
@@ -42,19 +41,15 @@ static void x86_gen_memcpy_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
     fprintf(fp, "    call memcpy\n");
 }
 
-static void x86_gen_alloca_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    // stack allocations already handled
-}
-
-static void x86_gen_addr_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr) {
     x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rax");
     x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
 }
-static void x86_gen_cast_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
     // char -> int : zero-extend
     x86_emit_cast(fp, &instr->ops[1], &instr->ops[0], instr->cast.from, instr->cast.to);
 }
-static void x86_gen_const_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
     IR_Literal *c = &ctx->module->const_pool.consts[instr->ops[1].const_index];
     x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
 }
@@ -99,16 +94,15 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         x86_gen_const_instruction(fp, ctx, instr);
         return;
     case IR_CAST:
-        x86_gen_cast_instruction(fp, ctx, instr);
+        x86_gen_cast_instruction(fp, instr);
         return;
     case IR_ADDR:
-        x86_gen_addr_instruction(fp, ctx, instr);
+        x86_gen_addr_instruction(fp, instr);
         break;
     case IR_ALLOCA:
-        x86_gen_alloca_instruction(fp, ctx, instr);
         break;
     case IR_MEMCPY:
-        x86_gen_memcpy_instruction(fp, ctx, instr);
+        x86_gen_memcpy_instruction(fp, instr);
         break;
     case IR_RET:
         x86_emit_xr(fp, "mov", "l", "", &instr->ops[0], "%eax");
@@ -177,7 +171,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
     if (ctx->module->const_pool.count > 0) {
         fprintf(fp, ".section .rodata\n");
         for (int i = 0; i < ctx->module->const_pool.count; i++) {
-            IR_Literal *c = &ctx->module->const_pool.consts[i];
+            const IR_Literal *c = &ctx->module->const_pool.consts[i];
             if (c->type == type_double) {
                 uint64_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
@@ -193,8 +187,8 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
     }
     if (ctx->module->global_pool.count > 0) {
         for (int i = 0; i < ctx->module->global_pool.count; i++) {
-            IR_Global *g = &ctx->module->global_pool.globals[i];
-            IR_Literal *c = &g->val;
+            const IR_Global *g = &ctx->module->global_pool.globals[i];
+            const IR_Literal *c = &g->val;
             if (g->storage == STORAGE_NONE) {
                 fprintf(fp, ".extern %s\n", g->name);
                 continue;
@@ -205,7 +199,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
                 fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->type->align, g->name, g->type->size);
             } else {
                 if (c->type == type_invalid) {
-                    printf("Recieved invalid type, probably an uninitialized global with incorrect storage specifier\n");
+                    printf("Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
                     exit(1);
                 }
                 if (c->type == type_double) {

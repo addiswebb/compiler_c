@@ -17,7 +17,7 @@ IR_OpInfo op_info[] = {
     [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},    [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},
     [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},  [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b010},
     [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},   [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b000} // IR_CALL uses handled seperately
+    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b000} // IR_CALL uses handled separately
 };
 const IR_Value ir_no_value = (IR_Value){IR_UNDEFINED, 0, 0, 0};
 
@@ -57,9 +57,9 @@ void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break
 }
 
 void ir_pop_loop_ctx(IR_Context *ctx) { ctx->loop_stack.size--; }
-IR_LoopContext *ir_loop_ctx(IR_Context *ctx) { return &ctx->loop_stack.data[ctx->loop_stack.size - 1]; }
+IR_LoopContext *ir_loop_ctx(const IR_Context *ctx) { return &ctx->loop_stack.data[ctx->loop_stack.size - 1]; }
 
-IR_Value ir_mem_value(int mem_reg, Type *type) {
+IR_Value ir_mem_value(const int mem_reg, const Type *type) {
     IR_Value v;
     v.kind = IR_MEM;
     v.mem = mem_reg;
@@ -68,7 +68,7 @@ IR_Value ir_mem_value(int mem_reg, Type *type) {
     v.align = type->align;
     return v;
 }
-IR_Value ir_vreg_value(int reg, Type *type) {
+IR_Value ir_vreg_value(const int reg, const Type *type) {
     IR_Value v;
     v.kind = IR_VREG;
     v.reg = reg;
@@ -107,11 +107,10 @@ void ir_end_scope(IR_Function *func) {
             func->max_reg = func->next_reg;
         }
         func->stack_size = func->scopes[func->scope_count].stack_pointer;
-        // func->local_count -= func->scopes[func->scope_count].var_count;
     }
 }
 
-IR_Value ir_next_virtual_slot(IR_Function *func, int size, int align) {
+IR_Value ir_next_virtual_slot(const IR_Function *func, const int size, const int align) {
     func->scopes[func->scope_count - 1].reg_count++;
     IR_Value v;
     v.kind = IR_MEM;
@@ -314,7 +313,8 @@ void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction) {
     block->instructions[block->count++] = *instruction;
 }
 
-void ir_append_global(IR_Module *module, const char *name, Type *type, IR_Literal *literal, Linkage linkage, Storage storage) {
+void ir_append_global(IR_Module *module, const char *name, Type *type, const IR_Literal *literal, const Linkage linkage,
+                      const Storage storage) {
     if (module->global_pool.count >= module->global_pool.capacity) {
         module->global_pool.capacity *= 2;
         IR_Global *new_globals = realloc(module->global_pool.globals, sizeof(IR_Global) * module->global_pool.capacity);
@@ -324,17 +324,15 @@ void ir_append_global(IR_Module *module, const char *name, Type *type, IR_Litera
         }
         module->global_pool.globals = new_globals;
     }
-    IR_Literal l = literal ? *literal : (IR_Literal){.type = type_invalid, .i = 0};
-
     module->global_pool.globals[module->global_pool.count++] = (IR_Global){
         .name = name,
         .type = type,
-        .val = l,
+        .val = literal ? *literal : (IR_Literal){.type = type_invalid, .i = 0},
         .linkage = linkage,
         .storage = storage,
     };
 }
-IR_Value ir_append_const(IR_Module *module, IR_Literal *literal) {
+IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal) {
     if (module->const_pool.count >= module->const_pool.capacity) {
         module->const_pool.capacity *= 2;
         IR_Literal *new_consts = realloc(module->const_pool.consts, sizeof(IR_Literal) * module->const_pool.capacity);
@@ -345,7 +343,6 @@ IR_Value ir_append_const(IR_Module *module, IR_Literal *literal) {
         module->const_pool.consts = new_consts;
     }
     module->const_pool.consts[module->const_pool.count] = *literal;
-    IR_Literal *c = &module->const_pool.consts[module->const_pool.count];
     IR_Value v;
     v.kind = IR_LITERAL;
     v.const_index = module->const_pool.count++;
@@ -364,7 +361,7 @@ IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
         }
         func->locals = new_locals;
     }
-    IR_Value next_var = ir_next_virtual_slot(func, align(type->size, 8), 8);
+    const IR_Value next_var = ir_next_virtual_slot(func, align(type->size, 8), 8);
     func->locals[func->local_count++] = (IR_Var){name, next_var, type};
     if (func->scope_count > 0) {
         IR_Scope *scope = &func->scopes[func->scope_count - 1];
@@ -387,7 +384,6 @@ IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
 
 IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name) {
     for (int i = 0; i < ctx->module->func_def_count; i++) {
-        IR_Func_Def *f = &ctx->module->func_defs[i];
         if (strcmp(ctx->module->func_defs[i].name, name) == 0) {
             return &ctx->module->func_defs[i];
         }
@@ -404,10 +400,10 @@ IR_Value ir_value_from_global(IR_Global *g) {
     return v;
 }
 IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name) {
-    IR_Function *func = ctx->func;
+    const IR_Function *func = ctx->func;
     for (int i = func->scope_count - 1; i >= 0; i--) {
         for (int j = func->scopes[i].var_count - 1; j >= 0; j--) {
-            int k = func->scopes[i].var_indices[j];
+            const int k = func->scopes[i].var_indices[j];
             if (strcmp(func->locals[k].name, name) == 0) return func->locals[k].reg;
         }
     }
@@ -419,7 +415,7 @@ IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name) {
     exit(1);
 }
 
-IR_Func_Def *ir_append_func_def(IR_Context *ctx, const char *name, bool is_defined) {
+IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined) {
     if (ctx->module->func_def_count >= ctx->module->func_def_capacity) {
         ctx->module->func_def_capacity *= 2;
         IR_Func_Def *new_func_defs = realloc(ctx->module->func_defs, sizeof(IR_Func_Def) * ctx->module->func_def_capacity);
@@ -433,7 +429,7 @@ IR_Func_Def *ir_append_func_def(IR_Context *ctx, const char *name, bool is_defin
     ;
     return &ctx->module->func_defs[ctx->module->func_def_count++];
 }
-void ir_append_function(IR_Context *ctx, IR_Func_Def *func_def, IR_Function *func) {
+void ir_append_function(const IR_Context *ctx, IR_Func_Def *func_def, IR_Function *func) {
     if (ctx->module->func_count >= ctx->module->func_capacity) {
         ctx->module->func_capacity *= 2;
         IR_Function **new_functions = realloc(ctx->module->functions, sizeof(IR_Function *) * ctx->module->func_capacity);

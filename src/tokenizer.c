@@ -89,15 +89,7 @@ static char t_peek(const Tokenizer *tk) {
     return '\0';
 }
 
-static char t_peek_next(const Tokenizer *tk) {
-    if (tk->index + 1 > tk->size) {
-        printf("t_peek_next Tried peeking past eof\n");
-        return '\0';
-    }
-    return tk->src[tk->index + 1];
-}
-
-static char t_peek_n(const Tokenizer *tk, int n) {
+static char t_peek_n(const Tokenizer *tk, const int n) {
     if (tk->index + n > tk->size) {
         printf("t_peek_n Tried peeking past eof\n");
         return '\0';
@@ -105,7 +97,11 @@ static char t_peek_n(const Tokenizer *tk, int n) {
     return tk->src[tk->index + n];
 }
 
-static void t_consume_n(Tokenizer *tk, int n) {
+static char t_peek_next(const Tokenizer *tk) {
+    return t_peek_n(tk, 1);
+}
+
+static void t_consume_n(Tokenizer *tk, const int n) {
     if (tk->index + n > tk->size) {
         printf("T_Consume Reached the end of the file");
         exit(1);
@@ -188,7 +184,7 @@ static void t_skip_comments(Tokenizer *tk) {
     }
 }
 
-static int is_op_start(char c) {
+static int is_op_start(const char c) {
     switch (c) {
     case '+':
     case '-':
@@ -210,7 +206,7 @@ static int is_op_start(char c) {
     }
 }
 
-static TokenMatch t_match_operator(Tokenizer *tk) {
+static TokenMatch t_match_operator(const Tokenizer *tk) {
     const char next = t_peek_next(tk);
     const int eq = next == '=';
     switch (t_peek(tk)) {
@@ -258,7 +254,7 @@ static TokenMatch t_match_operator(Tokenizer *tk) {
 }
 
 static void t_consume_operator(Tokenizer *tk) {
-    TokenMatch m = t_match_operator(tk);
+    const TokenMatch m = t_match_operator(tk);
     t_consume_n(tk, m.n_chars);
     t_push_buffer(tk, m.type);
 }
@@ -296,7 +292,6 @@ static void t_consume_special_char(Tokenizer *tk) {
     default:
         printf("Unexpected \'%c\'\n", t_peek(tk));
         exit(1);
-        return;
     }
     t_consume(tk);
     t_push_buffer(tk, type);
@@ -325,7 +320,6 @@ static void t_consume_string_literal(Tokenizer *tk) {
 void t_tokenize(Tokenizer *tk) {
     while (!t_is_eof(tk)) {
         const char c = t_peek(tk);
-        bool starts_with_decimal = c == '.';
         if (c == '.' && !is_digit(t_peek_next(tk))) {
             t_consume(tk);
             t_push_buffer(tk, TK_DOT);

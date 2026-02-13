@@ -10,7 +10,7 @@ const char *x86_reg(const IR_Value *v) {
     else return xmm_register_str[v->phys_reg.xmm_reg];
 }
 
-void x86_operand(const IR_Value *v, char *buf, int n) {
+void x86_operand(const IR_Value *v, char *buf, const int n) {
     switch (v->kind) {
     case IR_STACK:
         snprintf(buf, n, "%d(%%rbp)", v->stack_offset);
@@ -79,7 +79,7 @@ const char *x86_rax_reg(Type *t) {
     exit(1);
 }
 
-const char *x86_rbx_reg(Type *t) {
+const char *x86_rbx_reg(const Type *t) {
     if (t->kind == T_FLOAT) return "%xmm1";
     if (t->kind == T_INT) {
         switch (t->size) {
@@ -102,7 +102,7 @@ const char *x86_rbx_reg(Type *t) {
     exit(1);
 }
 
-const char *x86_rcx_reg(Type *t) {
+const char *x86_rcx_reg(const Type *t) {
     if (t->kind == T_FLOAT) return "%xmm2";
     if (t->kind == T_INT) {
         switch (t->size) {
@@ -125,7 +125,7 @@ const char *x86_rcx_reg(Type *t) {
     exit(1);
 }
 
-const char *x86_rdx_reg(Type *t) {
+const char *x86_rdx_reg(const Type *t) {
     if (t->kind == T_FLOAT) return "%xmm3";
     if (t->kind == T_INT) {
         switch (t->size) {
@@ -149,7 +149,7 @@ const char *x86_rdx_reg(Type *t) {
     exit(1);
 }
 
-const char *x86_op_suffix(Type *t) {
+const char *x86_op_suffix(const Type *t) {
     if (t->kind == T_FLOAT) {
         switch (t->size) {
         case 4:
@@ -182,7 +182,7 @@ const char *x86_op_suffix(Type *t) {
     exit(1);
 }
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    int dst_offset = instr->ops[0].stack_offset;
+    const int dst_offset = instr->ops[0].stack_offset;
     Type *t = instr->call.type;
 
     const char *reg = x86_rax_reg(t);
@@ -190,27 +190,25 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
 
     int gp_index = 0;
     int xmm_index = 0;
-    int spilled_count = instr->call.arg_count > PARAM_REGISTERS ? instr->call.arg_count - PARAM_REGISTERS : 0;
+    const int spilled_count = instr->call.arg_count > PARAM_REGISTERS ? instr->call.arg_count - PARAM_REGISTERS : 0;
     printf("Registers used %d/%d/%d\n", instr->call.arg_count - spilled_count, instr->call.arg_count, spilled_count);
     // +8 for push rbp (call emits push rbp, mov rsp, rbp)
-    int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count + 8, 16);
+    const int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count + 8, 16);
     int param_offset = SHADOW_SPACE;
     if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
     for (int i = 0; i < instr->call.arg_count; i++) {
-        IR_Var *v = &instr->call.args[i];
-        bool is_register_param = i < PARAM_REGISTERS;
+        const IR_Var *v = &instr->call.args[i];
+        const bool is_register_param = i < PARAM_REGISTERS;
         switch (v->type->kind) {
         case T_INT:
             if (is_register_param) {
                 const char *x = gp_register_str[win64_int_param_regs[gp_index++]][reg_size(v->type->size)];
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x);
             } else {
-                // fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x86_rax_reg(v->type));
-                const char *reg = x86_rax_reg(v->type);
-                fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, reg);
-                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", x86_op_suffix(v->type), reg, param_offset);
+                const char *v_reg = x86_rax_reg(v->type);
+                fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, v_reg);
+                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", x86_op_suffix(v->type), v_reg, param_offset);
                 param_offset += 8;
-                // fprintf(fp, "    push %%rax\n");
             }
             break;
         case T_FLOAT:
@@ -245,7 +243,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
 }
 
-void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, IR_BINOP_OP op, Type *t) {
+void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, const IR_BINOP_OP op, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     switch (t->kind) {
@@ -365,7 +363,7 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             x86_emit_xr(fp, "div", op_suffix, "", rhs, "%xmm0");
             break;
         default:
-            printf("Tried to perform unsuported binary operation on type float\n");
+            printf("Tried to perform unsupported binary operation on type float\n");
             exit(1);
         }
         x86_emit_rx(fp, "mov", op_suffix, "", "%xmm0", dst);
@@ -391,7 +389,7 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
         exit(1);
     }
 }
-void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNARY_OP op, Type *t) {
+void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, const IR_UNARY_OP op, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     switch (t->kind) {
@@ -511,7 +509,7 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
     printf("Cast node did literally nothing?\n");
     exit(1);
 }
-void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, IR_Literal *c, int pool_index) {
+void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c, const int pool_index) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
 
@@ -559,8 +557,7 @@ void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t)
     x86_emit_xr(fp, "mov", op_suffix, "", src, reg);
     x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
 }
-void x86_emit_store_mem(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t) {
-    const char *reg = x86_rax_reg(t);
+void x86_emit_store_mem(FILE *fp, const IR_Value *src, const IR_Value *dst, const Type *t) {
     const char *v = x86_rbx_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     x86_emit_xr(fp, "mov", "q", "", dst, "%rax");

@@ -71,8 +71,8 @@ Is End of token array?
 bool p_is_last_token(const Parser *p);
 
 Token *p_peek_n(const Parser *p, int n);
-Token *p_peek(Parser *p);
-Token *p_peek_next(Parser *p);
+Token *p_peek(const Parser *p);
+Token *p_peek_next(const Parser *p);
 
 Token *p_consume_n(Parser *p, int n);
 Token *p_consume(Parser *p);
@@ -83,7 +83,7 @@ void p_skip(Parser *p);
 /*
     Error on type mismatch
 */
-void p_expect(Parser *p, TokenType expected_type);
+void p_expect(const Parser *p, TokenType expected_type);
 
 Token *p_consume_a(Parser *p,TokenType type);
 Token *p_consume_semi(Parser *p);
@@ -129,25 +129,25 @@ void p_append_declaration(Node *root, Node *decl);
 void p_append_param(Node *func, Node *param);
 void p_add_call_param(Node *func, Node *param);
 
-Symbol *p_get_symbol(Parser *p, const char *name, SymbolKind kind);
+Symbol *p_get_symbol(const Parser *p, const char *name, SymbolKind kind);
 
-void p_append_typedef(Parser *p, Typedef *t);
-void p_append_func_def(Parser *p, Node *func);
-Node *p_get_func_def(Parser *p, const char* name);
-Typedef *p_get_typedef(Parser *p, const char *name);
+void p_append_typedef(Parser *p, const Typedef *t);
+void p_append_func_def(Parser *p, Node *f);
+Node *p_get_func_def(const Parser *p, const char* name);
+Typedef *p_get_typedef(const Parser *p, const char *name);
 
 void p_append_element(Node *init_list, Node *element);
 
-void p_append_var_decl(Parser *p, Node *var);
-Node *p_get_var_decl(Parser *p, const char* name);
+void p_append_var_decl(Parser *p, Node *v);
+Node *p_get_var_decl(const Parser *p, const char* name);
 
-EnumField *p_get_enum_const(Parser *p, const char* name);
-void p_append_enum_const(Parser *p, EnumField *e);
+EnumField *p_get_enum_const(const Parser *p, const char* name);
+void p_append_enum_const(Parser *p, const EnumField *e);
 /*
     Appends a block item to the given compound node,
     Resizes its statement array if necessary.
 */
-void p_append_block_item(Node *root, Node *stmt);
+void p_append_block_item(Node *root, Node *item);
 
 /*
     Consumes
@@ -224,8 +224,8 @@ Type *p_parse_type(Parser *p, NodeManager *nm);
 Type *p_parse_enum(Parser *p, NodeManager *nm);
 Type *p_parse_struct(Parser *p, NodeManager *nm);
 
-Node *current_func_definition(Parser *p);
+Node *current_func_definition(const Parser *p);
 
-bool is_type_token(Parser *p, Token *t);
-Type *token_to_type(Parser *p, Token*t);
+bool is_type_token(const Parser *p, const Token *t);
+Type *token_to_type(const Parser *p, const Token *t);
 #endif // COMPILER_C_PARSER_H

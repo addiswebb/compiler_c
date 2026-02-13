@@ -28,7 +28,7 @@ const char *xmm_register_str[16] = {
     [XMM12] = "%xmm12", [XMM13] = "%xmm13", [XMM14] = "%xmm14", [XMM15] = "%xmm15",
 };
 
-void bitset_init(BitSet *s, int reg_count) {
+void bitset_init(BitSet *s, const int reg_count) {
     s->num_bits = reg_count;
     s->capacity = (s->num_bits + 31) / 32;
     if (reg_count) {
@@ -41,62 +41,62 @@ void bitset_init(BitSet *s, int reg_count) {
         s->data = NULL;
     }
 }
-void bitset_clear(BitSet *s) {
+void bitset_clear(const BitSet *s) {
     for (int i = 0; i < s->capacity; i++) {
         s->data[i] = 0;
     }
 }
-void bitset_add(BitSet *s, int reg) {
+void bitset_add(const BitSet *s, const int reg) {
     if (reg >= s->num_bits) {
         printf("%d is too large a register for this bitset\n", reg);
         exit(1);
     }
     assert(reg >= 0);
-    int word = reg / 32;
-    int offset = reg % 32;
+    const int word = reg / 32;
+    const int offset = reg % 32;
     s->data[word] |= (1 << offset);
 }
-void bitset_remove(BitSet *s, int reg) {
+void bitset_remove(const BitSet *s, const int reg) {
     assert(reg >= 0);
-    int word = reg / 32;
-    int offset = reg % 32;
+    const int word = reg / 32;
+    const int offset = reg % 32;
     s->data[word] &= ~(1 << offset);
 }
-int bitset_has(BitSet *s, int reg) {
+int bitset_has(const BitSet *s, const int reg) {
     assert(reg >= 0);
-    int word = reg / 32;
-    int offset = reg % 32;
+    const int word = reg / 32;
+    const int offset = reg % 32;
     return (s->data[word] & (1 << offset)) != 0;
 }
-void bitset_union(BitSet *dst, BitSet *src) {
+void bitset_union(const BitSet *dst, const BitSet *src) {
     assert(dst->capacity == src->capacity);
     for (int i = 0; i < dst->capacity; i++)
         dst->data[i] |= src->data[i];
 }
-void bitset_intersect(BitSet *dst, BitSet *src) {
+void bitset_intersect(const BitSet *dst, const BitSet *src) {
     assert(dst->capacity == src->capacity);
     for (int i = 0; i < dst->capacity; i++)
         dst->data[i] &= src->data[i];
 }
 
-void bitset_difference(BitSet *dst, BitSet *src) {
+void bitset_difference(const BitSet *dst, const BitSet *src) {
     assert(dst->capacity == src->capacity);
     for (int i = 0; i < dst->capacity; i++)
         dst->data[i] &= ~src->data[i];
 }
-void bitset_copy(BitSet *dst, BitSet *src) {
+void bitset_copy(const BitSet *dst, const BitSet *src) {
     assert(dst->capacity == src->capacity);
     for (int i = 0; i < dst->capacity; i++)
         dst->data[i] = src->data[i];
 }
-int bitset_equal(BitSet *a, BitSet *b) {
+int bitset_equal(const BitSet *a, const BitSet *b) {
     assert(a->capacity == b->capacity);
     for (int i = 0; i < a->capacity; i++) {
         if (a->data[i] != b->data[i]) return false;
     }
     return true;
 }
-static int contains(int *arr, int count, int val) {
+static int contains(const int *arr, const int count, const int val) {
     for (int i = 0; i < count; i++) {
         if (arr[i] == val) return true;
     }
@@ -116,10 +116,10 @@ void add_successor(IR_Function *func, IR_Block *from, IR_Block *to) {
     }
 }
 
-void dfs_postorder(IR_Function *func, int block_id, bool *visited, int *postorder, int *count) {
+void dfs_postorder(IR_Function *func, const int block_id, bool *visited, int *postorder, int *count) {
     if (visited[block_id]) return;
     visited[block_id] = true;
-    IR_Block *b = func->blocks[block_id];
+    const IR_Block *b = func->blocks[block_id];
     for (int i = 0; i < b->cfg.succ_count; i++) {
         dfs_postorder(func, b->cfg.succ[i], visited, postorder, count);
     }
@@ -128,7 +128,16 @@ void dfs_postorder(IR_Function *func, int block_id, bool *visited, int *postorde
 
 void compute_reverse_postorder(IR_Function *func, int *rpo) {
     bool *visited = calloc(func->block_count, sizeof(bool));
+    if (!visited) {
+        printf("Failed to calloc for visited\n");
+        exit(1);
+    }
     int *postorder = malloc(func->block_count * sizeof(int));
+    if (!postorder) {
+        printf("Failed to calloc for postorder\n");
+        free(visited);
+        exit(1);
+    }
     int count = 0;
     dfs_postorder(func, 0, visited, postorder, &count);
 
@@ -137,7 +146,7 @@ void compute_reverse_postorder(IR_Function *func, int *rpo) {
     }
 }
 
-int bitset_add_defined(BitSet *defined, IR_Value *v) {
+int bitset_add_defined(const BitSet *defined, const IR_Value *v) {
     if (v->kind == IR_VREG) {
         if (!bitset_has(defined, v->reg)) {
             bitset_add(defined, v->reg);
@@ -146,7 +155,7 @@ int bitset_add_defined(BitSet *defined, IR_Value *v) {
     }
     return 0;
 }
-void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v) {
+void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v) {
     if (v->kind == IR_VREG) {
         if (!bitset_has(defined, v->reg)) {
             bitset_add(used, v->reg);
@@ -154,7 +163,7 @@ void bitset_add_used(BitSet *defined, BitSet *used, IR_Value *v) {
     }
 }
 
-void ir_init_func_cfg(IR_Function *f) {
+void ir_init_func_cfg(const IR_Function *f) {
     for (int j = 0; j < f->block_count; j++) {
         IR_Block *b = f->blocks[j];
 
@@ -178,8 +187,7 @@ void ir_compute_func_io(IR_Function *f) {
         if (b->count == 0) continue;
         bool found = false;
         for (int i = 0; i < b->count; i++) {
-            // IR_Instruction *end_instr = &b->instructions[b->count - 1];
-            IR_Instruction *instr = &b->instructions[i];
+            const IR_Instruction *instr = &b->instructions[i];
             switch (instr->op) {
             case IR_BR:
                 add_successor(f, b, instr->br.block);
@@ -204,17 +212,17 @@ void ir_compute_func_io(IR_Function *f) {
     }
 }
 
-int reg_bitset(IR_Function *f) {
+int reg_bitset(const IR_Function *f) {
     int defined = 0;
     for (int j = 0; j < f->block_count; j++) {
-        IR_Block *b = f->blocks[j];
+        const IR_Block *b = f->blocks[j];
         for (int k = 0; k < b->count; k++) {
-            IR_Instruction *instr = &b->instructions[k];
+            const IR_Instruction *instr = &b->instructions[k];
             for (int i = 0; i < instr->op_count; i++) {
                 if (instr->ops[i].reg < 0) continue;
                 if (instr->ops[i].kind == IR_LITERAL || instr->ops[i].kind == IR_MEM) continue;
                 if (op_info[instr->op].def_mask & (1 << i)) {
-                    // TODO: consider sideeffects of defined not overwriting. (should be alr...)
+                    // TODO: consider side effects of defined not overwriting. (should be alr...)
                     if (bitset_add_defined(&b->live.def, &instr->ops[i])) defined++;
                 }
                 if (op_info[instr->op].use_mask & (1 << i)) {
@@ -226,7 +234,7 @@ int reg_bitset(IR_Function *f) {
     return defined;
 }
 
-void compute_bitset(IR_Function *f, int *rpo) {
+void compute_bitset(const IR_Function *f, const int *rpo) {
     BitSet old_live_out;
     BitSet old_live_in;
     BitSet tmp;
@@ -237,7 +245,7 @@ void compute_bitset(IR_Function *f, int *rpo) {
     while (changed) {
         changed = false;
         for (int i = 0; i < f->block_count; i++) {
-            IR_Block *b = f->blocks[rpo[i]];
+            const IR_Block *b = f->blocks[rpo[i]];
             bitset_clear(&old_live_out);
             bitset_clear(&old_live_in);
             bitset_clear(&tmp);
@@ -261,7 +269,7 @@ void compute_bitset(IR_Function *f, int *rpo) {
 }
 int cmp(const void *a, const void *b) { return ((Lifetime *)a)->start - ((Lifetime *)b)->start; }
 
-void linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, int *stack_size, int *slot_count) {
+void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size, int *slot_count) {
     StackSlot *slots = NULL;
     for (int i = 0; i < count; i++) {
         Lifetime *l = &lts[i];
@@ -295,7 +303,7 @@ void linear_stack_slot_allocation(Lifetime *lts, int count, int *rpo, int *stack
     }
     if (slots) free(slots);
 }
-RegSize reg_size(int size) {
+RegSize reg_size(const int size) {
     switch (size) {
     case 1:
         return REG_8;
@@ -335,17 +343,21 @@ void param_offset(IR_Value *v) {
     v->stack_offset = (-v->reg - 1) * 8 + 16;
 }
 
-void stack_offset(IR_Value *v, Lifetime *lts) {
+void stack_offset(IR_Value *v, const Lifetime *lts) {
+    if (!lts) {
+        printf("Lts is null\n");
+        exit(1);
+    }
     v->kind = IR_STACK;
     v->stack_offset = -(lts[v->reg].stack_offset + 8);
 }
 
-void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, StackSlot *mem_slots) {
+void update_values_with_stack_offsets(const IR_Function *f, const Lifetime *lts, const StackSlot *mem_slots) {
     for (int i = 0; i < f->block_count; i++) {
-        IR_Block *b = f->blocks[i];
+        const IR_Block *b = f->blocks[i];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
-            int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
                 IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
                 if (a->kind == IR_LITERAL) continue;
@@ -382,14 +394,14 @@ void update_values_with_stack_offsets(IR_Function *f, Lifetime *lts, StackSlot *
     }
 }
 
-void verify_completion(IR_Function *f) {
+void verify_completion(const IR_Function *f) {
     for (int i = 0; i < f->block_count; i++) {
-        IR_Block *b = f->blocks[i];
+        const IR_Block *b = f->blocks[i];
         for (int j = 0; j < b->count; j++) {
-            IR_Instruction *instr = &b->instructions[j];
-            int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
+            const IR_Instruction *instr = &b->instructions[j];
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
+                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
                 if (a->kind == IR_LITERAL && instr->op != IR_CALL) continue;
                 if (a->kind == IR_GLOBAL || a->kind == IR_PHYS_REG) continue;
                 if (a->kind != IR_STACK) {
@@ -402,15 +414,15 @@ void verify_completion(IR_Function *f) {
     }
 }
 
-StackSlot *locals_stack_allocation(IR_Function *f, int *frame_size, int *slot_count) {
+StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size, const int *slot_count) {
     StackSlot *mem_slots = malloc(sizeof(StackSlot) * f->local_count);
     if (!mem_slots) {
         printf("Failed to allocate memslots\n");
         exit(1);
     }
     for (int j = 0; j < f->local_count; j++) {
-        Type *t = f->locals[j].type;
-        int k = f->locals[j].reg.mem;
+        const Type *t = f->locals[j].type;
+        const int k = f->locals[j].reg.mem;
         mem_slots[k].size = align(t->size, 8);
         mem_slots[k].align = 8;
         mem_slots[k].id = *slot_count;
@@ -422,16 +434,20 @@ StackSlot *locals_stack_allocation(IR_Function *f, int *frame_size, int *slot_co
     return mem_slots;
 }
 
-void analysis(IR_Context *ctx) {
+void analysis(const IR_Context *ctx) {
     for (int i = 0; i < ctx->module->func_count; i++) {
         IR_Function *f = ctx->module->functions[i];
         // Initialize Control Flow Graph Variables per block
         ir_init_func_cfg(f);
-        // Compute Function dependecies (successors, predecessors)
+        // Compute Function dependencies (successors, predecessors)
         ir_compute_func_io(f);
 
         Lifetime *lifetimes = NULL;
         int *rpo = malloc(f->block_count * sizeof(int));
+        if (!rpo) {
+            printf("Failed to allocate rpo\n");
+            exit(1);
+        }
         int reg_count = 0;
         // If any registers were used, compute their lifetimes
         if (f->max_reg > 0) {
@@ -439,7 +455,7 @@ void analysis(IR_Context *ctx) {
             compute_reverse_postorder(f, rpo);
             compute_bitset(f, rpo);
 
-            lifetimes = compute_lifetimes(ctx, f, reg_count, rpo);
+            lifetimes = compute_lifetimes(f, reg_count, rpo);
             if (DEBUG_LIFETIMES) {
                 for (int j = 0; j < reg_count; j++) {
                     printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
@@ -455,7 +471,7 @@ void analysis(IR_Context *ctx) {
 
         int slot_count = 0;
         // Allocate virtual registers
-        linear_stack_slot_allocation(lifetimes, reg_count, rpo, &frame_size, &slot_count);
+        linear_stack_slot_allocation(lifetimes, reg_count, &frame_size, &slot_count);
 
         // Update all instances of IR_Value with the correct stack offsets
         update_values_with_stack_offsets(f, lifetimes, mem_slots);
@@ -470,19 +486,18 @@ void analysis(IR_Context *ctx) {
     }
 }
 
-Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f, int defined, int *rpo) {
+Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *rpo) {
     Lifetime *lts = malloc(sizeof(Lifetime) * defined);
-    int count = 0;
     int pc = 0;
 
     for (int i = 0; i < f->block_count; i++) {
-        IR_Block *b = f->blocks[rpo[i]];
+        const IR_Block *b = f->blocks[rpo[i]];
         for (int j = 0; j < b->count; j++) {
             IR_Instruction *instr = &b->instructions[j];
-            int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
-                bool is_call_arg = k >= +instr->op_count;
+                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
+                const bool is_call_arg = k >= +instr->op_count;
                 if (a->kind == IR_VREG) {
                     if (a->reg < 0) continue;
                     if (op_info[instr->op].def_mask & (1 << k)) {
@@ -501,7 +516,7 @@ Lifetime *compute_lifetimes(IR_Context *ctx, IR_Function *f, int defined, int *r
     return lts;
 }
 
-void print_bitset(BitSet *bs) {
+void print_bitset(const BitSet *bs) {
     printf("{");
     int first = 1;
     for (int i = 0; i < bs->num_bits; i++) {
@@ -514,10 +529,10 @@ void print_bitset(BitSet *bs) {
     printf("}");
 }
 
-void print_cfg(IR_Function *func) {
+void print_cfg(const IR_Function *func) {
     printf("Func Analysis: %s\n", func->name);
     for (int i = 0; i < func->block_count; i++) {
-        IR_Block *b = func->blocks[i];
+        const IR_Block *b = func->blocks[i];
         printf("L%d:\n", i);
 
         // Successors

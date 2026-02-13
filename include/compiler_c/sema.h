@@ -3,12 +3,12 @@
 #include "compiler_c/node.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/type.h"
-bool is_lvalue(Node *n);
-bool is_deref(Node *n);
+bool is_lvalue(const Node *n);
+bool is_deref(const Node *n);
 
-Type *check_unary_op(Node *unaryop);
+Type *check_unary_op(const Node *unary_op);
 Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop);
 Type *promote_binary_operands(NodeManager *nm, Node *binop);
 void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop);
-void lower_enums(NodeManager *nm);
+void lower_enums(const NodeManager *nm);
 #endif

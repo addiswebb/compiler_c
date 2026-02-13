@@ -34,13 +34,13 @@ bool p_is_last_token(const Parser *p) { return p->index >= p->size; }
 
 Token *p_peek_n(const Parser *p, const int n) {
     if (p->index + n > p->src->size) {
-        printf("P_peek_n Tried peeking past eota\n");
+        printf("P_peek_n Tried peeking past eof\n");
         return NULL;
     }
     return &p->src->data[p->index + n];
 }
-Token *p_peek(Parser *p) { return p_peek_n(p, 0); }
-Token *p_peek_next(Parser *p) { return p_peek_n(p, 1); }
+Token *p_peek(const Parser *p) { return p_peek_n(p, 0); }
+Token *p_peek_next(const Parser *p) { return p_peek_n(p, 1); }
 Token *p_consume_n(Parser *p, const int n) {
     if (p->index + n > p->src->size) {
         printf("P_consume_n %d Reached the end of the token list %d/%d\n", n, p->index, p->src->size);
@@ -48,9 +48,7 @@ Token *p_consume_n(Parser *p, const int n) {
     }
     Token *token = &p->src->data[p->index];
     p->index += n;
-    if (DEBUG_CONSUME) {
-        print_token(token);
-    }
+    if (DEBUG_CONSUME) print_token(token);
     return token;
 }
 
@@ -62,7 +60,7 @@ void p_skip(Parser *p) { p_consume_n(p, 1); }
 /*
     Error on type mismatch
 */
-void p_expect(Parser *p, const TokenType expected_type) {
+void p_expect(const Parser *p, const TokenType expected_type) {
     if (!p_is_last_token(p)) {
         const TokenType token_type = p->src->data[p->index].type;
         if (token_type != expected_type) {
@@ -196,7 +194,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         p_consume(p); // '['
         if (!is_lvalue(primary)) {
             print_node_type(primary->kind);
-            printf(" is not a an ltype, needed for indexing\n");
+            printf(" is not a an lvalue, needed for indexing\n");
             exit(1);
         }
         Node *node = new_node(nm, N_INDEX);
@@ -261,7 +259,7 @@ Node *new_function_node(NodeManager *nm) {
     }
     return node;
 }
-Node *new_function_call_node(NodeManager *nm, Node *identifier, int param_count) {
+Node *new_function_call_node(NodeManager *nm, Node *identifier, const int param_count) {
     Node *node = new_node(nm, N_FUNCTION_CALL);
     node->func_call.identifier = identifier;
     node->func_call.param_capacity = param_count;
@@ -306,18 +304,16 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm) {
     if (is_type_token(p, p_peek(p))) return p_parse_block_declaration(p, nm);
     else return p_parse_statement(p, nm);
 }
-Node *p_parse_block_declaration(Parser *p, NodeManager *nm);
 /*
     Give the var decl node, if the var name/identifier is needed, otherwise NULL
 */
 Type *p_parse_type(Parser *p, NodeManager *nm) {
-    Type *type = type_invalid;
+    Type *type;
     if (p_peek(p)->type == TK_STRUCT) {
         type = p_parse_struct(p, nm);
     } else if (p_peek(p)->type == TK_ENUM) {
         type = p_parse_enum(p, nm);
     } else {
-        Token *t = p_peek(p);
         type = token_to_type(p, p_consume(p));
     }
     if (type == type_invalid) {
@@ -356,9 +352,8 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
             f.name = p_consume_a(p, TK_IDENTIFIER)->value;
             if (p_peek(p)->type == TK_EQ) {
                 p_consume(p);
-                Token *t = p_consume_a(p, TK_INT_LITERAL);
-                int new_val = parse_int(t->value, t->size);
-                val = new_val;
+                const Token *t = p_consume_a(p, TK_INT_LITERAL);
+                val = (int)parse_int(t->value, t->size);;
             }
             f.value = val++;
             f._enum_t = NULL;
@@ -495,7 +490,7 @@ void p_add_call_param(Node *func, Node *param) {
     }
 }
 
-void p_append_symbol(Parser *p, Symbol *s) {
+void p_append_symbol(Parser *p, const Symbol *s) {
     if (p->st.count >= p->st.capacity) {
         p->st.capacity *= 2;
         Symbol *new_symbols = realloc(p->st.symbols, sizeof(Symbol) * p->st.capacity);
@@ -507,7 +502,7 @@ void p_append_symbol(Parser *p, Symbol *s) {
     }
     p->st.symbols[p->st.count++] = *s;
 }
-Symbol *p_get_symbol(Parser *p, const char *name, SymbolKind kind) {
+Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind) {
     for (int i = 0; i < p->st.count; i++) {
         if ((kind == ANY || p->st.symbols[i].kind == kind) && strcmp(p->st.symbols[i].name, name) == 0) {
             return &p->st.symbols[i];
@@ -516,19 +511,19 @@ Symbol *p_get_symbol(Parser *p, const char *name, SymbolKind kind) {
     return NULL;
 }
 
-Typedef *p_get_typedef(Parser *p, const char *name) {
+Typedef *p_get_typedef(const Parser *p, const char *name) {
     Symbol *s = p_get_symbol(p, name, TYPEDEF);
     if (s) return &s->_typedef;
     printf("Tried to get the typedef of %s, which does not exist\n", name);
     exit(1);
 }
-Node *p_get_func_def(Parser *p, const char *name) {
-    Symbol *s = p_get_symbol(p, name, FUNC);
+Node *p_get_func_def(const Parser *p, const char *name) {
+    const Symbol *s = p_get_symbol(p, name, FUNC);
     if (s) return s->func_def;
     printf("Tried to call %s which does not exist\n", name);
     exit(1);
 }
-void p_append_typedef(Parser *p, Typedef *t) {
+void p_append_typedef(Parser *p, const Typedef *t) {
     p_append_symbol(p, &(Symbol){.name = t->new_def, .kind = TYPEDEF, .linkage = LINK_NONE, .storage = STORAGE_NONE, ._typedef = *t});
 }
 void p_append_func_def(Parser *p, Node *f) {
@@ -539,7 +534,7 @@ void p_append_var_decl(Parser *p, Node *v) {
         p, &(Symbol){
                .name = v->var_decl.identifier->identifier.name, .kind = VAR, .linkage = LINK_NONE, .storage = STORAGE_NONE, .var_decl = v});
 }
-void p_append_enum_const(Parser *p, EnumField *e) {
+void p_append_enum_const(Parser *p, const EnumField *e) {
     p_append_symbol(p, &(Symbol){.name = e->name, .kind = ENUM, .linkage = LINK_NONE, .storage = STORAGE_NONE, .enum_field = *e});
 }
 
@@ -548,20 +543,21 @@ void p_append_element(Node *init_list, Node *element) {
         init_list->init_list.capacity *= 2;
         Node **new_elements = realloc(init_list->init_list.elements, sizeof(Node *) * init_list->init_list.capacity);
         if (!new_elements) {
-            printf("Failed to append element to initlist\n");
+            printf("Failed to append element to init_list\n");
             exit(1);
         }
+        init_list->init_list.elements = new_elements;
     }
     init_list->init_list.elements[init_list->init_list.count++] = element;
 }
-Node *p_get_var_decl(Parser *p, const char *name) {
-    Symbol *s = p_get_symbol(p, name, VAR);
+Node *p_get_var_decl(const Parser *p, const char *name) {
+    const Symbol *s = p_get_symbol(p, name, VAR);
     if (s) return s->var_decl;
     printf("Tried to find variable %s which does not exist\n", name);
     exit(1);
 }
 
-EnumField *p_get_enum_const(Parser *p, const char *name) {
+EnumField *p_get_enum_const(const Parser *p, const char *name) {
     Symbol *s = p_get_symbol(p, name, ENUM);
     if (s) return &s->enum_field;
     printf("Tried to find enum constant %s which does not exist\n", name);
@@ -676,7 +672,7 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
     return node;
 }
 
-Node *current_func_definition(Parser *p) {
+Node *current_func_definition(const Parser *p) {
     for (int i = p->st.count - 1; i >= 0; i--) {
         if (p->st.symbols[i].kind == FUNC) return p->st.symbols[i].func_def;
     }
@@ -776,7 +772,7 @@ Node *p_parse_compound(Parser *p, NodeManager *nm) {
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, StorageClass storage_class) {
+Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, const StorageClass storage_class) {
     Node *node = new_function_node(nm);
     node->func.name = p_consume_a(p, TK_IDENTIFIER)->value;
     node->func.type = type;
@@ -824,16 +820,16 @@ Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, StorageClass stor
 
 Node *p_parse_decl_identifier(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_IDENTIFIER);
-    bool expect_closing_paren = p_peek(p)->type == TK_OPEN_PAREN;
+    const bool expect_closing_paren = p_peek(p)->type == TK_OPEN_PAREN;
     if (expect_closing_paren) p_consume(p); // (
-    Token *t = p_consume_a(p, TK_IDENTIFIER);
+    const Token *t = p_consume_a(p, TK_IDENTIFIER);
     node->identifier.name = t->value;
     node->identifier.len = t->size;
     if (expect_closing_paren) p_consume_a(p, TK_CLOSE_PAREN);
     return node;
 }
 
-Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, StorageClass storage_class, bool global) {
+Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const StorageClass storage_class, const bool global) {
     if (type_decl->type->kind == T_STRUCT || type_decl->type->kind == T_ENUM) {
         if (p_peek(p)->type != TK_IDENTIFIER) {
             p_consume_semi(p);
@@ -850,12 +846,12 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, StorageCl
 
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p); // [
-        int len = -1; // -1 for infered size
+        int len = -1; // -1 for inferred size
         if (p_peek(p)->type != TK_CLOSE_SQUARE) {
             // Only works for a[5], not a[b + 1] (can fix later)
             // Todo; allow for const expressions like [5 + 6] or smt
-            Token *t = p_consume_a(p, TK_INT_LITERAL);
-            len = parse_int(t->value, t->size);
+            const Token *t = p_consume_a(p, TK_INT_LITERAL);
+            len = (int) parse_int(t->value, t->size);
         }
         p_consume_a(p, TK_CLOSE_SQUARE);
         type_decl->type = get_array_type(type_decl->type, len);
@@ -965,7 +961,7 @@ Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
     }
     return root;
 }
-bool is_type_token(Parser *p, Token *t) {
+bool is_type_token(const Parser *p, const Token *t) {
     switch (t->type) {
     case TK_CHAR:
     case TK_SHORT:
@@ -984,7 +980,7 @@ bool is_type_token(Parser *p, Token *t) {
     }
 }
 
-Type *token_to_type(Parser *p, Token *t) {
+Type *token_to_type(const Parser *p, const Token *t) {
     switch (t->type) {
     case TK_CHAR:
         return type_char;

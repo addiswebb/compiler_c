@@ -4,3 +4,4 @@ tests/test.exe
 /tests/basic/Output
 /tests/complex/Output
 /tests/.lit_test_times.txt
+/.idea

@@ -30,7 +30,7 @@ Compiler init_compiler(const int argc, char *argv[]) {
     Compiler compiler;
     compiler.flags = 0;
     compiler.input_file = argv[1];
-    compiler.output_file = strdup(argv[1]);
+    compiler.output_file = _strdup(argv[1]);
     compiler.output_file[strlen(argv[1]) - 1] = 's';
 
     // Loop and try find compile flags

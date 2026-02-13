@@ -271,10 +271,10 @@ extern const IR_Value ir_no_value;
 IR_Context ir_init_ctx();
 void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block*break_block);
 void ir_pop_loop_ctx(IR_Context *ctx);
-IR_LoopContext *ir_loop_ctx(IR_Context *ctx);
+IR_LoopContext *ir_loop_ctx(const IR_Context *ctx);
 
-IR_Value ir_mem_value(int mem_reg, Type *type);
-IR_Value ir_vreg_value(int reg, Type *type);
+IR_Value ir_mem_value(int mem_reg, const Type *type);
+IR_Value ir_vreg_value(int reg, const Type *type);
 
 IR_Value ir_literal_value(int const_index);
 
@@ -283,20 +283,20 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx,const Node *tu);
 
 void ir_begin_scope(IR_Function *func);
 void ir_end_scope(IR_Function *func);
-IR_Value ir_next_virtual_slot(IR_Function *func, int size, int align);
+IR_Value ir_next_virtual_slot(const IR_Function *func, int size, int align);
 IR_Value ir_next_virtual_reg(IR_Function *func);
 
 IR_Module *ir_new_module();
 IR_Function *ir_new_function(IR_Context *ctx,const char *name);
-IR_Func_Def *ir_append_func_def(IR_Context *ctx, const char *name, bool is_defined);
+IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, bool is_defined);
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
 IR_Block *ir_new_block();
 
 IR_Block *ir_add_block(IR_Context *ctx);
-void ir_append_function(IR_Context *ctx,IR_Func_Def *func_def, IR_Function *func);
+void ir_append_function(const IR_Context *ctx,IR_Func_Def *func_def, IR_Function *func);
 void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction);
-void ir_append_global(IR_Module *module, const char *name, Type *type, IR_Literal *literal, Linkage linkage, Storage storage);
-IR_Value ir_append_const(IR_Module *module, IR_Literal *literal);
+void ir_append_global(IR_Module *module, const char *name, Type *type, const IR_Literal *literal, Linkage linkage, Storage storage);
+IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal);
 IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
 
 IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);

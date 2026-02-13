@@ -81,16 +81,17 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
     return cast;
 }
 
-bool is_valid_cast(Type *from, Type *to) {
+bool is_valid_cast(const Type *from, const Type *to) {
     if (from->kind == T_INVALID || to->kind == T_INVALID) return false;
     if (from->kind == T_ARRAY) {
         // Can only cast array->pointer (pointer decay)
         return to->kind == T_POINTER && from->base == to->base;
-    } else if (to->kind == T_POINTER) return to->base == from;
+    }
+    if (to->kind == T_POINTER) return to->base == from;
     return true;
 }
 
-LiteralKind literal_kind(TokenType type) {
+LiteralKind literal_kind(const TokenType type) {
     switch (type) {
     case TK_INT_LITERAL:
         return L_INT;
@@ -347,7 +348,7 @@ void print_node(const Node *node, const int depth) {
         print_node(node->cast.expr, depth + 1);
         break;
     case N_INDEX:
-        printf(": [index,indentifier]\n");
+        printf(": [index, identifier]\n");
         print_node(node->index.index, depth + 1);
         print_node(node->index.identifier, depth + 1);
         break;
@@ -357,8 +358,6 @@ void print_node(const Node *node, const int depth) {
         printf("]\n");
         break;
     case N_CONTINUE:
-        printf("\n");
-        break;
     case N_BREAK:
         printf("\n");
         break;

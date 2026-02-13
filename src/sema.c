@@ -10,13 +10,13 @@
 #include <string.h>
 
 // Is this node assignable?
-bool is_lvalue(Node *n) { return n->kind == N_IDENTIFIER || n->kind == N_INDEX || n->kind == N_MEMBER_ACCESS || is_deref(n); }
-bool is_deref(Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY; }
+bool is_lvalue(const Node *n) { return n->kind == N_IDENTIFIER || n->kind == N_INDEX || n->kind == N_MEMBER_ACCESS || is_deref(n); }
+bool is_deref(const Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY; }
 
-Type *check_unary_op(Node *unaryop) {
-    Node *expr = unaryop->unary.expr;
-    TypeKind kind = expr->type->kind;
-    switch (unaryop->unary.op) {
+Type *check_unary_op(const Node *unary_op) {
+    const Node *expr = unary_op->unary.expr;
+    const TypeKind kind = expr->type->kind;
+    switch (unary_op->unary.op) {
     // [Int, Float] => [Int, Float]
     case TK_PLUS:
     case TK_MINUS:
@@ -38,7 +38,7 @@ Type *check_unary_op(Node *unaryop) {
         exit(1);
     case TK_MULTIPLY:
         if (expr->type->base != type_invalid) return expr->type->base;
-        printf("Tried to derefence some nonexistent term\n");
+        printf("Tried to dereference some nonexistent term\n");
         exit(1);
     case TK_SIZEOF:
         if (expr->type != type_invalid && expr->type->size) return type_int;
@@ -53,27 +53,27 @@ Type *check_unary_op(Node *unaryop) {
     printf("Invalid operand type ");
     print_type(expr->type);
     printf("for the given unary operator ");
-    print_token_type(unaryop->unary.op);
+    print_token_type(unary_op->unary.op);
     printf("\n");
 
     return type_invalid;
 }
 
-Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop) {
+Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
     if (binop->binary.lhs->type == type_invalid || binop->binary.rhs->type == type_invalid) {
         printf("Semantic Analysis: Binary op was given expression with an invalid type\n");
         exit(1);
     }
-    Node *lhs = binop->binary.lhs;
+    const Node *lhs = binop->binary.lhs;
     Node *rhs = binop->binary.rhs;
     if (is_assignment_op(op)) {
         if (!is_lvalue(lhs)) {
             printf("Semantic Analysis: Binary op lhs is not assignable\n");
             exit(1);
         }
-        TokenType underlying = get_underlying_op(op);
+        const TokenType underlying = get_underlying_op(op);
         if (is_arithmetic_op(underlying) || is_bitwise_op(underlying)) {
-            Type *common = promote_binary_operands(nm, binop);
+            promote_binary_operands(nm, binop);
         }
 
         if (lhs->type->kind != rhs->type->kind) {
@@ -83,7 +83,7 @@ Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop) {
     }
 
     Type *common = promote_binary_operands(nm, binop);
-    if (!common) {
+    if (!common || common == type_invalid) {
         printf("Invalid arithmetic operands");
         exit(1);
     }
@@ -106,7 +106,7 @@ Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop) {
 }
 
 Type *promote_binary_operands(NodeManager *nm, Node *binop) {
-    Type *common;
+    Type *common = type_invalid;
     Node **lhs = &binop->binary.lhs;
     Node **rhs = &binop->binary.rhs;
     if ((*lhs)->type->kind == T_ENUM) {
@@ -140,6 +140,9 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
         return (*rhs)->type;
     } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_INT) {
         common = (*lhs)->type->size >= (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
+    }else {
+        printf("UNSURE HOW TO HANDLE COMMON CASE;\n");
+        exit(1);
     }
 
     if ((*lhs)->type != common) *lhs = cast_node(nm, (*lhs), common);
@@ -160,7 +163,6 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             p_append_var_decl(p, node->func.params[i]);
         }
         semantic_analysis(p, nm, node->func.body, loop);
-        Linkage func_linkage = node->func.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
         if (node->func.storage_class == EXTERN) {
             if (node->func.is_defined) {
                 printf("External Function cannot have a definition\n");
@@ -173,7 +175,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             printf("Failed to find Function Symbol for \"%s\"\n", node->func.name);
             exit(1);
         }
-        func_symbol->linkage = func_linkage;
+        func_symbol->linkage = node->func.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;;
         // if defined -> text, otherwise none
         func_symbol->storage = STORAGE_TEXT;
         node->func.symbol = func_symbol;
@@ -185,8 +187,8 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         break;
     case N_VAR_DECL:
         // Skip extern nodes
-        Linkage var_linkage;
-        Storage var_storage;
+        Linkage var_linkage = LINK_NONE;
+        Storage var_storage = STORAGE_NONE;
         if (node->var_decl.is_global) {
             var_storage = node->var_decl.has_initializer ? STORAGE_DATA : STORAGE_BSS;
             var_linkage = node->var_decl.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
@@ -200,7 +202,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
 
         if (node->var_decl.storage_class == EXTERN) {
             if (node->var_decl.has_initializer) {
-                printf("External variable cannot be initialized in the same statment\n");
+                printf("External variable cannot be initialized in the same statement\n");
                 exit(1);
             }
         }
@@ -223,7 +225,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
                 // Infer the size from the initializer list
                 if (node->type->array_len == -1) {
                     if (!init_list || init_list->init_list.count < 1) {
-                        printf("Infered array must be initialized, and cannot be empty.\n");
+                        printf("Inferred array must be initialized, and cannot be empty.\n");
                         exit(1);
                     }
                     node->type = infer_array_length(node->type, init_list->init_list.count);
@@ -265,7 +267,6 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         semantic_analysis(p, nm, node->var_decl.expr, loop);
         if (node->var_decl.expr->kind == N_LITERAL && node->var_decl.expr->literal.kind == L_STRING) {
             if (node->var_decl.expr->literal.kind == L_STRING) {
-                Node *str = node->var_decl.expr;
                 if (node->type->kind != T_ARRAY && node->type->base == type_char) {
                     printf("Cannot initialize ");
                     print_type(node->type);
@@ -273,7 +274,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
                     exit(1);
                 }
                 // Infer array length
-                if (node->type->array_len == -1) node->type = str->type;
+                if (node->type->array_len == -1) node->type = node->var_decl.expr->type;
             }
         }
         if (node->var_decl.expr->type != node->type) {
@@ -307,7 +308,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         printf("\n");
         exit(1);
     case N_FUNCTION_CALL:
-        Node *func_def = p_get_func_def(p, node->func_call.identifier->identifier.name);
+        const Node *func_def = p_get_func_def(p, node->func_call.identifier->identifier.name);
         if (func_def->func.param_count != node->func_call.param_count) {
             printf("Argument count mismatch: %s expects %d found %d\n", func_def->func.name, func_def->func.param_count,
                    node->func_call.param_count);
@@ -338,7 +339,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             node->type = s->var_decl->type;
             break;
         case TYPEDEF:
-            // Maybe reference a N_TYPE node instead
+            // Maybe reference an N_TYPE node instead
             node->type = s->_typedef.type;
             break;
         case FUNC:
@@ -392,9 +393,9 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             free(data);
             break;
         case L_FLOAT:
-            bool is_float = node->literal.raw_rata[node->literal.len - 1] == 'f';
+            const bool is_float = node->literal.raw_rata[node->literal.len - 1] == 'f';
             node->type = is_float ? type_float : type_double;
-            node->literal.f = atof(data);
+            node->literal.f = parse_float(data, node->literal.len);
             free(data);
             break;
         case L_CHAR:
@@ -420,8 +421,6 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             node->index.index = cast_node(nm, node->index.index, type_long);
         }
         if (node->index.identifier->type->kind != T_POINTER) {
-            Type *base = node->index.identifier->type->base;
-            Node *ident = node->index.identifier;
             Type *pointer_type = get_pointer_type(node->index.identifier->type->base);
             node->index.identifier = cast_node(nm, node->index.identifier, pointer_type);
         }
@@ -460,7 +459,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
                 printf("Can only access members of a struct\n");
                 exit(1);
             }
-            StructField *member = get_member(struct_t, node->member_access.member->identifier.name);
+            const StructField *member = get_member(struct_t, node->member_access.member->identifier.name);
             Type *member_t = member->type;
             node->member_access.member->type = member_t;
             node->member_access.identifier->type = struct_t;
@@ -501,7 +500,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
     }
 }
 
-void lower_enums(NodeManager *nm) {
+void lower_enums(const NodeManager *nm) {
     for (int i = 0; i < nm->count; i++) {
         Node *n = &nm->nodes[i];
         if (n->type->kind == T_ENUM) {

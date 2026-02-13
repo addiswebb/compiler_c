@@ -73,7 +73,7 @@ IR_BINOP_OP ir_binary_op(const TokenType type) {
         exit(1);
     }
 }
-static void print_unary_op(IR_UNARY_OP op) {
+static void print_unary_op(const IR_UNARY_OP op) {
     switch (op) {
     case POS:
         printf("POS");
@@ -96,7 +96,7 @@ static void print_unary_op(IR_UNARY_OP op) {
     }
 }
 
-static void print_binary_op(IR_BINOP_OP op) {
+static void print_binary_op(const IR_BINOP_OP op) {
     switch (op) {
     case ADD:
         printf("ADD");
@@ -136,7 +136,7 @@ static void print_binary_op(IR_BINOP_OP op) {
         break;
     }
 }
-static void print_cmp_op(IR_CMP_OP op) {
+static void print_cmp_op(const IR_CMP_OP op) {
     switch (op) {
     case LT:
         printf("LT");
@@ -159,7 +159,7 @@ static void print_cmp_op(IR_CMP_OP op) {
     }
 }
 
-static const char ir_type_suffix(Type *type) {
+static char ir_type_suffix(Type *type) {
     switch (type->kind) {
     case T_INVALID:
         printf("Tried to print invalid type\n");
@@ -202,8 +202,8 @@ static const char ir_type_suffix(Type *type) {
     }
 }
 
-static void print_ir_const(IR_Context *ctx, const IR_Instruction *instr) {
-    IR_Literal *c = &ctx->module->const_pool.consts[instr->ops[1].const_index];
+static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
+    const IR_Literal *c = &ctx->module->const_pool.consts[instr->ops[1].const_index];
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = CONST ");
@@ -230,7 +230,7 @@ static void print_ir_const(IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_binop(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_binop(const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = BINOP:%c ", ir_type_suffix(instr->binop.type));
@@ -359,7 +359,7 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
         print_ir_const(ctx, instr);
         break;
     case IR_BINOP:
-        print_ir_binop(ctx, instr);
+        print_ir_binop(instr);
         break;
     case IR_LOAD:
         print_ir_load(ctx, instr);
