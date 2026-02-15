@@ -205,6 +205,7 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     
 ## To be Implemented (Ordered from next to never...)
 * Refactor for consistency
+* Ensure correct order of stack spilled function params
 * Variadic Functions
 * Function ABI Calling Conventions
     * SysV ABI
