@@ -6,7 +6,7 @@
 bool is_lvalue(const Node *n);
 bool is_deref(const Node *n);
 
-Type *check_unary_op(const Node *unary_op);
+Type *check_unary_op(NodeManager *nm, Node *unary_op);
 Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop);
 Type *promote_binary_operands(NodeManager *nm, Node *binop);
 void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop);

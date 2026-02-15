@@ -13,7 +13,7 @@
 bool is_lvalue(const Node *n) { return n->kind == N_IDENTIFIER || n->kind == N_INDEX || n->kind == N_MEMBER_ACCESS || is_deref(n); }
 bool is_deref(const Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY; }
 
-Type *check_unary_op(const Node *unary_op) {
+Type *check_unary_op(NodeManager *nm, Node *unary_op) {
     const Node *expr = unary_op->unary.expr;
     const TypeKind kind = expr->type->kind;
     switch (unary_op->unary.op) {
@@ -37,6 +37,9 @@ Type *check_unary_op(const Node *unary_op) {
         printf("Tried to reference a non assignable term\n");
         exit(1);
     case TK_MULTIPLY:
+        if (expr->type->kind == T_ARRAY) {
+            unary_op->unary.expr = cast_node(nm, unary_op->unary.expr, get_pointer_type(expr->type->base));
+        }
         if (expr->type->base && expr->type->base != type_invalid) return expr->type->base;
         printf("Tried to dereference some nonexistent term\n");
         exit(1);
@@ -164,14 +167,13 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             p_append_var_decl(p, node->func.params[i]);
         }
         semantic_analysis(p, nm, node->func.body, loop);
+        p_pop_scope(p);
         if (node->func.storage_class == EXTERN) {
             if (node->func.is_defined) {
                 printf("External Function cannot have a definition\n");
                 exit(1);
             }
-            break;
         }
-        p_pop_scope(p);
         Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC);
         if (func_symbol) {
             if (func_symbol->func_def->func.storage_class == STATIC && node->func.storage_class != STATIC) {
@@ -289,7 +291,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         break;
     case N_UNARY:
         semantic_analysis(p, nm, node->unary.expr, loop);
-        node->type = check_unary_op(node);
+        node->type = check_unary_op(nm, node);
         break;
     case N_BINARY:
         semantic_analysis(p, nm, node->binary.lhs, loop);

@@ -352,7 +352,14 @@ void stack_offset(IR_Value *v, const Lifetime *lts) {
     v->stack_offset = -(lts[v->reg].stack_offset + 8);
 }
 
-void update_values_with_stack_offsets(const IR_Function *f, const Lifetime *lts, const StackSlot *mem_slots) {
+/*
+    Converts virtual stack registers to physical offsets.
+    Converts function param slots to physical registers or offsets.
+    Converts virtual mem slots to physical stack slots.
+
+    Converts ir_store structs to memcpy
+*/
+void lower_for_asm_gen(const IR_Function *f, const Lifetime *lts, const StackSlot *mem_slots) {
     for (int i = 0; i < f->block_count; i++) {
         const IR_Block *b = f->blocks[i];
         for (int j = 0; j < b->count; j++) {
@@ -474,7 +481,7 @@ void analysis(const IR_Context *ctx) {
         linear_stack_slot_allocation(lifetimes, reg_count, &frame_size, &slot_count);
 
         // Update all instances of IR_Value with the correct stack offsets
-        update_values_with_stack_offsets(f, lifetimes, mem_slots);
+        lower_for_asm_gen(f, lifetimes, mem_slots);
 
         // Verify all IR_Values are now of IR_STACK kind,
         verify_completion(f);

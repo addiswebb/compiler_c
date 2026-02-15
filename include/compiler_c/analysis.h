@@ -15,7 +15,7 @@ int bitset_add_defined(const BitSet *defined, const IR_Value *v);
 void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v);
 
 int reg_bitset(const IR_Function *f);
-void update_values_with_stack_offsets(const IR_Function *f, const Lifetime *lts, const StackSlot *mem_slots);
+void lower_for_asm_gen(const IR_Function *f, const Lifetime *lts, const StackSlot *mem_slots);
 void add_successor(IR_Function *func, IR_Block *from, IR_Block *to);
 
 Lifetime *compute_lifetimes(const IR_Function *f, int defined, const int *rpo);

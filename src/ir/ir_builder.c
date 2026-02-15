@@ -141,6 +141,7 @@ IR_Value ir_address(IR_Context *ctx, IR_Value src, int offset) {
     i.op = IR_ADDR;
     i.ops[1] = src;
     i.addr.offset = offset;
+    i.ops[1].offset = offset;
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
     ir_append_instruction(ctx->block, &i);

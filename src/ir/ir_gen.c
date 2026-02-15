@@ -96,6 +96,12 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                 }
                 val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
                                 expr->type);
+            } else if (expr->type->kind == T_STRUCT) {
+                // memcpy for `struct = struct;`
+                addr = ir_address(ctx, addr, 0);
+                IR_Value val_addr = ir_address(ctx, val, 0);
+                ir_memcpy(ctx, val_addr, addr, expr->type->size);
+                return val;
             }
             if (dereference) ir_store_mem(ctx, addr, val, expr->type);
             else ir_store(ctx, addr, val, expr->type);
@@ -378,6 +384,8 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
 
     if (var_decl->type->kind == T_ARRAY) {
         ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
+        // printf("dst: %d\n", dst.kind);
+        dst = ir_address(ctx, dst, 0);
         ir_memcpy(ctx, addr, dst, var_decl->type->size);
     } else {
         ir_store(ctx, dst, addr, var_decl->type);

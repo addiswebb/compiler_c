@@ -8,14 +8,15 @@
 #include <string.h>
 
 static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
+    // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
     switch (instr->ops[1].kind) {
-    case IR_STACK:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rdx");
-        break;
     case IR_LITERAL:
     case IR_GLOBAL:
-    case IR_PHYS_REG:
         x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rdx");
+        break;
+    case IR_STACK:
+    case IR_PHYS_REG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rdx");
         break;
     case IR_VREG:
     case IR_MEM:
@@ -25,11 +26,13 @@ static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     }
 
     switch (instr->ops[0].kind) {
-    case IR_STACK:
     case IR_LITERAL:
     case IR_GLOBAL:
-    case IR_PHYS_REG:
         x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rcx");
+        break;
+    case IR_STACK:
+    case IR_PHYS_REG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rcx");
         break;
     case IR_VREG:
     case IR_MEM:
@@ -37,8 +40,10 @@ static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
         printf("Sanity check failed\n");
         exit(1);
     }
-    fprintf(fp, "    mov $%d, %%r8d\n", instr->memcpy.size);
+    fprintf(fp, "    mov $%d, %%r8\n", instr->memcpy.size);
+    fprintf(fp, "    sub $32, %%rsp\n");
     fprintf(fp, "    call memcpy\n");
+    fprintf(fp, "    add $32, %%rsp\n");
 }
 
 static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr) {

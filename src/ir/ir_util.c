@@ -233,7 +233,7 @@ static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
 static void print_ir_binop(const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
-    printf(" = BINOP:%c ", ir_type_suffix(instr->binop.type));
+    printf(" = BINOP:%c%d ", ir_type_suffix(instr->binop.type), instr->binop.type->size * 8);
     print_ir_value(&instr->ops[1]);
     printf(", ");
     print_ir_value(&instr->ops[2]);
@@ -245,14 +245,14 @@ static void print_ir_binop(const IR_Instruction *instr) {
 static void print_ir_load(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
-    printf(" = LOAD:%c ", ir_type_suffix(instr->load.type));
+    printf(" = LOAD:%c%d ", ir_type_suffix(instr->load.type), instr->load.type->size * 8);
     print_ir_value(&instr->ops[1]);
     printf("\n");
 }
 
 static void print_ir_store_mem(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
-    printf("STORE_MEM:%c ", ir_type_suffix(instr->store.type));
+    printf("STORE_MEM:%c%d ", ir_type_suffix(instr->store.type), instr->store.type->size * 8);
     print_ir_value(&instr->ops[1]);
     printf(" -> ");
     print_ir_value(&instr->ops[0]);
@@ -260,7 +260,7 @@ static void print_ir_store_mem(IR_Context *ctx, const IR_Instruction *instr) {
 }
 static void print_ir_store(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
-    printf("STORE:%c ", ir_type_suffix(instr->store.type));
+    printf("STORE:%c%d ", ir_type_suffix(instr->store.type), instr->store.type->size * 8);
     print_ir_value(&instr->ops[1]);
     printf(" -> ");
     print_ir_value(&instr->ops[0]);
@@ -276,7 +276,8 @@ static void print_ir_ret(IR_Context *ctx, const IR_Instruction *instr) {
 static void print_ir_call(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
-    printf(" = CALL:%c '%s', %d:[ ", ir_type_suffix(instr->call.type), instr->call.callee->name, instr->call.arg_count);
+    printf(" = CALL:%c%d '%s', %d:[ ", ir_type_suffix(instr->call.type), instr->call.type->size * 8, instr->call.callee->name,
+           instr->call.arg_count);
     for (int i = 0; i < instr->call.arg_count; i++) {
         print_type(instr->call.args[i].type);
         printf("=");
@@ -337,7 +338,7 @@ static void print_ir_addr(IR_Context *ctx, const IR_Instruction *instr) {
     print_ir_value(&instr->ops[0]);
     printf(" = ADDR ");
     print_ir_value(&instr->ops[1]);
-    printf("+%d\n", instr->addr.offset);
+    printf("\n");
 }
 
 static void print_ir_alloca(IR_Context *ctx, const IR_Instruction *instr) {
