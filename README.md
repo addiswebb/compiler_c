@@ -191,6 +191,7 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * `struct A {}`
     * Member access using `.` and `->`
     * Padding rules
+    * Nested structs
 *  Enums
     * `enum B {}`
     * Specify value `enum C { ONE = 1, TWO, }`
