@@ -373,7 +373,7 @@ void print_node(const Node *node, const int depth) {
         print_type(node->type);
         printf(", op=");
         print_token_type(node->member_access.op);
-        printf("]\n");
+        printf(", offset=%d]\n", node->member_access.offset);
         print_node(node->member_access.identifier, depth + 1);
         print_node(node->member_access.member, depth + 1);
         break;

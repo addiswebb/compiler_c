@@ -20,8 +20,6 @@ static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         if (expr->unary.op != TK_MULTIPLY) break;
         return ir_gen_rvalue(ctx, expr->unary.expr);
     case N_INDEX:
-        Node deref;
-        deref.kind = N_UNARY;
         Node bin;
         bin.kind = N_BINARY;
         bin.binary.lhs = expr->index.identifier;
@@ -30,14 +28,11 @@ static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         bin.type = expr->index.index->type;
         return ir_gen_rvalue(ctx, &bin);
     case N_MEMBER_ACCESS:
-        // a.b
-        Node *identifier;
-        if (expr->member_access.identifier->kind == N_IDENTIFIER) {
-            identifier = expr->member_access.identifier;
-        } else if (expr->member_access.identifier->kind == N_UNARY && expr->member_access.identifier->unary.op == TK_MULTIPLY) {
-            identifier = expr->member_access.identifier->unary.expr;
-        }
-        return ir_address(ctx, ir_gen_lvalue(ctx, identifier), expr->member_access.offset);
+        IR_Value addr = ir_gen_lvalue(ctx, expr->member_access.identifier);
+        if (!expr->member_access.offset) return addr;
+        IR_Value c =
+            ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){.type = type_long, .i = expr->member_access.offset}), type_long);
+        return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), addr, c, type_void_ptr);
     case N_CAST:
         return ir_gen_rvalue(ctx, expr);
     default:
@@ -98,9 +93,9 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                                 expr->type);
             } else if (expr->type->kind == T_STRUCT) {
                 // memcpy for `struct = struct;`
-                addr = ir_address(ctx, addr, 0);
-                IR_Value val_addr = ir_address(ctx, val, 0);
-                ir_memcpy(ctx, val_addr, addr, expr->type->size);
+                // addr = ir_address(ctx, addr, 0);
+                // IR_Value val_addr = ir_address(ctx, val, 0);
+                ir_memcpy(ctx, val, addr, expr->type->size);
                 return val;
             }
             if (dereference) ir_store_mem(ctx, addr, val, expr->type);

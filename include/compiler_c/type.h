@@ -108,7 +108,7 @@ void append_struct_field(Type *s, StructField *f);
 
 Type struct_type();
 Type enum_type();
-StructField *get_member(Type *t, const char *name);
+StructField *get_member(Type *struct_t, const char *name);
 void print_type(Type* type);
 
 #endif // COMPILER_C_TYPE_H

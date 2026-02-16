@@ -3,6 +3,7 @@
     Tracks any variables added afterwards, and pops them from the IR virtual stack when `ir_end_scope()` is called.
 */
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/ir/ir_builder.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/type.h"
 #include <stdio.h>
@@ -399,12 +400,17 @@ IR_Value ir_value_from_global(IR_Global *g) {
     v.global = g;
     return v;
 }
-IR_Value ir_get_var_reg(const IR_Context *ctx, const char *name) {
+IR_Value ir_get_var_reg(IR_Context *ctx, const char *name) {
     const IR_Function *func = ctx->func;
     for (int i = func->scope_count - 1; i >= 0; i--) {
         for (int j = func->scopes[i].var_count - 1; j >= 0; j--) {
             const int k = func->scopes[i].var_indices[j];
-            if (strcmp(func->locals[k].name, name) == 0) return func->locals[k].reg;
+            if (strcmp(func->locals[k].name, name) == 0) {
+                if (func->locals[k].type->kind == T_STRUCT) {
+                    return ir_address(ctx, func->locals[k].reg, 0);
+                }
+                return func->locals[k].reg;
+            }
         }
     }
     for (int i = 0; i < ctx->module->global_pool.count; i++) {

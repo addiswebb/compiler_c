@@ -145,6 +145,7 @@ void append_struct_field(Type *s, StructField *f) {
     }
     s->size = align(s->size, f->type->align);
     f->offset = s->size;
+    printf("appended %s at offset %d\n", f->name, f->offset);
     s->_struct.fields[s->_struct.count++] = *f;
     s->size += align(f->type->size, f->type->align);
     if (f->type->align > s->align) s->align = f->type->align;
@@ -182,13 +183,13 @@ Type enum_type() {
     return e;
 }
 
-StructField *get_member(Type *t, const char *name) {
-    for (int i = 0; i < t->_struct.count; i++) {
-        if (strcmp(name, t->_struct.fields[i].name) == 0) {
-            return &t->_struct.fields[i];
+StructField *get_member(Type *struct_t, const char *name) {
+    for (int i = 0; i < struct_t->_struct.count; i++) {
+        if (strcmp(name, struct_t->_struct.fields[i].name) == 0) {
+            return &struct_t->_struct.fields[i];
         }
     }
-    printf("No member named \"%s\" in struct %s\n", name, t->_struct.name);
+    printf("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
     exit(1);
 }
 

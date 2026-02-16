@@ -1,15 +1,7 @@
-struct Pair {
-    int a;
-    int b;
-};
-
 int main() {
-    struct Pair p1;
-    p1.a = 4;
-    p1.b = 10;
-
-    struct Pair p2;
-    p2 = p1; // Struct copy
-
-    return p2.a + p2.b; // Expected exit code: 14
+    char str[] = "abc";
+    str[0] = 'z';
+    int nums[3] = {1, 2, 3};
+    nums[1] *= 5;                       // nums[1] = 10
+    return nums[0] + nums[1] + nums[2]; // 1 + 10 + 3 = 14
 }

@@ -172,20 +172,6 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         tk = p_consume(p);
         primary->identifier.name = tk->value;
         primary->identifier.len = tk->size;
-        if (p_peek(p)->type == TK_DOT || p_peek(p)->type == TK_ARROW) {
-            Node *member_access = new_node(nm, N_MEMBER_ACCESS);
-            member_access->member_access.op = p_consume(p)->type;
-            member_access->member_access.identifier = primary;
-            member_access->member_access.member = p_parse_primary_expression(p, nm);
-            if (!(member_access->member_access.member->kind == N_IDENTIFIER ||
-                  member_access->member_access.member->kind == N_MEMBER_ACCESS)) {
-                printf("Expected member identifier got ");
-                print_node(member_access->member_access.member, 0);
-                printf("\n");
-                exit(1);
-            }
-            primary = member_access;
-        }
         break;
     case TK_OPEN_PAREN:
         p_consume_a(p, TK_OPEN_PAREN);
@@ -300,6 +286,19 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
         node->unary.expr = primary;
         primary = node;
     }
+    while (p_peek(p)->type == TK_DOT || p_peek(p)->type == TK_ARROW) {
+        TokenType op = p_consume(p)->type;
+        Token *t = p_consume_a(p, TK_IDENTIFIER);
+        Node *member = new_node(nm, N_IDENTIFIER);
+        member->identifier.name = t->value;
+        member->identifier.len = t->size;
+
+        Node *access = new_node(nm, N_MEMBER_ACCESS);
+        access->member_access.op = op;
+        access->member_access.identifier = primary;
+        access->member_access.member = member;
+        primary = access;
+    }
 
     while (is_binary_operator(p_peek(p)->type) && !p_is_last_token(p) && precedence(p_peek(p)->type) >= min_prec) {
         const int prec = precedence(p_peek(p)->type);
@@ -310,6 +309,7 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
         binary->binary.lhs = primary;
         primary = binary;
     }
+
     return primary;
 }
 

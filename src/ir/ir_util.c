@@ -338,6 +338,9 @@ static void print_ir_addr(IR_Context *ctx, const IR_Instruction *instr) {
     print_ir_value(&instr->ops[0]);
     printf(" = ADDR ");
     print_ir_value(&instr->ops[1]);
+    if (instr->addr.offset > 0) {
+        printf(", +%d", instr->addr.offset);
+    }
     printf("\n");
 }
 
