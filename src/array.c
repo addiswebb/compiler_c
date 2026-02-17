@@ -31,9 +31,9 @@ void *append(Array *arr, const void *element) {
 void pop(Array *arr) { arr->count--; }
 
 void *get(const Array *arr, int index) {
-    if (index < 0 || index >= arr->count) {
-        printf("Index of %d is out of Array bounds of %d\n", index, arr->count);
-        exit(1);
+    if (__builtin_expect(index >= arr->count || index < 0, 0)) {
+        fprintf(stderr, "Index of %d is out of Array bounds of %d\n", index, arr->count);
+        abort();
     }
     return (char *)arr->data + index * arr->element_size;
 }
