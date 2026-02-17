@@ -210,11 +210,9 @@ struct IR_Block {
 
 /* Stores all local variables stored and registers used within a scopes lifetime */
 typedef struct {
-    int var_count;
     int reg_count;
     int stack_pointer;
-    int var_capacity;
-    int *var_indices;
+    Array var_array;
 } IR_Scope;
 
 typedef struct {
@@ -383,6 +381,10 @@ static inline IR_Global * get_global(const IR_Context *ctx, int index){
 }
 static inline IR_Var * get_local(const IR_Function *func, int index){
     return (IR_Var *) get(&func->locals_array, index);
+}
+
+static inline int get_var_index(const IR_Scope *scope, int index){
+    return *(int *)get(&scope->var_array, index);
 }
 
 #endif // COMPILER_C_IR_MODULE_H

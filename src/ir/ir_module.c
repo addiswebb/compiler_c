@@ -69,7 +69,11 @@ void ir_begin_scope(IR_Function *func) {
         printf("Failed to allocate for scope var indices\n");
         exit(1);
     }
-    append(&func->scopes_array, &(IR_Scope){0, 0, func->stack_size, 4, var_indices});
+    IR_Scope s;
+    s.reg_count = 0;
+    s.stack_pointer = func->stack_size;
+    array_init(&s.var_array, 4, sizeof(int));
+    append(&func->scopes_array, &s);
 }
 
 /*
@@ -238,22 +242,8 @@ IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal) {
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
     const IR_Value next_var = ir_next_virtual_slot(func, align(type->size, 8), 8);
     append(&func->locals_array, &(IR_Var){name, next_var, type});
-    if (func->scopes_array.count > 0) {
-        IR_Scope *scope = get_current_scope(func);
-        if (scope->var_count >= scope->var_capacity) {
-            scope->var_capacity *= 2;
-            int *new_var_indices = realloc(scope->var_indices, sizeof(int) * scope->var_capacity);
-            if (!new_var_indices) {
-                printf("Failed to realloc for new scope var indices\n");
-                exit(1);
-            }
-            scope->var_indices = new_var_indices;
-        }
-        scope->var_indices[scope->var_count++] = func->locals_array.count - 1;
-    } else {
-        printf("cooked");
-        exit(1);
-    }
+    int tmp = func->locals_array.count - 1;
+    append(&get_current_scope(func)->var_array, &tmp);
     return next_var;
 }
 
@@ -278,8 +268,8 @@ IR_Value ir_get_var_reg(IR_Context *ctx, const char *name) {
     const IR_Function *func = ctx->func;
     for (int i = func->scopes_array.count - 1; i >= 0; i--) {
         IR_Scope *scope = get_scope(func, i);
-        for (int j = scope->var_count - 1; j >= 0; j--) {
-            const int k = scope->var_indices[j];
+        for (int j = scope->var_array.count - 1; j >= 0; j--) {
+            const int k = get_var_index(scope, j);
             IR_Var *local = get_local(func, k);
             if (strcmp(local->name, name) == 0) {
                 if (local->type->kind == T_STRUCT) {
