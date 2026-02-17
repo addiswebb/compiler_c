@@ -82,7 +82,7 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     IR_Instruction i;
     i.op = IR_CALL;
     i.call.callee = ir_get_func_def(ctx, expr->func_call.identifier->identifier.name);
-    i.call.arg_count = expr->func_call.param_count;
+    i.call.arg_count = expr->func_call.params_array.count;
     i.call.args = malloc(sizeof(IR_Var) * i.call.arg_count);
     i.call.type = expr->type;
     if (!i.call.args) {
@@ -90,8 +90,9 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
         exit(1);
     }
     for (int j = 0; j < i.call.arg_count; j++) {
-        i.call.args[j].reg = ir_gen_rvalue(ctx, expr->func_call.params[j]);
-        i.call.args[j].type = expr->func_call.params[j]->type;
+        Node *param = get_node(&expr->func_call.params_array, j);
+        i.call.args[j].reg = ir_gen_rvalue(ctx, param);
+        i.call.args[j].type = param->type;
         i.call.args[j].name = NULL;
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);

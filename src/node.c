@@ -268,7 +268,7 @@ void print_node(const Node *node, const int depth) {
         }
         break;
     case N_FUNCTION:
-        printf(": [name= %s, param_count= %d, return_type= ", node->func.name, node->func.param_count);
+        printf(": [name= %s, param_count= %d, return_type= ", node->func.name, node->func.params_array.count);
         print_type(node->type);
         printf(", has_initializer=");
         if (node->func.has_initializer) printf("true");
@@ -276,11 +276,12 @@ void print_node(const Node *node, const int depth) {
         if (node->func.storage_class == EXTERN) printf(", extern");
         if (node->func.storage_class == STATIC) printf(", static");
         printf("]");
-        if (node->func.param_count > 0) {
+        if (node->func.params_array.count > 0) {
             printf(" { ");
-            for (int i = 0; i < node->func.param_count; i++) {
-                print_type(node->func.params[i]->type);
-                printf(" %s ", node->func.params[i]->var_decl.identifier->identifier.name);
+            for (int i = 0; i < node->func.params_array.count; i++) {
+                Node *param = get_node(&node->func.params_array, i);
+                print_type(param->type);
+                printf(" %s ", param->var_decl.identifier->identifier.name);
             }
             printf("}");
         }
@@ -330,9 +331,9 @@ void print_node(const Node *node, const int depth) {
         print_node(node->_for.block, depth + 1);
         break;
     case N_FUNCTION_CALL:
-        printf(": [name: %s, param_count: %d]\n", node->func_call.identifier->identifier.name, node->func_call.param_count);
-        for (int i = 0; i < node->func_call.param_count; i++) {
-            print_node(node->func_call.params[i], depth + 1);
+        printf(": [name: %s, param_count: %d]\n", node->func_call.identifier->identifier.name, node->func_call.params_array.count);
+        for (int i = 0; i < node->func_call.params_array.count; i++) {
+            print_node(get_node(&node->func_call.params_array, i), depth + 1);
         }
         break;
     case N_UNARY:

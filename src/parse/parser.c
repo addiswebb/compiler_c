@@ -222,27 +222,15 @@ Node *new_init_list_node(NodeManager *nm) {
 
 Node *new_function_node(NodeManager *nm) {
     Node *node = new_node(nm, N_FUNCTION);
+    array_init(&node->func.params_array, 4, sizeof(Node **));
     node->func.body = NULL;
-    node->func.param_count = 0;
-    node->func.param_capacity = 4;
-    node->func.params = malloc(sizeof(Node) * node->func.param_capacity);
     node->func.type = NULL;
-    if (!node->func.params) {
-        printf("Failed to create new function node\n");
-        exit(1);
-    }
     return node;
 }
 Node *new_function_call_node(NodeManager *nm, Node *identifier) {
     Node *node = new_node(nm, N_FUNCTION_CALL);
     node->func_call.identifier = identifier;
-    node->func_call.param_capacity = 4;
-    node->func_call.param_count = 0;
-    node->func_call.params = malloc(sizeof(Node) * node->func_call.param_capacity);
-    if (!node->func_call.params) {
-        printf("Failed to create new function call node\n");
-        exit(1);
-    }
+    array_init(&node->func_call.params_array, 4, sizeof(Node *));
     return node;
 }
 
@@ -427,31 +415,15 @@ void p_append_block_item(Node *root, Node *item) {
 }
 
 void p_append_param(Node *func, Node *param) {
-    if (func->func.param_count >= func->func.param_capacity) {
-        func->func.param_capacity *= 2;
-        func->func.params = realloc(func->func.params, sizeof(Node *) * func->func.param_capacity);
-        if (!func->func.params) {
-            printf("Failed to append params");
-            exit(1);
-        }
-    }
     if (param != NULL) {
-        func->func.params[func->func.param_count++] = param;
+        append(&func->func.params_array, &param);
+    } else {
+        printf("Recieved a NULL param node to append\n");
+        exit(1);
     }
 }
 
-void p_add_call_param(Node *func, Node *param) {
-    if (func->func_call.param_count >= func->func_call.param_capacity) {
-        func->func_call.param_capacity *= 2;
-        Node **new_params = realloc(func->func_call.params, sizeof(Node *) * func->func_call.param_capacity);
-        if (!new_params) {
-            printf("Failed to realloc new params for func call\n");
-            exit(1);
-        }
-        func->func_call.params = new_params;
-    }
-    func->func_call.params[func->func_call.param_count++] = param;
-}
+void p_add_call_param(Node *func, Node *param) { append(&func->func_call.params_array, &param); }
 
 Symbol *p_append_symbol(Array *st, const Symbol *s) { return (Symbol *)append(st, s); }
 

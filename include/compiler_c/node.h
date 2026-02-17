@@ -4,6 +4,7 @@
 #include "type.h"
 #include "tokenizer.h"
 #include <stdint.h>
+#include <string.h>
 
 typedef enum {
     N_TRANSLATION_UNIT,
@@ -59,9 +60,7 @@ struct Node {
         struct {
             Node *type;
             const char *name;
-            int param_count;
-            int param_capacity;
-            Node **params;
+            Array params_array;
             Node *body;
             StorageClass storage_class;
             bool has_initializer;
@@ -140,9 +139,7 @@ struct Node {
         // identifier(params*)
         struct {
             Node *identifier;
-            int param_count;
-            int param_capacity;
-            Node **params;
+            Array params_array;
         } func_call;
         // (int)0.5
         struct {
@@ -232,4 +229,7 @@ void print_node(const Node *node,int depth);
 void print_ast(const NodeManager *nm);
 
 static inline Node *get_node(const Array *node_array, int index) { return *(Node **)get(node_array, index); }
+static inline void set_node(const Array *node_array, Node** node, int index) {
+    memcpy((char*)node_array->data + index * node_array->element_size, node, sizeof(Node *));
+}
 #endif // COMPILER_C_NODE_H
