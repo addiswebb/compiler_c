@@ -203,7 +203,7 @@ static char ir_type_suffix(Type *type) {
 }
 
 static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
-    const IR_Literal *c = &ctx->module->const_pool.consts[instr->ops[1].const_index];
+    const IR_Literal *c = get_const(ctx, instr->ops[1].const_index);
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = CONST ");

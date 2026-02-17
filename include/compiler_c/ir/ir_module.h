@@ -236,13 +236,6 @@ typedef struct {
 } IR_Function;
 
 
-/* Global const pool array, stores all literals in a dynamic array. */
-typedef struct{
-    int count;
-    int capacity;
-    IR_Literal *consts;
-}IR_Const_Pool;
-
 /* Global global variable pool, stores definitions in a global array. */
 typedef struct{
     int count;
@@ -258,7 +251,7 @@ typedef struct {
     IR_Func_Def *func_defs;
     int func_def_count;
     int func_def_capacity;
-    IR_Const_Pool const_pool;
+    Array const_array;
     IR_Global_Pool global_pool;
 } IR_Module;
 
@@ -381,6 +374,10 @@ static inline IR_Scope * get_scope(const IR_Function *func, int index){
 
 static inline IR_Block * get_block(const IR_Function *func, int index){
     return *(IR_Block**) get(&func->blocks_array, index);
+}
+
+static inline IR_Literal * get_const(const IR_Context *ctx, int index){
+    return (IR_Literal*) get(&ctx->module->const_array, index);
 }
 
 #endif // COMPILER_C_IR_MODULE_H

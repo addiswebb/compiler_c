@@ -116,6 +116,8 @@ IR_Module *ir_new_module() {
         printf("Failed to allocate new IR module\n");
         exit(1);
     }
+    array_init(&module->const_array, 4, sizeof(IR_Literal));
+
     module->func_capacity = 4;
     module->func_count = 0;
     module->functions = malloc(sizeof(IR_Function *) * module->func_capacity);
@@ -133,16 +135,6 @@ IR_Module *ir_new_module() {
         free(module);
         exit(1);
     }
-    module->const_pool.capacity = 4;
-    module->const_pool.count = 0;
-    module->const_pool.consts = malloc(sizeof(IR_Literal) * module->const_pool.capacity);
-    if (!module->const_pool.consts) {
-        printf("Failed to allocate IR module const pool\n");
-        free(module->func_defs);
-        free(module->functions);
-        free(module);
-        exit(1);
-    }
     module->global_pool.capacity = 4;
     module->global_pool.count = 0;
     module->global_pool.globals = malloc(sizeof(IR_Literal) * module->global_pool.capacity);
@@ -150,7 +142,7 @@ IR_Module *ir_new_module() {
         printf("Failed to allocate IR module const pool\n");
         free(module->func_defs);
         free(module->functions);
-        free(module->const_pool.consts);
+        array_free(&module->const_array);
         free(module);
         exit(1);
     }
@@ -260,19 +252,10 @@ void ir_append_global(IR_Module *module, const char *name, Type *type, const IR_
     };
 }
 IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal) {
-    if (module->const_pool.count >= module->const_pool.capacity) {
-        module->const_pool.capacity *= 2;
-        IR_Literal *new_consts = realloc(module->const_pool.consts, sizeof(IR_Literal) * module->const_pool.capacity);
-        if (!new_consts) {
-            printf("Failed to reallocate for new ir_consts\n");
-            exit(1);
-        }
-        module->const_pool.consts = new_consts;
-    }
-    module->const_pool.consts[module->const_pool.count] = *literal;
+    append(&module->const_array, literal);
     IR_Value v;
     v.kind = IR_LITERAL;
-    v.const_index = module->const_pool.count++;
+    v.const_index = module->const_array.count - 1;
     v.size = literal->type->size;
     v.align = literal->type->align;
     return v;

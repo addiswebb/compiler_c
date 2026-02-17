@@ -56,7 +56,7 @@ static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
     x86_emit_cast(fp, &instr->ops[1], &instr->ops[0], instr->cast.from, instr->cast.to);
 }
 static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
-    IR_Literal *c = &ctx->module->const_pool.consts[instr->ops[1].const_index];
+    IR_Literal *c = get_const(ctx, instr->ops[1].const_index);
     x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
 }
 static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { x86_emit_call(fp, ctx, instr); }
@@ -174,10 +174,10 @@ static void x86_gen_function(FILE *fp, IR_Context *ctx) {
 }
 void x86_gen_module(FILE *fp, IR_Context *ctx) {
     // Const floats/strings
-    if (ctx->module->const_pool.count > 0) {
+    if (ctx->module->const_array.count > 0) {
         fprintf(fp, ".section .rodata\n");
-        for (int i = 0; i < ctx->module->const_pool.count; i++) {
-            const IR_Literal *c = &ctx->module->const_pool.consts[i];
+        for (int i = 0; i < ctx->module->const_array.count; i++) {
+            const IR_Literal *c = get_const(ctx, i);
             if (c->type == type_double) {
                 uint64_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));

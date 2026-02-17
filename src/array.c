@@ -14,7 +14,7 @@ void array_init(Array *arr, int initial_capacity, int element_size) {
     arr->count = 0;
 }
 
-void *append(Array *arr, void *element) {
+void *append(Array *arr, const void *element) {
     if (arr->count >= arr->capacity) {
         arr->capacity *= 2;
         void *new_data = realloc(arr->data, arr->element_size * arr->capacity);
