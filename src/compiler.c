@@ -111,8 +111,8 @@ int compile(Compiler *compiler) {
         analysis(&ctx);
 
         if (compiler->flags & COMP_FLAG_IR) {
-            for (int i = 0; i < module->func_count; i++) {
-                print_cfg(module->functions[i]);
+            for (int i = 0; i < module->functions_array.count; i++) {
+                print_cfg(get_func(module, i));
             }
             print_ir_module(&ctx, module);
         }

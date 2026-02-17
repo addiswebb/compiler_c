@@ -230,8 +230,8 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
     }
 
     fprintf(fp, "\n.text\n\n");
-    for (int i = 0; i < ctx->module->func_count; i++) {
-        ctx->func = ctx->module->functions[i];
+    for (int i = 0; i < ctx->module->functions_array.count; i++) {
+        ctx->func = get_func(ctx->module, i);
         x86_gen_function(fp, ctx);
     }
 }

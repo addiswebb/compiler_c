@@ -123,15 +123,8 @@ IR_Module *ir_new_module() {
     array_init(&module->const_array, 4, sizeof(IR_Literal));
     array_init(&module->global_array, 4, sizeof(IR_Global));
     array_init(&module->func_defs_array, 4, sizeof(IR_Func_Def));
+    array_init(&module->functions_array, 4, sizeof(IR_Function *));
 
-    module->func_capacity = 4;
-    module->func_count = 0;
-    module->functions = malloc(sizeof(IR_Function *) * module->func_capacity);
-    if (module->functions == NULL) {
-        printf("Failed to allocate IR module functions\n");
-        free(module);
-        exit(1);
-    }
     return module;
 }
 
@@ -285,23 +278,15 @@ IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const b
     return (IR_Func_Def *)append(&ctx->module->func_defs_array, &(IR_Func_Def){.name = name, .index = -1, .is_defined = is_defined});
 }
 void ir_append_function(const IR_Context *ctx, IR_Func_Def *func_def, IR_Function *func) {
-    if (ctx->module->func_count >= ctx->module->func_capacity) {
-        ctx->module->func_capacity *= 2;
-        IR_Function **new_functions = realloc(ctx->module->functions, sizeof(IR_Function *) * ctx->module->func_capacity);
-        if (!new_functions) {
-            printf("Failed to realloc ir functions\n");
-            exit(1);
-        }
-        ctx->module->functions = new_functions;
-    }
-    func_def->index = ctx->module->func_count;
+    func_def->index = ctx->module->functions_array.count;
     func_def->is_defined = true;
-    ctx->module->functions[ctx->module->func_count++] = func;
+    append(&ctx->module->functions_array, &func);
 }
 
 void ir_free_module(IR_Module *module) {
-    for (int i = 0; i < module->func_count; i++) {
-        IR_Function *func = module->functions[i];
+    for (int i = 0; i < module->functions_array.count; i++) {
+        // IR_Function *func = module->functions[i];
+        IR_Function *func = get_func(module, i);
         for (int j = 0; j < func->blocks_array.count; j++) {
             array_free(&get_block(func, j)->instruction_array);
         }
@@ -310,6 +295,7 @@ void ir_free_module(IR_Module *module) {
         array_free(&func->scopes_array);
         free(func);
     }
-    free(module->functions);
+    array_free(&module->functions_array);
+    array_free(&module->func_defs_array);
     free(module);
 }

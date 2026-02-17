@@ -241,9 +241,7 @@ typedef struct{
 
 /* Root of the intermediate representation of a source file. */
 typedef struct {
-    IR_Function **functions;
-    int func_count;
-    int func_capacity;
+    Array functions_array;
     Array func_defs_array;
     Array const_array;
     Array global_array;
@@ -387,5 +385,9 @@ static inline int get_var_index(const IR_Scope *scope, int index){
 
 static inline IR_Func_Def * get_func_def(const IR_Context *ctx, int index){
     return (IR_Func_Def*) get(&ctx->module->func_defs_array, index);
+}
+
+static inline IR_Function * get_func(const IR_Module *module, int index){
+    return *(IR_Function**) get(&module->functions_array, index);
 }
 #endif // COMPILER_C_IR_MODULE_H

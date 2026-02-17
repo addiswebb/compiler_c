@@ -428,8 +428,8 @@ StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size, const 
 }
 
 void analysis(const IR_Context *ctx) {
-    for (int i = 0; i < ctx->module->func_count; i++) {
-        IR_Function *f = ctx->module->functions[i];
+    for (int i = 0; i < ctx->module->functions_array.count; i++) {
+        IR_Function *f = get_func(ctx->module, i);
         // Initialize Control Flow Graph Variables per block
         ir_init_func_cfg(f);
         // Compute Function dependencies (successors, predecessors)

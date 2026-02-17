@@ -422,8 +422,8 @@ static void print_ir_function(IR_Context *ctx, const IR_Function *func) {
 }
 
 void print_ir_module(IR_Context *ctx, const IR_Module *module) {
-    for (int i = 0; i < module->func_count; i++) {
-        print_ir_function(ctx, module->functions[i]);
+    for (int i = 0; i < module->functions_array.count; i++) {
+        print_ir_function(ctx, get_func(module, i));
     }
 }
 
