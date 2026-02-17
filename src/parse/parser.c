@@ -18,19 +18,13 @@ void init_parser(Parser *p, Array *src, const int size) {
     p->src = src;
     p->index = 0;
     p->expect_semi = true;
-    array_init(&p->scopes_array, 4, sizeof(SymbolTable));
+    array_init(&p->scopes_array, 4, sizeof(Array));
     p_append_symbol_table(p);
 }
 
 void p_append_symbol_table(Parser *p) {
-    SymbolTable st; //= &p->scope_stack[p->scope_stack_count++];
-    st.count = 0;
-    st.capacity = 4;
-    st.symbols = malloc(sizeof(Symbol) * st.capacity);
-    if (!st.symbols) {
-        printf("Failed to alloc for new symbol table\n");
-        exit(1);
-    }
+    Array st;
+    array_init(&st, 4, sizeof(Symbol));
     append(&p->scopes_array, &st);
 }
 
@@ -497,25 +491,15 @@ void p_add_call_param(Node *func, Node *param) {
     func->func_call.params[func->func_call.param_count++] = param;
 }
 
-Symbol *p_append_symbol(SymbolTable *st, const Symbol *s) {
-    if (st->count >= st->capacity) {
-        st->capacity *= 2;
-        Symbol *new_symbols = realloc(st->symbols, sizeof(Symbol) * st->capacity);
-        if (!new_symbols) {
-            printf("Failed to realloc for symbol table size: %d\n", st->capacity);
-            exit(1);
-        }
-        st->symbols = new_symbols;
-    }
-    st->symbols[st->count++] = *s;
-    return &st->symbols[st->count - 1];
-}
+Symbol *p_append_symbol(Array *st, const Symbol *s) { return (Symbol *)append(st, s); }
+
 Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind) {
     for (int i = p->scopes_array.count - 1; i >= 0; i--) {
-        SymbolTable *st = get_symbol_table(p, i);
+        Array *st = get_symbol_table(p, i);
         for (int j = 0; j < st->count; j++) {
-            if ((kind == ANY || st->symbols[j].kind == kind) && strcmp(st->symbols[j].name, name) == 0) {
-                return &st->symbols[j];
+            Symbol *symbol = get_symbol(st, j);
+            if ((kind == ANY || symbol->kind == kind) && strcmp(symbol->name, name) == 0) {
+                return symbol;
             }
         }
     }
@@ -537,11 +521,11 @@ Node *p_get_func_def(const Parser *p, const char *name) {
 
 void p_append_typedef(Parser *p, const Typedef *t) {
     p_append_symbol(get_current_symbol_table(p), &(Symbol){.name = t->new_def,
-                                                       .kind = TYPEDEF,
-                                                       .linkage = LINK_NONE,
-                                                       .storage = STORAGE_NONE,
-                                                       ._typedef = *t,
-                                                       .scope_depth = p->scopes_array.count - 1});
+                                                           .kind = TYPEDEF,
+                                                           .linkage = LINK_NONE,
+                                                           .storage = STORAGE_NONE,
+                                                           ._typedef = *t,
+                                                           .scope_depth = p->scopes_array.count - 1});
 }
 Symbol *p_append_func_def(Parser *p, Node *f) {
     if (p->scopes_array.count > 2) {
@@ -553,11 +537,11 @@ Symbol *p_append_func_def(Parser *p, Node *f) {
     // if defined -> text, otherwise none
     Storage storage = STORAGE_TEXT;
     return p_append_symbol(get_current_symbol_table(p), &(Symbol){.name = f->func.name,
-                                                              .kind = FUNC,
-                                                              .linkage = linkage,
-                                                              .storage = storage,
-                                                              .func_def = f,
-                                                              .scope_depth = p->scopes_array.count - 1});
+                                                                  .kind = FUNC,
+                                                                  .linkage = linkage,
+                                                                  .storage = storage,
+                                                                  .func_def = f,
+                                                                  .scope_depth = p->scopes_array.count - 1});
 }
 Symbol *p_append_var_decl(Parser *p, Node *v) {
     Linkage linkage = LINK_NONE;
@@ -573,19 +557,19 @@ Symbol *p_append_var_decl(Parser *p, Node *v) {
         if (v->var_decl.storage_class == STATIC) linkage = LINK_INTERNAL;
     }
     return p_append_symbol(get_current_symbol_table(p), &(Symbol){.name = v->var_decl.identifier->identifier.name,
-                                                              .kind = VAR,
-                                                              .linkage = linkage,
-                                                              .storage = storage,
-                                                              .var_decl = v,
-                                                              .scope_depth = p->scopes_array.count - 1});
+                                                                  .kind = VAR,
+                                                                  .linkage = linkage,
+                                                                  .storage = storage,
+                                                                  .var_decl = v,
+                                                                  .scope_depth = p->scopes_array.count - 1});
 }
 void p_append_enum_const(Parser *p, const EnumField *e) {
     p_append_symbol(get_current_symbol_table(p), &(Symbol){.name = e->name,
-                                                       .kind = ENUM,
-                                                       .linkage = LINK_NONE,
-                                                       .storage = STORAGE_NONE,
-                                                       .enum_field = *e,
-                                                       .scope_depth = p->scopes_array.count - 1});
+                                                           .kind = ENUM,
+                                                           .linkage = LINK_NONE,
+                                                           .storage = STORAGE_NONE,
+                                                           .enum_field = *e,
+                                                           .scope_depth = p->scopes_array.count - 1});
 }
 
 void p_append_element(Node *init_list, Node *element) {
@@ -724,9 +708,10 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
 
 Node *current_func_definition(const Parser *p) {
     for (int i = p->scopes_array.count - 1; i >= 0; i--) {
-        SymbolTable *st = get_symbol_table(p, i);
+        Array *st = get_symbol_table(p, i);
         for (int j = 0; j < st->count; j++) {
-            if (st->symbols[j].kind == FUNC) return st->symbols[i].func_def;
+            Symbol *symbol = get_symbol(st, j);
+            if (symbol->kind == FUNC) return symbol->func_def;
         }
     }
     printf("Cannot return outside of a function\n");
@@ -805,7 +790,7 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
 
 void p_push_scope(Parser *p) { p_append_symbol_table(p); }
 void p_pop_scope(Parser *p) {
-    free(get_current_symbol_table(p)->symbols);
+    array_free(get_current_symbol_table(p));
     pop(&p->scopes_array);
 }
 

@@ -49,12 +49,6 @@ typedef struct Symbol{
     };
 }Symbol;
 
-typedef struct{
-    int count;
-    int capacity;
-    Symbol *symbols;
-}SymbolTable;
-
 typedef struct {
     int index;
     int size;
@@ -72,7 +66,7 @@ Is End of token array?
 */
 bool p_is_last_token(const Parser *p);
 
-Symbol *p_append_symbol(SymbolTable *st, const Symbol *s);
+Symbol *p_append_symbol(Array *st, const Symbol *s);
 Token *p_peek_n(const Parser *p, int n);
 Token *p_peek(const Parser *p);
 Token *p_peek_next(const Parser *p);
@@ -234,9 +228,10 @@ Node *current_func_definition(const Parser *p);
 bool is_type_token(const Parser *p, const Token *t);
 Type *token_to_type(const Parser *p, const Token *t);
 
-static inline SymbolTable* get_symbol_table(const Parser *p, int index){
-    return (SymbolTable*) get(&p->scopes_array, index);
+static inline Array * get_symbol_table(const Parser *p, int index){
+    return (Array*) get(&p->scopes_array, index);
 }
 
-static inline SymbolTable *get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count-1); }
+static inline Array *get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count-1); }
+static inline Symbol *get_symbol(Array *symbol_table, int index) { return (Symbol *)get(symbol_table, index); }
 #endif // COMPILER_C_PARSER_H
