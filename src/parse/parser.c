@@ -13,7 +13,7 @@
 
 Parser new_parser() { return (Parser){0}; }
 
-void init_parser(Parser *p, TokenArray *src, const int size) {
+void init_parser(Parser *p, Array *src, const int size) {
     p->size = size;
     p->src = src;
     p->index = 0;
@@ -54,20 +54,20 @@ Is End of token array?
 bool p_is_last_token(const Parser *p) { return p->index >= p->size; }
 
 Token *p_peek_n(const Parser *p, const int n) {
-    if (p->index + n > p->src->size) {
+    if (p->index + n > p->src->count) {
         printf("P_peek_n Tried peeking past eof\n");
         return NULL;
     }
-    return &p->src->data[p->index + n];
+    return get_token(p->src, p->index + n);
 }
 Token *p_peek(const Parser *p) { return p_peek_n(p, 0); }
 Token *p_peek_next(const Parser *p) { return p_peek_n(p, 1); }
 Token *p_consume_n(Parser *p, const int n) {
-    if (p->index + n > p->src->size) {
-        printf("P_consume_n %d Reached the end of the token list %d/%d\n", n, p->index, p->src->size);
+    if (p->index + n > p->src->count) {
+        printf("P_consume_n %d Reached the end of the token list %d/%d\n", n, p->index, p->src->count);
         return NULL;
     }
-    Token *token = &p->src->data[p->index];
+    Token *token = get_token(p->src, p->index);
     p->index += n;
     if (DEBUG_CONSUME) print_token(token);
     return token;
@@ -83,7 +83,7 @@ void p_skip(Parser *p) { p_consume_n(p, 1); }
 */
 void p_expect(const Parser *p, const TokenType expected_type) {
     if (!p_is_last_token(p)) {
-        const TokenType token_type = p->src->data[p->index].type;
+        const TokenType token_type = get_token(p->src, p->index)->type;
         if (token_type != expected_type) {
             printf("Expected ");
             print_token_type(expected_type);

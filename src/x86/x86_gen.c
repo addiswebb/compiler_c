@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
@@ -152,8 +153,8 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
     }
 }
 static void x86_gen_block(FILE *fp, IR_Context *ctx) {
-    for (int i = 0; i < ctx->block->count; i++) {
-        x86_gen_instruction(fp, ctx, &ctx->block->instructions[i]);
+    for (int i = 0; i < ctx->block->instruction_array.count; i++) {
+        x86_gen_instruction(fp, ctx, get_instruction(&ctx->block->instruction_array, i));
     }
 }
 static void x86_gen_function(FILE *fp, IR_Context *ctx) {
@@ -165,9 +166,9 @@ static void x86_gen_function(FILE *fp, IR_Context *ctx) {
     fprintf(fp, "    push %%rbp\n");
     fprintf(fp, "    mov %%rsp, %%rbp\n");
     fprintf(fp, "    subq $%d, %%rsp\n", aligned_stack_size);
-    for (int i = 0; i < ctx->func->block_count; i++) {
+    for (int i = 0; i < ctx->func->blocks_array.count; i++) {
         fprintf(fp, "%s_%d:\n", ctx->func->name, i);
-        ctx->block = ctx->func->blocks[i];
+        ctx->block = get_block(ctx->func, i);
         x86_gen_block(fp, ctx);
     }
 }

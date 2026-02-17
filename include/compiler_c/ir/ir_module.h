@@ -203,9 +203,7 @@ typedef struct{
 /* IR Function component, stores an array of instructions. Handles virtual register livesness and control graph data. */
 struct IR_Block {
     int id;
-    IR_Instruction *instructions;
-    int count;
-    int capacity;
+    Array instruction_array;
     IR_BlockCFG cfg;
     IR_BlockLiveness live;
 };
@@ -221,18 +219,14 @@ typedef struct {
 
 typedef struct {
     const char *name;
-    IR_Block **blocks;
-    int block_count;
-    int block_capacity;
+    Array blocks_array;
     int next_reg;
     int max_reg;
     int stack_size;
     IR_Var *locals;
     int local_count;
     int local_capacity;
-    IR_Scope *scopes;
-    int scope_count;
-    int scope_capacity;
+    Array scopes_array;
     StackSlot *stack_slots;
     int stack_slot_count;
     int stack_slot_capacity;
@@ -289,7 +283,7 @@ typedef struct{
     IR_Module *module;
     IR_Function *func;
     IR_Block *block;
-    IR_LoopStack loop_stack;
+    Array loop_stack_array;
     IR_Block *true_block;
     IR_Block *false_block;
 } IR_Context;
@@ -307,8 +301,6 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx,const Node *tu);
 void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block*break_block);
 /* Pop off the top of the loopstack. */
 void ir_pop_loop_ctx(IR_Context *ctx);
-/* Retrieve the current LoopContext, which lies at the top of the loopstack. */
-IR_LoopContext *ir_loop_ctx(const IR_Context *ctx);
 
 /* Returns an IR Mem Value using the `mem_reg` mem slot. */
 IR_Value ir_mem_value(int mem_reg, const Type *type);
@@ -354,8 +346,6 @@ IR_Block *ir_add_block(IR_Context *ctx);
     FuncDef is also defined at this point.
 */
 void ir_append_function(const IR_Context *ctx,IR_Func_Def *func_def, IR_Function *func);
-/* Appends the given IR Instruction to the given block's dynamic instruction array.*/
-void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction);
 /* Appends the given global variable to the module's global dynamic variable array. */
 void ir_append_global(IR_Module *module, const char *name, Type *type, const IR_Literal *literal, Linkage linkage, Storage storage);
 /* Appends the given Literal to the module's dynamic const array. */
@@ -363,7 +353,6 @@ IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal);
 /* Appends the given IR Block to the context's current function. */
 IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
 
-/* Returns the IR FuncDef corresponding to the given function name. */
 IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);
 /*
     Retrieves the IR Value corresponding to the given variable name.
@@ -372,5 +361,26 @@ IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);
 */
 IR_Value ir_get_var_reg(IR_Context *ctx, const char *name);
 /* Gets the most recently added block of a function. */
+
+static inline IR_Instruction *get_instruction(const Array *arr, int index){
+    return (IR_Instruction *) get(arr, index);
+}
+
+/* Retrieve the current LoopContext, which lies at the top of the loopstack. */
+static inline IR_LoopContext * ir_loop_ctx(const IR_Context *ctx){
+    return (IR_LoopContext*) get(&ctx->loop_stack_array, ctx->loop_stack_array.count-1);
+}
+
+static inline IR_Scope * get_current_scope(const IR_Function *func){
+    return (IR_Scope*) get(&func->scopes_array, func->scopes_array.count - 1);
+}
+
+static inline IR_Scope * get_scope(const IR_Function *func, int index){
+    return (IR_Scope*) get(&func->scopes_array, index);
+}
+
+static inline IR_Block * get_block(const IR_Function *func, int index){
+    return *(IR_Block**) get(&func->blocks_array, index);
+}
 
 #endif // COMPILER_C_IR_MODULE_H

@@ -1,4 +1,5 @@
 #include "compiler_c/tokenizer.h"
+#include "compiler_c/array.h"
 #include "compiler_c/util.h"
 
 #include <stdio.h>
@@ -13,41 +14,6 @@ static void t_buffer_reset(Tokenizer *tk) {
     tk->buf.size = 0;
     memset(tk->buf.buf, 0, sizeof(tk->buf.buf));
 }
-void ta_init(TokenArray *arr) {
-    arr->capacity = 16;
-    arr->data = malloc(sizeof(Token) * arr->capacity);
-    if (!arr->data) {
-        printf("Failed to allocate token array\n");
-        exit(1);
-    }
-    arr->size = 0;
-}
-
-int ta_push(TokenArray *arr, const Token tk) {
-    if (arr->size >= arr->capacity) {
-        // Resize array
-        const int new_capacity = arr->capacity * 2;
-        Token *new_data = realloc(arr->data, sizeof(Token) * new_capacity);
-        if (!new_data) {
-            printf("Failed to reallocate token array\n");
-            exit(1);
-        }
-        arr->capacity = new_capacity;
-        arr->data = new_data;
-    }
-    arr->data[arr->size++] = tk;
-    return 1;
-}
-
-void ta_free(TokenArray *arr) {
-    for (int i = 0; i < arr->size; i++) {
-        free(arr->data[i].value);
-    }
-    free(arr->data);
-    arr->data = NULL;
-    arr->size = 0;
-    arr->capacity = 0;
-}
 
 Tokenizer t_new_tokenizer(const char *src, const int src_size) {
     Tokenizer tokenizer;
@@ -57,7 +23,7 @@ Tokenizer t_new_tokenizer(const char *src, const int src_size) {
 
     t_buffer_reset(&tokenizer);
     tokenizer.buf.size = 0;
-    ta_init(&tokenizer.tokens);
+    array_init(&tokenizer.tokens_array, 16, sizeof(Token));
     return tokenizer;
 }
 
@@ -65,7 +31,7 @@ void t_free(Tokenizer *tokenizer) {
     tokenizer->src = NULL;
     tokenizer->index = 0;
     tokenizer->size = 0;
-    ta_free(&tokenizer->tokens);
+    array_free(&tokenizer->tokens_array);
 }
 
 /*
@@ -130,7 +96,7 @@ static void t_push_buffer(Tokenizer *tk, const TokenType type) {
         exit(1);
     }
     memcpy(buf_dupe, tk->buf.buf, sizeof(char) * tk->buf.size);
-    ta_push(&tk->tokens, (Token){type, buf_dupe, tk->buf.size});
+    append(&tk->tokens_array, &(Token){type, buf_dupe, tk->buf.size});
     if (DEBUG_TOKENIZER) {
         printf("Buf: %.10s\n", tk->buf.buf);
     }
@@ -155,7 +121,7 @@ static void t_parse_and_push_buffer(Tokenizer *tk) {
         token.type = TK_IDENTIFIER;
         token.value = _strdup(tk->buf.buf);
     }
-    ta_push(&tk->tokens, token);
+    append(&tk->tokens_array, &token);
 }
 
 static void t_skip_comments(Tokenizer *tk) {

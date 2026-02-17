@@ -26,6 +26,7 @@ add_executable(compiler_c
     src/ir/ir_module.c
     src/sema.c
     src/analysis.c
+    src/array.c
 )
 
 target_include_directories(compiler_c

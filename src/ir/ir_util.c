@@ -408,16 +408,16 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
 }
 
 static void print_ir_block(IR_Context *ctx, const IR_Block *block) {
-    for (int i = 0; i < block->count; i++) {
-        print_ir_instruction(ctx, &block->instructions[i]);
+    for (int i = 0; i < block->instruction_array.count; i++) {
+        print_ir_instruction(ctx, get_instruction(&block->instruction_array, i));
     }
 }
 
 static void print_ir_function(IR_Context *ctx, const IR_Function *func) {
     printf("%s: [max_reg: %d]\n ", func->name, func->max_reg);
-    for (int i = 0; i < func->block_count; i++) {
+    for (int i = 0; i < func->blocks_array.count; i++) {
         printf("L%d:\n", i);
-        print_ir_block(ctx, func->blocks[i]);
+        print_ir_block(ctx, get_block(func, i));
     }
 }
 

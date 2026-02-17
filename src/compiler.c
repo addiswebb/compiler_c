@@ -92,7 +92,7 @@ int compile(Compiler *compiler) {
     init_types();
     t_tokenize(&compiler->tk);
 
-    init_parser(&compiler->p, &compiler->tk.tokens, compiler->tk.tokens.size);
+    init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
 
     semantic_analysis(&compiler->p, &compiler->nm, &compiler->nm.nodes[0], NULL);

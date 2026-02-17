@@ -1,6 +1,7 @@
 #ifndef COMPILER_C_TOKENIZER_H
 #define COMPILER_C_TOKENIZER_H
 
+#include "compiler_c/array.h"
 #include <stdbool.h>
 
 #define DEBUG_TOKENIZER 0
@@ -101,7 +102,8 @@ typedef struct {
     const char *src;
     int index;
     int size;
-    TokenArray tokens;
+    // TokenArray tokens;
+    Array tokens_array;
     Buffer buf;
 } Tokenizer;
 
@@ -116,12 +118,6 @@ Tokenizer t_new_tokenizer(const char *src, int src_size);
 void t_free(Tokenizer *tokenizer);
 /* Converts the tokenizer's source file into tokens in the token array. */
 void t_tokenize(Tokenizer *tk);
-
-/* Initialize a token array. */
-void ta_init(TokenArray *arr);
-/* Appends a token to the given token array. */
-int ta_push(TokenArray *arr, const Token tk);
-void ta_free(TokenArray *arr);
 
 bool is_unary_operator(const TokenType type);
 bool is_binary_operator(const TokenType type);
@@ -145,4 +141,7 @@ int op_precedence(TokenType type);
 
 void print_token_type(TokenType type);
 void print_token(const Token *token);
+
+static inline Token *get_token(Array *arr, int index) { return (Token *)get(arr, index); }
+
 #endif // COMPILER_C_TOKENIZER_H

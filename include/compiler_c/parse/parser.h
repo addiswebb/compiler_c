@@ -58,7 +58,7 @@ typedef struct{
 typedef struct {
     int index;
     int size;
-    TokenArray *src;
+    Array *src;
     bool expect_semi;
     int scope_stack_count;
     int scope_stack_capacity;
@@ -66,7 +66,7 @@ typedef struct {
 } Parser;
 
 Parser new_parser();
-void init_parser(Parser *p,TokenArray* src, int size);
+void init_parser(Parser *p, Array* src, int size);
 void p_append_symbol_table(Parser *p);
 
 /*
