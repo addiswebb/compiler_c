@@ -91,7 +91,7 @@ IR_Value ir_next_virtual_slot(const IR_Function *func, const int size, const int
     v.kind = IR_MEM;
     v.size = size;
     v.align = align;
-    v.mem = func->local_count;
+    v.mem = func->locals_array.count;
     v.offset = 0;
     return v;
 }
@@ -180,21 +180,13 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
     }
     array_init(&func->scopes_array, 4, sizeof(IR_Scope));
     array_init(&func->blocks_array, 4, sizeof(IR_Block *));
+    array_init(&func->locals_array, 4, sizeof(IR_Var));
+
     func->name = name;
     func->next_reg = 0;
     func->max_reg = 0;
     func->param_count = 0;
     func->stack_size = 0;
-
-    func->local_capacity = 4;
-    func->local_count = 0;
-    func->locals = malloc(sizeof(IR_Var) * func->local_capacity);
-    if (!func->locals) {
-        printf("Failed to allocated IR_Locals\n");
-        array_free(&func->blocks_array);
-        free(func);
-        exit(1);
-    }
 
     func->stack_slot_capacity = 4;
     func->stack_slot_count = 0;
@@ -202,7 +194,8 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
     if (!func->stack_slots) {
         printf("Failed to allocated IR_Stack_Objects\n");
         array_free(&func->blocks_array);
-        free(func->locals);
+        array_free(&func->scopes_array);
+        array_free(&func->locals_array);
         free(func->stack_slots);
         free(func);
         exit(1);
@@ -243,17 +236,8 @@ IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal) {
 }
 
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
-    if (func->local_count >= func->local_capacity) {
-        func->local_capacity *= 2;
-        IR_Var *new_locals = realloc(func->locals, sizeof(IR_Var) * func->local_capacity);
-        if (!new_locals) {
-            printf("Failed to allocated for new local variable");
-            exit(1);
-        }
-        func->locals = new_locals;
-    }
     const IR_Value next_var = ir_next_virtual_slot(func, align(type->size, 8), 8);
-    func->locals[func->local_count++] = (IR_Var){name, next_var, type};
+    append(&func->locals_array, &(IR_Var){name, next_var, type});
     if (func->scopes_array.count > 0) {
         IR_Scope *scope = get_current_scope(func);
         if (scope->var_count >= scope->var_capacity) {
@@ -265,7 +249,7 @@ IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
             }
             scope->var_indices = new_var_indices;
         }
-        scope->var_indices[scope->var_count++] = func->local_count - 1;
+        scope->var_indices[scope->var_count++] = func->locals_array.count - 1;
     } else {
         printf("cooked");
         exit(1);
@@ -296,11 +280,12 @@ IR_Value ir_get_var_reg(IR_Context *ctx, const char *name) {
         IR_Scope *scope = get_scope(func, i);
         for (int j = scope->var_count - 1; j >= 0; j--) {
             const int k = scope->var_indices[j];
-            if (strcmp(func->locals[k].name, name) == 0) {
-                if (func->locals[k].type->kind == T_STRUCT) {
-                    return ir_address(ctx, func->locals[k].reg, 0);
+            IR_Var *local = get_local(func, k);
+            if (strcmp(local->name, name) == 0) {
+                if (local->type->kind == T_STRUCT) {
+                    return ir_address(ctx, local->reg, 0);
                 }
-                return func->locals[k].reg;
+                return local->reg;
             }
         }
     }
@@ -348,7 +333,7 @@ void ir_free_module(IR_Module *module) {
         for (int j = 0; j < func->blocks_array.count; j++) {
             array_free(&get_block(func, j)->instruction_array);
         }
-        free(func->locals);
+        array_free(&func->locals_array);
         array_free(&func->blocks_array);
         array_free(&func->scopes_array);
         free(func);

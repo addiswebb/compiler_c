@@ -407,14 +407,15 @@ void verify_completion(const IR_Function *f) {
 }
 
 StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size, const int *slot_count) {
-    StackSlot *mem_slots = malloc(sizeof(StackSlot) * f->local_count);
+    StackSlot *mem_slots = malloc(sizeof(StackSlot) * f->locals_array.count);
     if (!mem_slots) {
         printf("Failed to allocate memslots\n");
         exit(1);
     }
-    for (int j = 0; j < f->local_count; j++) {
-        const Type *t = f->locals[j].type;
-        const int k = f->locals[j].reg.mem;
+    for (int j = 0; j < f->locals_array.count; j++) {
+        IR_Var *local = get_local(f, j);
+        const Type *t = local->type;
+        const int k = local->reg.mem;
         mem_slots[k].size = align(t->size, 8);
         mem_slots[k].align = 8;
         mem_slots[k].id = *slot_count;

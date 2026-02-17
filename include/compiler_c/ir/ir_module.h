@@ -223,9 +223,7 @@ typedef struct {
     int next_reg;
     int max_reg;
     int stack_size;
-    IR_Var *locals;
-    int local_count;
-    int local_capacity;
+    Array locals_array;
     Array scopes_array;
     StackSlot *stack_slots;
     int stack_slot_count;
@@ -382,6 +380,9 @@ static inline IR_Literal * get_const(const IR_Context *ctx, int index){
 
 static inline IR_Global * get_global(const IR_Context *ctx, int index){
     return (IR_Global*) get(&ctx->module->global_array, index);
+}
+static inline IR_Var * get_local(const IR_Function *func, int index){
+    return (IR_Var *) get(&func->locals_array, index);
 }
 
 #endif // COMPILER_C_IR_MODULE_H
