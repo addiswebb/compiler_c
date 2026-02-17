@@ -63,9 +63,7 @@ struct Type{
         struct{
             char *name;
             bool complete;
-            int count;
-            int capacity;
-            StructMember* members;
+            Array members_array;
         }_struct;
         // T_ENUM
         struct{
@@ -134,7 +132,7 @@ Type *infer_array_length(Type *arr_type, int len);
 /* Appends the given enum field, sizing its array if needed */
 void append_enum_field(Type *e, EnumField *f);
 /* Appends the given struct field, sizing its array if needed */
-void append_struct_field(Type *s, StructMember *f);
+void append_struct_member(Type *s, StructMember *f);
 
 /* Helper for defining struct types */
 Type struct_type();

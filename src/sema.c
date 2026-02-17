@@ -253,7 +253,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
                 }
                 break;
             case T_STRUCT:
-                if (init_list->init_list.elements_array.count > node->type->_struct.count) {
+                if (init_list->init_list.elements_array.count > node->type->_struct.members_array.count) {
                     printf("Expected initializer list of length %d for ", node->type->_array.array_len);
                     print_type(node->type);
                     printf(", got %d\n", init_list->init_list.elements_array.count);
@@ -262,8 +262,9 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
                 for (int i = 0; i < init_list->init_list.elements_array.count; i++) {
                     Node *e = get_node(&init_list->init_list.elements_array, i);
                     semantic_analysis(p, nm, e, loop);
-                    if (e->type != node->type->_struct.members[i].type) {
-                        Node *casted_node = cast_node(nm, e, node->type->_struct.members[i].type);
+                    Type *member_type = get_struct_member(node->type, i)->type;
+                    if (e->type != member_type) {
+                        Node *casted_node = cast_node(nm, e, member_type);
                         set_node(&init_list->init_list.elements_array, &casted_node, i);
                     }
                 }

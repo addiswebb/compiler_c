@@ -125,20 +125,10 @@ Type *get_struct_type(const char *name) {
 
 void append_enum_field(Type *e, EnumField *f) { append(&e->_enum.fields_array, f); }
 
-void append_struct_field(Type *s, StructMember *f) {
-    if (s->_struct.count >= s->_struct.capacity) {
-        s->_struct.capacity *= 2;
-        StructMember *new_fields = realloc(s->_struct.members, sizeof(StructMember) * s->_struct.capacity);
-        if (!new_fields) {
-            printf("Failed to reallocated for struct fields\n");
-            exit(1);
-        }
-        s->_struct.members = new_fields;
-    }
+void append_struct_member(Type *s, StructMember *f) {
     s->size = align(s->size, f->type->align);
     f->offset = s->size;
-    printf("appended %s at offset %d\n", f->name, f->offset);
-    s->_struct.members[s->_struct.count++] = *f;
+    append(&s->_struct.members_array, f);
     s->size += align(f->type->size, f->type->align);
     if (f->type->align > s->align) s->align = f->type->align;
 }
@@ -153,9 +143,10 @@ Type struct_type() {
     s.is_signed = 0;
     s._struct.complete = false;
     s._struct.name = NULL;
-    s._struct.capacity = 0;
-    s._struct.count = 0;
-    s._struct.members = NULL;
+    s._struct.members_array.capacity = 0;
+    s._struct.members_array.count = 0;
+    s._struct.members_array.element_size = -1;
+    s._struct.members_array.data = NULL;
     return s;
 }
 
@@ -177,10 +168,9 @@ Type enum_type() {
 }
 
 StructMember *get_member(Type *struct_t, const char *name) {
-    for (int i = 0; i < struct_t->_struct.count; i++) {
-        if (strcmp(name, struct_t->_struct.members[i].name) == 0) {
-            return &struct_t->_struct.members[i];
-        }
+    for (int i = 0; i < struct_t->_struct.members_array.count; i++) {
+        StructMember *member = get_struct_member(struct_t, i);
+        if (strcmp(name, member->name) == 0) return member;
     }
     printf("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
     exit(1);
@@ -238,9 +228,10 @@ void print_type(Type *type) {
         printf("struct %s ", type->_struct.name);
         if (DEBUG_STRUCT_DETAILED) {
             printf("{");
-            for (int i = 0; i < type->_struct.count; i++) {
-                print_type(type->_struct.members[i].type);
-                printf(" %s, ", type->_struct.members[i].name);
+            for (int i = 0; i < type->_struct.members_array.count; i++) {
+                StructMember *member = get_struct_member(type, i);
+                print_type(member->type);
+                printf(" %s, ", member->name);
             }
             printf("}");
         }
@@ -269,10 +260,11 @@ void print_struct_type(Type *s) {
     }
     if (s->_struct.complete) {
         printf(" {\n");
-        for (int i = 0; i < s->_struct.count; i++) {
+        for (int i = 0; i < s->_struct.members_array.count; i++) {
+            StructMember *member = get_struct_member(s, i);
             printf("    ");
-            print_type(s->_struct.members[i].type);
-            printf("; [%d]\n", s->_struct.members[i].offset);
+            print_type(member->type);
+            printf("; [%d]\n", member->offset);
         }
         printf("}\n");
     }

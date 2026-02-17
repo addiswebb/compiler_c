@@ -235,4 +235,5 @@ static inline Array * get_symbol_table(const Parser *p, int index){
 static inline Array *get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count-1); }
 static inline Symbol *get_symbol(Array *symbol_table, int index) { return (Symbol *)get(symbol_table, index); }
 static inline EnumField *get_enum_field(Type *enum_t, int index) { return (EnumField*)get(&enum_t->_enum.fields_array, index); }
+static inline StructMember *get_struct_member(Type *struct_t, int index) { return (StructMember *)get(&struct_t->_struct.members_array, index); }
 #endif // COMPILER_C_PARSER_H

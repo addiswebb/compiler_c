@@ -5,6 +5,7 @@
 
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
+#include "compiler_c/parse/parser.h"
 #include "compiler_c/sema.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
@@ -352,7 +353,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
 
     if (var_decl->var_decl.expr->kind == N_INIT_LIST) {
         bool is_array = var_decl->type->kind == T_ARRAY;
-        int len = is_array ? var_decl->type->_array.array_len : var_decl->type->_struct.count;
+        int len = is_array ? var_decl->type->_array.array_len : var_decl->type->_struct.members_array.count;
 
         Node *l = var_decl->var_decl.expr;
         Type *type;
@@ -363,14 +364,18 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
             zero = ir_append_const(ctx->module, &(IR_Literal){type, 0});
         }
         for (int i = 0; i < len; i++) {
-            if (!is_array) type = var_decl->type->_struct.members[i].type;
+            dst.offset = type->align * i;
+            if (!is_array) {
+                StructMember *member = get_struct_member(var_decl->type, i);
+                type = member->type;
+                dst.offset = member->offset;
+            }
             Node *e = get_node(&l->init_list.elements_array, i);
             if (i < l->init_list.elements_array.count) v = ir_gen_rvalue(ctx, e);
             else {
                 if (!is_array) zero = ir_append_const(ctx->module, &(IR_Literal){e->type, 0});
                 v = ir_const(ctx, zero, type);
             }
-            dst.offset = is_array ? type->align * i : var_decl->type->_struct.members[i].offset;
             ir_store(ctx, dst, v, type);
         }
         return;

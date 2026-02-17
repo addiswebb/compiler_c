@@ -358,19 +358,14 @@ Type *p_parse_struct(Parser *p, NodeManager *nm) {
         struct_t._struct.name = p_consume(p)->value;
     }
     if (p_peek(p)->type == TK_OPEN_CURLY) {
-        struct_t._struct.capacity = 4;
-        struct_t._struct.members = malloc(sizeof(StructMember) * struct_t._struct.capacity);
-        if (!struct_t._struct.members) {
-            printf("Failed to allocate for struct fields\n");
-            exit(1);
-        }
+        array_init(&struct_t._struct.members_array, 4, sizeof(StructMember));
         p_consume(p); // {
         while (p_peek(p)->type != TK_CLOSE_CURLY) {
             StructMember f;
             Type *t = p_parse_type(p, nm);
             f.name = p_consume_a(p, TK_IDENTIFIER)->value;
             f.type = t;
-            append_struct_field(&struct_t, &f);
+            append_struct_member(&struct_t, &f);
             p_consume_semi(p);
         }
         p_consume(p); // }
