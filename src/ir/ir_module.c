@@ -122,21 +122,13 @@ IR_Module *ir_new_module() {
     }
     array_init(&module->const_array, 4, sizeof(IR_Literal));
     array_init(&module->global_array, 4, sizeof(IR_Global));
+    array_init(&module->func_defs_array, 4, sizeof(IR_Func_Def));
 
     module->func_capacity = 4;
     module->func_count = 0;
     module->functions = malloc(sizeof(IR_Function *) * module->func_capacity);
     if (module->functions == NULL) {
         printf("Failed to allocate IR module functions\n");
-        free(module);
-        exit(1);
-    }
-    module->func_def_capacity = 4;
-    module->func_def_count = 0;
-    module->func_defs = malloc(sizeof(IR_Func_Def) * module->func_def_capacity);
-    if (module->func_defs == NULL) {
-        printf("Failed to allocate IR module function definitions\n");
-        free(module->functions);
         free(module);
         exit(1);
     }
@@ -248,9 +240,10 @@ IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
 }
 
 IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name) {
-    for (int i = 0; i < ctx->module->func_def_count; i++) {
-        if (strcmp(ctx->module->func_defs[i].name, name) == 0) {
-            return &ctx->module->func_defs[i];
+    for (int i = 0; i < ctx->module->func_defs_array.count; i++) {
+        IR_Func_Def *func_def = get_func_def(ctx, i);
+        if (strcmp(func_def->name, name) == 0) {
+            return func_def;
         }
     }
     return NULL;
@@ -289,18 +282,7 @@ IR_Value ir_get_var_reg(IR_Context *ctx, const char *name) {
 }
 
 IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined) {
-    if (ctx->module->func_def_count >= ctx->module->func_def_capacity) {
-        ctx->module->func_def_capacity *= 2;
-        IR_Func_Def *new_func_defs = realloc(ctx->module->func_defs, sizeof(IR_Func_Def) * ctx->module->func_def_capacity);
-        if (!new_func_defs) {
-            printf("Failed to realloc func_defs\n");
-            exit(1);
-        }
-        ctx->module->func_defs = new_func_defs;
-    }
-    ctx->module->func_defs[ctx->module->func_def_count] = (IR_Func_Def){.name = name, .index = -1, .is_defined = is_defined};
-    ;
-    return &ctx->module->func_defs[ctx->module->func_def_count++];
+    return (IR_Func_Def *)append(&ctx->module->func_defs_array, &(IR_Func_Def){.name = name, .index = -1, .is_defined = is_defined});
 }
 void ir_append_function(const IR_Context *ctx, IR_Func_Def *func_def, IR_Function *func) {
     if (ctx->module->func_count >= ctx->module->func_capacity) {
