@@ -162,9 +162,7 @@ struct Node {
         }_continue;
         // { [element]+ }
         struct{
-            int count;
-            int capacity;
-            Node **elements;
+            Array elements_array;
         }init_list;
         // a->b, a.b
         struct{
@@ -177,9 +175,7 @@ struct Node {
         struct{
             Node *test;
             Node *block;
-            Node **cases;
-            int count;
-            int capacity;
+            Array cases_array;
         }_switch;
         // case test:
         struct{

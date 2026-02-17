@@ -232,37 +232,39 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             case T_ARRAY:
                 // Infer the size from the initializer list
                 if (node->type->_array.array_len == -1) {
-                    if (!init_list || init_list->init_list.count < 1) {
+                    if (!init_list || init_list->init_list.elements_array.count < 1) {
                         printf("Inferred array must be initialized, and cannot be empty.\n");
                         exit(1);
                     }
-                    node->type = infer_array_length(node->type, init_list->init_list.count);
-                } else if (node->type->_array.array_len < init_list->init_list.count) {
+                    node->type = infer_array_length(node->type, init_list->init_list.elements_array.count);
+                } else if (node->type->_array.array_len < init_list->init_list.elements_array.count) {
                     printf("Expected initializer list of length %d for ", node->type->_array.array_len);
                     print_type(node->type);
-                    printf(", got %d\n", init_list->init_list.count);
+                    printf(", got %d\n", init_list->init_list.elements_array.count);
                     exit(1);
                 }
-                for (int i = 0; i < init_list->init_list.count; i++) {
-                    Node *e = init_list->init_list.elements[i];
+                for (int i = 0; i < init_list->init_list.elements_array.count; i++) {
+                    Node *e = get_node(&init_list->init_list.elements_array, i);
                     semantic_analysis(p, nm, e, loop);
                     if (e->type != node->type->base) {
-                        init_list->init_list.elements[i] = cast_node(nm, e, node->type->base);
+                        Node *casted_node = cast_node(nm, e, node->type->base);
+                        set_node(&init_list->init_list.elements_array, &casted_node, i);
                     }
                 }
                 break;
             case T_STRUCT:
-                if (init_list->init_list.count > node->type->_struct.count) {
+                if (init_list->init_list.elements_array.count > node->type->_struct.count) {
                     printf("Expected initializer list of length %d for ", node->type->_array.array_len);
                     print_type(node->type);
-                    printf(", got %d\n", init_list->init_list.count);
+                    printf(", got %d\n", init_list->init_list.elements_array.count);
                     exit(1);
                 }
-                for (int i = 0; i < init_list->init_list.count; i++) {
-                    Node *e = init_list->init_list.elements[i];
+                for (int i = 0; i < init_list->init_list.elements_array.count; i++) {
+                    Node *e = get_node(&init_list->init_list.elements_array, i);
                     semantic_analysis(p, nm, e, loop);
                     if (e->type != node->type->_struct.members[i].type) {
-                        init_list->init_list.elements[i] = cast_node(nm, e, node->type->_struct.members[i].type);
+                        Node *casted_node = cast_node(nm, e, node->type->_struct.members[i].type);
+                        set_node(&init_list->init_list.elements_array, &casted_node, i);
                     }
                 }
                 break;
@@ -446,8 +448,8 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         break;
     case N_TYPE:
         if (node->type->kind == T_ENUM) {
-            for (int i = 0; i < node->type->_enum.count; i++) {
-                p_append_enum_const(p, &node->type->_enum.fields[i]);
+            for (int i = 0; i < node->type->_enum.fields_array.count; i++) {
+                p_append_enum_const(p, get_enum_field(node->type, i));
             }
         }
         break;

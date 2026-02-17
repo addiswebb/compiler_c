@@ -1,4 +1,6 @@
 #include "compiler_c/type.h"
+#include "compiler_c/array.h"
+#include "compiler_c/parse/parser.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -121,18 +123,8 @@ Type *get_struct_type(const char *name) {
     return NULL;
 }
 
-void append_enum_field(Type *e, EnumField *f) {
-    if (e->_enum.count >= e->_enum.capacity) {
-        e->_enum.capacity *= 2;
-        EnumField *new_fields = realloc(e->_enum.fields, sizeof(StructMember) * e->_enum.capacity);
-        if (!new_fields) {
-            printf("Failed to reallocated for struct fields\n");
-            exit(1);
-        }
-        e->_enum.fields = new_fields;
-    }
-    e->_enum.fields[e->_struct.count++] = *f;
-}
+void append_enum_field(Type *e, EnumField *f) { append(&e->_enum.fields_array, f); }
+
 void append_struct_field(Type *s, StructMember *f) {
     if (s->_struct.count >= s->_struct.capacity) {
         s->_struct.capacity *= 2;
@@ -177,9 +169,10 @@ Type enum_type() {
     e.is_signed = true;
     e._enum.complete = false;
     e._enum.name = NULL;
-    e._enum.capacity = 0;
-    e._enum.count = 0;
-    e._enum.fields = NULL;
+    e._enum.fields_array.capacity = 0;
+    e._enum.fields_array.count = 0;
+    e._enum.fields_array.element_size = -1;
+    e._enum.fields_array.data = NULL;
     return e;
 }
 
@@ -256,8 +249,9 @@ void print_type(Type *type) {
         printf("enum %s ", type->_enum.name);
         if (DEBUG_ENUM_DETAILED) {
             printf("{");
-            for (int i = 0; i < type->_enum.count; i++) {
-                printf(" %s = %d, ", type->_enum.fields[i].name, type->_enum.fields[i].value);
+            for (int i = 0; i < type->_enum.fields_array.count; i++) {
+                EnumField *field = get_enum_field(type, i);
+                printf(" %s = %d, ", field->name, field->value);
             }
             printf("}");
         }

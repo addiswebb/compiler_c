@@ -365,9 +365,9 @@ void print_node(const Node *node, const int depth) {
         printf("\n");
         break;
     case N_INIT_LIST:
-        printf(": [count= %d]\n", node->init_list.count);
-        for (int i = 0; i < node->init_list.count; i++) {
-            print_node(node->init_list.elements[i], depth + 1);
+        printf(": [count= %d]\n", node->init_list.elements_array.count);
+        for (int i = 0; i < node->init_list.elements_array.count; i++) {
+            print_node(get_node(&node->init_list.elements_array, i), depth + 1);
         }
         break;
     case N_MEMBER_ACCESS:
@@ -380,7 +380,7 @@ void print_node(const Node *node, const int depth) {
         print_node(node->member_access.member, depth + 1);
         break;
     case N_SWITCH:
-        printf(": [cases= %d]\n", node->_switch.count);
+        printf(": [cases= %d]\n", node->_switch.cases_array.count);
         print_node(node->_switch.test, depth + 1);
         print_node(node->_switch.block, depth + 1);
         break;

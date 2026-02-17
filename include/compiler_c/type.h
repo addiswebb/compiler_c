@@ -2,6 +2,7 @@
 #define COMPILER_C_TYPE_H
 
 /* Include enum fields when printing an enum type */
+#include "compiler_c/array.h"
 #define DEBUG_ENUM_DETAILED 0
 /* Include struct members when printing an enum type */
 #define DEBUG_STRUCT_DETAILED 0
@@ -61,18 +62,16 @@ struct Type{
         // T_STRUCT
         struct{
             char *name;
+            bool complete;
             int count;
             int capacity;
             StructMember* members;
-            bool complete;
         }_struct;
         // T_ENUM
         struct{
             char *name;
-            int count;
-            int capacity;
-            EnumField *fields;
             bool complete;
+            Array fields_array;
         }_enum;
     };
 };

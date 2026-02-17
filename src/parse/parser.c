@@ -210,13 +210,7 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
 }
 Node *new_init_list_node(NodeManager *nm) {
     Node *node = new_node(nm, N_INIT_LIST);
-    node->init_list.count = 0;
-    node->init_list.capacity = 4;
-    node->init_list.elements = malloc(sizeof(Node) * node->init_list.capacity);
-    if (!node->init_list.elements) {
-        printf("Failed to create new init list node\n");
-        exit(1);
-    }
+    array_init(&node->init_list.elements_array, 4, sizeof(Node *));
     return node;
 }
 
@@ -315,12 +309,7 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
         enum_t._enum.name = p_consume(p)->value;
     }
     if (p_peek(p)->type == TK_OPEN_CURLY) {
-        enum_t._enum.capacity = 4;
-        enum_t._enum.fields = malloc(sizeof(EnumField) * enum_t._enum.capacity);
-        if (!enum_t._enum.fields) {
-            printf("Failed to allocate for enum fields\n");
-            exit(1);
-        }
+        array_init(&enum_t._enum.fields_array, 4, sizeof(EnumField));
         p_consume(p); // {
         int val = 0;
         while (p_peek(p)->type != TK_CLOSE_CURLY) {
@@ -352,10 +341,11 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
         }
         return s;
     } else {
+        // Add it to the type pool, at &t
         Type *t = new_type();
         *t = enum_t;
-        for (int i = 0; i < enum_t._enum.count; i++) {
-            enum_t._enum.fields[i]._enum_t = t;
+        for (int i = 0; i < enum_t._enum.fields_array.count; i++) {
+            get_enum_field(&enum_t, i)->_enum_t = t;
         }
         return t;
     }
@@ -506,18 +496,8 @@ void p_append_enum_const(Parser *p, const EnumField *e) {
                                                            .scope_depth = p->scopes_array.count - 1});
 }
 
-void p_append_element(Node *init_list, Node *element) {
-    if (init_list->init_list.count >= init_list->init_list.capacity) {
-        init_list->init_list.capacity *= 2;
-        Node **new_elements = realloc(init_list->init_list.elements, sizeof(Node *) * init_list->init_list.capacity);
-        if (!new_elements) {
-            printf("Failed to append element to init_list\n");
-            exit(1);
-        }
-        init_list->init_list.elements = new_elements;
-    }
-    init_list->init_list.elements[init_list->init_list.count++] = element;
-}
+void p_append_element(Node *init_list, Node *element) { append(&init_list->init_list.elements_array, &element); }
+
 Node *p_get_var_decl(const Parser *p, const char *name) {
     const Symbol *s = p_get_symbol(p, name, VAR);
     if (s) return s->var_decl;
@@ -578,28 +558,13 @@ Node *p_parse_case(Parser *p, NodeManager *nm) {
 }
 
 void p_append_case(Node *s, Node *c) {
-    if (s->_switch.count >= s->_switch.capacity) {
-        s->_switch.capacity *= 2;
-        Node **new_cases = realloc(s->_switch.cases, sizeof(Node *) * s->_switch.capacity);
-        if (!new_cases) {
-            printf("Failed to realloc for switch cases\n");
-            exit(1);
-        }
-        s->_switch.cases = new_cases;
-    }
     c->_case.i = s->_switch.block->compound.items_array.count;
-    s->_switch.cases[s->_switch.count++] = c;
+    append(&s->_switch.cases_array, &c);
 }
 
 Node *p_parse_switch_statement(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_SWITCH);
-    node->_switch.capacity = 4;
-    node->_switch.count = 0;
-    node->_switch.cases = malloc(sizeof(Node *) * node->_switch.capacity);
-    if (!node->_switch.cases) {
-        printf("Failed to alloc for switch cases\n");
-        exit(1);
-    }
+    array_init(&node->_switch.cases_array, 4, sizeof(Node *));
 
     p_consume_a(p, TK_SWITCH);
     p_consume_a(p, TK_OPEN_PAREN);
@@ -797,6 +762,7 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const Sto
             p_consume_semi(p);
             return type_decl;
         }
+        // TODO: this assumes .complete is at the same offset for _enum
         if (!type_decl->type->_struct.complete) {
             printf("Cannot instantiate an incomplete type\n");
             exit(1);

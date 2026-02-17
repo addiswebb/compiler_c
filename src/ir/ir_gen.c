@@ -230,8 +230,8 @@ static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
 }
 static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
     IR_Value test = ir_gen_rvalue(ctx, _switch->_switch.test);
-    if (_switch->_switch.count == 0) return;
-    IR_Block **cases = malloc(sizeof(IR_Block *) * _switch->_switch.count);
+    if (_switch->_switch.cases_array.count == 0) return;
+    IR_Block **cases = malloc(sizeof(IR_Block *) * _switch->_switch.cases_array.count);
     if (!cases) {
         printf("Failed to allocate for ir_gen_switch cases\n");
         exit(1);
@@ -239,11 +239,12 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
     IR_Block *default_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
     int block_index = 0;
-    for (int i = 0; i < _switch->_switch.count; i++) {
+    for (int i = 0; i < _switch->_switch.cases_array.count; i++) {
         // Is a case x:
-        if (_switch->_switch.cases[i]->_case.test) {
+        Node *_case = get_node(&_switch->_switch.cases_array, i);
+        if (_case->_case.test) {
             cases[block_index++] = ir_new_block();
-            IR_Value test_case = ir_gen_rvalue(ctx, _switch->_switch.cases[i]->_case.test);
+            IR_Value test_case = ir_gen_rvalue(ctx, _case->_case.test);
             IR_Value cmp_reg = ir_cmp(ctx, NEQ, test, test_case);
             // branch for fallthrough to the next test.
             ir_branch_cond(ctx, cmp_reg, NULL, cases[block_index - 1]);
@@ -363,8 +364,8 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
         }
         for (int i = 0; i < len; i++) {
             if (!is_array) type = var_decl->type->_struct.members[i].type;
-            Node *e = l->init_list.elements[i];
-            if (i < l->init_list.count) v = ir_gen_rvalue(ctx, e);
+            Node *e = get_node(&l->init_list.elements_array, i);
+            if (i < l->init_list.elements_array.count) v = ir_gen_rvalue(ctx, e);
             else {
                 if (!is_array) zero = ir_append_const(ctx->module, &(IR_Literal){e->type, 0});
                 v = ir_const(ctx, zero, type);
