@@ -464,5 +464,3 @@ void ir_free_module(IR_Module *module) {
     free(module->functions);
     free(module);
 }
-
-IR_Block *current_block(const IR_Function *func) { return func->blocks[func->block_count - 1]; }

@@ -124,6 +124,7 @@ typedef struct{
 extern IR_OpInfo op_info[];
 typedef struct IR_Block IR_Block;
 
+/* Serves as a map between function names and the index into IR_Module's functions array of the actual function. */
 typedef struct{
     const char *name;
     int index;
@@ -331,20 +332,45 @@ IR_Value ir_next_virtual_reg(IR_Function *func);
 /* Initializes IR Module, and functions, func_defs, globals, and consts arrays. */
 IR_Module *ir_new_module();
 
+/* Creates a new IR Function with initialized blocks, locals, scopes and stack slots arrays. */
 IR_Function *ir_new_function(IR_Context *ctx,const char *name);
+/*
+    Appends a function definition to the global array.
+    At this point the FuncDef is a placeholder. Its actual index is -1/ undefined.
+    If it is defined, immediately after, its index will be updated.
+    Otherwise it gets updated when a defined N_Function node is lowered.
+*/
 IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, bool is_defined);
+/* Generates an IR Mem Value for the variable. Also appends it to the current scope.  */
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
-IR_Block *ir_new_block();
 
+/* Creates a new empty IR Block and initializes its instructions array. */
+IR_Block *ir_new_block();
+/* Handles creating a new block and appending it to the current function's blocks array. */
 IR_Block *ir_add_block(IR_Context *ctx);
+/*
+    Appends the IR Function to the modules function array.
+    Also handles updating the corresponding IR FuncDef with the correct index into the function array,
+    FuncDef is also defined at this point.
+*/
 void ir_append_function(const IR_Context *ctx,IR_Func_Def *func_def, IR_Function *func);
+/* Appends the given IR Instruction to the given block's dynamic instruction array.*/
 void ir_append_instruction(IR_Block *block, const IR_Instruction *instruction);
+/* Appends the given global variable to the module's global dynamic variable array. */
 void ir_append_global(IR_Module *module, const char *name, Type *type, const IR_Literal *literal, Linkage linkage, Storage storage);
+/* Appends the given Literal to the module's dynamic const array. */
 IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal);
+/* Appends the given IR Block to the context's current function. */
 IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
 
+/* Returns the IR FuncDef corresponding to the given function name. */
 IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);
+/*
+    Retrieves the IR Value corresponding to the given variable name.
+    First checks the scope stack, top down. Then checks module globals array.
+    Immediately returning the Value if found, otherwise it is considered an undefined variable.
+*/
 IR_Value ir_get_var_reg(IR_Context *ctx, const char *name);
-IR_Block *current_block(const IR_Function *func);
+/* Gets the most recently added block of a function. */
 
-#endif
+#endif // COMPILER_C_IR_MODULE_H
