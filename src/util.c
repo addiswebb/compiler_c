@@ -1,34 +1,20 @@
 #include <compiler_c/util.h>
-#include <stdio.h>
 
 bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
-char to_lower_case(const char c) {
-    printf("%c to %c", c, c | (1 << 5));
-    return c | (1 << 5);
-}
+char to_lower_case(const char c) { return c | (1 << 5); }
 
-bool is_digit(const char c) { return c >= '0' && c <= '9'; }
+bool is_num(const char c) { return c >= '0' && c <= '9'; }
 
-bool is_alpha_num(const char c) { return c == '_' || is_digit(c) || is_alpha(c); }
+bool is_alpha_num(const char c) { return c == '_' || is_num(c) || is_alpha(c); }
 
 bool is_hex(const char c) {
-    if (is_digit(c)) return true;
+    if (is_num(c)) return true;
     char lower = c | 0x20;
     return lower <= 'f' && lower >= 'a';
 }
 
 bool is_oct(const char c) { return c >= '0' && c <= '7'; }
 bool is_binary(const char c) { return c == '0' || c == '1'; }
-
-bool is_valid_int_str(const char *c) {
-    while (*c != '\0') {
-        if (!is_hex(*c)) {
-            return false;
-        }
-        c++;
-    }
-    return true;
-}
 
 bool is_alpha_numeric_str(const char *c) {
     while (*c != '\0') {
@@ -52,7 +38,7 @@ bool is_int_or_float(const char *c, bool *is_int) {
             }
             found_decimal = true;
         }
-        if (!(is_digit(c[i]) || c[i] == '.')) {
+        if (!(is_num(c[i]) || c[i] == '.')) {
             return false;
         }
         i++;
@@ -63,7 +49,6 @@ bool is_int_or_float(const char *c, bool *is_int) {
     // Weeds out any empty string or "\0"
     return i > 0;
 }
-bool is_num_str(const char *c) { return is_int_or_float(c, 0); }
 
 bool is_whitespace(const char c) {
     switch (c) {

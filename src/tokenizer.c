@@ -23,7 +23,7 @@ void ta_init(TokenArray *arr) {
     arr->size = 0;
 }
 
-static int ta_push(TokenArray *arr, const Token tk) {
+int ta_push(TokenArray *arr, const Token tk) {
     if (arr->size >= arr->capacity) {
         // Resize array
         const int new_capacity = arr->capacity * 2;
@@ -39,7 +39,7 @@ static int ta_push(TokenArray *arr, const Token tk) {
     return 1;
 }
 
-static void ta_free(TokenArray *arr) {
+void ta_free(TokenArray *arr) {
     for (int i = 0; i < arr->size; i++) {
         free(arr->data[i].value);
     }
@@ -49,11 +49,6 @@ static void ta_free(TokenArray *arr) {
     arr->capacity = 0;
 }
 
-void t_print_tokens(const Tokenizer *tk) {
-    for (int i = 0; i < tk->tokens.size; i++) {
-        print_token(&tk->tokens.data[i]);
-    }
-}
 Tokenizer t_new_tokenizer(const char *src, const int src_size) {
     Tokenizer tokenizer;
     tokenizer.index = 0;
@@ -97,9 +92,7 @@ static char t_peek_n(const Tokenizer *tk, const int n) {
     return tk->src[tk->index + n];
 }
 
-static char t_peek_next(const Tokenizer *tk) {
-    return t_peek_n(tk, 1);
-}
+static char t_peek_next(const Tokenizer *tk) { return t_peek_n(tk, 1); }
 
 static void t_consume_n(Tokenizer *tk, const int n) {
     if (tk->index + n > tk->size) {
@@ -320,10 +313,10 @@ static void t_consume_string_literal(Tokenizer *tk) {
 void t_tokenize(Tokenizer *tk) {
     while (!t_is_eof(tk)) {
         const char c = t_peek(tk);
-        if (c == '.' && !is_digit(t_peek_next(tk))) {
+        if (c == '.' && !is_num(t_peek_next(tk))) {
             t_consume(tk);
             t_push_buffer(tk, TK_DOT);
-        } else if (is_digit(c) || c == '.') {
+        } else if (is_num(c) || c == '.') {
             int is_float = 0;
             t_consume(tk);
             if (c == '0') {
@@ -343,7 +336,7 @@ void t_tokenize(Tokenizer *tk) {
                 case '.':
                     is_float = true;
                     t_consume(tk);
-                    while (is_digit(t_peek(tk))) {
+                    while (is_num(t_peek(tk))) {
                         t_consume(tk);
                     }
                     break;
@@ -354,13 +347,13 @@ void t_tokenize(Tokenizer *tk) {
                     break;
                 }
             } else {
-                while (is_digit(t_peek(tk))) {
+                while (is_num(t_peek(tk))) {
                     t_consume(tk);
                 }
                 if (t_peek(tk) == '.') {
                     t_consume(tk);
                     is_float = true;
-                    while (is_digit(t_peek(tk))) {
+                    while (is_num(t_peek(tk))) {
                         t_consume(tk);
                     }
                 }
@@ -557,7 +550,7 @@ TokenType get_underlying_op(const TokenType type) {
     }
 }
 
-int associativity(const TokenType type) {
+int op_associativity(const TokenType type) {
     switch (type) {
     case TK_MULTIPLY:
     case TK_DIVIDE:
@@ -597,7 +590,7 @@ int associativity(const TokenType type) {
     }
 }
 
-int precedence(const TokenType type) {
+int op_precedence(const TokenType type) {
     switch (type) {
     case TK_EQ:
     case TK_PLUS_EQ:

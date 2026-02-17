@@ -250,7 +250,7 @@ void print_node(const Node *node, const int depth) {
         case T_ARRAY:
             if (node->type->base == type_char) {
                 printf("value= \"");
-                for (int i = 0; i < node->type->array_len; i++) {
+                for (int i = 0; i < node->type->_array.array_len; i++) {
                     printf("%c", node->literal.s.data[i]);
                 }
                 printf("\"]\n");

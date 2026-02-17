@@ -8,9 +8,7 @@
 
 #define MAX_OPERAND_BUFFER_SIZE 64
 
-
 void x86_gen_module(FILE *fp, IR_Context *ctx);
-
 
 void x86_operand(const IR_Value *v, char *buf, int n);
 void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst);

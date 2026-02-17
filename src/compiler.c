@@ -18,9 +18,7 @@ Compiler init_compiler(const int argc, char *argv[]) {
     if (argc == 2 && strcmp(argv[1], "-h") == 0) {
         printf("compiler [input]\n");
         printf("\t-o [output] : Set output file path\n");
-        printf("\t-d          : Compile in debug mode\n");
         printf("\t-ir         : Compile to IR\n");
-        printf("\t-ira        : Compile to IR and print IR analysis\n");
         printf("\t-a          : Compile to assembly\n");
         printf("\t-t          : Print parse tree\n");
         printf("\t-h          : Get help\n");
@@ -29,9 +27,9 @@ Compiler init_compiler(const int argc, char *argv[]) {
 
     Compiler compiler;
     compiler.flags = 0;
-    compiler.input_file = argv[1];
-    compiler.output_file = _strdup(argv[1]);
-    compiler.output_file[strlen(argv[1]) - 1] = 's';
+    const char *input_file = argv[1];
+    compiler.output_file = _strdup(input_file);
+    compiler.output_file[strlen(input_file) - 1] = 's';
 
     // Loop and try find compile flags
     for (int i = 1; i < argc; i++) {
@@ -49,15 +47,6 @@ Compiler init_compiler(const int argc, char *argv[]) {
             }
         } else if (strcmp(argv[i], "-t") == 0) {
             compiler.flags |= COMP_FLAG_AST;
-        } else if (strcmp(argv[i], "-d") == 0) {
-            compiler.flags |= COMP_FLAG_DEBUG;
-        } else if (strcmp(argv[i], "-tk") == 0) {
-            compiler.flags |= COMP_FLAG_TOKENS;
-        } else if (strcmp(argv[i], "-n") == 0) {
-            compiler.flags |= COMP_FLAG_NODES;
-        } else if (strcmp(argv[i], "-ira") == 0) {
-            compiler.flags |= COMP_FLAG_IR;
-            compiler.flags |= COMP_FLAG_IR_ANALYSIS;
         } else if (strcmp(argv[i], "-ir") == 0) {
             compiler.flags |= COMP_FLAG_IR;
         } else if (strcmp(argv[i], "-a") == 0) {
@@ -65,32 +54,20 @@ Compiler init_compiler(const int argc, char *argv[]) {
         }
     }
 
-    load_src_file(&compiler);
+    load_src_file(&compiler, input_file);
 
     compiler.tk = t_new_tokenizer(compiler.src, compiler.src_size);
     compiler.nm = new_node_manager();
     compiler.p = new_parser();
 
-    printf("Compiling %s to %s ", compiler.input_file, compiler.output_file);
+    printf("Compiling %s to %s ", input_file, compiler.output_file);
     if (compiler.flags != 0) {
         printf("with flags: ");
-        if (compiler.flags & COMP_FLAG_DEBUG) {
-            printf("-d ");
-        }
         if (compiler.flags & COMP_FLAG_AST) {
             printf("-t ");
         }
-        if (compiler.flags & COMP_FLAG_TOKENS) {
-            printf("-tk ");
-        }
-        if (compiler.flags & COMP_FLAG_NODES) {
-            printf("-n ");
-        }
         if (compiler.flags & COMP_FLAG_IR) {
             printf("-ir ");
-        }
-        if (compiler.flags & COMP_FLAG_IR_ANALYSIS) {
-            printf("-ira ");
         }
         if (compiler.flags & COMP_FLAG_ASM) {
             printf("-a ");
@@ -115,9 +92,6 @@ int compile(Compiler *compiler) {
     init_types();
     t_tokenize(&compiler->tk);
 
-    if (compiler->flags & COMP_FLAG_TOKENS) {
-        t_print_tokens(&compiler->tk);
-    }
     init_parser(&compiler->p, &compiler->tk.tokens, compiler->tk.tokens.size);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
 
@@ -150,29 +124,29 @@ int compile(Compiler *compiler) {
         }
         ir_free_module(module);
     }
-    printf("Finished.\n");
+    printf("Done.\n");
 
     return 1;
 }
 
-static int load_src_file(Compiler *compiler) {
-    FILE *fp = fopen(compiler->input_file, "rb");
+static int load_src_file(Compiler *compiler, const char *file) {
+    FILE *fp = fopen(file, "rb");
 
     if (fp == NULL) {
-        printf("Failed to open %s", compiler->input_file);
+        printf("Failed to open %s\n", file);
         exit(1);
     }
 
     if (fseek(fp, 0, SEEK_END) != 0) {
         fclose(fp);
-        printf("Failed to read file size (SEEK)");
+        printf("Failed to read file size (SEEK)\n");
         exit(1);
     }
 
     const long size = ftell(fp);
     if (size < 0) {
         fclose(fp);
-        printf("Failed to read file size (TELL)");
+        printf("Failed to read file size (TELL)\n");
         exit(1);
     }
 
@@ -180,7 +154,7 @@ static int load_src_file(Compiler *compiler) {
     char *src = malloc((size_t)size + 1);
     if (src == NULL) {
         fclose(fp);
-        printf("Failed to write to src buffer");
+        printf("Failed to write to src buffer\n");
         exit(1);
     }
 
@@ -188,7 +162,7 @@ static int load_src_file(Compiler *compiler) {
     fclose(fp);
     if (read != (size_t)size) {
         free(src);
-        printf("Inconsistent file sizes");
+        printf("Inconsistent file sizes\n");
         exit(1);
     }
 

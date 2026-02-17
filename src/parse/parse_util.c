@@ -66,7 +66,7 @@ int64_t parse_hex(const char *raw, int len) {
     const char *start = raw;
     while (raw < start + len) {
         int value;
-        if (is_digit(*raw)) value = *raw - '0';
+        if (is_num(*raw)) value = *raw - '0';
         char c = *raw | 0x20;
         if (c <= 'f' && c >= 'a') value = c - 'a' + 10;
         res = res * 16 + value;

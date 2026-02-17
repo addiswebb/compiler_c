@@ -17,6 +17,8 @@ typedef struct {
 } Buffer;
 
 #define KEYWORDS_N 24
+
+/* All standard C keywords */
 extern const char* KEYWORDS[KEYWORDS_N];
 
 /*
@@ -27,6 +29,8 @@ extern const char* KEYWORDS[KEYWORDS_N];
     4. Update print_token_type
     // Keep alphabetical order for KEYWORDS and TokenType
 */
+
+/* Set of all tokens */
 typedef enum {
     // Keywords
     TK_BREAK,
@@ -85,12 +89,14 @@ typedef struct {
     int size;
 } Token;
 
+/* Dynamic array of tokens used by tokenizer to store tokens */
 typedef struct {
     Token *data;
     int size;
     int capacity;
 } TokenArray;
 
+/* Converts a given src file to tokens */
 typedef struct {
     const char *src;
     int index;
@@ -99,15 +105,23 @@ typedef struct {
     Buffer buf;
 } Tokenizer;
 
+/* Defines number of characters a specific token type is comprised of. Used for correctly parsing +=,/=,-= etc. */
 typedef struct{
     TokenType type;
     int n_chars;
 }TokenMatch;
 
-void ta_init(TokenArray *arr);
-void print_token_type(TokenType type);
+/* Creates a new tokenizer for a given source file. Also handles the token array and buffer. */
+Tokenizer t_new_tokenizer(const char *src, int src_size);
+void t_free(Tokenizer *tokenizer);
+/* Converts the tokenizer's source file into tokens in the token array. */
+void t_tokenize(Tokenizer *tk);
 
-void print_token(const Token *token);
+/* Initialize a token array. */
+void ta_init(TokenArray *arr);
+/* Appends a token to the given token array. */
+int ta_push(TokenArray *arr, const Token tk);
+void ta_free(TokenArray *arr);
 
 bool is_unary_operator(const TokenType type);
 bool is_binary_operator(const TokenType type);
@@ -116,13 +130,19 @@ bool is_arithmetic_op(const TokenType type);
 bool is_bitwise_op(const TokenType type);
 bool is_comparison_op(const TokenType type);
 bool is_logical_op(const TokenType type);
+
+/* Returns the underlying operator of combined operators. E.g `+=` returns `+`, `/=` returns `/`. */
 TokenType get_underlying_op(TokenType type);
 
-int associativity(TokenType type);
-int precedence(TokenType type);
-void t_print_tokens(const Tokenizer *tk);
-Tokenizer t_new_tokenizer(const char *src, int src_size);
-void t_free(Tokenizer *tokenizer);
+/*
+    Returns the associativity of a given operator token type.
+    **Left associativity**: `1 + 2 + 3` => `(1 + 2) + 3`.
+    **Right associativity**: `1 + 2 + 3` => `1 + (2 + 3)`.
+*/
+int op_associativity(TokenType type);
+/* Returns the precedence of the given operator token type. */
+int op_precedence(TokenType type);
 
-void t_tokenize(Tokenizer *tk);
+void print_token_type(TokenType type);
+void print_token(const Token *token);
 #endif // COMPILER_C_TOKENIZER_H

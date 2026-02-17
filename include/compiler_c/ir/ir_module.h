@@ -56,6 +56,7 @@ typedef enum{
      IR_UNDEFINED, IR_PHYS_REG, IR_VREG, IR_MEM, IR_STACK, IR_LITERAL, IR_GLOBAL
 }IR_ValueKind;
 
+/* A IR literal integer, float or string. */
 typedef struct{
     Type *type;
     union{
@@ -78,6 +79,7 @@ typedef struct{
 
 typedef struct PhysReg PhysReg;
 
+/* Represents every possible way to represent values and memory in IR */
 typedef struct IR_Value{
     IR_ValueKind kind;
     union{
@@ -105,17 +107,20 @@ typedef struct IR_Value{
     int align;
 }IR_Value;
 
+/* Represents a variable in IR */
 typedef struct {
     const char *name;
     IR_Value reg;
     Type *type;
 } IR_Var;
 
+/* Determines of the 3 possible operands in an instruction, which are considered `used` or `defined` by the instruction. */
 typedef struct{
     uint8_t def_mask;
     uint8_t use_mask;
 } IR_OpInfo;
 
+/* Global map between IR instructions and their corresponding operand infos */
 extern IR_OpInfo op_info[];
 typedef struct IR_Block IR_Block;
 
@@ -146,6 +151,7 @@ typedef struct {
     };
 } IR_Instruction;
 
+/* A physical, stack allocated slot of statically sized memory. Used for virtual registers and locals/IR_MEMs.*/
 typedef struct{
     int id;
     int offset;
@@ -154,12 +160,14 @@ typedef struct{
     int free_at;
 }StackSlot;
 
+/* Represents an array registers */
 typedef struct{
     int *data;
     int num_bits;
     int capacity;
 } BitSet;
 
+/* A block's control flow graph data. Stores a static array of its successors and predecessors. */
 typedef struct{
     int *succ;
     int succ_count;
@@ -167,6 +175,10 @@ typedef struct{
     int pred_count;
 }IR_BlockCFG;
 
+/*
+    A block's liveness data.
+    Stores whether any virtual register, is defined, used, lives in from a predecessorblock, lives out and used in another sucessor block.
+*/
 typedef struct{
     BitSet def;
     BitSet use;
@@ -174,6 +186,10 @@ typedef struct{
     BitSet live_out;
 }IR_BlockLiveness;
 
+/*
+    Represents the start and end liveness of a virtual register aswell as the actual stack slot and offset.
+    Also stores a reference the operand which defines the virtual register.
+*/
 typedef struct{
     int reg;
     int start;
@@ -183,6 +199,7 @@ typedef struct{
     IR_Value *v;
 } Lifetime;
 
+/* IR Function component, stores an array of instructions. Handles virtual register livesness and control graph data. */
 struct IR_Block {
     int id;
     IR_Instruction *instructions;
@@ -192,6 +209,7 @@ struct IR_Block {
     IR_BlockLiveness live;
 };
 
+/* Stores all local variables stored and registers used within a scopes lifetime */
 typedef struct {
     int var_count;
     int reg_count;
@@ -223,18 +241,21 @@ typedef struct {
 } IR_Function;
 
 
+/* Global const pool array, stores all literals in a dynamic array. */
 typedef struct{
     int count;
     int capacity;
     IR_Literal *consts;
 }IR_Const_Pool;
 
+/* Global global variable pool, stores definitions in a global array. */
 typedef struct{
     int count;
     int capacity;
     IR_Global *globals;
 }IR_Global_Pool;
 
+/* Root of the intermediate representation of a source file. */
 typedef struct {
     IR_Function **functions;
     int func_count;
@@ -246,17 +267,23 @@ typedef struct {
     IR_Global_Pool global_pool;
 } IR_Module;
 
+/* Holds the correct block to jump to in the event of a `continue` or `break` statement. */
 typedef struct{
     IR_Block *continue_block;
     IR_Block *break_block;
 } IR_LoopContext;
 
+/* Dynamic stack of LoopContexts to handle nested loops. */
 typedef struct{
     IR_LoopContext *data;
     int size;
     int capacity;
 } IR_LoopStack;
-
+/*
+    Stores the current and in use module, function, block.
+    Stores the true/false blocks to early jump out of (a && b) conditions.
+    Holds the loopstack also.
+*/
 typedef struct{
     IR_Module *module;
     IR_Function *func;
@@ -266,27 +293,44 @@ typedef struct{
     IR_Block *false_block;
 } IR_Context;
 
+/* The IR_Value used for instructions which do not have a return value / destination register */
 extern const IR_Value ir_no_value;
 
+/* Initializes the IR Context and allocates memory for the dynamic loop stack. */
 IR_Context ir_init_ctx();
+
+/* Root call to generate IR for a given source file/translation unit. Expects the root AST node, N_TRANSLATION_UNIT. */
+IR_Module *ir_gen_translation_unit(IR_Context *ctx,const Node *tu);
+
+/* Append a LoopContext to the top of the loopstack. */
 void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block*break_block);
+/* Pop off the top of the loopstack. */
 void ir_pop_loop_ctx(IR_Context *ctx);
+/* Retrieve the current LoopContext, which lies at the top of the loopstack. */
 IR_LoopContext *ir_loop_ctx(const IR_Context *ctx);
 
+/* Returns an IR Mem Value using the `mem_reg` mem slot. */
 IR_Value ir_mem_value(int mem_reg, const Type *type);
+/* Returns an IR VReg Value using the `reg` register. */
 IR_Value ir_vreg_value(int reg, const Type *type);
-
+/* Returns an IR Const Value using the constant at `const_index`. */
 IR_Value ir_literal_value(int const_index);
 
 void ir_free_module(IR_Module *module);
-IR_Module *ir_gen_translation_unit(IR_Context *ctx,const Node *tu);
 
+/* Begins a new scope to track locals defined. */
 void ir_begin_scope(IR_Function *func);
+/* Ends the scope, popping all locals defined within it. */
 void ir_end_scope(IR_Function *func);
+
+/* Returns an IR Mem Value pointing to a new virtual slot with `size` and `align`. */
 IR_Value ir_next_virtual_slot(const IR_Function *func, int size, int align);
+/* Returns an IR VReg Value pointing to the next virtual register */
 IR_Value ir_next_virtual_reg(IR_Function *func);
 
+/* Initializes IR Module, and functions, func_defs, globals, and consts arrays. */
 IR_Module *ir_new_module();
+
 IR_Function *ir_new_function(IR_Context *ctx,const char *name);
 IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, bool is_defined);
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);

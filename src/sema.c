@@ -7,9 +7,10 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-// Is this node assignable?
 bool is_lvalue(const Node *n) { return n->kind == N_IDENTIFIER || n->kind == N_INDEX || n->kind == N_MEMBER_ACCESS || is_deref(n); }
 bool is_deref(const Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY; }
 
@@ -230,14 +231,14 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             switch (node->type->kind) {
             case T_ARRAY:
                 // Infer the size from the initializer list
-                if (node->type->array_len == -1) {
+                if (node->type->_array.array_len == -1) {
                     if (!init_list || init_list->init_list.count < 1) {
                         printf("Inferred array must be initialized, and cannot be empty.\n");
                         exit(1);
                     }
                     node->type = infer_array_length(node->type, init_list->init_list.count);
-                } else if (node->type->array_len < init_list->init_list.count) {
-                    printf("Expected initializer list of length %d for ", node->type->array_len);
+                } else if (node->type->_array.array_len < init_list->init_list.count) {
+                    printf("Expected initializer list of length %d for ", node->type->_array.array_len);
                     print_type(node->type);
                     printf(", got %d\n", init_list->init_list.count);
                     exit(1);
@@ -252,7 +253,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
                 break;
             case T_STRUCT:
                 if (init_list->init_list.count > node->type->_struct.count) {
-                    printf("Expected initializer list of length %d for ", node->type->array_len);
+                    printf("Expected initializer list of length %d for ", node->type->_array.array_len);
                     print_type(node->type);
                     printf(", got %d\n", init_list->init_list.count);
                     exit(1);
@@ -260,8 +261,8 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
                 for (int i = 0; i < init_list->init_list.count; i++) {
                     Node *e = init_list->init_list.elements[i];
                     semantic_analysis(p, nm, e, loop);
-                    if (e->type != node->type->_struct.fields[i].type) {
-                        init_list->init_list.elements[i] = cast_node(nm, e, node->type->_struct.fields[i].type);
+                    if (e->type != node->type->_struct.members[i].type) {
+                        init_list->init_list.elements[i] = cast_node(nm, e, node->type->_struct.members[i].type);
                     }
                 }
                 break;
@@ -281,7 +282,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
                     exit(1);
                 }
                 // Infer array length
-                if (node->type->array_len == -1) node->type = node->var_decl.expr->type;
+                if (node->type->_array.array_len == -1) node->type = node->var_decl.expr->type;
             }
         }
         if (node->var_decl.expr->type != node->type) {
@@ -481,7 +482,7 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
             node->member_access.identifier = deref;
             node->member_access.op = TK_DOT;
         }
-        StructField *member_f = get_member(lhs_t, node->member_access.member->identifier.name);
+        StructMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name);
         node->member_access.member->type = member_f->type;
         node->member_access.offset = member_f->offset;
         node->type = member_f->type;

@@ -57,7 +57,5 @@ extern const XMM_Reg win64_float_param_regs[8];
 extern const char * gp_register_str[16][4];
 extern const char * xmm_register_str[16];
 
-
 RegSize reg_size(int size);
-
-#endif
+#endif // COMPILER_C_ANALYSIS_TYPES_H

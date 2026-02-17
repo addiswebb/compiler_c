@@ -20,18 +20,18 @@ Type *type_invalid;
 TypePool typepool;
 
 void init_types() {
-    type_char = init_type(T_INT, sizeof(char));
-    type_short = init_type(T_INT, sizeof(short));
-    type_int = init_type(T_INT, sizeof(int));
-    type_long = init_type(T_INT, sizeof(int64_t));
+    type_char = init_global_type(T_INT, sizeof(char));
+    type_short = init_global_type(T_INT, sizeof(short));
+    type_int = init_global_type(T_INT, sizeof(int));
+    type_long = init_global_type(T_INT, sizeof(int64_t));
 
-    type_float = init_type(T_FLOAT, sizeof(float));
-    type_double = init_type(T_FLOAT, sizeof(double));
+    type_float = init_global_type(T_FLOAT, sizeof(float));
+    type_double = init_global_type(T_FLOAT, sizeof(double));
 
-    type_void = init_type(T_VOID, sizeof(void));
+    type_void = init_global_type(T_VOID, sizeof(void));
 
-    type_void_ptr = init_type(T_POINTER, sizeof(void *));
-    type_invalid = init_type(T_INVALID, -1);
+    type_void_ptr = init_global_type(T_POINTER, sizeof(void *));
+    type_invalid = init_global_type(T_INVALID, -1);
 
     typepool.count = 0;
     typepool.capacity = 32;
@@ -41,7 +41,7 @@ void init_types() {
     }
 }
 
-Type *init_type(TypeKind type, int size) {
+Type *init_global_type(TypeKind type, int size) {
     Type *t = malloc(sizeof(Type));
     if (!t) {
         printf("Failed to alloc for new type\n");
@@ -67,11 +67,11 @@ Type *new_array_type(Type *type, int len) {
     arr_type->size = type->size * len;
     arr_type->align = type->align;
     arr_type->base = type;
-    arr_type->array_len = len;
+    arr_type->_array.array_len = len;
     return arr_type;
 }
 Type *infer_array_length(Type *arr_type, int len) {
-    arr_type->array_len = len;
+    arr_type->_array.array_len = len;
     arr_type->size = len * arr_type->base->size;
     return arr_type;
 }
@@ -86,7 +86,7 @@ Type *new_pointer_type(Type *type) {
 
 Type *get_array_type(Type *type, int len) {
     for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].base == type && typepool.types[i].kind == T_ARRAY && typepool.types[i].array_len == len) {
+        if (typepool.types[i].base == type && typepool.types[i].kind == T_ARRAY && typepool.types[i]._array.array_len == len) {
             return &typepool.types[i];
         }
     }
@@ -124,7 +124,7 @@ Type *get_struct_type(const char *name) {
 void append_enum_field(Type *e, EnumField *f) {
     if (e->_enum.count >= e->_enum.capacity) {
         e->_enum.capacity *= 2;
-        EnumField *new_fields = realloc(e->_enum.fields, sizeof(StructField) * e->_enum.capacity);
+        EnumField *new_fields = realloc(e->_enum.fields, sizeof(StructMember) * e->_enum.capacity);
         if (!new_fields) {
             printf("Failed to reallocated for struct fields\n");
             exit(1);
@@ -133,20 +133,20 @@ void append_enum_field(Type *e, EnumField *f) {
     }
     e->_enum.fields[e->_struct.count++] = *f;
 }
-void append_struct_field(Type *s, StructField *f) {
+void append_struct_field(Type *s, StructMember *f) {
     if (s->_struct.count >= s->_struct.capacity) {
         s->_struct.capacity *= 2;
-        StructField *new_fields = realloc(s->_struct.fields, sizeof(StructField) * s->_struct.capacity);
+        StructMember *new_fields = realloc(s->_struct.members, sizeof(StructMember) * s->_struct.capacity);
         if (!new_fields) {
             printf("Failed to reallocated for struct fields\n");
             exit(1);
         }
-        s->_struct.fields = new_fields;
+        s->_struct.members = new_fields;
     }
     s->size = align(s->size, f->type->align);
     f->offset = s->size;
     printf("appended %s at offset %d\n", f->name, f->offset);
-    s->_struct.fields[s->_struct.count++] = *f;
+    s->_struct.members[s->_struct.count++] = *f;
     s->size += align(f->type->size, f->type->align);
     if (f->type->align > s->align) s->align = f->type->align;
 }
@@ -157,13 +157,13 @@ Type struct_type() {
     s.base = NULL;
     s.align = 0;
     s.size = 0;
-    s.array_len = 0;
+    s._array.array_len = 0;
     s.is_signed = 0;
     s._struct.complete = false;
     s._struct.name = NULL;
     s._struct.capacity = 0;
     s._struct.count = 0;
-    s._struct.fields = NULL;
+    s._struct.members = NULL;
     return s;
 }
 
@@ -173,7 +173,7 @@ Type enum_type() {
     e.base = type_int;
     e.align = 4;
     e.size = 4;
-    e.array_len = 0;
+    e._array.array_len = 0;
     e.is_signed = true;
     e._enum.complete = false;
     e._enum.name = NULL;
@@ -183,10 +183,10 @@ Type enum_type() {
     return e;
 }
 
-StructField *get_member(Type *struct_t, const char *name) {
+StructMember *get_member(Type *struct_t, const char *name) {
     for (int i = 0; i < struct_t->_struct.count; i++) {
-        if (strcmp(name, struct_t->_struct.fields[i].name) == 0) {
-            return &struct_t->_struct.fields[i];
+        if (strcmp(name, struct_t->_struct.members[i].name) == 0) {
+            return &struct_t->_struct.members[i];
         }
     }
     printf("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
@@ -203,7 +203,7 @@ void print_type(Type *type) {
         break;
     case T_ARRAY:
         print_type(type->base);
-        printf("[%d]", type->array_len);
+        printf("[%d]", type->_array.array_len);
         break;
     case T_INT:
         switch (type->size) {
@@ -246,8 +246,8 @@ void print_type(Type *type) {
         if (DEBUG_STRUCT_DETAILED) {
             printf("{");
             for (int i = 0; i < type->_struct.count; i++) {
-                print_type(type->_struct.fields[i].type);
-                printf(" %s, ", type->_struct.fields[i].name);
+                print_type(type->_struct.members[i].type);
+                printf(" %s, ", type->_struct.members[i].name);
             }
             printf("}");
         }
@@ -277,8 +277,8 @@ void print_struct_type(Type *s) {
         printf(" {\n");
         for (int i = 0; i < s->_struct.count; i++) {
             printf("    ");
-            print_type(s->_struct.fields[i].type);
-            printf("; [%d]\n", s->_struct.fields[i].offset);
+            print_type(s->_struct.members[i].type);
+            printf("; [%d]\n", s->_struct.members[i].offset);
         }
         printf("}\n");
     }

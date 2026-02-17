@@ -300,9 +300,9 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
         primary = access;
     }
 
-    while (is_binary_operator(p_peek(p)->type) && !p_is_last_token(p) && precedence(p_peek(p)->type) >= min_prec) {
-        const int prec = precedence(p_peek(p)->type);
-        const int assoc = associativity(p_peek(p)->type);
+    while (is_binary_operator(p_peek(p)->type) && !p_is_last_token(p) && op_precedence(p_peek(p)->type) >= min_prec) {
+        const int prec = op_precedence(p_peek(p)->type);
+        const int assoc = op_associativity(p_peek(p)->type);
         Node *binary = new_node(nm, N_BINARY);
         binary->binary.op = p_consume(p)->type;
         binary->binary.rhs = p_parse_expression(p, nm, prec + assoc);
@@ -412,14 +412,14 @@ Type *p_parse_struct(Parser *p, NodeManager *nm) {
     }
     if (p_peek(p)->type == TK_OPEN_CURLY) {
         struct_t._struct.capacity = 4;
-        struct_t._struct.fields = malloc(sizeof(StructField) * struct_t._struct.capacity);
-        if (!struct_t._struct.fields) {
+        struct_t._struct.members = malloc(sizeof(StructMember) * struct_t._struct.capacity);
+        if (!struct_t._struct.members) {
             printf("Failed to allocate for struct fields\n");
             exit(1);
         }
         p_consume(p); // {
         while (p_peek(p)->type != TK_CLOSE_CURLY) {
-            StructField f;
+            StructMember f;
             Type *t = p_parse_type(p, nm);
             f.name = p_consume_a(p, TK_IDENTIFIER)->value;
             f.type = t;

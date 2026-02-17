@@ -4,6 +4,7 @@
 #include "compiler_c/type.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 const GP_Reg win64_caller_saved[7] = {RAX, RCX, RDX, R8, R9, R10, R11};
@@ -267,7 +268,7 @@ void compute_bitset(const IR_Function *f, const int *rpo) {
     free(old_live_in.data);
     free(tmp.data);
 }
-int cmp(const void *a, const void *b) { return ((Lifetime *)a)->start - ((Lifetime *)b)->start; }
+int cmp_lifetime(const void *a, const void *b) { return ((Lifetime *)a)->start - ((Lifetime *)b)->start; }
 
 void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size, int *slot_count) {
     StackSlot *slots = NULL;
@@ -319,23 +320,13 @@ RegSize reg_size(const int size) {
         exit(1);
     }
 }
-/*
-    Gets the correct register for a function parameter only currently.
-*/
+
 void physical_register(IR_Value *v) {
     int reg_index = v->reg;
     if (v->reg < 0) reg_index = -v->reg - 1;
     v->kind = IR_PHYS_REG;
-    // if (v->type == T_INT || v->type == T_POINTER) {
     v->phys_reg.kind = REG_GP;
     v->phys_reg.gp_reg = win64_int_param_regs[reg_index];
-    // } else if (v->type == T_FLOAT) {
-    //     v->phys_reg.kind = REG_XMM;
-    //     v->phys_reg.xmm_reg = sysv_float_param_regs[reg_index];
-    // } else {
-    //     printf("Cannot use physical register with non int/float/pointer type");
-    //     exit(1);
-    // }
     v->phys_reg.size = reg_size(v->size);
 }
 void param_offset(IR_Value *v) {
@@ -352,13 +343,6 @@ void stack_offset(IR_Value *v, const Lifetime *lts) {
     v->stack_offset = -(lts[v->reg].stack_offset + 8);
 }
 
-/*
-    Converts virtual stack registers to physical offsets.
-    Converts function param slots to physical registers or offsets.
-    Converts virtual mem slots to physical stack slots.
-
-    Converts ir_store structs to memcpy
-*/
 void lower_for_asm_gen(const IR_Function *f, const Lifetime *lts, const StackSlot *mem_slots) {
     for (int i = 0; i < f->block_count; i++) {
         const IR_Block *b = f->blocks[i];
@@ -468,7 +452,7 @@ void analysis(const IR_Context *ctx) {
                     printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
                 }
             }
-            qsort(lifetimes, reg_count, sizeof(Lifetime), cmp);
+            qsort(lifetimes, reg_count, sizeof(Lifetime), cmp_lifetime);
         }
 
         int frame_size = 0;
@@ -508,7 +492,7 @@ Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *
                 if (a->kind == IR_VREG) {
                     if (a->reg < 0) continue;
                     if (op_info[instr->op].def_mask & (1 << k)) {
-                        lts[instr->ops[k].reg] = (Lifetime){instr->ops[k].reg, pc, -1, 0, 0, &instr->ops[k]};
+                        lts[instr->ops[k].reg] = (Lifetime){instr->ops[k].reg, pc, -1, 0, 0, .v = &instr->ops[k]};
                     }
                     if (is_call_arg || op_info[instr->op].use_mask & (1 << k)) {
                         if (lts[a->reg].end < pc) {

@@ -4,8 +4,11 @@
 #include "node.h"
 #include "tokenizer.h"
 
+/*
+    Represents the whole compilation of a single file
+    And all necessary structures
+*/
 typedef struct {
-    char *input_file;
     char *output_file;
     unsigned int flags;
     char *src;
@@ -15,18 +18,29 @@ typedef struct {
     Parser p;
 } Compiler;
 
-#define COMP_FLAG_DEBUG (1u << 0)  // -d
+// Generate and print Abstract Syntax Tree
 #define COMP_FLAG_AST (1u << 1)    // -t
-#define COMP_FLAG_TOKENS (1u << 2) // -tk
-#define COMP_FLAG_NODES (1u << 3)  // -n
+// Generate and print IR Module and instructions
 #define COMP_FLAG_IR (1u << 4)     // -ir
+// Generate and save raw assembly
 #define COMP_FLAG_ASM (1u << 5)    // -a
-#define COMP_FLAG_IR_ANALYSIS (1u << 6)    // -ira
 
-int compile(Compiler *compiler);
+
+/*
+    Takes input from terminal and instantiates a compiler,
+    Which is ready to compile the inputted file
+*/
 Compiler init_compiler(int argc, char *argv[]);
+
+/*
+    Takes an initialized compiler and performes compilation,
+    following the set flags, on the file designated previously
+*/
+int compile(Compiler *compiler);
+
 void free_compiler(Compiler *compiler);
 
-static int load_src_file(Compiler *compiler);
+// Loads the given file into the Compiler
+static int load_src_file(Compiler *compiler, const char *file);
 
 #endif // COMPILER_C_COMPILER_H
