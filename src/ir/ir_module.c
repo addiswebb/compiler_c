@@ -117,6 +117,7 @@ IR_Module *ir_new_module() {
         exit(1);
     }
     array_init(&module->const_array, 4, sizeof(IR_Literal));
+    array_init(&module->global_array, 4, sizeof(IR_Global));
 
     module->func_capacity = 4;
     module->func_count = 0;
@@ -132,17 +133,6 @@ IR_Module *ir_new_module() {
     if (module->func_defs == NULL) {
         printf("Failed to allocate IR module function definitions\n");
         free(module->functions);
-        free(module);
-        exit(1);
-    }
-    module->global_pool.capacity = 4;
-    module->global_pool.count = 0;
-    module->global_pool.globals = malloc(sizeof(IR_Literal) * module->global_pool.capacity);
-    if (!module->global_pool.globals) {
-        printf("Failed to allocate IR module const pool\n");
-        free(module->func_defs);
-        free(module->functions);
-        array_free(&module->const_array);
         free(module);
         exit(1);
     }
@@ -234,22 +224,13 @@ IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block) {
 
 void ir_append_global(IR_Module *module, const char *name, Type *type, const IR_Literal *literal, const Linkage linkage,
                       const Storage storage) {
-    if (module->global_pool.count >= module->global_pool.capacity) {
-        module->global_pool.capacity *= 2;
-        IR_Global *new_globals = realloc(module->global_pool.globals, sizeof(IR_Global) * module->global_pool.capacity);
-        if (!new_globals) {
-            printf("Failed to reallocate for new ir_consts\n");
-            exit(1);
-        }
-        module->global_pool.globals = new_globals;
-    }
-    module->global_pool.globals[module->global_pool.count++] = (IR_Global){
-        .name = name,
-        .type = type,
-        .val = literal ? *literal : (IR_Literal){.type = type_invalid, .i = 0},
-        .linkage = linkage,
-        .storage = storage,
-    };
+    append(&module->global_array, &(IR_Global){
+                                      .name = name,
+                                      .type = type,
+                                      .val = literal ? *literal : (IR_Literal){.type = type_invalid, .i = 0},
+                                      .linkage = linkage,
+                                      .storage = storage,
+                                  });
 }
 IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal) {
     append(&module->const_array, literal);
@@ -323,8 +304,9 @@ IR_Value ir_get_var_reg(IR_Context *ctx, const char *name) {
             }
         }
     }
-    for (int i = 0; i < ctx->module->global_pool.count; i++) {
-        if (strcmp(ctx->module->global_pool.globals[i].name, name) == 0) return ir_value_from_global(&ctx->module->global_pool.globals[i]);
+    for (int i = 0; i < ctx->module->global_array.count; i++) {
+        IR_Global *global = get_global(ctx, i);
+        if (strcmp(global->name, name) == 0) return ir_value_from_global(global);
     }
 
     printf("Undefined local or global variable \'%s\' \n", name);

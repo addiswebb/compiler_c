@@ -252,7 +252,7 @@ typedef struct {
     int func_def_count;
     int func_def_capacity;
     Array const_array;
-    IR_Global_Pool global_pool;
+    Array global_array;
 } IR_Module;
 
 /* Holds the correct block to jump to in the event of a `continue` or `break` statement. */
@@ -378,6 +378,10 @@ static inline IR_Block * get_block(const IR_Function *func, int index){
 
 static inline IR_Literal * get_const(const IR_Context *ctx, int index){
     return (IR_Literal*) get(&ctx->module->const_array, index);
+}
+
+static inline IR_Global * get_global(const IR_Context *ctx, int index){
+    return (IR_Global*) get(&ctx->module->global_array, index);
 }
 
 #endif // COMPILER_C_IR_MODULE_H

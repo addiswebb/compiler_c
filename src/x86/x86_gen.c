@@ -191,42 +191,40 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
             }
         }
     }
-    if (ctx->module->global_pool.count > 0) {
-        for (int i = 0; i < ctx->module->global_pool.count; i++) {
-            const IR_Global *g = &ctx->module->global_pool.globals[i];
-            const IR_Literal *c = &g->val;
-            if (g->storage == STORAGE_NONE) {
-                fprintf(fp, ".extern %s\n", g->name);
-                continue;
+    for (int i = 0; i < ctx->module->global_array.count; i++) {
+        const IR_Global *g = get_global(ctx, i);
+        const IR_Literal *c = &g->val;
+        if (g->storage == STORAGE_NONE) {
+            fprintf(fp, ".extern %s\n", g->name);
+            continue;
+        }
+        if (g->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", g->name);
+        if (g->storage == STORAGE_DATA) fprintf(fp, ".data\n");
+        if (g->storage == STORAGE_BSS) {
+            fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->type->align, g->name, g->type->size);
+        } else {
+            if (c->type == type_invalid) {
+                printf("Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
+                exit(1);
             }
-            if (g->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", g->name);
-            if (g->storage == STORAGE_DATA) fprintf(fp, ".data\n");
-            if (g->storage == STORAGE_BSS) {
-                fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->type->align, g->name, g->type->size);
-            } else {
-                if (c->type == type_invalid) {
-                    printf("Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
-                    exit(1);
-                }
-                if (c->type == type_double) {
-                    uint64_t bits;
-                    memcpy(&bits, &c->f, sizeof(bits));
-                    fprintf(fp, ".align 8\n%s:\n    .quad 0x%016llx\n", g->name, bits);
-                } else if (c->type == type_float) {
-                    uint32_t bits;
-                    memcpy(&bits, &c->f, sizeof(bits));
-                    fprintf(fp, ".align 4\n%s:\n    .long 0x%08x\n", g->name, bits);
-                } else if (c->type->kind == T_ARRAY && c->type->base == type_char) {
-                    fprintf(fp, ".align 8\n%s:\n    .string \"%s\"\n", g->name, c->s.data);
-                } else if (c->type == type_int) {
-                    fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->name, (int)c->i);
-                } else if (c->type == type_char) {
-                    fprintf(fp, "%s:\n    .byte %d\n", g->name, (char)c->i);
-                } else if (c->type == type_short) {
-                    fprintf(fp, ".align 2\n%s:\n    .word %d\n", g->name, (short)c->i);
-                } else if (c->type == type_long) {
-                    fprintf(fp, ".align 8\n%s:\n    .quad %lld\n", g->name, c->i);
-                }
+            if (c->type == type_double) {
+                uint64_t bits;
+                memcpy(&bits, &c->f, sizeof(bits));
+                fprintf(fp, ".align 8\n%s:\n    .quad 0x%016llx\n", g->name, bits);
+            } else if (c->type == type_float) {
+                uint32_t bits;
+                memcpy(&bits, &c->f, sizeof(bits));
+                fprintf(fp, ".align 4\n%s:\n    .long 0x%08x\n", g->name, bits);
+            } else if (c->type->kind == T_ARRAY && c->type->base == type_char) {
+                fprintf(fp, ".align 8\n%s:\n    .string \"%s\"\n", g->name, c->s.data);
+            } else if (c->type == type_int) {
+                fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->name, (int)c->i);
+            } else if (c->type == type_char) {
+                fprintf(fp, "%s:\n    .byte %d\n", g->name, (char)c->i);
+            } else if (c->type == type_short) {
+                fprintf(fp, ".align 2\n%s:\n    .word %d\n", g->name, (short)c->i);
+            } else if (c->type == type_long) {
+                fprintf(fp, ".align 8\n%s:\n    .quad %lld\n", g->name, c->i);
             }
         }
     }
