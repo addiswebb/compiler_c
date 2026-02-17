@@ -211,8 +211,8 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR);
         if (var_symbol) {
             // If we are within a function and var_symbol is a also a local variable
-            if (p->scope_stack_count > 1) {
-                if (var_symbol->scope_depth == p->scope_stack_count - 1) {
+            if (p->scopes_array.count > 1) {
+                if (var_symbol->scope_depth == p->scopes_array.count - 1) {
                     printf("Redeclaration of local variable %s\n", node->var_decl.identifier->identifier.name);
                     exit(1);
                 }

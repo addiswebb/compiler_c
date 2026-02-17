@@ -60,9 +60,7 @@ typedef struct {
     int size;
     Array *src;
     bool expect_semi;
-    int scope_stack_count;
-    int scope_stack_capacity;
-    SymbolTable *scope_stack;
+    Array scopes_array;
 } Parser;
 
 Parser new_parser();
@@ -136,7 +134,6 @@ void p_add_call_param(Node *func, Node *param);
 
 Symbol *p_get_symbol(const Parser *p, const char *name, SymbolKind kind);
 
-SymbolTable *current_symbol_table(Parser *p);
 void p_append_typedef(Parser *p, const Typedef *t);
 Symbol * p_append_func_def(Parser *p, Node *f);
 Node *p_get_func_def(const Parser *p, const char* name);
@@ -236,4 +233,10 @@ Node *current_func_definition(const Parser *p);
 
 bool is_type_token(const Parser *p, const Token *t);
 Type *token_to_type(const Parser *p, const Token *t);
+
+static inline SymbolTable* get_symbol_table(const Parser *p, int index){
+    return (SymbolTable*) get(&p->scopes_array, index);
+}
+
+static inline SymbolTable *get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count-1); }
 #endif // COMPILER_C_PARSER_H
