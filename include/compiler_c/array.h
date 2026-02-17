@@ -9,7 +9,7 @@ typedef struct{
 }Array;
 
 void array_init(Array *arr, int initial_capacity,int element_size);
-void array_free(Array *arr);
+void array_free(const Array *arr);
 
 void *append(Array *arr, const void *element);
 void pop(Array *arr);

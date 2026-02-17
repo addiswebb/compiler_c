@@ -1,4 +1,5 @@
 #include "compiler_c/parse/parser.h"
+#include "compiler_c/array.h"
 #include "compiler_c/node.h"
 #include "compiler_c/parse/parse_util.h"
 #include "compiler_c/sema.h"
@@ -92,13 +93,7 @@ Token *p_consume_semi(Parser *p) {
 */
 Node *init_translation_unit(NodeManager *nm) {
     Node *node = new_node(nm, N_TRANSLATION_UNIT);
-    node->translation_unit.declarations = malloc(sizeof(Node **) * DEFAULT_STATEMENTS_PER_BLOCK);
-    if (node->translation_unit.declarations == NULL) {
-        printf("Failed to initialize translation unit");
-        exit(1);
-    }
-    node->translation_unit.capacity = DEFAULT_STATEMENTS_PER_BLOCK;
-    node->translation_unit.count = 0;
+    array_init(&node->translation_unit.declarations_array, DEFAULT_STATEMENTS_PER_BLOCK, sizeof(Node **));
     return node;
 }
 
@@ -108,13 +103,7 @@ Node *init_translation_unit(NodeManager *nm) {
 */
 Node *new_compound_node(NodeManager *nm) {
     Node *node = new_node(nm, N_COMPOUND);
-    node->compound.items = malloc(sizeof(Node **) * DEFAULT_STATEMENTS_PER_BLOCK);
-    if (node->translation_unit.declarations == NULL) {
-        printf("Failed to create new compound node");
-        exit(1);
-    }
-    node->compound.capacity = DEFAULT_STATEMENTS_PER_BLOCK;
-    node->compound.count = 0;
+    array_init(&node->compound.items_array, DEFAULT_STATEMENTS_PER_BLOCK, sizeof(Node **));
     return node;
 }
 
@@ -429,39 +418,12 @@ Type *p_parse_struct(Parser *p, NodeManager *nm) {
 }
 
 /*
-    Appends a declaration to the given translation unit,
-    Resizes its declaration array if necessary.
-*/
-void p_append_declaration(Node *root, Node *decl) {
-    if (root->translation_unit.count >= root->translation_unit.capacity) {
-        root->translation_unit.capacity *= 2;
-        root->translation_unit.declarations = realloc(root->translation_unit.declarations, sizeof(Node) * root->translation_unit.capacity);
-        if (root->translation_unit.declarations == NULL) {
-            printf("Failed to append declaration");
-            exit(1);
-        }
-    }
-    root->translation_unit.declarations[root->translation_unit.count++] = decl;
-}
-
-/*
     Appends a statement to the given compound node,
     Resizes its statement array if necessary.
 */
 void p_append_block_item(Node *root, Node *item) {
-    if (root->compound.count >= root->compound.capacity) {
-        root->compound.capacity *= 2;
-        root->compound.items = realloc(root->compound.items, sizeof(Node) * root->compound.capacity);
-        if (!root->compound.items) {
-            printf("Failed to append declaration");
-            exit(1);
-        }
-    }
-    if (item != NULL) {
-        root->compound.items[root->compound.count++] = item;
-    } else {
-        printf("Skipping empty node\n");
-    }
+    if (item != NULL) append(&root->compound.items_array, &item);
+    else printf("Skipping empty node\n");
 }
 
 void p_append_param(Node *func, Node *param) {
@@ -653,7 +615,7 @@ void p_append_case(Node *s, Node *c) {
         }
         s->_switch.cases = new_cases;
     }
-    c->_case.i = s->_switch.block->compound.count;
+    c->_case.i = s->_switch.block->compound.items_array.count;
     s->_switch.cases[s->_switch.count++] = c;
 }
 

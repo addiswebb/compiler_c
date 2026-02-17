@@ -157,8 +157,8 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
     if (!node) return;
     switch (node->kind) {
     case N_TRANSLATION_UNIT:
-        for (int i = 0; i < node->translation_unit.count; i++) {
-            semantic_analysis(p, nm, node->translation_unit.declarations[i], loop);
+        for (int i = 0; i < node->translation_unit.declarations_array.count; i++) {
+            semantic_analysis(p, nm, get_node(&node->translation_unit.declarations_array, i), loop);
         }
         node->type = type_void;
         break;
@@ -195,8 +195,8 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         break;
     case N_COMPOUND:
         p_push_scope(p);
-        for (int i = 0; i < node->compound.count; i++) {
-            semantic_analysis(p, nm, node->compound.items[i], loop);
+        for (int i = 0; i < node->compound.items_array.count; i++) {
+            semantic_analysis(p, nm, get_node(&node->compound.items_array, i), loop);
         }
         p_pop_scope(p);
         break;

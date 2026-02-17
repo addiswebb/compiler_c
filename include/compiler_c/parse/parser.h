@@ -121,7 +121,7 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm);
     Appends a declaration to the given translation unit,
     Resizes its declaration array if necessary.
 */
-void p_append_declaration(Node *root, Node *decl);
+static inline void p_append_declaration(Node *root, Node *decl) { append(&root->translation_unit.declarations_array, &decl); }
 
 void p_append_param(Node *func, Node *param);
 void p_add_call_param(Node *func, Node *param);

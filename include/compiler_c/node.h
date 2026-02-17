@@ -53,9 +53,7 @@ struct Node {
     // The type of the values associated with this node
     union {
         struct {
-            Node **declarations;
-            int capacity;
-            int count;
+            Array declarations_array;
         } translation_unit;
         // type name(params) [body]
         struct {
@@ -73,9 +71,7 @@ struct Node {
         } func;
         // { [block_item]+ }
         struct {
-            Node **items;
-            int capacity;
-            int count;
+            Array items_array;
         } compound;
         // op expr | expr op
         struct {
@@ -235,4 +231,5 @@ void print_node(const Node *node,int depth);
 */
 void print_ast(const NodeManager *nm);
 
+static inline Node *get_node(const Array *node_array, int index) { return *(Node **)get(node_array, index); }
 #endif // COMPILER_C_NODE_H

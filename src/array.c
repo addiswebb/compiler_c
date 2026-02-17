@@ -38,6 +38,6 @@ void *get(const Array *arr, int index) {
     return (char *)arr->data + index * arr->element_size;
 }
 
-void array_free(Array *arr) {
+void array_free(const Array *arr) {
     if (arr->data) free(arr->data);
 }

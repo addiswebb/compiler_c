@@ -1,3 +1,4 @@
+#include "compiler_c/array.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
 #include <compiler_c/node.h>
@@ -22,20 +23,20 @@ void free_node_manager(const NodeManager *nm) {
     for (int i = 0; i < nm->count; i++) {
         const Node *node = &nm->nodes[i];
         if (node->kind == N_TRANSLATION_UNIT) {
-            for (int j = 0; j < node->translation_unit.count; j++) {
-                free(node->translation_unit.declarations[j]);
+            for (int j = 0; j < node->translation_unit.declarations_array.count; j++) {
+                free(get_node(&node->translation_unit.declarations_array, j));
             }
-            free(node->translation_unit.declarations);
+            array_free(&node->translation_unit.declarations_array);
         } else if (node->kind == N_COMPOUND) {
-            for (int j = 0; j < node->compound.count; j++) {
-                free(node->compound.items[j]);
+            for (int j = 0; j < node->compound.items_array.count; j++) {
+                free(get_node(&node->compound.items_array, i));
             }
-            free(node->compound.items);
+            array_free(&node->compound.items_array);
         } else if (node->kind == N_FUNCTION && node->func.body->kind == N_COMPOUND) {
-            for (int j = 0; j < node->func.body->compound.count; j++) {
-                free(node->func.body->compound.items[j]);
+            for (int j = 0; j < node->func.body->compound.items_array.count; j++) {
+                free(get_node(&node->func.body->compound.items_array, i));
             }
-            free(node->func.body->compound.items);
+            array_free(&node->func.body->compound.items_array);
         }
     }
     free(nm->nodes);
@@ -192,14 +193,14 @@ void print_node(const Node *node, const int depth) {
     switch (node->kind) {
     case N_TRANSLATION_UNIT:
         printf("\n");
-        for (int i = 0; i < node->translation_unit.count; i++) {
-            print_node(node->translation_unit.declarations[i], depth + 1);
+        for (int i = 0; i < node->translation_unit.declarations_array.count; i++) {
+            print_node(get_node(&node->translation_unit.declarations_array, i), depth + 1);
         }
         break;
     case N_COMPOUND:
         printf("\n");
-        for (int i = 0; i < node->compound.count; i++) {
-            print_node(node->compound.items[i], depth + 1);
+        for (int i = 0; i < node->compound.items_array.count; i++) {
+            print_node(get_node(&node->compound.items_array, i), depth + 1);
         }
         break;
     case N_BINARY:

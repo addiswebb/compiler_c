@@ -199,8 +199,8 @@ static void ir_gen_block_item(IR_Context *ctx, const Node *item) {
 
 static void ir_gen_compound(IR_Context *ctx, const Node *comp) {
     ir_begin_scope(ctx->func);
-    for (int i = 0; i < comp->compound.count; i++) {
-        ir_gen_block_item(ctx, comp->compound.items[i]);
+    for (int i = 0; i < comp->compound.items_array.count; i++) {
+        ir_gen_block_item(ctx, get_node(&comp->compound.items_array, i));
     }
     ir_end_scope(ctx->func);
 }
@@ -254,8 +254,8 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
     ir_begin_scope(ctx->func);
     ir_push_loop_ctx(ctx, NULL, end_block);
     int j = 0;
-    for (int i = 0; i < _switch->_switch.block->compound.count; i++) {
-        Node *node = _switch->_switch.block->compound.items[i];
+    for (int i = 0; i < _switch->_switch.block->compound.items_array.count; i++) {
+        Node *node = get_node(&_switch->_switch.block->compound.items_array, i);
         if (node->kind == N_CASE) {
             if (node->_case.test) ir_append_block(ctx, cases[j++]);
             else ir_append_block(ctx, default_block);
@@ -453,8 +453,8 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
         fn->param_count++;
     }
     // handle {[statement]*}
-    for (int i = 0; i < func->func.body->compound.count; i++) {
-        ir_gen_block_item(ctx, func->func.body->compound.items[i]);
+    for (int i = 0; i < func->func.body->compound.items_array.count; i++) {
+        ir_gen_block_item(ctx, get_node(&func->func.body->compound.items_array, i));
     }
     ir_end_scope(fn);
 
@@ -470,9 +470,9 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
     IR_Module *module = ir_new_module();
     ctx->module = module;
 
-    for (int i = 0; i < tu->translation_unit.count; i++) {
-        Node *n = tu->translation_unit.declarations[i];
-        switch (tu->translation_unit.declarations[i]->kind) {
+    for (int i = 0; i < tu->translation_unit.declarations_array.count; i++) {
+        Node *n = get_node(&tu->translation_unit.declarations_array, i);
+        switch (n->kind) {
         case N_FUNCTION:
             IR_Func_Def *func_def = ir_get_func_def(ctx, n->func.name);
             if (func_def) {
