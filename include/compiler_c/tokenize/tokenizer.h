@@ -1,7 +1,7 @@
 #ifndef COMPILER_C_TOKENIZER_H
 #define COMPILER_C_TOKENIZER_H
 
-#include "compiler_c/array.h"
+#include "compiler_c/core/array.h"
 #include <stdbool.h>
 
 #define DEBUG_TOKENIZER 0

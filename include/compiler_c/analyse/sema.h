@@ -1,8 +1,7 @@
 #ifndef COMPILER_C_SEMA_H
 #define COMPILER_C_SEMA_H
-#include "compiler_c/node.h"
+#include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"
-#include "compiler_c/type.h"
 
 /* Is a node which is assignable */
 bool is_lvalue(const Node *n);

@@ -1,8 +1,4 @@
-#include "compiler_c/sema.h"
-#include "compiler_c/node.h"
-#include "compiler_c/parse/parser.h"
-#include "compiler_c/tokenizer.h"
-#include "compiler_c/type.h"
+#include "compiler_c/analyse/sema.h"
 
 #include <stdbool.h>
 #include <stdint.h>

@@ -12,21 +12,20 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 add_executable(compiler_c
     src/main.c
     src/compiler.c
-    src/tokenizer.c
+    src/core/node.c
+   src/core/util.c
+    src/core/array.c
+    src/core/type.c
+    src/tokenize/tokenizer.c
     src/parse/parser.c
-    src/parse/parse_util.c
-    src/node.c
-    src/util.c
     src/x86/x86_gen.c
     src/x86/x86_emit.c
-    src/type.c
     src/ir/ir_gen.c
     src/ir/ir_util.c
     src/ir/ir_builder.c
     src/ir/ir_module.c
-    src/sema.c
-    src/analysis.c
-    src/array.c
+    src/analyse/sema.c
+    src/analyse/analysis.c
 )
 
 target_include_directories(compiler_c

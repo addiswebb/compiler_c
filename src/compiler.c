@@ -1,10 +1,8 @@
-#include "compiler_c/analysis.h"
-#include "compiler_c/ir/ir_module.h"
+#include "compiler_c/analyse/analysis.h"
 #include "compiler_c/ir/ir_util.h"
+#include <compiler_c/analyse/sema.h>
 #include <compiler_c/compiler.h>
-#include <compiler_c/sema.h>
-#include <compiler_c/tokenizer.h>
-#include <compiler_c/x86.h>
+#include <compiler_c/x86/x86.h>
 
 #include <stdio.h>
 #include <stdlib.h>

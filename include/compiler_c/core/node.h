@@ -1,8 +1,9 @@
 #ifndef COMPILER_C_NODE_H
 #define COMPILER_C_NODE_H
 
-#include "type.h"
-#include "tokenizer.h"
+#include "compiler_c/core/type.h"
+#include "compiler_c/tokenize/tokenizer.h"
+
 #include <stdint.h>
 #include <string.h>
 

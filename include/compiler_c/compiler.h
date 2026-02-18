@@ -1,8 +1,6 @@
 #ifndef COMPILER_C_COMPILER_H
 #define COMPILER_C_COMPILER_H
 #include "compiler_c/parse/parser.h"
-#include "node.h"
-#include "tokenizer.h"
 
 /*
     Represents the whole compilation of a single file

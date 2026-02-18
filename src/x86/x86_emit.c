@@ -1,6 +1,6 @@
+#include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
-#include "compiler_c/type.h"
-#include "compiler_c/x86.h"
+#include "compiler_c/x86/x86.h"
 
 #include <stdio.h>
 #include <stdlib.h>

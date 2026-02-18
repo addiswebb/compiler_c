@@ -3,10 +3,10 @@
     Tracks any variables added afterwards, and pops them from the IR virtual stack when `ir_end_scope()` is called.
 */
 #include "compiler_c/ir/ir_module.h"
-#include "compiler_c/array.h"
+#include "compiler_c/core/array.h"
+#include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_builder.h"
 #include "compiler_c/parse/parser.h"
-#include "compiler_c/type.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

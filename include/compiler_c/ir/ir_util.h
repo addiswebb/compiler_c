@@ -2,7 +2,7 @@
 #define COMPILER_C_IR_UTIL_H
 
 #include "compiler_c/ir/ir_module.h"
-#include "compiler_c/tokenizer.h"
+#include "compiler_c/tokenize/tokenizer.h"
 
 /* Converts token to IR_CMP_OP */
 IR_CMP_OP ir_cmp_op(const TokenType type);

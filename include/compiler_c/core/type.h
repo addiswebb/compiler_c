@@ -2,7 +2,7 @@
 #define COMPILER_C_TYPE_H
 
 /* Include enum fields when printing an enum type */
-#include "compiler_c/array.h"
+#include "compiler_c/core/array.h"
 #define DEBUG_ENUM_DETAILED 0
 /* Include struct members when printing an enum type */
 #define DEBUG_STRUCT_DETAILED 0

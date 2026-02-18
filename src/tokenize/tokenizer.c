@@ -1,6 +1,5 @@
-#include "compiler_c/tokenizer.h"
-#include "compiler_c/array.h"
-#include "compiler_c/util.h"
+#include "compiler_c/tokenize/tokenizer.h"
+#include "compiler_c/core/util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
