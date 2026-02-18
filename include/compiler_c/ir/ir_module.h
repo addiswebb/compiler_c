@@ -345,17 +345,18 @@ IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);
     Immediately returning the Value if found, otherwise it is considered an undefined variable.
 */
 IR_Value ir_get_var_reg(IR_Context *ctx, const char *name);
-/* Gets the most recently added block of a function. */
 
+/* Helper functions for the generic Array type. */
 static inline IR_Instruction *get_instruction(const Array *arr, int index){
     return (IR_Instruction *) get(arr, index);
 }
 
 /* Retrieve the current LoopContext, which lies at the top of the loopstack. */
-static inline IR_LoopContext * ir_loop_ctx(const IR_Context *ctx){
+static inline IR_LoopContext * get_loop_ctx(const IR_Context *ctx){
     return (IR_LoopContext*) get(&ctx->loop_stack_array, ctx->loop_stack_array.count-1);
 }
 
+/* Retrieve the scope which lies at the top of the scope stack. */
 static inline IR_Scope * get_current_scope(const IR_Function *func){
     return (IR_Scope*) get(&func->scopes_array, func->scopes_array.count - 1);
 }
@@ -376,11 +377,11 @@ static inline IR_Global * get_global(const IR_Context *ctx, int index){
     return (IR_Global*) get(&ctx->module->global_array, index);
 }
 static inline IR_Var * get_local(const IR_Function *func, int index){
-    return (IR_Var *) get(&func->locals_array, index);
+    return (IR_Var*) get(&func->locals_array, index);
 }
 
 static inline int get_var_index(const IR_Scope *scope, int index){
-    return *(int *) get(&scope->var_array, index);
+    return *(int*) get(&scope->var_array, index);
 }
 
 static inline IR_Func_Def * get_func_def(const IR_Context *ctx, int index){

@@ -37,7 +37,7 @@ IR_Context ir_init_ctx() {
 void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break_block) {
     IR_Block *new_continue_block = continue_block;
     // Try retrieve current continue block, if provided with NULL (switch statement has no continue block to jump to)
-    if (!continue_block) new_continue_block = ctx->loop_stack_array.count < 1 ? NULL : ir_loop_ctx(ctx)->continue_block;
+    if (!continue_block) new_continue_block = ctx->loop_stack_array.count < 1 ? NULL : get_loop_ctx(ctx)->continue_block;
     append(&ctx->loop_stack_array, &(IR_LoopContext){new_continue_block, break_block});
 }
 

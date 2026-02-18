@@ -44,7 +44,7 @@ static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     exit(1);
 }
 
-IR_Literal ir_gen_literal(const Node *node) {
+IR_Literal ir_literal(const Node *node) {
     IR_Literal c;
     c.type = node->type;
     switch (c.type->kind) {
@@ -77,7 +77,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_IDENTIFIER:
         return ir_gen_lvalue(ctx, expr);
     case N_LITERAL:
-        IR_Literal c = ir_gen_literal(expr);
+        IR_Literal c = ir_literal(expr);
         return ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
     case N_BINARY:
         if (is_assignment_op(expr->binary.op)) {
@@ -110,7 +110,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             IR_Value zero = ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){type_int, 0}), type_int);
             IR_Value lhs_cmp = ir_cmp(ctx, NEQ, lhs, zero);
 
-            if (ir_within_cond(ctx)) {
+            if (ir_is_within_cond(ctx)) {
                 if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, lhs_cmp, NULL, ctx->false_block);
                 if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, lhs_cmp, ctx->true_block, NULL);
             }
@@ -119,7 +119,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             IR_Value rhs_cmp = ir_cmp(ctx, NEQ, rhs, zero);
             // No need to cmp both results, if we reach here it means lhs is 1 or rhs represents (lhs op rhs)
             // Early out
-            if (ir_within_cond(ctx)) return rhs_cmp;
+            if (ir_is_within_cond(ctx)) return rhs_cmp;
 
             // Otherwise generate the whole || or && result
             return ir_binary(ctx, expr->binary.op == TK_OR_OR ? BW_OR : BW_AND, ir_next_virtual_reg(ctx->func), lhs_cmp, rhs_cmp, type_int);
@@ -341,7 +341,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
         IR_Literal *l = &x;
         if (var_decl->var_decl.has_initializer) {
             Node *x = var_decl->var_decl.expr;
-            *l = ir_gen_literal(var_decl->var_decl.expr);
+            *l = ir_literal(var_decl->var_decl.expr);
         } else l = NULL;
         return ir_append_global(ctx->module, var_decl->var_decl.identifier->identifier.name, var_decl->type, l,
                                 var_decl->var_decl.symbol->linkage, var_decl->var_decl.symbol->storage);
@@ -416,10 +416,10 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     case N_LITERAL:
         return;
     case N_BREAK:
-        ir_branch(ctx, ir_loop_ctx(ctx)->break_block);
+        ir_branch(ctx, get_loop_ctx(ctx)->break_block);
         return;
     case N_CONTINUE:
-        ir_branch(ctx, ir_loop_ctx(ctx)->continue_block);
+        ir_branch(ctx, get_loop_ctx(ctx)->continue_block);
         return;
     default:
         // given invalid statement? probably an expression
@@ -508,7 +508,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
     return module;
 }
 
-int ir_within_cond(IR_Context *ctx) { return ctx->false_block && ctx->true_block; }
+int ir_is_within_cond(IR_Context *ctx) { return ctx->false_block && ctx->true_block; }
 
 void ir_set_cond_block(IR_Context *ctx, IR_Block *true_block, IR_Block *false_block) {
     ctx->true_block = true_block;

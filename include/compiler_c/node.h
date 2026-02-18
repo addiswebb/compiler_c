@@ -207,6 +207,13 @@ void free_node_manager(const NodeManager *nm);
     Handles creating a Node, pushing it to the global node array
 */
 Node *new_node(NodeManager *nm, NodeKind kind);
+
+Node *init_translation_unit(NodeManager *nm);
+Node *new_compound_node(NodeManager *nm);
+Node *new_init_list_node(NodeManager *nm);
+Node *new_function_node(NodeManager *nm);
+Node *new_function_call_node(NodeManager *nm, Node *identifier);
+
 Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type);
 Node *cast_node(NodeManager *nm, Node *node, Type *type);
 bool is_valid_cast(const Type *from, const Type *to);

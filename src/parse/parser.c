@@ -107,12 +107,6 @@ Node *new_compound_node(NodeManager *nm) {
     return node;
 }
 
-/*
-    Consumes
-    `literal`
-    `identifier`
-    `(expr)`
-*/
 Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     if (p_peek(p)->type == TK_OPEN_CURLY) return p_parse_init_list(p, nm);
     Node *primary = NULL;
@@ -188,7 +182,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         Node *func_call = new_function_call_node(nm, primary);
 
         while (p_peek(p)->type != TK_CLOSE_PAREN) {
-            p_add_call_param(func_call, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
+            p_append_call_param(func_call, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
             if (p_peek(p)->type == TK_COMMA) p_consume(p);
             else break;
         }
@@ -264,12 +258,6 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     return primary;
 }
 
-/*
-    Consumes either,
-    var decl
-    or
-    statement
-*/
 Node *p_parse_block_item(Parser *p, NodeManager *nm) {
     if (is_type_token(p, p_peek(p))) return p_parse_block_declaration(p, nm);
     else return p_parse_statement(p, nm);
@@ -408,7 +396,7 @@ void p_append_param(Node *func, Node *param) {
     }
 }
 
-void p_add_call_param(Node *func, Node *param) { append(&func->func_call.params_array, &param); }
+void p_append_call_param(Node *func_call, Node *param) { append(&func_call->func_call.params_array, &param); }
 
 Symbol *p_append_symbol(Array *st, const Symbol *s) { return (Symbol *)append(st, s); }
 
@@ -600,7 +588,7 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
     return node;
 }
 
-Node *current_func_definition(const Parser *p) {
+Node *p_get_current_func_definition(const Parser *p) {
     for (int i = p->scopes_array.count - 1; i >= 0; i--) {
         Array *st = get_symbol_table(p, i);
         for (int j = 0; j < st->count; j++) {
@@ -633,24 +621,6 @@ Node *p_parse_break(Parser *p, NodeManager *nm) {
     return node;
 }
 
-Node *p_parse_var_assign(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_BINARY);
-    node->binary.lhs = p_parse_primary_expression(p, nm);
-    node->binary.op = p_consume_a(p, TK_EQ)->type;
-    node->binary.rhs = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-    p_consume_semi(p);
-    return node;
-}
-
-/*
-    Consumes any of,
-    `(type) identifier = [= expr]?;`
-    `[if statement]`
-    `return [expr]?`
-    `[expr];`
-
-    Never consumes `;`, other functions must consume it.
-*/
 Node *p_parse_statement(Parser *p, NodeManager *nm) {
     switch (p_peek(p)->type) {
     case TK_IF:
@@ -869,7 +839,8 @@ Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
     }
 
     while (!p_is_last_token(p)) {
-        p_append_declaration(root, p_parse_external_declaration(p, nm));
+        Node *decl = p_parse_external_declaration(p, nm);
+        append(&root->translation_unit.declarations_array, &decl);
     }
     return root;
 }
