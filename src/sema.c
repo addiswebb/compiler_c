@@ -1,6 +1,5 @@
 #include "compiler_c/sema.h"
 #include "compiler_c/node.h"
-#include "compiler_c/parse/parse_util.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenizer.h"
 #include "compiler_c/type.h"
