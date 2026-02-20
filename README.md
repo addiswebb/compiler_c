@@ -23,14 +23,15 @@ The **AST** constructed by the parser is mostly typeless. Only explictly typed e
 ### IR Gen
 This step involves taking the **AST** and converting it from the recursive structured tree (where nodes link to nodes linking to other nodes), into a more linear and assembly like "Intermediate Representation", **IR**. The **IR** generator, traverses the tree according to our definition, and when it reaches a statement or expression, it converts it to corresponding **IR**  instructions. 
 
-### Analysis Pass
-When **IR** is generated, the instructions mostly use Virtual Registers. A virtual register is defined once and its value is read from many times. A virtual register does not get redefined nor does it actually exist in memory. The job of the Analysis pass is to replace these virtual registers with physical stack slots and registers. To achieve this, first a Control Flow Graph is generated from the **IR Blocks**. Each block is read to determine where it can branch to. The result is that every block has a list of successor blocks and predecessor blocks. The next step is to define what virtual registers a block defines/creates and what registers it uses but did not create. This is done by looping over every instruction within the block, it is known for each instruction which operand is a definition and which operands are just used. With this information we populate the blocks 'used' and 'defined' arrays.
-The next step is to compute for each block, the virtual registers which come from outside the block and which exist after the block ends. These are called the 'live_in' and 'live_out' arrays. The details of this are complex and will be skipped for brevity. At this point it can be concluded that for every block, where a virtual register is in its 'live_in' but not the 'live_out', the register dies within the block. For such instances we search for the last occurence of it and set that as the registers end instruction. The start instruction of every virtual register is simply found by looping over all instructions and recording when it is defined.
-With the liveness/lifetimes of every virtual register computed, we can now allocate them to reusable stack slots. This process is simple, given the virtual registers sorted from first defined to last defined, we check if their is a suitable stack slot evailiable, if so we assign the register to it. Otherwise we create a new stack slot with the correct size and set its next_free variable to the registers last_used. This results in stack slots being reused once their are free.
-
 E.g., We reach a **N_RETURN** node. It has an `expr`, which we need to generate **IR** for before we can call **IR_RET**. First, we call `ir_gen_expression`, which creates the **IR** for the return expression and stores the result in some virtual register. `ir_gen_expression` then returns the register, which we can give to our **IR_RET** instruction. Now the **IR_RET** has only the register where its return value is. This makes converting to assembly very easy later on. Its similar to assembly but it only represents what the code will do, where assembly represents exactly what the computer will do (which as a human, is not always as clear). 
 
 This simplicity is vital for easily translating **IR** into actual assembly, which takes place in the final step.
+
+### Analysis Pass
+When **IR** is generated, the instructions mostly use Virtual Registers. A virtual register is defined once and its value is read from many times. A virtual register does not get redefined nor does it actually exist in memory. The job of the Analysis pass is to replace these virtual registers with physical stack slots and registers. To achieve this, first a Control Flow Graph is generated from the **IR Blocks**. Each block is read to determine where it can branch to. The result is that every block has a list of successor blocks and predecessor blocks. The next step is to define what virtual registers a block defines/creates and what registers it uses but did not create. This is done by looping over every instruction within the block, it is known for each instruction which operand is a definition and which operands are just used. With this information we populate the blocks 'used' and 'defined' arrays.
+The next step is to compute for each block, the virtual registers which come from outside the block and which exist after the block ends. These are called the 'live_in' and 'live_out' arrays. The details of this are complex and will be skipped for brevity. At this point it can be concluded that for every block, where a virtual register is in its 'live_in' but not the 'live_out', the register dies within the block. For such instances we search for the last occurence of it and set that as the registers end instruction. The start instruction of every virtual register is simply found by looping over all instructions and recording when it is defined.
+With the liveness/lifetimes of every virtual register computed, we can now allocate them to reusable stack slots. This process is simple, given the virtual registers sorted from first defined to last defined, we check if their is a suitable stack slot availiable, if so we assign the register to it. Otherwise we create a new stack slot with the correct size and set its 'next_free' variable to the registers 'last_used'. This results in stack slots being reused once they are free.
+These slots can then be allocated on the stack as physical slots. Later, the first n compatible stack slots can be assigned to registers instead for optimisations. 
 
 ### x86 Gen
 Here we lower the **IR** to raw assembly, replacing simplified **IR_BINARYOP**, or other instruction with hardware specific instructions. Loading memory to and from registers, handling bit flags etc. While the assembly can be tricky to come to terms with, converting the generated **IR** to x86-64 assembly is actually the easiest step. This is thanks to the work done by the Tokenizer, Parser and **IR** gen.
@@ -55,13 +56,29 @@ Rules:
 "any valid variable type"
 * int 
 * float
-* *char*
-* *double*
+* char
+* double
+* struct [label]? [{[struct member]*]}];
+* enum [label]? [{[enum field]*}]?;
 
-This will later include modifiers and any typedef'd types
+Can be prepended with any one of the following storage classifiers
+* static
+* extern
+
+Optionally also a mutability classifier
+* *const*
+* *volatile*
+
+Optionally also a variant
+* *unsigned*
+
+Typedef'ed 'identifiers' are also included.
 
 >### 2. `identifier` 
 "Any alpha-starting alpha-numeric string which may contain underscores '_' "
+
+Used to identify variables, functions, or typedef type aliases.
+Must be unique.
 
 >### 3. `expr`
 "Anything that can be evaluated"
@@ -90,14 +107,15 @@ This will later include modifiers and any typedef'd types
 
 >### 6. `statement`
 "Any self sufficient piece of code"
-* `identifier`
+* `identifier`;
 * `{compound}`
-* `expr`
+* `expr`;
 * `;`
+Almost always ends with a ';'
 
 * Or Control Flow Statement
     * \[ `if`, `for`, `while`, `return`, `break`, `continue`, `switch` \]
-
+    * *goto*
 >### 7. `var decl`
 "A `(type)` followed by an `identifier`, may be uninitialized"
 * Simple Variable declaration:
@@ -247,7 +265,8 @@ Returns control flow to callee, also returns a value. If no value is given, retu
 * Inline functions
 * Labels as values? (part of GCC, not standard C)
 * Volatile/Atomic memory
-* Create a standard library
+* --Create a standard library--
+* Support a standard library.
     * `printf`
     * `malloc`
     * `free`
