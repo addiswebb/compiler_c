@@ -3,19 +3,22 @@ An unoptimised C compiler written in C supporting C89 following Win64 MS ABI Con
 With the goal of eventual self compilation.
 
 # Architecture
-The compiler is comprised of 6 major sections. Each one has a clear task. The compiler manages all 4 sections, and hands the work of one onto the next. It also handles loading the file from disc into memory and parsing compile flags given at runtime.
+The compiler is comprised of 6 major sections. Each one has a clear task. 
+The compiler manages all sections and hands the work of one onto the next. It also handles loading the file from disc into memory and parsing compile flags given at runtime which change the compiler's behaviour.
 
 ### The Tokenizer. 
 Its job is to take in the loaded file (called a translation unit), as a string of characters and convert it into an array of tokens. These tokens represent core parts of the grammar defined below, e.g. **TK_INT_LITERAL** is simply a raw number "1234", or **TK_RETURN** represents the the 'return' keyword. It performs this by loading tokens sequentially into a buffer until it finds a whitespace character. It then parses the buffer into a token. Essentially looking at each word and deciding what kind of token it is. There is more hidden complexity to this in skipping comments, or handling special characters but this is a good overview. Once it reaches the EOF (end of the file) it stops and returns the Token Array back to the compiler.
 
 ### The Parser
-The parser recieves the linear array of tokens and is tasked with parsing it into a AST (abstract syntax tree). The tree is structured as follows:
+The parser recieves the linear array of tokens and is tasked with converting it into a AST (abstract syntax tree). The tree is structured as follows:
 
 * **N_TRANSLATION_UNIT**: Array of declarations of either a function or variable
 * **N_FUNCTION**: Name, Params, and an **N_COMPOUND** block.
 * **N_COMPOUND**: Array of statements.
 
-The parser, starting from the very first token, uses its context and grammar to decide what node is next, but also if there is a syntax error. E.g., if the current token is a **TK_RETURN**, given the grammar below, we can expect an `expr` to follow. The parser then tries to parse an `expr` and if it succeeds, we combine the **TK_RETURN** token and parsed `expr` into a single Node, **N_RETURN**. This node is then appended to the **N_COMPOUND** parent node. Another example, if the current token is **TK_OPEN_CURLY**, given the grammar, this can only be the start of a **N_COMPOUND**. The parser knows to parse the following tokens as an array of statements and append them to the compound nodes list, and only stops when **TK_CLOSE_CURLY** is found. Same as the **Tokenizer**, when we reach the end of the token array, we return the parsed **AST** to the compiler.
+With more fundamental nodes like **N_BINARY** and **N_UNARY** representing the most basic C constructs.
+
+The parser, starting from the very first token, uses context and grammar to decide what node is next. It also naturally handles syntax errors. E.g., if the current token is a **TK_RETURN**, given the grammar below, we can expect an `expr` to follow. The parser then tries to parse an `expr` and if it succeeds, we combine the **TK_RETURN** token and parsed `expr` into a single Node, **N_RETURN**. This node is then appended to the **N_COMPOUND** parent node. Another example, if the current token is **TK_OPEN_CURLY**, given the grammar, this can only be the start of a **N_COMPOUND**. The parser knows to parse the following tokens as an array of statements and append them to the compound nodes list, and only stops when **TK_CLOSE_CURLY** is found. Same as the **Tokenizer**, when we reach the end of the token array, we return the parsed **AST** to the compiler.
 
 ### Semantic Analysis Pass
 The **AST** constructed by the parser is mostly typeless. Only explictly typed expressions have type information. It is the job of the semantic analysis pass to give every node a correct type. While doing so, it also ensures correctness through type checking. In the majority of cases a binary operation requires two operands of the same type. If the operands are found to have different types, we try to promote them to the same common type. If this is not possible and their types and completely incompatible, a type error is thrown. Semantic Analysis also handles converting constructs which are simply syntactic sugar into their literal underlying forms. E.g 'a[5]' is just '*(a + sizeof(element) * 5)'. Similarily 'a->b' is just '*(a).b'. These conversions are handled in this pass.
@@ -36,11 +39,11 @@ These slots can then be allocated on the stack as physical slots. Later, the fir
 ### x86 Gen
 Here we lower the **IR** to raw assembly, replacing simplified **IR_BINARYOP**, or other instruction with hardware specific instructions. Loading memory to and from registers, handling bit flags etc. While the assembly can be tricky to come to terms with, converting the generated **IR** to x86-64 assembly is actually the easiest step. This is thanks to the work done by the Tokenizer, Parser and **IR** gen.
 
-E.g., given our **IR_RET** instruction, we first take the given register (Which promises to store a return value) and load it into the `%rax` CPU register. This register is used for all return values. Then we reset the %rsp stack pointer back to the start of the functions stack frame, which was stored in %rbp. Then we pop the return address off the stack (Which is at the top of the stack, when we are at the start of the functions stack frame) and finally call `ret`. Which jumps back to the return address in `%rbp` and "brings" our return value along in `%rax`.
+E.g., given an **IR_RET** instruction, we first take the given virtual register (Which promises to store a return value) and load it into the `%rax` CPU register. This register is used for all return values in the MS  ABI Function Call Convention. Then we reset the %rsp stack pointer back to the start of the function's stack frame, which was stored in %rbp. Then we pop the return address off the stack (Which is at the top of the stack, when we are at the start of the functions stack frame) and finally call `ret`. Which jumps back to the return address in `%rbp` and "brings" our return value along in `%rax`.
 
 You can see how such a simple **IR** instruction can expand into a much more complex set of assembly instructions. This highlights the purpose of the intermediate representation, to hide away this overwhelming complexity so we can later focus on optimizaton and stuff.
 
-# Explanation
+# Grammar
 Below is the grammar for these comments to help understanding.
 
 Rules:
@@ -49,8 +52,8 @@ Rules:
 * '+' for any non-zero number.
 * '?' for optional
 * '[]' container for consumption, wraps general things like `expr` or `var decl`
-* [true] means any non-zero value
-* [false] means a value of zero only
+* 'true' means any non-zero value
+* 'false' means a value of zero only
 
 >### 1.  `(type)`
 "any valid variable type"
@@ -65,11 +68,11 @@ Can be prepended with any one of the following storage classifiers
 * static
 * extern
 
-Optionally also a mutability classifier
+Optionally also a mutability classifier:
 * *const*
 * *volatile*
 
-Optionally also a variant
+Optionally also a variant:
 * *unsigned*
 
 Typedef'ed 'identifiers' are also included.
@@ -94,6 +97,7 @@ Must be unique.
 ```c
     i++
 ```
+
 >### 4. `{compound}`
 "A list of block items wrapped in curly braces"
 ```c
@@ -116,6 +120,7 @@ Almost always ends with a ';'
 * Or Control Flow Statement
     * \[ `if`, `for`, `while`, `return`, `break`, `continue`, `switch` \]
     * *goto*
+
 >### 7. `var decl`
 "A `(type)` followed by an `identifier`, may be uninitialized"
 * Simple Variable declaration:
@@ -126,6 +131,7 @@ int a;
 ```c
 int a = 10;
 ```
+
 >### 8. Standard C Statements
 ### `if` statement
 Jumps to either `true` or `false` dependent on `cond`'s value 
