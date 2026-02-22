@@ -28,6 +28,8 @@ This step involves taking the **AST** and converting it from the recursive struc
 
 E.g., We reach a **N_RETURN** node. It has an `expr`, which we need to generate **IR** for before we can call **IR_RET**. First, we call `ir_gen_expression`, which creates the **IR** for the return expression and stores the result in some virtual register. `ir_gen_expression` then returns the register, which we can give to our **IR_RET** instruction. Now the **IR_RET** has only the register where its return value is. This makes converting to assembly very easy later on. Its similar to assembly but it only represents what the code will do, where assembly represents exactly what the computer will do (which as a human, is not always as clear). 
 
+The **IR_Module** makes use of pools to store symbols and their definitons. There is a const pool which stores all literals and can be referenced to using an index. The globals pool acts similarly, storing a literal but also a identifier. Finally the var pool which tracks defined locals. It exists its self as a stack of pools, one for each scope entered.
+
 This simplicity is vital for easily translating **IR** into actual assembly, which takes place in the final step.
 
 ### Analysis Pass
