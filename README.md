@@ -4,10 +4,10 @@ With the goal of eventual self compilation.
 
 # Architecture
 The compiler is comprised of 6 major sections. Each one has a clear task. 
-The compiler manages all sections and hands the work of one onto the next. It also handles loading the file from disc into memory and parsing compile flags given at runtime which change the compiler's behaviour.
+The compiler manages all sections and hands the work of one onto the next. It also handles loading the file from disc into memory and parsing compile flags given at runtime which change the compiler`s behaviour.
 
 ### The Tokenizer. 
-Its job is to take in the loaded file (called a translation unit), as a string of characters and convert it into an array of tokens. These tokens represent core parts of the grammar defined below, e.g. **TK_INT_LITERAL** is simply a raw number "1234", or **TK_RETURN** represents the the 'return' keyword. It performs this by loading tokens sequentially into a buffer until it finds a whitespace character. It then parses the buffer into a token. Essentially looking at each word and deciding what kind of token it is. There is more hidden complexity to this in skipping comments, or handling special characters but this is a good overview. Once it reaches the EOF (end of the file) it stops and returns the Token Array back to the compiler.
+Its job is to take in the loaded file (called a translation unit), as a string of characters and convert it into an array of tokens. These tokens represent core parts of the grammar defined below, e.g. **TK_INT_LITERAL** is simply a raw number "1234", or **TK_RETURN** represents the the `return` keyword. It performs this by loading tokens sequentially into a buffer until it finds a whitespace character. It then parses the buffer into a token. Essentially looking at each word and deciding what kind of token it is. There is more hidden complexity to this in skipping comments, or handling special characters but this is a good overview. Once it reaches the EOF (end of the file) it stops and returns the Token Array back to the compiler.
 
 ### The Parser
 The parser recieves the linear array of tokens and is tasked with converting it into a AST (abstract syntax tree). The tree is structured as follows:
@@ -22,7 +22,7 @@ The parser, starting from the very first token, uses context and grammar to deci
 Whilst parsing, a typedef token might be parsed, this happens the typedef entry is added to the symbol pool. This is later used by the parser to parse types.
 
 ### Semantic Analysis Pass
-The **AST** constructed by the parser is mostly typeless. Only explictly typed expressions have type information. It is the job of the semantic analysis pass to give every node a correct type. While doing so, it also ensures correctness through type checking. In the majority of cases a binary operation requires two operands of the same type. If the operands are found to have different types, we try to promote them to the same common type. If this is not possible and their types and completely incompatible, a type error is thrown. Semantic Analysis also handles converting constructs which are simply syntactic sugar into their literal underlying forms. E.g 'a[5]' is just '*(a + sizeof(element) * 5)'. Similarily 'a->b' is just '*(a).b'. These conversions are handled in this pass.
+The **AST** constructed by the parser is mostly typeless. Only explictly typed expressions have type information. It is the job of the semantic analysis pass to give every node a correct type. While doing so, it also ensures correctness through type checking. In the majority of cases a binary operation requires two operands of the same type. If the operands are found to have different types, we try to promote them to the same common type. If this is not possible and their types and completely incompatible, a type error is thrown. Semantic Analysis also handles converting constructs which are simply syntactic sugar into their literal underlying forms. E.g `a[5]` is just `*(a + sizeof(element) * 5)`. Similarily `a->b` is just `*(a).b`. These conversions are handled in this pass.
 
 During semantic analysis, the symbol table is added to for all declarations. Symbols should be unique so for every declaration we check if its identifier is already within the symbol table. If it is, we ensure it is already defined, in the case where it is, the current declaration cannot also contain a definiton. This case produces a redefinition error. If the symbol is not defined and the declaration is, we update the symbol with the definition.
 
@@ -36,9 +36,9 @@ The **IR_Module** makes use of pools to store symbols and their definitons. Ther
 This simplicity is vital for easily translating **IR** into actual assembly, which takes place in the final step.
 
 ### Analysis Pass
-When **IR** is generated, the instructions mostly use Virtual Registers. A virtual register is defined once and its value is read from many times. A virtual register does not get redefined nor does it actually exist in memory. The job of the Analysis pass is to replace these virtual registers with physical stack slots and registers. To achieve this, first a Control Flow Graph is generated from the **IR Blocks**. Each block is read to determine where it can branch to. The result is that every block has a list of successor blocks and predecessor blocks. The next step is to define what virtual registers a block defines/creates and what registers it uses but did not create. This is done by looping over every instruction within the block, it is known for each instruction which operand is a definition and which operands are just used. With this information we populate the blocks 'used' and 'defined' arrays.
-The next step is to compute for each block, the virtual registers which come from outside the block and which exist after the block ends. These are called the 'live_in' and 'live_out' arrays. The details of this are complex and will be skipped for brevity. At this point it can be concluded that for every block, where a virtual register is in its 'live_in' but not the 'live_out', the register dies within the block. For such instances we search for the last occurence of it and set that as the registers end instruction. The start instruction of every virtual register is simply found by looping over all instructions and recording when it is defined.
-With the liveness/lifetimes of every virtual register computed, we can now allocate them to reusable stack slots. This process is simple, given the virtual registers sorted from first defined to last defined, we check if their is a suitable stack slot availiable, if so we assign the register to it. Otherwise we create a new stack slot with the correct size and set its 'next_free' variable to the registers 'last_used'. This results in stack slots being reused once they are free.
+When **IR** is generated, the instructions mostly use Virtual Registers. A virtual register is defined once and its value is read from many times. A virtual register does not get redefined nor does it actually exist in memory. The job of the Analysis pass is to replace these virtual registers with physical stack slots and registers. To achieve this, first a Control Flow Graph is generated from the **IR Blocks**. Each block is read to determine where it can branch to. The result is that every block has a list of successor blocks and predecessor blocks. The next step is to define what virtual registers a block defines/creates and what registers it uses but did not create. This is done by looping over every instruction within the block, it is known for each instruction which operand is a definition and which operands are just used. With this information we populate the blocks `used` and `defined` arrays.
+The next step is to compute for each block, the virtual registers which come from outside the block and which exist after the block ends. These are called the `live_in` and `live_out` arrays. The details of this are complex and will be skipped for brevity. At this point it can be concluded that for every block, where a virtual register is in its `live_in` but not the `live_out`, the register dies within the block. For such instances we search for the last occurence of it and set that as the registers end instruction. The start instruction of every virtual register is simply found by looping over all instructions and recording when it is defined.
+With the liveness/lifetimes of every virtual register computed, we can now allocate them to reusable stack slots. This process is simple, given the virtual registers sorted from first defined to last defined, we check if their is a suitable stack slot availiable, if so we assign the register to it. Otherwise we create a new stack slot with the correct size and set its `next_free` variable to the registers `last_used`. This results in stack slots being reused once they are free.
 These slots can then be allocated on the stack as physical slots. Later, the first n compatible stack slots can be assigned to registers instead for optimisations. 
 
 ### x86 Gen
@@ -53,12 +53,12 @@ Below is the grammar for these comments to help understanding.
 
 Rules:
 * *Italics for unimplemented*.
-* '*' for any number, including zero.
-* '+' for any non-zero number.
-* '?' for optional
-* '[]' container for consumption, wraps general things like `expr` or `var decl`
-* 'true' means any non-zero value
-* 'false' means a value of zero only
+* `*` for any number, including zero.
+* `+` for any non-zero number.
+* `?` for optional
+* `[]` container for consumption, wraps general things like `expr` or `var decl`
+* `true` means any non-zero value
+* `false` means a value of zero only
 
 >### 1.  `(type)`
 "any valid variable type"
@@ -80,10 +80,10 @@ Optionally also a mutability classifier:
 Optionally also a variant:
 * *unsigned*
 
-Typedef'ed 'identifiers' are also included.
+Typedef`ed `identifiers` are also included.
 
 >### 2. `identifier` 
-"Any alpha-starting alpha-numeric string which may contain underscores '_' "
+"Any alpha-starting alpha-numeric string which may contain underscores `_` "
 
 Used to identify variables, functions, or typedef type aliases.
 Must be unique.
@@ -120,7 +120,7 @@ Must be unique.
 * `{compound}`
 * `expr`;
 * `;`
-Almost always ends with a ';'
+Almost always ends with a `;`
 
 * Or Control Flow Statement
     * \[ `if`, `for`, `while`, `return`, `break`, `continue`, `switch` \]
@@ -139,7 +139,7 @@ int a = 10;
 
 >### 8. Standard C Statements
 ### `if` statement
-Jumps to either `true` or `false` dependent on `cond`'s value 
+Jumps to either `true` or `false` dependent on `cond``s value 
 *{0 => false, any other value => true}*
 ```c
 if (cond) `true` [else `false`]?
@@ -241,28 +241,28 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * MS x64 ABI
     * Use registers for Parameters
     * Overflow 6/4+ to stack
+* Escaped characters
+    * `\n` and others.
+* Variadic Functions
+    * Link with external variadic functions
     
 ## To be Implemented (Ordered from next to never...)
-* Refactor for consistency
-* Ensure correct order of stack spilled function params
-* Variadic Functions
+* Array Initialization
+    * Compound literals `(Type){}`
 * Function ABI Calling Conventions
-    * SysV ABI
     * Handle Structs
-        * sizeof(struct A) < 16b => use registers
-        *       ...        > 16b => use hidden pointer to copy on function stack 
+        * `sizeof(struct A) < 16b` => use registers
+        * `              ...             > 16b` => use hidden pointer to copy on function stack 
     * Caller/Callee save registers
 * Use physical registers
     * Overflow to stack
-* Array Initialization
-    * Compound literals `(Type){}`
 * Pointers
     * [Pointer,Pointer] Arithmetic
     * Function pointers
 * Advanced Control Flow:
     * goto & labels
 * Literals
-    * Handle overflows and multi char literal `char a = 'abcd';`
+    * Handle overflows and multi char literal `char a = `abcd`;`
 * Structs and Unions, Enums
     * Designated Initializers `.member = value` [C99+]
     * Bitfield in structs
@@ -271,12 +271,15 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * Unsigned
 * Qualifiers
     * const, volatile
-* preprocessor
-    * `#define`, `#include` etc for conditional compilation.
+* Variadic Functions
+    * Compile variadic functions
+* ~~preprocessor~~
+* Use/Support a Preprocessor
 * Inline functions
 * Labels as values? (part of GCC, not standard C)
 * Volatile/Atomic memory
-* --Create a standard library--
+* SysV ABI
+* ~~Create a standard library~~
 * Support a standard library.
     * `printf`
     * `malloc`
