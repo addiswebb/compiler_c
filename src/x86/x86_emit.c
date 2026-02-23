@@ -1,3 +1,4 @@
+#include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/x86/x86.h"
@@ -202,7 +203,10 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         case T_INT:
             if (is_register_param) {
                 const char *x = gp_register_str[win64_int_param_regs[gp_index++]][reg_size(v->type->size)];
+                // const char *y = xmm_register_str[win64_float_param_regs[gp_index++]];
+                // TODO, use correct register based of given type and if variadic with float, copy to gp reg also
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x);
+                // fprintf(fp, "    movq %d(%%rbp), %s\n", v->reg.stack_offset, y);
             } else {
                 const char *v_reg = x86_rax_reg(v->type);
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, v_reg);
@@ -542,8 +546,9 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c,
     case T_POINTER:
     case T_ARRAY:
         if (t->base == type_char) {
-            fprintf(fp, "    lea .LC%d(%%rip), %%rax\n", pool_index);
-            break;
+            // fprintf(fp, "    lea .LC%d(%%rip), %%rax\n", pool_index);
+            // break;
+            return;
         }
     default:
         printf("Tried to emit const of unsupported type\n");

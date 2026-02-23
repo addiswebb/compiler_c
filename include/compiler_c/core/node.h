@@ -68,6 +68,7 @@ struct Node {
             bool is_global;
             bool is_defined;
             Symbol *symbol;
+            bool is_variadic;
         } func;
         // { [block_item]+ }
         struct {

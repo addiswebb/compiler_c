@@ -270,9 +270,13 @@ void print_node(const Node *node, const int depth) {
     case N_FUNCTION:
         printf(": [name= %s, param_count= %d, return_type= ", node->func.name, node->func.params_array.count);
         print_type(node->type);
+
         printf(", has_initializer=");
         if (node->func.has_initializer) printf("true");
         else printf("false");
+
+        if (node->func.is_variadic) printf(", variadic");
+
         if (node->func.storage_class == EXTERN) printf(", extern");
         if (node->func.storage_class == STATIC) printf(", static");
         printf("]");
@@ -283,6 +287,7 @@ void print_node(const Node *node, const int depth) {
                 print_type(param->type);
                 printf(" %s ", param->var_decl.identifier->identifier.name);
             }
+            if (node->func.is_variadic) printf(", ... ");
             printf("}");
         }
         printf("\n");

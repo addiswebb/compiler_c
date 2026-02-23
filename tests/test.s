@@ -1,4 +1,8 @@
 .section .rodata
+.LC0:
+    .string "Hello %s"
+.LC1:
+    .string "World"
 
 .text
 
@@ -8,13 +12,14 @@ main:
     mov %rsp, %rbp
     subq $16, %rsp
 main_0:
-    movl $97, %eax
-    movb %al, -8(%rbp)
-    movsbl -8(%rbp), %eax
-    movl %eax, -8(%rbp)
+    lea .LC0(%rip), %rax
+    movq %rax, -8(%rbp)
+    lea .LC1(%rip), %rax
+    movq %rax, -16(%rbp)
     subq $48, %rsp
-    movl -8(%rbp), %ecx
-    call putchar
+    movq -8(%rbp), %rcx
+    movq -16(%rbp), %rdx
+    call printf
     addq $48, %rsp
     movl %eax, -8(%rbp)
     movl $0, %eax

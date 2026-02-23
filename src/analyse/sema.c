@@ -1,4 +1,5 @@
 #include "compiler_c/analyse/sema.h"
+#include "compiler_c/core/type.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -316,18 +317,27 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         exit(1);
     case N_FUNCTION_CALL:
         const Node *func_def = p_get_func_def(p, node->func_call.identifier->identifier.name);
-        if (func_def->func.params_array.count != node->func_call.params_array.count) {
+        if (!func_def->func.is_variadic && func_def->func.params_array.count != node->func_call.params_array.count) {
             printf("Argument count mismatch: %s expects %d found %d\n", func_def->func.name, func_def->func.params_array.count,
                    node->func_call.params_array.count);
             exit(1);
         }
+        // TODO handle variadic with no named paramter here instead of parser.
         node->type = func_def->type;
-        for (int i = 0; i < func_def->func.params_array.count; i++) {
+        for (int i = 0; i < node->func_call.params_array.count; i++) {
             Node *func_call_ptr = get_node(&node->func_call.params_array, i);
             semantic_analysis(p, nm, func_call_ptr, loop);
-            Node *func_param = get_node(&func_def->func.params_array, i);
-            if (func_param->type != func_call_ptr->type) {
-                Node *casted_node = cast_node(nm, func_call_ptr, func_param->type);
+            // Only type check named params, skip variadic params.
+            if (i < func_def->func.params_array.count) {
+                Node *func_param = get_node(&func_def->func.params_array, i);
+                if (func_param->type != func_call_ptr->type) {
+                    Node *casted_node = cast_node(nm, func_call_ptr, func_param->type);
+                    set_node(&node->func_call.params_array, &casted_node, i);
+                }
+            }
+            // Always downcast arrays to pointers for functions
+            if (func_call_ptr->type->kind == T_ARRAY) {
+                Node *casted_node = cast_node(nm, func_call_ptr, get_pointer_type(func_call_ptr->type->base));
                 set_node(&node->func_call.params_array, &casted_node, i);
             }
         }

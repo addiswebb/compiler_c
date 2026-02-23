@@ -1,6 +1,8 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/analyse/sema.h"
+#include "compiler_c/core/node.h"
 #include "compiler_c/core/util.h"
+#include "compiler_c/tokenize/tokenizer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -669,6 +671,31 @@ Node *p_parse_compound(Parser *p, NodeManager *nm) {
     return node;
 }
 
+int p_parse_parameter_list(Parser *p, NodeManager *nm, Node *func) {
+    p_consume_a(p, TK_OPEN_PAREN);
+    while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
+        if (p_peek(p)->type == TK_ELLIPSES) {
+            if (func->func.params_array.count >= 1) {
+                p_consume(p);
+                p_consume_a(p, TK_CLOSE_PAREN);
+                return 1;
+            } else {
+                printf("Variadic function declaration must have at least one named parameter.\n");
+                exit(1);
+            }
+        }
+        Node *param = new_node(nm, N_VAR_DECL);
+        param->type = p_parse_type(p, nm);
+        param->var_decl.identifier = p_parse_decl_identifier(p, nm);
+        param->var_decl.expr = NULL;
+        p_append_param(func, param);
+        if (p_peek(p)->type == TK_COMMA) p_consume(p);
+        else break;
+    }
+    p_consume_a(p, TK_CLOSE_PAREN);
+    return 0;
+}
+
 /*
     Consumes
     `(type) identifier ([var decl],*) {[statement]*}`
@@ -682,17 +709,7 @@ Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, const StorageClas
     node->func.type = type;
     node->type = type->type;
 
-    p_consume_a(p, TK_OPEN_PAREN);
-    while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
-        Node *param = new_node(nm, N_VAR_DECL);
-        param->type = p_parse_type(p, nm);
-        param->var_decl.identifier = p_parse_decl_identifier(p, nm);
-        param->var_decl.expr = NULL;
-        p_append_param(node, param);
-        if (p_peek(p)->type == TK_COMMA) p_consume(p);
-        else break;
-    }
-    p_consume_a(p, TK_CLOSE_PAREN);
+    node->func.is_variadic = p_parse_parameter_list(p, nm, node);
     if (p_peek(p)->type == TK_SEMI) {
         p_consume(p);
         node->func.has_initializer = false;

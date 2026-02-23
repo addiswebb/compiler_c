@@ -5,9 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char *KEYWORDS[KEYWORDS_N] = {"break",  "case",   "char",   "continue", "default", "double",  "else", "enum",
-                                    "exit",   "extern", "float",  "for",      "if",      "int",     "long", "return",
-                                    "sizeof", "short",  "static", "struct",   "switch",  "typedef", "void", "while"};
+const char *KEYWORDS[KEYWORDS_N] = {
+    [TK_BREAK] = "break",   [TK_CASE] = "case",       [TK_CHAR] = "char",   [TK_CONTINUE] = "continue", [TK_DEFAULT] = "default",
+    [TK_DOUBLE] = "double", [TK_ELSE] = "else",       [TK_ENUM] = "enum",   [TK_EXIT] = "exit",         [TK_EXTERN] = "extern",
+    [TK_FLOAT] = "float",   [TK_FOR] = "for",         [TK_IF] = "if",       [TK_INT] = "int",           [TK_LONG] = "long",
+    [TK_RETURN] = "return", [TK_SIZEOF] = "sizeof",   [TK_SHORT] = "short", [TK_STATIC] = "static",     [TK_STRUCT] = "struct",
+    [TK_SWITCH] = "switch", [TK_TYPEDEF] = "typedef", [TK_VOID] = "void",   [TK_WHILE] = "while",       [TK_ELLIPSES] = "..."};
 
 static void t_buffer_reset(Tokenizer *tk) {
     tk->buf.size = 0;
@@ -280,7 +283,10 @@ void t_tokenize(Tokenizer *tk) {
         const char c = t_peek(tk);
         if (c == '.' && !is_num(t_peek_next(tk))) {
             t_consume(tk);
-            t_push_buffer(tk, TK_DOT);
+            if (t_peek(tk) == '.' && t_peek_next(tk) == '.') {
+                t_consume_n(tk, 2);
+                t_push_buffer(tk, TK_ELLIPSES);
+            } else t_push_buffer(tk, TK_DOT);
         } else if (is_num(c) || c == '.') {
             int is_float = 0;
             t_consume(tk);
@@ -827,6 +833,9 @@ void print_token_type(const TokenType type) {
         break;
     case TK_STATIC:
         printf("Static");
+        break;
+    case TK_ELLIPSES:
+        printf("\'...\'");
         break;
     }
 }

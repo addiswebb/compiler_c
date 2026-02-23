@@ -1,6 +1,6 @@
+#include "compiler_c/core/node.h"
 #include "compiler_c/ir/ir_gen.h"
 #include "compiler_c/ir/ir_module.h"
-#include "compiler_c/core/node.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -34,12 +34,14 @@ IR_Value ir_store_mem(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     append(&ctx->block->instruction_array, &i);
     return i.ops[0];
 }
+// TODO: Always use the .LCx label, and replace it in analysis with the int literal (if type is compatible integer)
 IR_Value ir_const(IR_Context *ctx, IR_Value c, Type *type) {
     IR_Instruction i;
     i.op = IR_CONST;
     i.ops[1] = c;
     i._const.type = type;
-    i.ops[0] = ir_next_virtual_reg(ctx->func);
+    // Use the .LCx literal for strings, otherwise it was lowered to an asm literal and stored in a register.
+    i.ops[0] = type->kind == T_ARRAY && type->base == type_char ? c : ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
     append(&ctx->block->instruction_array, &i);
     return i.ops[0];
