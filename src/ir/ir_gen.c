@@ -421,6 +421,12 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     case N_CONTINUE:
         ir_branch(ctx, get_loop_ctx(ctx)->continue_block);
         return;
+    case N_GOTO:
+        ir_jmp(ctx, stmt->_goto.identifier->identifier.name);
+        return;
+    case N_LABEL:
+        ir_label(ctx, stmt->label.identifier->identifier.name);
+        return;
     default:
         // given invalid statement? probably an expression
         printf("Dont know what to do with the given statemnet: ir_gen_statement: ");

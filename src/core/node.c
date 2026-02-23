@@ -178,6 +178,12 @@ void print_node_type(const NodeKind type) {
     case N_TYPEDEF:
         printf("Typedef");
         break;
+    case N_GOTO:
+        printf("Goto");
+        break;
+    case N_LABEL:
+        printf("Label");
+        break;
     }
 }
 
@@ -400,6 +406,12 @@ void print_node(const Node *node, const int depth) {
         print_type(node->type);
         printf(", identifier]\n");
         print_node(node->_typedef.symbol, depth + 1);
+        break;
+    case N_GOTO:
+        printf(": [ %s ]\n", node->_goto.identifier->identifier.name);
+        break;
+    case N_LABEL:
+        printf(": [ %s ]\n", node->label.identifier->identifier.name);
         break;
     }
 }

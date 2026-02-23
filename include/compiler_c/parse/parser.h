@@ -5,7 +5,7 @@
 #include "compiler_c/tokenize/tokenizer.h"
 #include <stdbool.h>
 
-#define DEBUG_CONSUME 0
+#define DEBUG_CONSUME 1
 #define DEFAULT_STATEMENTS_PER_BLOCK 8
 
 typedef struct{
@@ -129,6 +129,20 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm);
     Where `term` is any `literal`, `identifier` or `[expr]`
 */
 Node *p_parse_expression(Parser *p,NodeManager *nm,int min_prec);
+/*
+    Consumes
+    `goto [label];`
+    Where `label` is any valid unique identifier.
+*/
+Node *p_parse_goto_statement(Parser *p,NodeManager *nm);
+
+/*
+    Consumes
+    `[label]:`
+    Where `label` is any valid unique identifier.
+*/
+Node *p_parse_label(Parser *p,NodeManager *nm);
+
 /*
     Consumes either,
     `var decl`.

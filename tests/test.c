@@ -1,6 +1,11 @@
 extern int printf(char *format, ...);
 
 int main() {
-    printf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n", 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    goto a;
+b:
+    printf(" Word\n");
     return 0;
+a:
+    printf("Hello");
+    goto b;
 }

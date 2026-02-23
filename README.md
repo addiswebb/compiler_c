@@ -120,6 +120,7 @@ Must be unique.
 * `{compound}`
 * `expr`;
 * `;`
+
 Almost always ends with a `;`
 
 * Or Control Flow Statement
@@ -247,20 +248,20 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * Link with external variadic functions
     
 ## To be Implemented (Ordered from next to never...)
-* Array Initialization
-    * Compound literals `(Type){}`
+* Advanced Control Flow:
+    * goto & labels
 * Function ABI Calling Conventions
     * Handle Structs
         * `sizeof(struct A) < 16b` => use registers
-        * `              ...             > 16b` => use hidden pointer to copy on function stack 
+        * `       ...       > 16b` => use hidden pointer to copy on function stack 
     * Caller/Callee save registers
 * Use physical registers
     * Overflow to stack
 * Pointers
     * [Pointer,Pointer] Arithmetic
     * Function pointers
-* Advanced Control Flow:
-    * goto & labels
+* Array Initialization
+    * Compound literals `(Type){}`
 * Literals
     * Handle overflows and multi char literal `char a = `abcd`;`
 * Structs and Unions, Enums
@@ -273,14 +274,12 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * const, volatile
 * Variadic Functions
     * Compile variadic functions
-* ~~preprocessor~~
-* Use/Support a Preprocessor
+* Use/Support a Preprocessor (~~Write a Preprocessor~~)
 * Inline functions
 * Labels as values? (part of GCC, not standard C)
 * Volatile/Atomic memory
 * SysV ABI
-* ~~Create a standard library~~
-* Support a standard library.
+* Support a standard library. (~~Create a standard library~~)
     * `printf`
     * `malloc`
     * `free`

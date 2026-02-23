@@ -219,6 +219,28 @@ Node *new_function_call_node(NodeManager *nm, Node *identifier) {
     array_init(&node->func_call.params_array, 4, sizeof(Node *));
     return node;
 }
+Node *p_parse_goto_statement(Parser *p, NodeManager *nm) {
+    p_consume(p);
+    Node *identifier = new_node(nm, N_IDENTIFIER);
+    const Token *t = p_consume_a(p, TK_IDENTIFIER);
+    identifier->identifier.name = t->value;
+    identifier->identifier.len = t->size;
+    Node *node = new_node(nm, N_GOTO);
+    node->_goto.identifier = identifier;
+    p_consume_semi(p);
+    return node;
+}
+
+Node *p_parse_label(Parser *p, NodeManager *nm) {
+    Node *identifier = new_node(nm, N_IDENTIFIER);
+    const Token *t = p_consume_a(p, TK_IDENTIFIER);
+    identifier->identifier.name = t->value;
+    identifier->identifier.len = t->size;
+    Node *node = new_node(nm, N_LABEL);
+    node->_goto.identifier = identifier;
+    p_consume_a(p, TK_COLON);
+    return node;
+}
 
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     Node *primary = p_parse_primary_expression(p, nm);
@@ -637,6 +659,7 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
         return p_parse_return(p, nm);
     case TK_MULTIPLY:
     case TK_IDENTIFIER:
+        if (p_peek_next(p)->type == TK_COLON) return p_parse_label(p, nm);
         Node *n = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
         p_consume_semi(p);
         return n;
@@ -645,6 +668,8 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
     case TK_SEMI:
         printf("Null statement is currently unsupported ';'\n");
         exit(1);
+    case TK_GOTO:
+        return p_parse_goto_statement(p, nm);
     default:
         return p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
     }

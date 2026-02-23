@@ -299,10 +299,10 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         node->type = check_binary_op(nm, node->binary.op, node);
         break;
     case N_CAST:
-        if (node->cast.expr->kind == N_INIT_LIST) {
-            printf("Unable to handle casting initializer lists to structs\n");
-            exit(1);
-        }
+        // if (node->cast.expr->kind == N_INIT_LIST) {
+        //     printf("Unable to handle casting initializer lists to structs\n");
+        //     exit(1);
+        // }
         semantic_analysis(p, nm, node->cast.expr, loop);
         if (is_valid_cast(node->cast.expr->type, node->cast.to)) {
             node->cast.from = node->cast.expr->type;
@@ -514,6 +514,8 @@ void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop) {
         }
         break;
     case N_TYPEDEF:
+    case N_GOTO:
+    case N_LABEL:
         break;
     }
 }

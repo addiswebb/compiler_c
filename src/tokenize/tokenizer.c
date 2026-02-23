@@ -7,10 +7,11 @@
 
 const char *KEYWORDS[KEYWORDS_N] = {
     [TK_BREAK] = "break",   [TK_CASE] = "case",       [TK_CHAR] = "char",   [TK_CONTINUE] = "continue", [TK_DEFAULT] = "default",
-    [TK_DOUBLE] = "double", [TK_ELSE] = "else",       [TK_ENUM] = "enum",   [TK_EXIT] = "exit",         [TK_EXTERN] = "extern",
-    [TK_FLOAT] = "float",   [TK_FOR] = "for",         [TK_IF] = "if",       [TK_INT] = "int",           [TK_LONG] = "long",
+    [TK_DOUBLE] = "double", [TK_ELSE] = "else",       [TK_ENUM] = "enum",   [TK_EXTERN] = "extern",     [TK_FLOAT] = "float",
+    [TK_FOR] = "for",       [TK_GOTO] = "goto",       [TK_IF] = "if",       [TK_INT] = "int",           [TK_LONG] = "long",
     [TK_RETURN] = "return", [TK_SIZEOF] = "sizeof",   [TK_SHORT] = "short", [TK_STATIC] = "static",     [TK_STRUCT] = "struct",
-    [TK_SWITCH] = "switch", [TK_TYPEDEF] = "typedef", [TK_VOID] = "void",   [TK_WHILE] = "while",       [TK_ELLIPSES] = "..."};
+    [TK_SWITCH] = "switch", [TK_TYPEDEF] = "typedef", [TK_VOID] = "void",   [TK_WHILE] = "while",
+};
 
 static void t_buffer_reset(Tokenizer *tk) {
     tk->buf.size = 0;
@@ -68,6 +69,9 @@ static void t_consume_n(Tokenizer *tk, const int n) {
         exit(1);
     } else {
         for (int i = 0; i < n; i++) {
+            if (DEBUG_TOKENIZER) {
+                printf("%c", tk->src[tk->index]);
+            }
             tk->buf.buf[tk->buf.size++] = tk->src[tk->index++];
         }
     }
@@ -657,9 +661,6 @@ int op_precedence(const TokenType type) {
 }
 void print_token_type(const TokenType type) {
     switch (type) {
-    case TK_EXIT:
-        printf("Exit");
-        break;
     case TK_INT_LITERAL:
         printf("Int Literal");
         break;
@@ -700,10 +701,10 @@ void print_token_type(const TokenType type) {
         printf("Int");
         break;
     case TK_FLOAT:
-        printf("Float");
+        printf("float");
         break;
     case TK_CHAR:
-        printf("Char");
+        printf("char");
         break;
     case TK_VOID:
         printf("void");
@@ -881,6 +882,9 @@ void print_token_type(const TokenType type) {
         break;
     case TK_ELLIPSES:
         printf("\'...\'");
+        break;
+    case TK_GOTO:
+        printf("goto");
         break;
     }
 }

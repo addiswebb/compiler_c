@@ -118,6 +118,24 @@ IR_Value ir_branch(IR_Context *ctx, IR_Block *block) {
     append(&ctx->block->instruction_array, &i);
     return ir_no_value;
 }
+
+IR_Value ir_jmp(IR_Context *ctx, const char *name) {
+    IR_Instruction i;
+    i.op = IR_JMP;
+    i.jmp.name = name;
+    i.op_count = 0;
+    append(&ctx->block->instruction_array, &i);
+    return ir_no_value;
+}
+
+IR_Value ir_label(IR_Context *ctx, const char *name) {
+    IR_Instruction i;
+    i.op = IR_LABEL;
+    i.label.name = name;
+    i.op_count = 0;
+    append(&ctx->block->instruction_array, &i);
+    return ir_no_value;
+}
 IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, IR_Block *f_block) {
     IR_Instruction i;
     i.op = IR_BR_COND;

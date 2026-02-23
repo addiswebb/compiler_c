@@ -405,6 +405,12 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
     case IR_STORE_MEM:
         print_ir_store_mem(ctx, instr);
         break;
+    case IR_LABEL:
+        printf("%s:\n", instr->label.name);
+        break;
+    case IR_JMP:
+        printf("    JMP %s\n", instr->jmp.name);
+        break;
     }
 }
 

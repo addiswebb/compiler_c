@@ -150,6 +150,12 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         fprintf(fp, "    testl %%eax, %%eax\n");
         if (instr->br_cond.f_block) fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_block->id);
         break;
+    case IR_LABEL:
+        fprintf(fp, "%s:\n", instr->label.name);
+        break;
+    case IR_JMP:
+        fprintf(fp, "    jmp %s\n", instr->jmp.name);
+        break;
     }
 }
 static void x86_gen_block(FILE *fp, IR_Context *ctx) {

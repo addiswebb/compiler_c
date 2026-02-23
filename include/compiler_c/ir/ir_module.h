@@ -49,6 +49,8 @@ typedef enum {
     IR_ADDR,
     IR_ALLOCA,
     IR_MEMCPY,
+    IR_LABEL,
+    IR_JMP,
 } IR_OP;
 
 typedef enum{
@@ -148,6 +150,8 @@ typedef struct {
         struct { int offset; } addr;
         struct { int size; } alloca;
         struct { int size; } memcpy;
+        struct { const char *name; } label;
+        struct { const char *name; } jmp;
     };
 } IR_Instruction;
 

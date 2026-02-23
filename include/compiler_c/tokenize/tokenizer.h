@@ -4,7 +4,7 @@
 #include "compiler_c/core/array.h"
 #include <stdbool.h>
 
-#define DEBUG_TOKENIZER 0
+#define DEBUG_TOKENIZER 1
 #define MIN_BINARY_OP_PRECEDENCE 0
 
 #define LEFT_ASSOCIATIVITY 1
@@ -17,7 +17,7 @@ typedef struct {
     int size;
 } Buffer;
 
-#define KEYWORDS_N 25
+#define KEYWORDS_N 24
 
 /* All standard C keywords */
 extern const char* KEYWORDS[KEYWORDS_N];
@@ -42,10 +42,10 @@ typedef enum {
     TK_DOUBLE,
     TK_ELSE,
     TK_ENUM,
-    TK_EXIT,
     TK_EXTERN,
     TK_FLOAT,
     TK_FOR,
+    TK_GOTO,
     TK_IF,
     TK_INT,
     TK_LONG,
@@ -58,7 +58,6 @@ typedef enum {
     TK_TYPEDEF,
     TK_VOID,
     TK_WHILE,
-    TK_ELLIPSES,
     // Unary Operators
     TK_L_NOT, TK_BW_NOT, TK_INCR, TK_DECR,
     // Binary Operators
@@ -83,6 +82,7 @@ typedef enum {
     TK_INT_LITERAL, TK_FLT_LITERAL, TK_CHAR_LITERAL, TK_STRING_LITERAL,
     TK_EXPR,
     TK_IDENTIFIER,
+    TK_ELLIPSES,
 } TokenType;
 
 typedef struct {

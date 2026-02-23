@@ -31,6 +31,8 @@ typedef enum {
     N_BREAK,
     N_INIT_LIST,
     N_MEMBER_ACCESS,
+    N_GOTO,
+    N_LABEL,
 } NodeKind;
 
 typedef enum{
@@ -188,6 +190,12 @@ struct Node {
         struct{
             Node *symbol;
         }_typedef;
+        struct{
+            Node *identifier;
+        }_goto;
+        struct{
+            Node *identifier;
+        }label;
     };
 };
 
