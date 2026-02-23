@@ -30,7 +30,7 @@ Write-Host "[2/4] Assembling $Base1.s → $Base1.o"
 Write-Host "[3/4] Compiling $File2 with gcc → $Base2.o"
 & gcc -c $File2 -o "$Base2.o"
 
-Write-Host "[4/4] Linking → a.exe (no libc)"
+Write-Host "[4/4] Linking → a.exe"
 & gcc "$Base1.o" "$Base2.o" -o "a.exe"
 
 Write-Host "Done."

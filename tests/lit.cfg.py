@@ -19,3 +19,7 @@ config.substitutions.append(("%cc", r"E:\dev\compiler_c\build\compiler_c.exe"))
 config.substitutions.append(
     ("%check_exit", r"python E:\dev\compiler_c\tests\check_exit.py")
 )
+
+config.substitutions.append(
+    ("%check_output", r"python E:\dev\compiler_c\tests\check_output.py")
+)
