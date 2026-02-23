@@ -81,6 +81,8 @@ static void t_consume_n(Tokenizer *tk, const int n) {
 */
 static void t_consume(Tokenizer *tk) { t_consume_n(tk, 1); }
 
+static void t_consume_a(Tokenizer *tk, const char c) { tk->buf.buf[tk->buf.size++] = c; }
+
 static void t_skip_n(Tokenizer *tk, int n) {
     if (tk->index + n > tk->size) {
         printf("T_Skip Reached end of the file");
@@ -103,9 +105,6 @@ static void t_push_buffer(Tokenizer *tk, const TokenType type) {
     }
     memcpy(buf_dupe, tk->buf.buf, sizeof(char) * tk->buf.size);
     append(&tk->tokens_array, &(Token){type, buf_dupe, tk->buf.size});
-    if (DEBUG_TOKENIZER) {
-        printf("Buf: %.10s\n", tk->buf.buf);
-    }
     t_buffer_reset(tk);
 }
 
@@ -259,6 +258,7 @@ static void t_consume_special_char(Tokenizer *tk) {
         exit(1);
     }
     t_consume(tk);
+    t_consume_a(tk, '\0');
     t_push_buffer(tk, type);
 }
 static void t_consume_char_literal(Tokenizer *tk) {
@@ -320,7 +320,7 @@ static void t_consume_string_literal(Tokenizer *tk) {
 
         if (c == '\\') {
             int n = 0;
-            tk->buf.buf[tk->buf.size++] = t_parse_escape_sequence(tk, &n);
+            t_consume_a(tk, t_parse_escape_sequence(tk, &n));
             t_skip_n(tk, n);
         } else t_consume(tk);
     }
