@@ -1,11 +1,10 @@
 .section .rodata
 .LC0:
-    .string "Hello %s"
+    .byte 'H', 'e', 'l', 'l', 'o', ' ', '%', 's', 0x0A, 0
 .LC1:
-    .string "World"
+    .byte 'W', 'o', 'r', 'l', 'd', 0
 
 .text
-
 .global main
 main:
     push %rbp

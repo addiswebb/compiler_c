@@ -268,13 +268,58 @@ static void t_consume_char_literal(Tokenizer *tk) {
         exit(1);
     }
 }
+static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
+    t_skip(tk); // '\\'
+    char c = t_peek(tk);
+    *length = 1;
+    switch (c) {
+    case 'n':
+        return '\n';
+    case 't':
+        return '\t';
+    case 'r':
+        return '\r';
+    case '\\':
+        return '\\';
+    case '"':
+        return '\"';
+    case '\'':
+        return '\'';
+    case '0':
+        return 0;
+    // Dont forget to update *length to correctly skip escaped characters.
+    case 'x':
+        printf("Escaped hex sequences are currently unsupported\n");
+        exit(1);
+    default:
+        if (is_oct(c)) {
+            printf("Escaped oct sequences are currently unsupported\n");
+            exit(1);
+        }
+        printf("Invalid escape sequence\n");
+        exit(1);
+    }
+}
 
 static void t_consume_string_literal(Tokenizer *tk) {
     t_skip(tk); // "
-    while (t_peek(tk) != '\"') {
-        t_consume(tk);
+    for (;;) {
+        char c = t_peek(tk);
+        if (c == '\n') {
+            printf("Found \'\\n\' in string literal.");
+            exit(1);
+        }
+        if (c == '\"') {
+            t_skip(tk); // "
+            break;
+        }
+
+        if (c == '\\') {
+            int n = 0;
+            tk->buf.buf[tk->buf.size++] = t_parse_escape_sequence(tk, &n);
+            t_skip_n(tk, n);
+        } else t_consume(tk);
     }
-    t_skip(tk); // "
     t_push_buffer(tk, TK_STRING_LITERAL);
 }
 

@@ -576,3 +576,17 @@ void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t)
     x86_emit_rr(fp, "mov", op_suffix, "", "(%rax)", reg);
     x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
 }
+
+void x86_emit_string(FILE *fp, const char *str) {
+    fprintf(fp, "    .byte ");
+    while (*str) {
+        unsigned char c = *str;
+        if (c >= 0x20 && c <= 0x7E && c != '\'' && c != '\\' && c != '"') {
+            fprintf(fp, "\'%c\', ", c);
+        } else {
+            fprintf(fp, "0x%02X, ", c);
+        }
+        str++;
+    }
+    fprintf(fp, "0\n");
+}

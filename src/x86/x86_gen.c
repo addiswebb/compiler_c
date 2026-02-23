@@ -187,7 +187,8 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
                 memcpy(&bits, &c->f, sizeof(bits));
                 fprintf(fp, ".align 4\n.LC%d:\n    .long 0x%08x\n", i, bits);
             } else if (c->type->kind == T_ARRAY && c->type->base == type_char) {
-                fprintf(fp, ".LC%d:\n    .string \"%s\"\n", i, c->s.data);
+                fprintf(fp, ".LC%d:\n", i);
+                x86_emit_string(fp, c->s.data);
             }
         }
     }
@@ -216,7 +217,8 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
                 memcpy(&bits, &c->f, sizeof(bits));
                 fprintf(fp, ".align 4\n%s:\n    .long 0x%08x\n", g->name, bits);
             } else if (c->type->kind == T_ARRAY && c->type->base == type_char) {
-                fprintf(fp, ".align 8\n%s:\n    .string \"%s\"\n", g->name, c->s.data);
+                fprintf(fp, ".align 8\n%s:\n", g->name);
+                x86_emit_string(fp, c->s.data);
             } else if (c->type == type_int) {
                 fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->name, (int)c->i);
             } else if (c->type == type_char) {
@@ -229,7 +231,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
         }
     }
 
-    fprintf(fp, "\n.text\n\n");
+    fprintf(fp, "\n.text\n");
     for (int i = 0; i < ctx->module->functions_array.count; i++) {
         ctx->func = get_func(ctx->module, i);
         x86_gen_function(fp, ctx);

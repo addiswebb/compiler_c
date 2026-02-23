@@ -30,6 +30,7 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c,
 void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
 void x86_emit_store_mem(FILE *fp,const  IR_Value *src, const IR_Value *dst, const Type *t);
 void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
+void x86_emit_string(FILE *fp, const char *str);
 
 static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
 static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr);
