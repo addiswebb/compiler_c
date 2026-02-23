@@ -1,6 +1,6 @@
 #include "compiler_c/ir/ir_gen.h"
 #include "compiler_c/ir/ir_module.h"
-#include "compiler_c/node.h"
+#include "compiler_c/core/node.h"
 #include <stdio.h>
 #include <stdlib.h>
 

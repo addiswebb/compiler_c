@@ -1,9 +1,10 @@
 #include "compiler_c/ir/ir_util.h"
+#include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
-#include "compiler_c/tokenizer.h"
-#include "compiler_c/type.h"
+#include "compiler_c/tokenize/tokenizer.h"
 #include <stdio.h>
 #include <stdlib.h>
+
 IR_CMP_OP ir_cmp_op(const TokenType type) {
     switch (type) {
     case TK_EQ_EQ:

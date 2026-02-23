@@ -1,7 +1,7 @@
-#include "compiler_c/array.h"
-#include "compiler_c/tokenizer.h"
-#include "compiler_c/type.h"
-#include <compiler_c/node.h>
+#include "compiler_c/core/array.h"
+#include "compiler_c/core/type.h"
+#include "compiler_c/tokenize/tokenizer.h"
+#include <compiler_c/core/node.h>
 
 #include <stdio.h>
 #include <stdlib.h>

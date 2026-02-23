@@ -1,13 +1,3 @@
-// stdlib.h minimal
-#include <stdio.h>
-extern int abs(int x);
+extern int test(int a, int b, int c, int d, int e, int f, int g);
 
-// stdio.h minimal
-extern int putchar(int c);
-
-int main() {
-    // puts("hello world\n");
-    char str[6] = "hello";
-    puts(str);
-    return putchar('c');
-}
+int main() { return test(1, 2, 3, 4, 5, 6, 7); }

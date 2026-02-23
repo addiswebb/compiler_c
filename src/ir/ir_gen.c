@@ -3,15 +3,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "compiler_c/analyse/sema.h"
+#include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/parse/parser.h"
-#include "compiler_c/sema.h"
-#include "compiler_c/tokenizer.h"
-#include "compiler_c/type.h"
+#include "compiler_c/tokenize/tokenizer.h"
+#include <compiler_c/core/node.h>
 #include <compiler_c/ir/ir_builder.h>
 #include <compiler_c/ir/ir_gen.h>
-#include <compiler_c/node.h>
 
 static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {

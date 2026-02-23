@@ -1,4 +1,4 @@
-#include "compiler_c/array.h"
+#include "compiler_c/core/array.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

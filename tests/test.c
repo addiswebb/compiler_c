@@ -1,12 +1,8 @@
+// extern int test(int a, int b, int c, int d, int e, int f);
+extern int putchar(int character);
+
 int main() {
-    int a[3] = {4, 2, 1};
-    int *p = a;
-
-    if ((int)(*(p + 1) / (float)a[2]) == 2) {
-        a[0] <<= 1; // 8
-    } else {
-        a[0] >>= 1;
-    }
-
-    return a[0] + a[1] + a[2]; // 8 + 2 + 1 = 11
+    putchar('a');
+    // return test(1, 2, 3, 4, 5, 6);
+    return 0;
 }

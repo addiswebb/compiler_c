@@ -1,4 +1,4 @@
-#include <compiler_c/util.h>
+#include <compiler_c/core/util.h>
 
 bool is_alpha(const char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
 char to_lower_case(const char c) { return c | (1 << 5); }

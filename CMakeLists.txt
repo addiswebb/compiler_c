@@ -13,7 +13,7 @@ add_executable(compiler_c
     src/main.c
     src/compiler.c
     src/core/node.c
-   src/core/util.c
+    src/core/util.c
     src/core/array.c
     src/core/type.c
     src/tokenize/tokenizer.c

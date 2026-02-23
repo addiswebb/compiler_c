@@ -1,5 +1,5 @@
-#include "compiler_c/type.h"
-#include "compiler_c/array.h"
+#include "compiler_c/core/type.h"
+#include "compiler_c/core/array.h"
 #include "compiler_c/parse/parser.h"
 #include <stdint.h>
 #include <stdio.h>
