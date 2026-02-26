@@ -626,8 +626,10 @@ Node *p_get_current_func_definition(const Parser *p) {
 Node *p_parse_return(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_RETURN);
     p_consume(p); // -> return
-    node->_return.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-    node->type = type_invalid;
+    if (p_peek(p)->type != TK_SEMI) {
+        node->_return.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+        node->type = type_invalid;
+    }
     p_consume_semi(p);
     return node;
 }
@@ -701,25 +703,27 @@ Node *p_parse_compound(Parser *p, NodeManager *nm) {
 
 int p_parse_parameter_list(Parser *p, NodeManager *nm, Node *func) {
     p_consume_a(p, TK_OPEN_PAREN);
-    while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
-        if (p_peek(p)->type == TK_ELLIPSES) {
-            if (func->func.params_array.count >= 1) {
-                p_consume(p);
-                p_consume_a(p, TK_CLOSE_PAREN);
-                return 1;
-            } else {
-                printf("Variadic function declaration must have at least one named parameter.\n");
-                exit(1);
+    if (p_peek(p)->type != TK_VOID) {
+        while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
+            if (p_peek(p)->type == TK_ELLIPSES) {
+                if (func->func.params_array.count >= 1) {
+                    p_consume(p);
+                    p_consume_a(p, TK_CLOSE_PAREN);
+                    return 1;
+                } else {
+                    printf("Variadic function declaration must have at least one named parameter.\n");
+                    exit(1);
+                }
             }
+            Node *param = new_node(nm, N_VAR_DECL);
+            param->type = p_parse_type(p, nm);
+            param->var_decl.identifier = p_parse_decl_identifier(p, nm);
+            param->var_decl.expr = NULL;
+            p_append_param(func, param);
+            if (p_peek(p)->type == TK_COMMA) p_consume(p);
+            else break;
         }
-        Node *param = new_node(nm, N_VAR_DECL);
-        param->type = p_parse_type(p, nm);
-        param->var_decl.identifier = p_parse_decl_identifier(p, nm);
-        param->var_decl.expr = NULL;
-        p_append_param(func, param);
-        if (p_peek(p)->type == TK_COMMA) p_consume(p);
-        else break;
-    }
+    } else p_consume(p);
     p_consume_a(p, TK_CLOSE_PAREN);
     return 0;
 }
@@ -761,7 +765,6 @@ Node *p_parse_decl_identifier(Parser *p, NodeManager *nm) {
     if (expect_closing_paren) p_consume_a(p, TK_CLOSE_PAREN);
     return node;
 }
-
 
 Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const StorageClass storage_class, const bool global) {
     if (type_decl->type->kind == T_STRUCT || type_decl->type->kind == T_ENUM) {

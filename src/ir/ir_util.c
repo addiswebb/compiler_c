@@ -451,6 +451,7 @@ void print_ir_value(const IR_Value *v) {
         printf(".LC%d", v->const_index);
         break;
     case IR_UNDEFINED:
+        printf("Undefined");
         break;
     case IR_GLOBAL:
         printf("g[%s]", v->global->name);

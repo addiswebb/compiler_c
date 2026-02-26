@@ -453,7 +453,10 @@ static void ir_gen_label(IR_Context *ctx, const Node *label) {
     ir_append_block(ctx, lb->block);
 }
 
-static void ir_gen_return(IR_Context *ctx, const Node *_return) { ir_return(ctx, ir_gen_rvalue(ctx, _return->_return.expr)); }
+static void ir_gen_return(IR_Context *ctx, const Node *_return) {
+    IR_Value return_value = _return->_return.expr ? ir_gen_rvalue(ctx, _return->_return.expr) : ir_no_value;
+    ir_return(ctx, return_value);
+}
 
 static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     if (func->kind != N_FUNCTION) {

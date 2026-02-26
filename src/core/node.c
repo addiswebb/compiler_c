@@ -195,6 +195,10 @@ void print_indent(const int depth) {
 
 void print_node(const Node *node, const int depth) {
     print_indent(depth);
+    if (node == NULL) {
+        printf("-\n");
+        return;
+    }
     print_node_type(node->kind);
     switch (node->kind) {
     case N_TRANSLATION_UNIT:

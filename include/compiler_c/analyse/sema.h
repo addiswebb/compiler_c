@@ -2,6 +2,12 @@
 #define COMPILER_C_SEMA_H
 #include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"
+#include <complex.h>
+
+typedef struct{
+    Node *loop;
+    Node *func;
+}SemanticContext;
 
 /* Is a node which is assignable */
 bool is_lvalue(const Node *n);
@@ -31,7 +37,7 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop);
     Ensures that the resulting AST is safe and correct to lower to IR.
     Casts types, lowers enums, handles literals, assigns correct types, lowers `a->` to `*(a).b`.
 */
-void semantic_analysis(Parser *p, NodeManager *nm, Node *node, Node *loop);
+void semantic_analysis(SemanticContext *sema_ctx,Parser *p, NodeManager *nm, Node *node);
 
 /*
     Converts all AST enum field nodes to integer literals. Must be called after semantic analysis has computed types.

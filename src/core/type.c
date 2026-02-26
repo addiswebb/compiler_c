@@ -247,6 +247,9 @@ void print_type(Type *type) {
             printf("}");
         }
         break;
+    case T_VOID:
+        printf("void");
+        break;
     default:
         printf("Not handling other types in print_type\n");
         exit(1);

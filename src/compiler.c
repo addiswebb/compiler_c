@@ -92,8 +92,8 @@ int compile(Compiler *compiler) {
 
     init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
-
-    semantic_analysis(&compiler->p, &compiler->nm, &compiler->nm.nodes[0], NULL);
+    SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL};
+    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, &compiler->nm.nodes[0]);
 
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 

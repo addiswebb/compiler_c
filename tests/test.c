@@ -1,11 +1,13 @@
 extern int printf(char *format, ...);
 
-int main() {
-    goto a;
-b:
-    printf(" Word\n");
+void faa() {
+    printf("faa\n");
+    return;
+}
+
+void foo() { return faa(); }
+
+int main(void) {
+    foo();
     return 0;
-a:
-    printf("Hello");
-    goto b;
 }
