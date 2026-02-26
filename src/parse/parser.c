@@ -287,6 +287,9 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm) {
 */
 Type *p_parse_type(Parser *p, NodeManager *nm) {
     Type *type;
+    if (p_peek(p)->type == TK_CONST) {
+        p_consume(p);
+    }
     if (p_peek(p)->type == TK_STRUCT) {
         type = p_parse_struct(p, nm);
     } else if (p_peek(p)->type == TK_ENUM) {
@@ -759,6 +762,7 @@ Node *p_parse_decl_identifier(Parser *p, NodeManager *nm) {
     return node;
 }
 
+
 Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const StorageClass storage_class, const bool global) {
     if (type_decl->type->kind == T_STRUCT || type_decl->type->kind == T_ENUM) {
         if (p_peek(p)->type != TK_IDENTIFIER) {
@@ -808,29 +812,16 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const Sto
 
 // Either function or type/var declaration
 Node *p_parse_external_declaration(Parser *p, NodeManager *nm) {
-    StorageClass storage_class = NONE;
-    switch (p_peek(p)->type) {
-    case TK_TYPEDEF:
-        return p_parse_typedef(p, nm);
-    case TK_EXTERN:
-        storage_class = EXTERN;
-        p_consume(p);
-        break;
-    case TK_STATIC:
-        storage_class = STATIC;
-        p_consume(p);
-        break;
-    default:
-        break;
-    }
+    if (p_peek(p)->type == TK_TYPEDEF) return p_parse_typedef(p, nm);
+
+    StorageClass storage_class = p_parse_storage_classifier(p, nm);
+
     Node *type_decl = new_node(nm, N_TYPE);
     type_decl->type = p_parse_type(p, nm);
-
-    if (p_peek(p)->type == TK_IDENTIFIER && p_peek_next(p)->type == TK_OPEN_PAREN) {
-        return p_parse_function(p, nm, type_decl, storage_class);
-    } else {
-        return p_parse_declaration(p, nm, type_decl, storage_class, true);
-    }
+    // If a function is ahead, parse function
+    if (p_peek(p)->type == TK_IDENTIFIER && p_peek_next(p)->type == TK_OPEN_PAREN) return p_parse_function(p, nm, type_decl, storage_class);
+    // Otherwise parse variable/type declaration
+    else return p_parse_declaration(p, nm, type_decl, storage_class, true);
 }
 Node *p_parse_typedef(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_TYPEDEF);
@@ -842,20 +833,23 @@ Node *p_parse_typedef(Parser *p, NodeManager *nm) {
     return node;
 }
 
-Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
-    StorageClass storage_class = NONE;
+StorageClass p_parse_storage_classifier(Parser *p, NodeManager *nm) {
     switch (p_peek(p)->type) {
-    case TK_TYPEDEF:
-        return p_parse_typedef(p, nm);
     case TK_EXTERN:
-        storage_class = EXTERN;
-        break;
+        p_consume(p);
+        return EXTERN;
     case TK_STATIC:
-        storage_class = STATIC;
-        break;
+        p_consume(p);
+        return STATIC;
     default:
-        break;
+        return NONE;
     }
+}
+
+Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
+    if (p_peek(p)->type == TK_TYPEDEF) return p_parse_typedef(p, nm);
+
+    StorageClass storage_class = p_parse_storage_classifier(p, nm);
     Node *type_decl = new_node(nm, N_TYPE);
     type_decl->type = p_parse_type(p, nm);
 

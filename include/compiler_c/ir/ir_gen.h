@@ -26,6 +26,8 @@ static void ir_gen_if_statement(IR_Context *ctx, const Node *_if);
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl);
 static void ir_gen_statement(IR_Context *ctx,const Node *stmt);
 static void ir_gen_return(IR_Context *ctx, const Node *_return);
+static void ir_gen_goto(IR_Context *ctx, const Node *_goto);
+static void ir_gen_label(IR_Context *ctx, const Node *label);
 static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func);
 
 int ir_is_within_cond(IR_Context *ctx);

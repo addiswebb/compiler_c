@@ -124,6 +124,7 @@ IR_Module *ir_new_module() {
     array_init(&module->global_array, 4, sizeof(IR_Global));
     array_init(&module->func_defs_array, 4, sizeof(IR_Func_Def));
     array_init(&module->functions_array, 4, sizeof(IR_Function *));
+    array_init(&module->labeled_block_array, 4, sizeof(IR_LabeledBlock));
 
     return module;
 }
@@ -202,6 +203,22 @@ IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block) {
     append(&ctx->func->blocks_array, &block);
     ctx->block = get_block(ctx->func, ctx->func->blocks_array.count - 1);
     return block;
+}
+
+IR_LabeledBlock *ir_append_labeled_block(IR_Context *ctx, const char *label) {
+    IR_Block *block = ir_new_block();
+    return (IR_LabeledBlock *)append(&ctx->module->labeled_block_array,
+                                     &(IR_LabeledBlock){.label = label, .block = block, .placeholder = true});
+}
+
+IR_LabeledBlock *ir_get_labeled_block(IR_Context *ctx, const char *label) {
+    for (int i = 0; i < ctx->module->labeled_block_array.count; i++) {
+        IR_LabeledBlock *b = get_labeled_block(ctx->module, i);
+        if (strcmp(b->label, label) == 0) {
+            return b;
+        }
+    }
+    return NULL;
 }
 
 void ir_append_global(IR_Module *module, const char *name, Type *type, const IR_Literal *literal, const Linkage linkage,

@@ -422,18 +422,35 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
         ir_branch(ctx, get_loop_ctx(ctx)->continue_block);
         return;
     case N_GOTO:
-        ir_jmp(ctx, stmt->_goto.identifier->identifier.name);
-        return;
+        return ir_gen_goto(ctx, stmt);
     case N_LABEL:
-        ir_label(ctx, stmt->label.identifier->identifier.name);
-        return;
+        return ir_gen_label(ctx, stmt);
     default:
         // given invalid statement? probably an expression
-        printf("Dont know what to do with the given statemnet: ir_gen_statement: ");
+        printf("Dont know what to do with the given statement: ir_gen_statement: ");
         print_node_type(stmt->kind);
         printf("\n");
         exit(1);
     }
+}
+
+static void ir_gen_goto(IR_Context *ctx, const Node *_goto) {
+    IR_LabeledBlock *goto_lb = ir_get_labeled_block(ctx, _goto->_goto.identifier->identifier.name);
+    if (!goto_lb) goto_lb = ir_append_labeled_block(ctx, _goto->_goto.identifier->identifier.name);
+    ir_branch(ctx, goto_lb->block);
+}
+
+static void ir_gen_label(IR_Context *ctx, const Node *label) {
+    IR_LabeledBlock *lb = ir_get_labeled_block(ctx, label->label.identifier->identifier.name);
+    if (lb) {
+        if (!lb->placeholder) {
+            printf("Redefinition of label \'%s\'\n", label->label.identifier->identifier.name);
+            exit(1);
+        }
+    } else lb = ir_append_labeled_block(ctx, label->label.identifier->identifier.name);
+
+    lb->placeholder = false;
+    ir_append_block(ctx, lb->block);
 }
 
 static void ir_gen_return(IR_Context *ctx, const Node *_return) { ir_return(ctx, ir_gen_rvalue(ctx, _return->_return.expr)); }

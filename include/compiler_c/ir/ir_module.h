@@ -242,12 +242,19 @@ typedef struct{
     IR_Global *globals;
 }IR_Global_Pool;
 
+typedef struct{
+    IR_Block *block;
+    const char *label;
+    bool placeholder;
+}IR_LabeledBlock;
+
 /* Root of the intermediate representation of a source file. */
 typedef struct {
     Array functions_array;
     Array func_defs_array;
     Array const_array;
     Array global_array;
+    Array labeled_block_array;
 } IR_Module;
 
 /* Holds the correct block to jump to in the event of a `continue` or `break` statement. */
@@ -340,6 +347,8 @@ void ir_append_global(IR_Module *module, const char *name, Type *type, const IR_
 IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal);
 /* Appends the given IR Block to the context's current function. */
 IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
+/* Appends, uniquely, a new labeled block. */
+IR_LabeledBlock *ir_append_labeled_block(IR_Context *ctx, const char*label);
 
 IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);
 /*
@@ -348,6 +357,11 @@ IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);
     Immediately returning the Value if found, otherwise it is considered an undefined variable.
 */
 IR_Value ir_get_var_reg(IR_Context *ctx, const char *name);
+
+/*
+    Retrieves the Block which has the corresponding label.
+*/
+IR_LabeledBlock *ir_get_labeled_block(IR_Context *ctx, const char *label);
 
 /* Helper functions for the generic Array type. */
 static inline IR_Instruction *get_instruction(const Array *arr, int index){
@@ -393,5 +407,9 @@ static inline IR_Func_Def * get_func_def(const IR_Context *ctx, int index){
 
 static inline IR_Function * get_func(const IR_Module *module, int index){
     return *(IR_Function**) get(&module->functions_array, index);
+}
+
+static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int index){
+    return (IR_LabeledBlock*) get(&module->labeled_block_array, index);
 }
 #endif // COMPILER_C_IR_MODULE_H

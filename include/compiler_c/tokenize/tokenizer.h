@@ -4,7 +4,7 @@
 #include "compiler_c/core/array.h"
 #include <stdbool.h>
 
-#define DEBUG_TOKENIZER 1
+#define DEBUG_TOKENIZER 0
 #define MIN_BINARY_OP_PRECEDENCE 0
 
 #define LEFT_ASSOCIATIVITY 1
@@ -17,7 +17,7 @@ typedef struct {
     int size;
 } Buffer;
 
-#define KEYWORDS_N 24
+#define KEYWORDS_N 25
 
 /* All standard C keywords */
 extern const char* KEYWORDS[KEYWORDS_N];
@@ -37,6 +37,7 @@ typedef enum {
     TK_BREAK,
     TK_CASE,
     TK_CHAR,
+    TK_CONST,
     TK_CONTINUE,
     TK_DEFAULT,
     TK_DOUBLE,

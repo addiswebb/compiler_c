@@ -5,7 +5,7 @@
 #include "compiler_c/tokenize/tokenizer.h"
 #include <stdbool.h>
 
-#define DEBUG_CONSUME 1
+#define DEBUG_CONSUME 0
 #define DEFAULT_STATEMENTS_PER_BLOCK 8
 
 typedef struct{
@@ -251,6 +251,8 @@ Node *p_parse_decl_identifier(Parser *p, NodeManager *nm);
     `struct or enum delcaration`
     or `{type} [[int literal]?] [= expr]?;
     Where the `{type}` has already been consumed.
+
+    A declaration is any variable or type declaration.
 */
 Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, StorageClass storage_class, bool global);
 /*
@@ -281,6 +283,18 @@ Type *p_parse_enum(Parser *p, NodeManager *nm);
     Where `Member Declaration` is any `[var decl]`
 */
 Type *p_parse_struct(Parser *p, NodeManager *nm);
+
+/*
+    Consumes either,
+    `extern`
+    `static`
+    or
+    Nothing,
+    Returns the corresponding storageClass;
+*/
+StorageClass p_parse_storage_classifier(Parser *p, NodeManager *nm);
+
+/* ===== Parse Number Literals ===== */
 
 int64_t parse_int(const char *raw, int len);
 int64_t parse_binary(const char *raw, int len);
