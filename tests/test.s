@@ -1,18 +1,15 @@
 .section .rodata
-.LC0:
-    .byte 'f', 'a', 'a', 0x0A, 0
 
 .text
-.global faa
-faa:
+.global main
+main:
     push %rbp
     mov %rsp, %rbp
     subq $16, %rsp
-faa_0:
-    lea .LC0(%rip), %rax
-    movq %rax, -8(%rbp)
-    subq $48, %rsp
-    movq -8(%rbp), %rcx
-    call printf
-    addq $48, %rsp
+main_0:
+    movl $0, %eax
     movl %eax, -8(%rbp)
+    movl -8(%rbp), %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
