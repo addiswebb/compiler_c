@@ -208,6 +208,9 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * For Loops
     * While Loops
     * Nested branches
+* Advanced Control Flow
+    * continue, break
+    * switch, case
 * Functions
     * Passing Parameters
 * Pointers & Addresses 
@@ -223,15 +226,12 @@ Returns control flow to callee, also returns a value. If no value is given, retu
         * Empty, Undersized, Oversized
     * size inference
     * Allow infered size allocation `int[]`
-* Advanced Control Flow
-    * continue, break
-    * switch, case,
 * Structs
     * `struct A {}`
     * Member access using `.` and `->`
     * Padding rules
     * Nested structs
-*  Enums
+* Enums
     * `enum B {}`
     * Specify value `enum C { ONE = 1, TWO, }`
 * Storage Specifiers
@@ -246,10 +246,12 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * `\n` and others.
 * Variadic Functions
     * Link with external variadic functions
-    
-## To be Implemented (Ordered from next to never...)
 * Advanced Control Flow:
     * goto & labels
+
+## To be Implemented (Ordered from next to never...)
+* Compound literals
+    * `(Type){}`
 * Function ABI Calling Conventions
     * Handle Structs
         * `sizeof(struct A) < 16b` => use registers
@@ -261,7 +263,7 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * [Pointer,Pointer] Arithmetic
     * Function pointers
 * Array Initialization
-    * Compound literals `(Type){}`
+
 * Literals
     * Handle overflows and multi char literal `char a = `abcd`;`
 * Structs and Unions, Enums
