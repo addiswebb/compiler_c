@@ -184,6 +184,9 @@ void print_node_type(const NodeKind type) {
     case N_LABEL:
         printf("Label");
         break;
+    case N_COMPOUND_LITERAL:
+        printf("Compound Literal");
+        break;
     }
 }
 
@@ -416,6 +419,12 @@ void print_node(const Node *node, const int depth) {
         break;
     case N_LABEL:
         printf(": [ %s ]\n", node->label.identifier->identifier.name);
+        break;
+    case N_COMPOUND_LITERAL:
+        printf(": [type = ");
+        print_type(node->type);
+        printf("]\n");
+        print_node(node->compound_literal.value, depth + 1);
         break;
     }
 }

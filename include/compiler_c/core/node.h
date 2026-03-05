@@ -33,6 +33,7 @@ typedef enum {
     N_MEMBER_ACCESS,
     N_GOTO,
     N_LABEL,
+    N_COMPOUND_LITERAL,
 } NodeKind;
 
 typedef enum{
@@ -110,6 +111,7 @@ struct Node {
             Node *iter;
             Node *block;
         } _for;
+        // 'a' "abc" 0.1512 123
         struct {
             LiteralKind kind;
             const char *raw_rata;
@@ -125,6 +127,9 @@ struct Node {
                 void *ptr;
             };
         } literal;
+        struct{
+            Node * value;
+        }compound_literal;
         struct {
             const char *name;
             int len;

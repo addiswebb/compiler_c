@@ -527,6 +527,10 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             exit(1);
         }
         break;
+    case N_COMPOUND_LITERAL:
+        printf("Not handling compound literals yet\n.");
+        exit(1);
+        break;
     case N_TYPEDEF:
     case N_GOTO:
     case N_LABEL:

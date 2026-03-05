@@ -126,11 +126,11 @@ Type *get_struct_type(const char *name) {
 void append_enum_field(Type *e, EnumField *f) { append(&e->_enum.fields_array, f); }
 
 void append_struct_member(Type *s, StructMember *f) {
-    s->size = align(s->size, f->type->align);
+    if (f->type->align > s->align) s->align = f->type->align;
+    s->size = align(s->size, s->align);
     f->offset = s->size;
     append(&s->_struct.members_array, f);
-    s->size += align(f->type->size, f->type->align);
-    if (f->type->align > s->align) s->align = f->type->align;
+    s->size += align(f->type->size, s->align);
 }
 
 Type struct_type() {
@@ -231,7 +231,7 @@ void print_type(Type *type) {
             for (int i = 0; i < type->_struct.members_array.count; i++) {
                 StructMember *member = get_struct_member(type, i);
                 print_type(member->type);
-                printf(" %s, ", member->name);
+                printf(" %s:[%d@%d], ", member->name, member->offset, member->type->size);
             }
             printf("}");
         }

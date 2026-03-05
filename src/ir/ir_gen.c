@@ -363,9 +363,11 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
             type = var_decl->type->base;
             zero = ir_append_const(ctx->module, &(IR_Literal){type, 0});
         }
+
         for (int i = 0; i < len; i++) {
-            dst.offset = type->align * i;
-            if (!is_array) {
+            if (is_array) {
+                dst.offset = type->align * i;
+            } else {
                 StructMember *member = get_struct_member(var_decl->type, i);
                 type = member->type;
                 dst.offset = member->offset;

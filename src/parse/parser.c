@@ -136,16 +136,25 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         break;
     case TK_OPEN_PAREN:
         p_consume_a(p, TK_OPEN_PAREN);
+        // Try parse a cast (Type) or compound literal (Type){}
         if (is_type_token(p, p_peek(p))) {
-            Node *type_node = new_node(nm, N_TYPE);
-            type_node->type = p_parse_type(p, nm);
+            Node *node = new_node(nm, N_TYPE);
+            node->type = p_parse_type(p, nm);
             p_consume_a(p, TK_CLOSE_PAREN);
+            // Is a compound literal
+            if (p_peek(p)->type == TK_OPEN_CURLY) {
+                node->kind = N_COMPOUND_LITERAL;
+                node->compound_literal.value = p_parse_init_list(p, nm);
+                return node;
+            }
+            // If this is the end of the term/expression, return it
             if (is_unary_operator(p_peek(p)->type) || is_binary_operator(p_peek(p)->type) || p_peek(p)->type == TK_SEMI ||
                 p_peek(p)->type == TK_CLOSE_PAREN) {
-                return type_node;
+                return node;
             }
+            // Otherwise parse the expression after it, and cast it using the (Type)
             primary = p_parse_primary_expression(p, nm);
-            primary = cast_node_unchecked(nm, primary, type_node->type);
+            primary = cast_node_unchecked(nm, primary, node->type);
         } else {
             primary = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
             p_consume_a(p, TK_CLOSE_PAREN);
