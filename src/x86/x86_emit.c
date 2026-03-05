@@ -230,7 +230,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
                 fprintf(fp, "    movq %d(%%rbp), %s\n", v->reg.stack_offset, gp_register_str[win64_int_param_regs[gp_index++]][REG_64]);
             } else {
                 fprintf(fp, "    movq %d(%%rbp), %%rax\n", v->reg.stack_offset);
-                fprintf(fp, "    push %%rax\n");
+                fprintf(fp, "    movq %%rax, %d(%%rsp)\n", param_offset);
             }
             break;
         default:

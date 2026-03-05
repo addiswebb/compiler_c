@@ -374,7 +374,6 @@ void lower_for_asm_gen(const IR_Function *f, const Lifetime *lts, const StackSlo
                 case IR_MEM:
                     a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
                     a->kind = IR_STACK;
-                    printf("z\n");
                     break;
                 case IR_STACK:
                 case IR_LITERAL:

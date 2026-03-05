@@ -72,7 +72,7 @@ main_0:
     movl -88(%rbp), %r8d
     movl -96(%rbp), %r9d
     movq -104(%rbp), %rax
-    push %rax
+    movq %rax, 32(%rsp)
     call printf
     addq $48, %rsp
     movl %eax, -72(%rbp)
