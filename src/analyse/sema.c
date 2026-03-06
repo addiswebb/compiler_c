@@ -169,15 +169,16 @@ void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *n
     d->var_decl.is_defined = true;
     d->var_decl.storage_class = STATIC;
     d->var_decl.is_global = false;
-    d->var_decl.symbol = p_append_var_decl(p, d);
+    // d->var_decl.symbol = p_append_var_decl(p, d);
+    d->var_decl.symbol = NULL;
 
     node->kind = N_IDENTIFIER;
     node->identifier.name = ident->identifier.name;
     node->identifier.len = ident->identifier.len;
 
-    insert_node(&sema_ctx->compound->compound.items_array, &d, sema_ctx->index);
+    insert_node(&sema_ctx->compound->compound.items_array, &d, *get_i(sema_ctx));
     // Insert shifted all nodes over by one, so increment tracker too.
-    sema_ctx->index++;
+    (*get_i(sema_ctx))++;
 }
 
 void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
@@ -222,15 +223,12 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         } else node->func.symbol = p_append_func_def(p, node);
         break;
     case N_COMPOUND:
-        p_push_scope(p);
-        sema_ctx->compound = node;
-        sema_ctx->index = 0;
+        push_sema_scope(sema_ctx, p, node);
         int n_nodes = node->compound.items_array.count;
-        for (int i = 0; i < n_nodes; i++, sema_ctx->index++) {
-            semantic_analysis(sema_ctx, p, nm, get_node(&node->compound.items_array, sema_ctx->index));
+        for (int i = 0; i < n_nodes; i++, (*get_i(sema_ctx))++) {
+            semantic_analysis(sema_ctx, p, nm, get_node(&node->compound.items_array, *get_i(sema_ctx)));
         }
-        sema_ctx->compound = NULL;
-        p_pop_scope(p);
+        pop_sema_scope(sema_ctx, p);
         break;
     case N_VAR_DECL:
         // Skip extern nodes
@@ -242,8 +240,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
         Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR);
         // TODO consider if symbol management can happen after symantic analysis
-        // Below stops duplicate symbols of lowered compound literals
-        // if (!(node->var_decl.expr && node->var_decl.expr->kind == N_COMPOUND_LITERAL)) {
         if (var_symbol) {
             // If we are within a function and var_symbol is a also a local variable
             if (p->scopes_array.count > 1) {
@@ -259,7 +255,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
             node->var_decl.symbol = var_symbol;
         } else node->var_decl.symbol = p_append_var_decl(p, node);
-        // }
 
         if (!node->var_decl.expr) break;
         if (node->var_decl.expr->kind == N_INIT_LIST) {
@@ -582,28 +577,36 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     }
 }
+void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n) {
+    p_push_scope(p);
+    sema_ctx->compound = n;
+    int tmp = 0;
+    append(&sema_ctx->i_array, &tmp);
+}
+void pop_sema_scope(SemanticContext *sema_ctx, Parser *p) {
+    pop(&sema_ctx->i_array);
+    sema_ctx->compound = NULL;
+    p_pop_scope(p);
+}
+
 void lower_nodes(NodeManager *nm) {
     for (int i = 0; i < nm->count; i++) {
         Node *n = &nm->nodes[i];
-        if (n->type->kind == T_ENUM) lower_enum(n);
-    }
-}
-
-void lower_enum(Node *n) {
-    if (n->type->kind == T_ENUM) {
-        n->type = type_int;
-    }
-    if (n->kind == N_CAST) {
-        if (n->cast.from && n->cast.from->kind == T_ENUM) {
-            n->cast.from = type_int;
-        }
-        if (n->cast.to && n->cast.to->kind == T_ENUM) {
-            n->cast.to = type_int;
+        if (n->type->kind == T_ENUM) {
             n->type = type_int;
         }
-        // Optimize out no op (cast from=x, to=x)
-        if (n->cast.from == n->type) {
-            *n = *n->cast.expr;
+        if (n->kind == N_CAST) {
+            if (n->cast.from && n->cast.from->kind == T_ENUM) {
+                n->cast.from = type_int;
+            }
+            if (n->cast.to && n->cast.to->kind == T_ENUM) {
+                n->cast.to = type_int;
+                n->type = type_int;
+            }
+            // Optimize out no op (cast from=x, to=x)
+            if (n->cast.from == n->type) {
+                *n = *n->cast.expr;
+            }
         }
     }
 }

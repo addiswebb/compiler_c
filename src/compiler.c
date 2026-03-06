@@ -1,4 +1,5 @@
 #include "compiler_c/analyse/analysis.h"
+#include "compiler_c/core/array.h"
 #include "compiler_c/ir/ir_util.h"
 #include <compiler_c/analyse/sema.h>
 #include <compiler_c/compiler.h>
@@ -92,7 +93,9 @@ int compile(Compiler *compiler) {
 
     init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
-    SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL};
+    SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL};
+    array_init(&sema_ctx.i_array, 4, sizeof(int));
+
     semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, &compiler->nm.nodes[0]);
 
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);

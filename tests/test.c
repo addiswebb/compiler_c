@@ -1,12 +1,8 @@
-extern int printf(const char *format, ...);
-
-typedef struct Point {
-    int x;
-    int y;
-} Point;
-
-int main(void) {
-    Point p = (Point){1, 2};
-    printf("Point [%d, %d]\n", p.x, p.y);
-    return 0;
+int main() {
+    int x = 3;
+    {
+        int x = 10; // shadow outer x
+        x += 5;     // x = 15
+    }
+    return x; // outer x = 3
 }

@@ -1,5 +1,6 @@
 #ifndef COMPILER_C_SEMA_H
 #define COMPILER_C_SEMA_H
+#include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"
 #include <complex.h>
@@ -8,7 +9,7 @@ typedef struct{
     Node *loop;
     Node *func;
     Node *compound;
-    int index;
+    Array i_array;
 }SemanticContext;
 
 /* Is a node which is assignable */
@@ -56,8 +57,20 @@ void lower_nodes(NodeManager *nm);
     ```
 */
 void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
+// TODO Consider having the actual conversion after sema, but add the symbols during sema.
+
 /*
-    Converts an AST enum field node to integer literal. Must be called after semantic analysis has computed types.
+    Handles pushing a new symbol table and compound + index tracker onto the stack.
 */
-void lower_enum(Node *n);
+void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n);
+
+/*
+    Handles poping the symbol table and compound + index tracker off the top of the stack.
+*/
+void pop_sema_scope(SemanticContext *sema_ctx, Parser *p);
+
+static inline int* get_i(SemanticContext *sema_ctx){
+    return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count-1);
+}
+
 #endif // COMPILER_C_SEMA_H
