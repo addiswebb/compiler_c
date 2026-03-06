@@ -1,5 +1,7 @@
 #include "compiler_c/analyse/sema.h"
+#include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
+#include "compiler_c/parse/parser.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -149,6 +151,35 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     if ((*rhs)->type != common) *rhs = cast_node(nm, (*rhs), common);
     return common;
 }
+
+void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
+    Node *ident = new_node(nm, N_IDENTIFIER);
+    // TODO track compound literals and name accordingly.
+    ident->identifier.name = "__tmp_cl";
+    ident->identifier.len = 9;
+    Node *d_type = new_node(nm, N_TYPE);
+    d_type->type = node->type;
+    Node *d = new_node(nm, N_VAR_DECL);
+    d->var_decl.type = d_type;
+    d->var_decl.identifier = ident;
+    d->type = node->type;
+
+    d->var_decl.expr = node->compound_literal.value;
+    d->var_decl.has_initializer = true;
+    d->var_decl.is_defined = true;
+    d->var_decl.storage_class = STATIC;
+    d->var_decl.is_global = false;
+    d->var_decl.symbol = p_append_var_decl(p, d);
+
+    node->kind = N_IDENTIFIER;
+    node->identifier.name = ident->identifier.name;
+    node->identifier.len = ident->identifier.len;
+
+    insert_node(&sema_ctx->compound->compound.items_array, &d, sema_ctx->index);
+    // Insert shifted all nodes over by one, so increment tracker too.
+    sema_ctx->index++;
+}
+
 void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
     if (!node) return;
     switch (node->kind) {
@@ -192,9 +223,13 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_COMPOUND:
         p_push_scope(p);
-        for (int i = 0; i < node->compound.items_array.count; i++) {
-            semantic_analysis(sema_ctx, p, nm, get_node(&node->compound.items_array, i));
+        sema_ctx->compound = node;
+        sema_ctx->index = 0;
+        int n_nodes = node->compound.items_array.count;
+        for (int i = 0; i < n_nodes; i++, sema_ctx->index++) {
+            semantic_analysis(sema_ctx, p, nm, get_node(&node->compound.items_array, sema_ctx->index));
         }
+        sema_ctx->compound = NULL;
         p_pop_scope(p);
         break;
     case N_VAR_DECL:
@@ -206,6 +241,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
         }
         Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR);
+        // TODO consider if symbol management can happen after symantic analysis
+        // Below stops duplicate symbols of lowered compound literals
+        // if (!(node->var_decl.expr && node->var_decl.expr->kind == N_COMPOUND_LITERAL)) {
         if (var_symbol) {
             // If we are within a function and var_symbol is a also a local variable
             if (p->scopes_array.count > 1) {
@@ -221,55 +259,13 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
             node->var_decl.symbol = var_symbol;
         } else node->var_decl.symbol = p_append_var_decl(p, node);
+        // }
 
         if (!node->var_decl.expr) break;
         if (node->var_decl.expr->kind == N_INIT_LIST) {
+            node->var_decl.expr->type = node->type;
+            semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
             Node *init_list = node->var_decl.expr;
-            switch (node->type->kind) {
-            case T_ARRAY:
-                // Infer the size from the initializer list
-                if (node->type->_array.array_len == -1) {
-                    if (!init_list || init_list->init_list.elements_array.count < 1) {
-                        printf("Inferred array must be initialized, and cannot be empty.\n");
-                        exit(1);
-                    }
-                    node->type = infer_array_length(node->type, init_list->init_list.elements_array.count);
-                } else if (node->type->_array.array_len < init_list->init_list.elements_array.count) {
-                    printf("Expected initializer list of length %d for ", node->type->_array.array_len);
-                    print_type(node->type);
-                    printf(", got %d\n", init_list->init_list.elements_array.count);
-                    exit(1);
-                }
-                for (int i = 0; i < init_list->init_list.elements_array.count; i++) {
-                    Node *e = get_node(&init_list->init_list.elements_array, i);
-                    semantic_analysis(sema_ctx, p, nm, e);
-                    if (e->type != node->type->base) {
-                        Node *casted_node = cast_node(nm, e, node->type->base);
-                        set_node(&init_list->init_list.elements_array, &casted_node, i);
-                    }
-                }
-                break;
-            case T_STRUCT:
-                if (init_list->init_list.elements_array.count > node->type->_struct.members_array.count) {
-                    printf("Expected initializer list of length %d for ", node->type->_array.array_len);
-                    print_type(node->type);
-                    printf(", got %d\n", init_list->init_list.elements_array.count);
-                    exit(1);
-                }
-                for (int i = 0; i < init_list->init_list.elements_array.count; i++) {
-                    Node *e = get_node(&init_list->init_list.elements_array, i);
-                    semantic_analysis(sema_ctx, p, nm, e);
-                    Type *member_type = get_struct_member(node->type, i)->type;
-                    if (e->type != member_type) {
-                        Node *casted_node = cast_node(nm, e, member_type);
-                        set_node(&init_list->init_list.elements_array, &casted_node, i);
-                    }
-                }
-                break;
-            default:
-                printf("Initializer list can only be used for struct and arrays");
-                exit(1);
-            }
             break;
         }
         semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
@@ -487,8 +483,56 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         node->_break.loop = sema_ctx->loop;
         break;
     case N_INIT_LIST:
-        printf("Semantic parser should never reach a Init List node\n");
-        exit(1);
+        if (node->type == type_invalid) {
+            printf("Semantic Analysis recieved an untyped initializer list\n");
+            exit(1);
+        }
+        switch (node->type->kind) {
+        case T_ARRAY:
+            // Infer the size from the initializer list
+            if (node->type->_array.array_len == -1) {
+                if (!node || node->init_list.elements_array.count < 1) {
+                    printf("Inferred array must be initialized, and cannot be empty.\n");
+                    exit(1);
+                }
+                node->type = infer_array_length(node->type, node->init_list.elements_array.count);
+            } else if (node->type->_array.array_len < node->init_list.elements_array.count) {
+                printf("Expected initializer list of length %d for ", node->type->_array.array_len);
+                print_type(node->type);
+                printf(", got %d\n", node->init_list.elements_array.count);
+                exit(1);
+            }
+            for (int i = 0; i < node->init_list.elements_array.count; i++) {
+                Node *e = get_node(&node->init_list.elements_array, i);
+                semantic_analysis(sema_ctx, p, nm, e);
+                if (e->type != node->type->base) {
+                    Node *casted_node = cast_node(nm, e, node->type->base);
+                    set_node(&node->init_list.elements_array, &casted_node, i);
+                }
+            }
+            break;
+        case T_STRUCT:
+            if (node->init_list.elements_array.count > node->type->_struct.members_array.count) {
+                printf("Expected initializer list of length %d for ", node->type->_array.array_len);
+                print_type(node->type);
+                printf(", got %d\n", node->init_list.elements_array.count);
+                exit(1);
+            }
+            for (int i = 0; i < node->init_list.elements_array.count; i++) {
+                Node *e = get_node(&node->init_list.elements_array, i);
+                semantic_analysis(sema_ctx, p, nm, e);
+                Type *member_type = get_struct_member(node->type, i)->type;
+                if (e->type != member_type) {
+                    Node *casted_node = cast_node(nm, e, member_type);
+                    set_node(&node->init_list.elements_array, &casted_node, i);
+                }
+            }
+            break;
+        default:
+            printf("Initializer list can only be used for struct and arrays");
+            exit(1);
+        }
+        break;
     case N_MEMBER_ACCESS:
         semantic_analysis(sema_ctx, p, nm, node->member_access.identifier);
         Type *lhs_t = node->member_access.identifier->type;
@@ -528,8 +572,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
         break;
     case N_COMPOUND_LITERAL:
-        printf("Not handling compound literals yet\n.");
-        exit(1);
+        node->compound_literal.value->type = node->type;
+        semantic_analysis(sema_ctx, p, nm, node->compound_literal.value);
+        lower_compound_literal(sema_ctx, p, nm, node);
         break;
     case N_TYPEDEF:
     case N_GOTO:
@@ -537,25 +582,28 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     }
 }
-
-void lower_enums(const NodeManager *nm) {
+void lower_nodes(NodeManager *nm) {
     for (int i = 0; i < nm->count; i++) {
         Node *n = &nm->nodes[i];
-        if (n->type->kind == T_ENUM) {
+        if (n->type->kind == T_ENUM) lower_enum(n);
+    }
+}
+
+void lower_enum(Node *n) {
+    if (n->type->kind == T_ENUM) {
+        n->type = type_int;
+    }
+    if (n->kind == N_CAST) {
+        if (n->cast.from && n->cast.from->kind == T_ENUM) {
+            n->cast.from = type_int;
+        }
+        if (n->cast.to && n->cast.to->kind == T_ENUM) {
+            n->cast.to = type_int;
             n->type = type_int;
         }
-        if (n->kind == N_CAST) {
-            if (n->cast.from && n->cast.from->kind == T_ENUM) {
-                n->cast.from = type_int;
-            }
-            if (n->cast.to && n->cast.to->kind == T_ENUM) {
-                n->cast.to = type_int;
-                n->type = type_int;
-            }
-            // Optimize out no op (cast from=x, to=x)
-            if (n->cast.from == n->type) {
-                *n = *n->cast.expr;
-            }
+        // Optimize out no op (cast from=x, to=x)
+        if (n->cast.from == n->type) {
+            *n = *n->cast.expr;
         }
     }
 }

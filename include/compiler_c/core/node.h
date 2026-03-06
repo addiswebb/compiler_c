@@ -247,7 +247,10 @@ void print_node(const Node *node,int depth);
 void print_ast(const NodeManager *nm);
 
 static inline Node *get_node(const Array *node_array, int index) { return *(Node **)get(node_array, index); }
-static inline void set_node(const Array *node_array, Node** node, int index) {
+static inline void set_node(Array *node_array, Node** node, int index) {
     memcpy((char*)node_array->data + index * node_array->element_size, node, sizeof(Node *));
+}
+static inline Node* insert_node(Array *node_array, Node **node, int index){
+    return (Node*) insert(node_array, node, index);
 }
 #endif // COMPILER_C_NODE_H

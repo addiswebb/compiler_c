@@ -1,14 +1,12 @@
 extern int printf(const char *format, ...);
 
 typedef struct Point {
-    char *a;
-    int b;
-    int c;
-    char *s;
+    int x;
+    int y;
 } Point;
 
 int main(void) {
-    Point p = {"Hello", 2, 3, "World"};
-    printf("Point [%s %d %d %s]\n", p.a, p.b, p.c, p.s);
+    Point p = (Point){1, 2};
+    printf("Point [%d, %d]\n", p.x, p.y);
     return 0;
 }

@@ -97,7 +97,7 @@ int compile(Compiler *compiler) {
 
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 
-    lower_enums(&compiler->nm);
+    lower_nodes(&compiler->nm);
 
     if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {
         IR_Context ctx = ir_init_ctx();

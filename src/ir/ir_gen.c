@@ -385,14 +385,12 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
 
     const IR_Value addr = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
 
-    if (var_decl->type->kind == T_ARRAY) {
+    if (var_decl->type->kind == T_ARRAY || var_decl->type->kind == T_STRUCT) {
         ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
         // printf("dst: %d\n", dst.kind);
         dst = ir_address(ctx, dst, 0);
         ir_memcpy(ctx, addr, dst, var_decl->type->size);
-    } else {
-        ir_store(ctx, dst, addr, var_decl->type);
-    }
+    } else ir_store(ctx, dst, addr, var_decl->type);
 }
 
 static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {

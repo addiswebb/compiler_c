@@ -7,6 +7,8 @@
 typedef struct{
     Node *loop;
     Node *func;
+    Node *compound;
+    int index;
 }SemanticContext;
 
 /* Is a node which is assignable */
@@ -40,7 +42,22 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop);
 void semantic_analysis(SemanticContext *sema_ctx,Parser *p, NodeManager *nm, Node *node);
 
 /*
-    Converts all AST enum field nodes to integer literals. Must be called after semantic analysis has computed types.
+    Lowers enums and compound literals to their literal counterparts.
 */
-void lower_enums(const NodeManager *nm);
+void lower_nodes(NodeManager *nm);
+
+/*
+    Convert compount literal into a variable declaration+initialization
+    `foo(&(Type){1,2,3});`
+    into
+    ```c
+    static Type _tmp = {1,2,3};
+    foo(&_tmp);
+    ```
+*/
+void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
+/*
+    Converts an AST enum field node to integer literal. Must be called after semantic analysis has computed types.
+*/
+void lower_enum(Node *n);
 #endif // COMPILER_C_SEMA_H
