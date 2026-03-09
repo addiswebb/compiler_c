@@ -181,87 +181,116 @@ Returns control flow to callee, also returns a value. If no value is given, retu
 * Where:
     * `value` is an optional `expr`
 
-# Implemented
-* Scopes
-* Variable Declaration
-    * Shadowing
-* Types:
-    * Int, Float, Char, Double, Short, Long
-* Literals 
-    * Octal, Hexadecimal, Decimal, Binary
-    * Floating Point
-    * Strings
-    * Char
-* All Binary operators:
-    * Arithmetic:  \[ `+`, `-`, `*`, `/` \]
-    * Bitwise:  \[ `&`, `|`, `^`, `<<`, `>>` \]
-    * Comparitive: \[ `<`, `>`, `<=`, `>=`, `==`, `!=` \]
-    * Logical: \[ `&&`, `||` \]
-    * Assignment
-        * Any arithmetic or bitwise operator appended by `=`, assigns the value of the operation e.g `+=`.
-* All Unary operators:
-    * Arithmetic:  \[ `+`, `-`, `!`, `++`, `--` \]
-    * Bitwise: \[ `~` ]
-    * sizeof
-* Control Flow
-    * If/Else branching
-    * For Loops
-    * While Loops
-    * Nested branches
-* Advanced Control Flow
-    * continue, break
-    * switch, case
-* Functions
-    * Passing Parameters
-* Pointers & Addresses 
-    *   [Pointer,int] Arithmetic
-* Type conversion
-    * `(int)x`, `(float *)y`
-* Arrays
-    * Declaring arrays
-    * C Strings
+# Compiler Features Implemented
+
+## 1. Types
+
+* Primitive Types
+  * `int`, `float`, `char`, `double`, `short`, `long`
+  * Unsigned variants: `unsigned int`, `unsigned char`, etc.
+* Type Qualifiers
+  * `const`
+  * `volatile`
+* Type Conversion
+  * Casts: `(int)x`, `(float*)y`
+* Compound Types
+  * Arrays
+    * Declaration: `type A[n]`
+    * C strings
     * Indexing with `[]`
-* Array Initialization
-    * `(type) A[]`
-    * size inference
-    * Allow infered size allocation `int[]`
-    * Array Initialization `= {};`
-        * Empty, Undersized, Oversized
-* Structs
-    * `struct A {}`
-    * Member access using `.` and `->`
-    * Padding rules
+    * Array initialization: `= {}`
+    * **Size inference** `int[]` (C99)
+    * **Designated index assignment** `[i] = value` (C99)
+  * Structs
+    * Declaration: `struct A { ... }`
     * Nested structs
-    * Designated Initializers `.member = value` [C99+]
-* Enums
-    * `enum B {}`
-    * Specify value `enum C { ONE = 1, TWO, }`
+    * Member access: `.` and `->`
+    * Padding rules
+    * **Designated initializers** `.member = value` (C99)
+  * Unions
+  * Enums
+    * Explicit values: `enum C { ONE = 1, TWO, }`
+* Typedef
+  * Aliases: `typedef type name`
+
+## 2. Literals
+
+* Integer Literals
+  * Decimal, Octal, Hexadecimal, Binary (`0bNN`) (C99/C11 for binary)
+  * Unsigned variants
+* Floating-Point Literals
+  * Decimal floating literals
+* Character Literals
+  * Single character `'a'`
+  * Multi-character literals `'abcd'` (implementation-defined)
+  * Escape sequences: `\n`, `\t`, etc.
+* String Literals
+  * `"..."`  
+* Compound Literals
+  * `(Type){ ... }` (C99)
+
+## 3. Variables & Storage
+
+* Declaration & Scoping
+  * Local and global variables
+  * Shadowing
 * Storage Specifiers
-    * extern
-    * static
-* typedef
-* Function ABI Calling Conventions
-    * MS x64 ABI
-    * Use registers for Parameters
-    * Overflow 6/4+ to stack
-* Escaped characters
-    * `\n` and others.
+  * `extern`
+  * `static`
+
+## 4. Expressions
+
+* Unary Operators
+  * Arithmetic: `+`, `-`, `!`, `++`, `--`
+  * Bitwise: `~`
+  * `sizeof`
+* Binary Operators
+  * Arithmetic: `+`, `-`, `*`, `/`
+  * Bitwise: `&`, `|`, `^`, `<<`, `>>`
+  * Comparison: `<`, `>`, `<=`, `>=`, `==`, `!=`
+  * Logical: `&&`, `||`
+  * Assignment: `=`, `+=`, `-=`, `*=`, `/=`, `&=`, `|=`, `^=`, `<<=`, `>>=`
+* Pointer & Address Operators
+  * `&`, `*`
+  * Pointer arithmetic
+
+## 5. Control Flow
+
+* Conditional
+  * `if` / `else`
+  * Nested conditionals
+* Loops
+  * `for`, `while`
+* Switch
+  * `switch`, `case`
+* Jump Statements
+  * `break`, `continue`
+  * `goto` & labels
+* Nested loops/branches
+
+## 6. Functions
+
+* Declarations & Calls
+  * Parameters, return types
 * Variadic Functions
-    * Link with external variadic functions
-* Advanced Control Flow:
-    * goto & labels
-* Compound literals
-    * `(Type){}`
+  * Link with external variadic functions
+* Function ABI & Calling Conventions
+  * MS x64 ABI
+  * First 6 integer / 4 float args in registers, overflow to stack
+* Compound Literals as Arguments (C99)
+
+## 7. Pointers
+
+* Basic pointers & addresses
+* Pointer arithmetic
+* Dereference and member access `->`
 
 ## To be Implemented (Ordered from next to never...)
+* Unions
 * Variants
-    * Unsigned
-* Qualifiers
-    * const, volatile
-* Structs and Unions, Enums
-    * Index assigment `int x[] = {[1] = 2`
-    * Bitfield in structs
-        * `unsigned int flag : 1; // 1 bit`
+    * Unsigned assembly lowering
+* Bitfield in structs
+    * `unsigned int flag : 1; // 1 bit`
 * Function ABI Calling Conventions
     * Handle Structs
         * `sizeof(struct A) < 16b` => use registers
@@ -272,8 +301,6 @@ Returns control flow to callee, also returns a value. If no value is given, retu
 * Pointers
     * [Pointer,Pointer] Arithmetic
     * Function pointers
-* Literals
-    * Handle overflows and multi char literal `char a = `abcd`;`
 * Use/Support a Preprocessor (~~Write a Preprocessor~~)
     * Automatically call preprocessor on source file.
 * Parse & Ignore
