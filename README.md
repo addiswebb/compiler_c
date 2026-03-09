@@ -271,16 +271,20 @@ Returns control flow to callee, also returns a value. If no value is given, retu
 * Qualifiers
     * const, volatile
 * Structs and Unions, Enums
+    * Index assigment `int x[] = {[1] = 2`
     * Bitfield in structs
         * `unsigned int flag : 1; // 1 bit`
-* Variadic Functions
-    * Compile variadic functions
 * Use/Support a Preprocessor (~~Write a Preprocessor~~)
-* Inline functions
-* Labels as values? (part of GCC, not standard C)
-* Volatile/Atomic memory
-* SysV ABI
-* Support a standard library. (~~Create a standard library~~)
+    * Automatically call preprocessor on source file.
+* Parse & Ignore
+    * `inline`
+    * `volatile`
+    * `...`
+* Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)
     * `printf`
     * `malloc`
     * `free`
+* Labels as values? (part of GCC, not standard C)
+* Volatile/Atomic memory
+* SysV ABI
+* Inline functions
