@@ -1086,6 +1086,14 @@ int64_t parse_hex(const char *raw, int len) {
     return res;
 }
 
+int parse_multi_character(const char *raw, int len) {
+    int c = 0;
+    for (int i = 0; i < len && i < 4; i++) {
+        c |= (unsigned char)raw[i] << (i * 8);
+    }
+    return c;
+}
+
 double parse_float(const char *raw, int len) {
     double res = 0;
     const char *end = raw + len;

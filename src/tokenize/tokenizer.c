@@ -270,17 +270,6 @@ static void t_consume_special_char(Tokenizer *tk) {
     t_consume_a(tk, '\0');
     t_push_buffer(tk, type);
 }
-static void t_consume_char_literal(Tokenizer *tk) {
-    if (t_peek_n(tk, 2) == '\'') {
-        t_skip(tk);
-        t_consume(tk);
-        t_skip(tk);
-        t_push_buffer(tk, TK_CHAR_LITERAL);
-    } else {
-        printf("Expected single character char 'c' \n");
-        exit(1);
-    }
-}
 static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
     t_skip(tk); // '\\'
     char c = t_peek(tk);
@@ -312,6 +301,23 @@ static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
         printf("Invalid escape sequence\n");
         exit(1);
     }
+}
+static void t_consume_char_literal(Tokenizer *tk) {
+    t_skip(tk);
+    for (int i = 0; i < 4; i++) {
+        if (t_peek(tk) == '\'') break;
+
+        if (t_peek(tk) == '\\') {
+            int n = 0;
+            t_consume_a(tk, t_parse_escape_sequence(tk, &n));
+            t_skip_n(tk, n);
+        } else t_consume(tk);
+    }
+    // Multi literal char might be longer than 4, skip all these characters until \'
+    while (t_peek(tk) != '\'')
+        t_skip(tk);
+    t_skip(tk);
+    t_push_buffer(tk, TK_CHAR_LITERAL);
 }
 
 static void t_consume_string_literal(Tokenizer *tk) {

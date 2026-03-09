@@ -418,7 +418,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         data[node->literal.len] = '\0';
         switch (node->literal.kind) {
         case L_INT:
-            node->type = type_i32;
+            node->type = node->literal.raw_rata[node->literal.len - 1] == 'u' ? type_u32 : type_i32;
             node->literal.i = parse_int(data, node->literal.len);
             free(data);
             break;
@@ -429,12 +429,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             free(data);
             break;
         case L_CHAR:
-            node->type = type_i8;
-            node->literal.c = node->literal.raw_rata[0];
-            if (node->literal.len != 1) {
-                printf("Expected char len of 1, found %d\n", node->literal.len);
-                exit(1);
-            }
+            node->type = type_u32;
+            node->literal.i = parse_multi_character(data, node->literal.len);
             free(data);
             break;
         case L_STRING:
