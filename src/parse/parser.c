@@ -1,6 +1,7 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/analyse/sema.h"
 #include "compiler_c/core/node.h"
+#include "compiler_c/core/type.h"
 #include "compiler_c/core/util.h"
 #include "compiler_c/tokenize/tokenizer.h"
 
@@ -137,7 +138,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     case TK_OPEN_PAREN:
         p_consume_a(p, TK_OPEN_PAREN);
         // Try parse a cast (Type) or compound literal (Type){}
-        if (is_type_token(p, p_peek(p))) {
+        if (is_start_of_type(p, p_peek(p))) {
             Node *node = new_node(nm, N_TYPE);
             node->type = p_parse_type(p, nm);
             p_consume_a(p, TK_CLOSE_PAREN);
@@ -298,15 +299,37 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
 }
 
 Node *p_parse_block_item(Parser *p, NodeManager *nm) {
-    if (is_type_token(p, p_peek(p))) return p_parse_block_declaration(p, nm);
+    if (is_start_of_type(p, p_peek(p))) return p_parse_block_declaration(p, nm);
     else return p_parse_statement(p, nm);
+}
+unsigned int p_parse_qualifiers(Parser *p) {
+    unsigned int qualifiers = QUAL_NONE;
+    while (is_qualifier_token(p, p_peek(p))) {
+        if (p_peek(p)->type == TK_CONST) {
+            p_consume(p);
+            qualifiers |= QUAL_CONST;
+        } else if (p_peek(p)->type == TK_VOLATILE) {
+            p_consume(p);
+            qualifiers |= QUAL_VOLATILE;
+        }
+    }
+    return qualifiers;
 }
 /*
     Give the var decl node, if the var name/identifier is needed, otherwise NULL
 */
 Type *p_parse_type(Parser *p, NodeManager *nm) {
     Type *type;
-    if (p_peek(p)->type == TK_CONST) {
+    unsigned int qualifiers = QUAL_NONE;
+    bool is_signed = SIGNED;
+    while (is_qualifier_token(p, p_peek(p)) || p_peek(p)->type == TK_UNSIGNED) {
+        if (p_peek(p)->type == TK_CONST) {
+            qualifiers |= QUAL_CONST;
+        } else if (p_peek(p)->type == TK_VOLATILE) {
+            qualifiers |= QUAL_VOLATILE;
+        } else if (p_peek(p)->type == TK_UNSIGNED) {
+            is_signed = UNSIGNED;
+        }
         p_consume(p);
     }
     if (p_peek(p)->type == TK_STRUCT) {
@@ -320,6 +343,12 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
         printf("Tried to parse an unknown type\n");
         exit(1);
     }
+
+    if (type->kind == T_INT) {
+        if (!is_signed && is_signed != type->is_signed) {
+            type = get_unsigned_type(type);
+        }
+    }
     int ptrs = 0;
     while (p_peek(p)->type == TK_MULTIPLY) {
         ptrs++;
@@ -328,6 +357,7 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
     for (int i = 0; i < ptrs; i++)
         type = get_pointer_type(type);
 
+    if (qualifiers != QUAL_NONE) type = get_qualified_type(type, qualifiers);
     return type;
 }
 
@@ -918,6 +948,18 @@ Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
     }
     return root;
 }
+bool is_qualifier_token(const Parser *p, const Token *t) {
+    switch (t->type) {
+    case TK_CONST:
+    case TK_VOLATILE:
+        return true;
+    default:
+        return false;
+    }
+}
+bool is_start_of_type(const Parser *p, const Token *t) {
+    return is_type_token(p, t) || is_qualifier_token(p, t) || p_peek(p)->type == TK_UNSIGNED;
+}
 bool is_type_token(const Parser *p, const Token *t) {
     switch (t->type) {
     case TK_CHAR:
@@ -940,17 +982,17 @@ bool is_type_token(const Parser *p, const Token *t) {
 Type *token_to_type(const Parser *p, const Token *t) {
     switch (t->type) {
     case TK_CHAR:
-        return type_char;
+        return type_i8;
     case TK_SHORT:
-        return type_short;
+        return type_i16;
     case TK_INT:
-        return type_int;
+        return type_i32;
     case TK_LONG:
-        return type_long;
+        return type_i64;
     case TK_FLOAT:
-        return type_float;
+        return type_f32;
     case TK_DOUBLE:
-        return type_double;
+        return type_f64;
     case TK_VOID:
         return type_void;
     case TK_IDENTIFIER:

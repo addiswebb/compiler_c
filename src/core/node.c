@@ -232,7 +232,7 @@ void print_node(const Node *node, const int depth) {
         printf(": [type= ");
         print_type(node->type);
         printf(", ");
-        if (node->type == type_char) {
+        if (node->type == type_i8) {
             printf("value= %c]\n", (char)node->literal.i);
             break;
         }
@@ -265,7 +265,7 @@ void print_node(const Node *node, const int depth) {
             printf("value= [INVALID TYPE]]\n");
             break;
         case T_ARRAY:
-            if (node->type->base == type_char) {
+            if (node->type->base == type_i8) {
                 printf("value= \"");
                 for (int i = 0; i < node->type->_array.array_len; i++) {
                     printf("%c", node->literal.s.data[i]);
@@ -274,7 +274,7 @@ void print_node(const Node *node, const int depth) {
                 break;
             }
         case T_POINTER:
-            if (node->type->base == type_char) {
+            if (node->type->base == type_i8) {
                 printf("value= \"%s\"]\n", node->literal.s.data);
                 break;
             }

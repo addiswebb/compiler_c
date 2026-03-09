@@ -220,7 +220,7 @@ typedef struct {
 
 void init_types();
 
-Type *init_global_type(TypeKind type, int size);
+// Type *init_global_type(TypeKind type, int size);
 NodeManager new_node_manager();
 void free_node_manager(const NodeManager *nm);
 

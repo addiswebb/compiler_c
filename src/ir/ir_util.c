@@ -220,7 +220,7 @@ static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
         printf("%g", c->f);
         break;
     case T_ARRAY:
-        if (instr->_const.type->base == type_char) {
+        if (instr->_const.type->base == type_i8) {
             printf("\"%s\"", c->s.data);
             break;
         }

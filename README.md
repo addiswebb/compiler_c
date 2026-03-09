@@ -254,6 +254,14 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * `(Type){}`
 
 ## To be Implemented (Ordered from next to never...)
+* Variants
+    * Unsigned
+* Qualifiers
+    * const, volatile
+* Structs and Unions, Enums
+    * Index assigment `int x[] = {[1] = 2`
+    * Bitfield in structs
+        * `unsigned int flag : 1; // 1 bit`
 * Function ABI Calling Conventions
     * Handle Structs
         * `sizeof(struct A) < 16b` => use registers
@@ -266,14 +274,6 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * Function pointers
 * Literals
     * Handle overflows and multi char literal `char a = `abcd`;`
-* Variants
-    * Unsigned
-* Qualifiers
-    * const, volatile
-* Structs and Unions, Enums
-    * Index assigment `int x[] = {[1] = 2`
-    * Bitfield in structs
-        * `unsigned int flag : 1; // 1 bit`
 * Use/Support a Preprocessor (~~Write a Preprocessor~~)
     * Automatically call preprocessor on source file.
 * Parse & Ignore

@@ -184,15 +184,15 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
         fprintf(fp, ".section .rodata\n");
         for (int i = 0; i < ctx->module->const_array.count; i++) {
             const IR_Literal *c = get_const(ctx, i);
-            if (c->type == type_double) {
+            if (c->type == type_f64) {
                 uint64_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
                 fprintf(fp, ".align 8\n.LC%d:\n    .quad 0x%016llx\n", i, bits);
-            } else if (c->type == type_float) {
+            } else if (c->type == type_f32) {
                 uint32_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
                 fprintf(fp, ".align 4\n.LC%d:\n    .long 0x%08x\n", i, bits);
-            } else if (c->type->kind == T_ARRAY && c->type->base == type_char) {
+            } else if (c->type->kind == T_ARRAY && c->type->base == type_i8) {
                 fprintf(fp, ".LC%d:\n", i);
                 x86_emit_string(fp, c->s.data);
             }
@@ -214,24 +214,24 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
                 printf("Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
                 exit(1);
             }
-            if (c->type == type_double) {
+            if (c->type == type_f64) {
                 uint64_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
                 fprintf(fp, ".align 8\n%s:\n    .quad 0x%016llx\n", g->name, bits);
-            } else if (c->type == type_float) {
+            } else if (c->type == type_f32) {
                 uint32_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
                 fprintf(fp, ".align 4\n%s:\n    .long 0x%08x\n", g->name, bits);
-            } else if (c->type->kind == T_ARRAY && c->type->base == type_char) {
+            } else if (c->type->kind == T_ARRAY && c->type->base == type_i8) {
                 fprintf(fp, ".align 8\n%s:\n", g->name);
                 x86_emit_string(fp, c->s.data);
-            } else if (c->type == type_int) {
+            } else if (c->type == type_i32) {
                 fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->name, (int)c->i);
-            } else if (c->type == type_char) {
+            } else if (c->type == type_i8) {
                 fprintf(fp, "%s:\n    .byte %d\n", g->name, (char)c->i);
-            } else if (c->type == type_short) {
+            } else if (c->type == type_i16) {
                 fprintf(fp, ".align 2\n%s:\n    .word %d\n", g->name, (short)c->i);
-            } else if (c->type == type_long) {
+            } else if (c->type == type_i64) {
                 fprintf(fp, ".align 8\n%s:\n    .quad %lld\n", g->name, c->i);
             }
         }

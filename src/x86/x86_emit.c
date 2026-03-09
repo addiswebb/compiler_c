@@ -545,7 +545,7 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c,
         break;
     case T_POINTER:
     case T_ARRAY:
-        if (t->base == type_char) {
+        if (t->base == type_i8) {
             // fprintf(fp, "    lea .LC%d(%%rip), %%rax\n", pool_index);
             // break;
             return;

@@ -41,7 +41,7 @@ IR_Value ir_const(IR_Context *ctx, IR_Value c, Type *type) {
     i.ops[1] = c;
     i._const.type = type;
     // Use the .LCx literal for strings, otherwise it was lowered to an asm literal and stored in a register.
-    i.ops[0] = type->kind == T_ARRAY && type->base == type_char ? c : ir_next_virtual_reg(ctx->func);
+    i.ops[0] = type->kind == T_ARRAY && type->base == type_i8 ? c : ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
     append(&ctx->block->instruction_array, &i);
     return i.ops[0];

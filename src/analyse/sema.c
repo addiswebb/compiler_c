@@ -23,7 +23,7 @@ Type *check_unary_op(NodeManager *nm, Node *unary_op) {
         break;
     // [Int, Float] => Int
     case TK_L_NOT:
-        if (kind == T_INT || kind == T_FLOAT) return type_int;
+        if (kind == T_INT || kind == T_FLOAT) return type_i32;
         break;
     // Int => Int
     case TK_BW_NOT:
@@ -43,7 +43,7 @@ Type *check_unary_op(NodeManager *nm, Node *unary_op) {
         printf("Tried to dereference some nonexistent term\n");
         exit(1);
     case TK_SIZEOF:
-        if (expr->type != type_invalid && expr->type->size) return type_int;
+        if (expr->type != type_invalid && expr->type->size) return type_i32;
         printf("Tried to get the sizeof something without a size\n");
         exit(1);
     case TK_INCR:
@@ -91,17 +91,17 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
     }
 
     if (is_arithmetic_op(op)) return common;
-    if (is_comparison_op(op)) return type_int;
+    if (is_comparison_op(op)) return type_i32;
 
     if (is_bitwise_op(op)) {
         if (lhs->type->kind != T_INT || rhs->type->kind != T_INT) {
             printf("Bitwise operation requires integers\n");
             exit(1);
         }
-        return type_int;
+        return type_i32;
     }
 
-    if (is_logical_op(op)) return type_int;
+    if (is_logical_op(op)) return type_i32;
 
     printf("Unknown binary operator\n");
     return type_invalid;
@@ -112,10 +112,10 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     Node **lhs = &binop->binary.lhs;
     Node **rhs = &binop->binary.rhs;
     if ((*lhs)->type->kind == T_ENUM) {
-        *lhs = cast_node(nm, (*lhs), type_int);
+        *lhs = cast_node(nm, (*lhs), type_i32);
     }
     if ((*rhs)->type->kind == T_ENUM) {
-        *rhs = cast_node(nm, (*rhs), type_int);
+        *rhs = cast_node(nm, (*rhs), type_i32);
     }
     // Decay array -> pointer
     if ((*lhs)->type->kind == T_ARRAY) {
@@ -126,8 +126,8 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     }
     // Integer promotion
     if (is_arithmetic_op(binop->binary.op)) {
-        if ((*lhs)->type->kind == T_INT && (*lhs)->type->size < type_int->size) *lhs = cast_node(nm, (*lhs), type_int);
-        if ((*rhs)->type->kind == T_INT && (*rhs)->type->size < type_int->size) *rhs = cast_node(nm, (*rhs), type_int);
+        if ((*lhs)->type->kind == T_INT && (*lhs)->type->size < type_i32->size) *lhs = cast_node(nm, (*lhs), type_i32);
+        if ((*rhs)->type->kind == T_INT && (*rhs)->type->size < type_i32->size) *rhs = cast_node(nm, (*rhs), type_i32);
     }
     // Check for pointer - pointer, only allowed binop with two pointers
     if ((*lhs)->type == (*rhs)->type) return (*lhs)->type;
@@ -135,10 +135,10 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     if ((*lhs)->type->kind == T_FLOAT || (*rhs)->type->kind == T_FLOAT) {
         common = (*lhs)->type->size > (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
     } else if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_INT) {
-        if ((*rhs)->type != type_long) *rhs = cast_node(nm, (*rhs), type_long);
+        if ((*rhs)->type != type_i64) *rhs = cast_node(nm, (*rhs), type_i64);
         return (*lhs)->type;
     } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_POINTER) {
-        if ((*lhs)->type != type_long) *lhs = cast_node(nm, (*lhs), type_long);
+        if ((*lhs)->type != type_i64) *lhs = cast_node(nm, (*lhs), type_i64);
         return (*rhs)->type;
     } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_INT) {
         common = (*lhs)->type->size >= (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
@@ -266,7 +266,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
         if (node->var_decl.expr->kind == N_LITERAL && node->var_decl.expr->literal.kind == L_STRING) {
             if (node->var_decl.expr->literal.kind == L_STRING) {
-                if (node->type->kind != T_ARRAY && node->type->base == type_char) {
+                if (node->type->kind != T_ARRAY && node->type->base == type_i8) {
                     printf("Cannot initialize ");
                     print_type(node->type);
                     printf(" with String Literal\n");
@@ -359,8 +359,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_IF:
         p_push_scope(p);
         semantic_analysis(sema_ctx, p, nm, node->_if.cond);
-        if (node->_if.cond->type != type_int) {
-            node->_if.cond = cast_node(nm, node->_if.cond, type_int);
+        if (node->_if.cond->type != type_i32) {
+            node->_if.cond = cast_node(nm, node->_if.cond, type_i32);
         }
         semantic_analysis(sema_ctx, p, nm, node->_if.if_true);
         semantic_analysis(sema_ctx, p, nm, node->_if.if_false);
@@ -370,8 +370,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         p_push_scope(p);
         sema_ctx->loop = node;
         semantic_analysis(sema_ctx, p, nm, node->_while.cond);
-        if (node->_while.cond->type != type_int) {
-            node->_while.cond = cast_node(nm, node->_while.cond, type_int);
+        if (node->_while.cond->type != type_i32) {
+            node->_while.cond = cast_node(nm, node->_while.cond, type_i32);
         }
         semantic_analysis(sema_ctx, p, nm, node->_while.block);
         p_pop_scope(p);
@@ -381,8 +381,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         sema_ctx->loop = node;
         semantic_analysis(sema_ctx, p, nm, node->_for.init);
         semantic_analysis(sema_ctx, p, nm, node->_for.cond);
-        if (node->_for.cond->type != type_int) {
-            node->_for.cond = cast_node(nm, node->_for.cond, type_int);
+        if (node->_for.cond->type != type_i32) {
+            node->_for.cond = cast_node(nm, node->_for.cond, type_i32);
         }
         semantic_analysis(sema_ctx, p, nm, node->_for.iter);
         semantic_analysis(sema_ctx, p, nm, node->_for.block);
@@ -418,18 +418,18 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         data[node->literal.len] = '\0';
         switch (node->literal.kind) {
         case L_INT:
-            node->type = type_int;
+            node->type = type_i32;
             node->literal.i = parse_int(data, node->literal.len);
             free(data);
             break;
         case L_FLOAT:
             const bool is_float = node->literal.raw_rata[node->literal.len - 1] == 'f';
-            node->type = is_float ? type_float : type_double;
+            node->type = is_float ? type_f32 : type_f64;
             node->literal.f = parse_float(data, node->literal.len);
             free(data);
             break;
         case L_CHAR:
-            node->type = type_char;
+            node->type = type_i8;
             node->literal.c = node->literal.raw_rata[0];
             if (node->literal.len != 1) {
                 printf("Expected char len of 1, found %d\n", node->literal.len);
@@ -438,7 +438,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             free(data);
             break;
         case L_STRING:
-            node->type = get_array_type(type_char, node->literal.len + 1);
+            node->type = get_array_type(type_i8, node->literal.len + 1);
             node->literal.s.data = data;
             node->literal.s.len = node->literal.len + 1;
             break;
@@ -447,8 +447,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_INDEX:
         semantic_analysis(sema_ctx, p, nm, node->index.index);
         semantic_analysis(sema_ctx, p, nm, node->index.identifier);
-        if (node->index.index->type != type_long) {
-            node->index.index = cast_node(nm, node->index.index, type_long);
+        if (node->index.index->type != type_i64) {
+            node->index.index = cast_node(nm, node->index.index, type_i64);
         }
         if (node->index.identifier->type->kind != T_POINTER) {
             Type *pointer_type = get_pointer_type(node->index.identifier->type->base);
@@ -612,15 +612,15 @@ void lower_nodes(NodeManager *nm) {
     for (int i = 0; i < nm->count; i++) {
         Node *n = &nm->nodes[i];
         if (n->type->kind == T_ENUM) {
-            n->type = type_int;
+            n->type = type_i32;
         }
         if (n->kind == N_CAST) {
             if (n->cast.from && n->cast.from->kind == T_ENUM) {
-                n->cast.from = type_int;
+                n->cast.from = type_i32;
             }
             if (n->cast.to && n->cast.to->kind == T_ENUM) {
-                n->cast.to = type_int;
-                n->type = type_int;
+                n->cast.to = type_i32;
+                n->type = type_i32;
             }
             // Optimize out no op (cast from=x, to=x)
             if (n->cast.from == n->type) {

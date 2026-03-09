@@ -94,6 +94,8 @@ Token *p_consume_semi(Parser *p);
     Checks against C standard types, and typedef table.
 */
 bool is_type_token(const Parser *p, const Token *t);
+bool is_qualifier_token(const Parser *p, const Token *t);
+bool is_start_of_type(const Parser *p, const Token *t);
 /*
     Converts token using C standard types, and typedef table.
 */

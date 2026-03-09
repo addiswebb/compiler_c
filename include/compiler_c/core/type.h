@@ -6,15 +6,17 @@
 #define DEBUG_ENUM_DETAILED 0
 /* Include struct members when printing an enum type */
 #define DEBUG_STRUCT_DETAILED 0
+#define SIGNED 1
+#define UNSIGNED 0
 
 #include <stdbool.h>
 
 typedef enum {
+    T_VOID,
     T_INT,
     T_FLOAT,
     T_POINTER,
     T_ARRAY,
-    T_VOID,
     T_STRUCT,
     T_ENUM,
     T_INVALID,
@@ -46,12 +48,19 @@ typedef struct{
     Type* _enum_t;
 }EnumField;
 
+typedef enum{
+    QUAL_NONE = 0u,
+    QUAL_CONST = 1u << 0,
+    QUAL_VOLATILE = 1u << 1,
+} TypeQualifier;
+
 /* Represents a canonical type of any TypeKind */
 struct Type{
     TypeKind kind;
     int size;
     int align;
     bool is_signed;
+    unsigned int qualifiers;
     Type *base;
     // Data for special types
     union{
@@ -75,13 +84,18 @@ struct Type{
 };
 
 /* Global canonical definitions for all predefined C types */
-extern Type *type_char;
-extern Type *type_short;
-extern Type *type_int;
-extern Type *type_long;
+extern Type *type_i8;
+extern Type *type_i16;
+extern Type *type_i32;
+extern Type *type_i64;
 
-extern Type *type_float;
-extern Type *type_double;
+extern Type *type_u8;
+extern Type *type_u16;
+extern Type *type_u32;
+extern Type *type_u64;
+
+extern Type *type_f32;
+extern Type *type_f64;
 
 extern Type *type_void;
 
@@ -102,13 +116,16 @@ static inline int align(int size, int align) {
 void init_types();
 
 /* Helper for initialising a global type outside of the typepool */
-Type *init_global_type(TypeKind type, int size);
+Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is_signed);
 
 /* Returns pointer to a new type in the typepool */
 Type *new_type();
 
 /* Wraps the given type in a pointer type */
 Type *new_pointer_type(Type *type);
+
+Type *new_qualified_type(Type *type, unsigned int qualifiers);
+Type *new_unsigned_type(Type *type);
 /* Creates a sized array of the given type */
 Type *new_array_type(Type *type, int len);
 
@@ -120,6 +137,8 @@ Type *get_pointer_type(Type *type);
 Type *get_enum_type(const char *name);
 Type *get_struct_type(const char *name);
 Type *get_array_type(Type *type, int len);
+Type *get_qualified_type(Type *type, unsigned int qualifiers);
+Type *get_unsigned_type(Type *type);
 
 /*
     Update the length of the given array type, which was previously uninitialized.
