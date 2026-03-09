@@ -1,0 +1,28 @@
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t.exe
+// RUN: %t.exe | %check_output "0 5 0  0 5 7  1 0 3  4 0 0  1 0 9  6 2 3  1 2 3  1 2 3"
+
+extern int printf(const char *format, ...);
+
+struct Point {
+    int x;
+    int y;
+    int z;
+};
+
+int main() {
+
+    struct Point p1 = {.y = 5};
+    struct Point p2 = {.y = 5, 7};
+    struct Point p3 = {.z = 3, .x = 1};
+    struct Point p4 = {.x = 1, .x = 4};
+    struct Point p5 = {1, .z = 9};
+    struct Point p6 = {.x = 1, .x = 6, 2, 3};
+    struct Point p7 = {.x = 1, .y = 2, .z = 3};
+    struct Point p8 = {1, 2, 3};
+
+    printf("%d %d %d  %d %d %d  %d %d %d  %d %d %d  %d %d %d  %d %d %d  %d %d %d  %d %d %d\n", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x,
+           p3.y, p3.z, p4.x, p4.y, p4.z, p5.x, p5.y, p5.z, p6.x, p6.y, p6.z, p7.x, p7.y, p7.z, p8.x, p8.y, p8.z);
+
+    return 0;
+}

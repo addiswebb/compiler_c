@@ -202,7 +202,17 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
     Node *node = new_init_list_node(nm);
     p_consume(p); // '{'
     while (p_peek(p)->type != TK_CLOSE_CURLY) {
-        p_append_element(node, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
+        if (p_peek(p)->type == TK_DOT) {
+            p_consume(p);
+            Token *token = p_consume_a(p, TK_IDENTIFIER);
+            p_consume_a(p, TK_EQ);
+
+            Node *member_assign = new_node(nm, N_MEMBER_ASSIGN);
+            member_assign->member_assign.name = token->value;
+            member_assign->member_assign.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+
+            p_append_element(node, member_assign);
+        } else p_append_element(node, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
         if (p_peek(p)->type == TK_COMMA) p_consume(p);
         else break;
     }
@@ -575,6 +585,26 @@ Node *p_parse_case(Parser *p, NodeManager *nm) {
 void p_append_case(Node *s, Node *c) {
     c->_case.i = s->_switch.block->compound.items_array.count;
     append(&s->_switch.cases_array, &c);
+}
+
+StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index) {
+    bool found_member = false;
+    for (int j = 0; j < struct_t->_struct.members_array.count; j++) {
+        StructMember *member = get_struct_member(struct_t, j);
+        if (strcmp(member->name, name) == 0) {
+            found_member = true;
+            // Continue from after the named initializer.
+            *index = j;
+            return member;
+        }
+    }
+    if (!found_member) {
+        printf("No such member \'%s\' on ", name);
+        print_type(struct_t);
+        printf("\n");
+        exit(1);
+    }
+    return NULL;
 }
 
 Node *p_parse_switch_statement(Parser *p, NodeManager *nm) {

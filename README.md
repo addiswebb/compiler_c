@@ -222,15 +222,17 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * C Strings
     * Indexing with `[]`
 * Array Initialization
-    * Using `= {};`
-        * Empty, Undersized, Oversized
+    * `(type) A[]`
     * size inference
     * Allow infered size allocation `int[]`
+    * Array Initialization `= {};`
+        * Empty, Undersized, Oversized
 * Structs
     * `struct A {}`
     * Member access using `.` and `->`
     * Padding rules
     * Nested structs
+    * Designated Initializers `.member = value` [C99+]
 * Enums
     * `enum B {}`
     * Specify value `enum C { ONE = 1, TWO, }`
@@ -248,10 +250,10 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * Link with external variadic functions
 * Advanced Control Flow:
     * goto & labels
-
-## To be Implemented (Ordered from next to never...)
 * Compound literals
     * `(Type){}`
+
+## To be Implemented (Ordered from next to never...)
 * Function ABI Calling Conventions
     * Handle Structs
         * `sizeof(struct A) < 16b` => use registers
@@ -262,18 +264,15 @@ Returns control flow to callee, also returns a value. If no value is given, retu
 * Pointers
     * [Pointer,Pointer] Arithmetic
     * Function pointers
-* Array Initialization
-
 * Literals
     * Handle overflows and multi char literal `char a = `abcd`;`
-* Structs and Unions, Enums
-    * Designated Initializers `.member = value` [C99+]
-    * Bitfield in structs
-        * `unsigned int flag : 1; // 1 bit`
 * Variants
     * Unsigned
 * Qualifiers
     * const, volatile
+* Structs and Unions, Enums
+    * Bitfield in structs
+        * `unsigned int flag : 1; // 1 bit`
 * Variadic Functions
     * Compile variadic functions
 * Use/Support a Preprocessor (~~Write a Preprocessor~~)

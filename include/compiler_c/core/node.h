@@ -34,6 +34,7 @@ typedef enum {
     N_GOTO,
     N_LABEL,
     N_COMPOUND_LITERAL,
+    N_MEMBER_ASSIGN,
 } NodeKind;
 
 typedef enum{
@@ -201,6 +202,11 @@ struct Node {
         struct{
             Node *identifier;
         }label;
+        struct{
+            const char *name;
+            Node *value;
+            StructMember *member;
+        }member_assign;
     };
 };
 

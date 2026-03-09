@@ -356,28 +356,53 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
         int len = is_array ? var_decl->type->_array.array_len : var_decl->type->_struct.members_array.count;
 
         Node *l = var_decl->var_decl.expr;
+        /*
+            Type changes to match the corresponding struct member for structs,
+            and stays constant as the base type of an array;
+        */
         Type *type;
+        /*
+            Zero's type changes accordingly when filling a struct,
+            but stays as constant as the base type of an array.
+        */
         IR_Value zero;
+        /*
+            v is the ir_value of the value being stored at the current location,
+            when filling either struct or array.
+        */
         IR_Value v;
+
         if (is_array) {
             type = var_decl->type->base;
             zero = ir_append_const(ctx->module, &(IR_Literal){type, 0});
         }
 
         for (int i = 0; i < len; i++) {
+            bool use_zero = true;
+            Node *e = NULL;
             if (is_array) {
+                e = get_node(&l->init_list.elements_array, i);
                 dst.offset = type->align * i;
+                use_zero = i >= l->init_list.elements_array.count;
             } else {
                 StructMember *member = get_struct_member(var_decl->type, i);
+                // Find corresponding member assignment in the init list.
+                for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
+                    e = get_node(&l->init_list.elements_array, j);
+                    if (strcmp(member->name, e->member_assign.name) == 0) {
+                        use_zero = false;
+                        e = e->member_assign.value;
+                        break;
+                    }
+                }
                 type = member->type;
                 dst.offset = member->offset;
             }
-            Node *e = get_node(&l->init_list.elements_array, i);
-            if (i < l->init_list.elements_array.count) v = ir_gen_rvalue(ctx, e);
-            else {
+            if (use_zero) {
+                // If it is a struct, generate a zero in the correct member's type.
                 if (!is_array) zero = ir_append_const(ctx->module, &(IR_Literal){e->type, 0});
                 v = ir_const(ctx, zero, type);
-            }
+            } else v = ir_gen_rvalue(ctx, e);
             ir_store(ctx, dst, v, type);
         }
         return;

@@ -507,20 +507,36 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
             break;
         case T_STRUCT:
-            if (node->init_list.elements_array.count > node->type->_struct.members_array.count) {
-                printf("Expected initializer list of length %d for ", node->type->_array.array_len);
-                print_type(node->type);
-                printf(", got %d\n", node->init_list.elements_array.count);
-                exit(1);
-            }
+            int index = 0;
             for (int i = 0; i < node->init_list.elements_array.count; i++) {
                 Node *e = get_node(&node->init_list.elements_array, i);
-                semantic_analysis(sema_ctx, p, nm, e);
-                Type *member_type = get_struct_member(node->type, i)->type;
-                if (e->type != member_type) {
-                    Node *casted_node = cast_node(nm, e, member_type);
-                    set_node(&node->init_list.elements_array, &casted_node, i);
+                if (index > node->type->_struct.members_array.count - 1 && e->kind != N_MEMBER_ASSIGN) {
+                    printf("Too many initializers for ");
+                    print_type(node->type);
+                    printf("\n");
+                    exit(1);
                 }
+                Node *value = e->kind == N_MEMBER_ASSIGN ? e->member_assign.value : e;
+                semantic_analysis(sema_ctx, p, nm, value);
+                StructMember *member = e->kind == N_MEMBER_ASSIGN ? get_struct_member_named(node->type, e->member_assign.name, &index)
+                                                                  : get_struct_member(node->type, index);
+                if (e->kind != N_MEMBER_ASSIGN) {
+                    Node *member_assign = new_node(nm, N_MEMBER_ASSIGN);
+                    member_assign->member_assign.value = e;
+                    member_assign->member_assign.name = member->name;
+                    set_node(&node->init_list.elements_array, &member_assign, i);
+                    e = member_assign;
+                }
+
+                e->type = member->type;
+                e->member_assign.member = member;
+
+                if (value->type != member->type) {
+                    Node *casted_node = cast_node(nm, value, member->type);
+                    set_node(&node->init_list.elements_array, &casted_node, index);
+                }
+
+                index++;
             }
             break;
         default:
@@ -571,6 +587,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         semantic_analysis(sema_ctx, p, nm, node->compound_literal.value);
         lower_compound_literal(sema_ctx, p, nm, node);
         break;
+    case N_MEMBER_ASSIGN:
+        printf("Unreachable\n");
+        exit(1);
     case N_TYPEDEF:
     case N_GOTO:
     case N_LABEL:
