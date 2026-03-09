@@ -69,10 +69,11 @@ struct Node {
             Array params_array;
             Node *body;
             StorageClass storage_class;
+            Symbol *symbol;
             bool has_initializer;
             bool is_global;
             bool is_defined;
-            Symbol *symbol;
+            bool is_inline;
             bool is_variadic;
         } func;
         // { [block_item]+ }

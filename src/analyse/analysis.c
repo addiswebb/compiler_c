@@ -359,12 +359,9 @@ void lower_for_asm_gen(const IR_Function *f, const Lifetime *lts, const StackSlo
                 case IR_VREG:
                     // a->reg is negative for function parameters
                     if (a->reg < 0) {
-                        printf("a\n");
                         if (-a->reg - 1 < WIN64_PARAM_REGISTERS) {
-                            printf("b\n");
                             physical_register(a);
                         } else {
-                            printf("c\n");
                             param_offset(a);
                         }
                     } else {

@@ -312,19 +312,6 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm) {
     if (is_start_of_type(p, p_peek(p))) return p_parse_block_declaration(p, nm);
     else return p_parse_statement(p, nm);
 }
-unsigned int p_parse_qualifiers(Parser *p) {
-    unsigned int qualifiers = QUAL_NONE;
-    while (is_qualifier_token(p, p_peek(p))) {
-        if (p_peek(p)->type == TK_CONST) {
-            p_consume(p);
-            qualifiers |= QUAL_CONST;
-        } else if (p_peek(p)->type == TK_VOLATILE) {
-            p_consume(p);
-            qualifiers |= QUAL_VOLATILE;
-        }
-    }
-    return qualifiers;
-}
 /*
     Give the var decl node, if the var name/identifier is needed, otherwise NULL
 */
@@ -332,14 +319,11 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
     Type *type;
     unsigned int qualifiers = QUAL_NONE;
     bool is_signed = SIGNED;
-    while (is_qualifier_token(p, p_peek(p)) || p_peek(p)->type == TK_UNSIGNED) {
-        if (p_peek(p)->type == TK_CONST) {
-            qualifiers |= QUAL_CONST;
-        } else if (p_peek(p)->type == TK_VOLATILE) {
-            qualifiers |= QUAL_VOLATILE;
-        } else if (p_peek(p)->type == TK_UNSIGNED) {
-            is_signed = UNSIGNED;
-        }
+    for (;;) {
+        if (p_peek(p)->type == TK_CONST) qualifiers |= QUAL_CONST;
+        else if (p_peek(p)->type == TK_VOLATILE) qualifiers |= QUAL_VOLATILE;
+        else if (p_peek(p)->type == TK_UNSIGNED) is_signed = UNSIGNED;
+        else break;
         p_consume(p);
     }
     if (p_peek(p)->type == TK_STRUCT) {
@@ -814,10 +798,11 @@ int p_parse_parameter_list(Parser *p, NodeManager *nm, Node *func) {
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, const StorageClass storage_class) {
+Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, const StorageClass storage_class, bool is_inline) {
     Node *node = new_function_node(nm);
     node->func.name = p_consume_a(p, TK_IDENTIFIER)->value;
     node->func.type = type;
+    node->func.is_inline = is_inline;
     node->type = type->type;
 
     node->func.is_variadic = p_parse_parameter_list(p, nm, node);
@@ -896,12 +881,21 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const Sto
 Node *p_parse_external_declaration(Parser *p, NodeManager *nm) {
     if (p_peek(p)->type == TK_TYPEDEF) return p_parse_typedef(p, nm);
 
-    StorageClass storage_class = p_parse_storage_classifier(p, nm);
+    StorageClass storage_class = NONE;
+    bool is_inline = false;
+    for (;;) {
+        if (p_peek(p)->type == TK_STATIC) storage_class = STATIC;
+        else if (p_peek(p)->type == TK_EXTERN) storage_class = EXTERN;
+        else if (p_peek(p)->type == TK_INLINE) is_inline = true;
+        else break;
+        p_consume(p);
+    }
 
     Node *type_decl = new_node(nm, N_TYPE);
     type_decl->type = p_parse_type(p, nm);
     // If a function is ahead, parse function
-    if (p_peek(p)->type == TK_IDENTIFIER && p_peek_next(p)->type == TK_OPEN_PAREN) return p_parse_function(p, nm, type_decl, storage_class);
+    if (p_peek(p)->type == TK_IDENTIFIER && p_peek_next(p)->type == TK_OPEN_PAREN)
+        return p_parse_function(p, nm, type_decl, storage_class, is_inline);
     // Otherwise parse variable/type declaration
     else return p_parse_declaration(p, nm, type_decl, storage_class, true);
 }
@@ -958,8 +952,17 @@ Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
     }
     return root;
 }
-bool is_qualifier_token(const Parser *p, const Token *t) {
-    switch (t->type) {
+bool is_storage_classifier(const TokenType type) {
+    switch (type) {
+    case TK_STATIC:
+    case TK_EXTERN:
+        return true;
+    default:
+        return false;
+    }
+}
+bool is_qualifier_token(const TokenType type) {
+    switch (type) {
     case TK_CONST:
     case TK_VOLATILE:
         return true;
@@ -968,7 +971,7 @@ bool is_qualifier_token(const Parser *p, const Token *t) {
     }
 }
 bool is_start_of_type(const Parser *p, const Token *t) {
-    return is_type_token(p, t) || is_qualifier_token(p, t) || p_peek(p)->type == TK_UNSIGNED;
+    return is_type_token(p, t) || is_qualifier_token(t->type) || p_peek(p)->type == TK_UNSIGNED;
 }
 bool is_type_token(const Parser *p, const Token *t) {
     switch (t->type) {

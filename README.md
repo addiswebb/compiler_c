@@ -340,7 +340,9 @@ Returns control flow to callee, also returns a value. If no value is given, retu
     * `inline`
     * `volatile`
     * `...`
-* Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)
+* Support a standard library 
+* ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
+    * Need to support SysV/Linux Abi for Musl libc :(
     * `printf`
     * `malloc`
     * `free`

@@ -94,7 +94,8 @@ Token *p_consume_semi(Parser *p);
     Checks against C standard types, and typedef table.
 */
 bool is_type_token(const Parser *p, const Token *t);
-bool is_qualifier_token(const Parser *p, const Token *t);
+bool is_storage_classifier(const TokenType type);
+bool is_qualifier_token(const TokenType type);
 bool is_start_of_type(const Parser *p, const Token *t);
 /*
     Converts token using C standard types, and typedef table.
@@ -227,7 +228,7 @@ Node *p_parse_compound(Parser *p, NodeManager *nm);
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, StorageClass storage_class);
+Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, const StorageClass storage_class, bool is_inline);
 
 /*
     Consumes any valid declaration.

@@ -1,7 +1,3 @@
-extern int printf(const char *format, ...);
+static inline int foo(int x) { return x; }
 
-int main() {
-    int x = 'abcdef';
-
-    return x;
-}
+int main() { return foo(10); }

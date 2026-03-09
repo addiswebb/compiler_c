@@ -6,20 +6,12 @@
 #include <string.h>
 
 const char *KEYWORDS[KEYWORDS_N] = {
-    [TK_BREAK] = "break",       [TK_CASE] = "case",
-    [TK_CHAR] = "char",         [TK_CONST] = "const",
-    [TK_CONTINUE] = "continue", [TK_DEFAULT] = "default",
-    [TK_DOUBLE] = "double",     [TK_ELSE] = "else",
-    [TK_ENUM] = "enum",         [TK_EXTERN] = "extern",
-    [TK_FLOAT] = "float",       [TK_FOR] = "for",
-    [TK_GOTO] = "goto",         [TK_IF] = "if",
-    [TK_INT] = "int",           [TK_LONG] = "long",
-    [TK_RETURN] = "return",     [TK_SIZEOF] = "sizeof",
-    [TK_SHORT] = "short",       [TK_STATIC] = "static",
-    [TK_STRUCT] = "struct",     [TK_SWITCH] = "switch",
-    [TK_TYPEDEF] = "typedef",   [TK_UNSIGNED] = "unsigned",
-    [TK_VOID] = "void",         [TK_VOLATILE] = "volatile",
-    [TK_WHILE] = "while",
+    [TK_BREAK] = "break",     [TK_CASE] = "case",         [TK_CHAR] = "char",     [TK_CONST] = "const",     [TK_CONTINUE] = "continue",
+    [TK_DEFAULT] = "default", [TK_DOUBLE] = "double",     [TK_ELSE] = "else",     [TK_ENUM] = "enum",       [TK_EXTERN] = "extern",
+    [TK_FLOAT] = "float",     [TK_FOR] = "for",           [TK_GOTO] = "goto",     [TK_IF] = "if",           [TK_INLINE] = "inline",
+    [TK_INT] = "int",         [TK_LONG] = "long",         [TK_RETURN] = "return", [TK_SIZEOF] = "sizeof",   [TK_SHORT] = "short",
+    [TK_STATIC] = "static",   [TK_STRUCT] = "struct",     [TK_SWITCH] = "switch", [TK_TYPEDEF] = "typedef", [TK_UNSIGNED] = "unsigned",
+    [TK_VOID] = "void",       [TK_VOLATILE] = "volatile", [TK_WHILE] = "while",
 };
 
 static void t_buffer_reset(Tokenizer *tk) {
@@ -909,6 +901,9 @@ void print_token_type(const TokenType type) {
         break;
     case TK_UNSIGNED:
         printf("unsigned");
+        break;
+    case TK_INLINE:
+        printf("inline");
         break;
     }
 }
