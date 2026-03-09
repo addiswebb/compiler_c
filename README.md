@@ -2,6 +2,38 @@
 An unoptimised C compiler written in C supporting C89 following Win64 MS ABI Conventions.
 With the goal of eventual self compilation.
 
+## Table of Contents
+* [Compiler C](#compiler-c)
+* [Architecture](#architecture)
+  * [The Tokenizer](#the-tokenizer)
+  * [The Parser](#the-parser)
+  * [Semantic Analysis Pass](#semantic-analysis-pass)
+  * [IR Gen](#ir-gen)
+  * [Analysis Pass](#analysis-pass)
+  * [x86 Gen](#x86-gen)
+* [Grammar](#grammar)
+  * [1. `(type)`](#1-type)
+  * [2. `identifier`](#2-identifier)
+  * [3. `expr`](#3-expr)
+  * [4. `{compound}`](#4-compound)
+  * [5. `block item`](#5-block-item)
+  * [6. `statement`](#6-statement)
+  * [7. `var decl`](#7-var-decl)
+  * [8. Standard C Statements](#8-standard-c-statements)
+    * [`if` statement](#if-statement)
+    * [`while` loop](#while-loop)
+    * [`for` loop](#for-loop)
+    * [`return` statement](#return-statement)
+* [Compiler Features Implemented](#compiler-features-implemented)
+  * [1. Types](#1-types)
+  * [2. Literals](#2-literals)
+  * [3. Variables & Storage](#3-variables--storage)
+  * [4. Expressions](#4-expressions)
+  * [5. Control Flow](#5-control-flow)
+  * [6. Functions](#6-functions)
+  * [7. Pointers](#7-pointers)
+* [To be Implemented](#to-be-implemented-ordered-from-next-to-never)
+
 # Architecture
 The compiler is comprised of 6 major sections. Each one has a clear task. 
 The compiler manages all sections and hands the work of one onto the next. It also handles loading the file from disc into memory and parsing compile flags given at runtime which change the compiler`s behaviour.
@@ -272,6 +304,7 @@ Returns control flow to callee, also returns a value. If no value is given, retu
 
 * Declarations & Calls
   * Parameters, return types
+  * `inline` (Parsed but ignored)
 * Variadic Functions
   * Link with external variadic functions
 * Function ABI & Calling Conventions
