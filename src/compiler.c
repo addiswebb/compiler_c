@@ -101,12 +101,6 @@ int compile(Compiler *compiler) {
 
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 
-    for (int i = 0; i < typepool.count; i++) {
-        printf("%d: [", i + 1);
-        print_type(&typepool.types[i]);
-        printf("]\n");
-    }
-
     lower_nodes(&compiler->nm);
 
     if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {

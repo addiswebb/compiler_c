@@ -381,9 +381,15 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
             bool use_zero = true;
             Node *e = NULL;
             if (is_array) {
+                for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
+                    e = get_node(&l->init_list.elements_array, j);
+                    if (e->element_assign.index == i) {
+                        use_zero = false;
+                        e = e->element_assign.value;
+                        break;
+                    }
+                }
                 dst.offset = type->align * i;
-                use_zero = i >= l->init_list.elements_array.count;
-                if (!use_zero) e = get_node(&l->init_list.elements_array, i);
             } else {
                 StructMember *member = get_struct_member(var_decl->type, i);
                 // Find corresponding member assignment in the init list.
@@ -403,6 +409,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
                 if (!is_array) zero = ir_append_const(ctx->module, &(IR_Literal){e->type, 0});
                 v = ir_const(ctx, zero, type);
             } else v = ir_gen_rvalue(ctx, e);
+
             ir_store(ctx, dst, v, type);
         }
         return;

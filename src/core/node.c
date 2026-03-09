@@ -190,6 +190,9 @@ void print_node_type(const NodeKind type) {
     case N_MEMBER_ASSIGN:
         printf("Member Assign");
         break;
+    case N_ELEMENT_ASSIGN:
+        printf("Element Assign");
+        break;
     }
 }
 
@@ -434,6 +437,12 @@ void print_node(const Node *node, const int depth) {
         print_type(node->type);
         printf("]\n");
         print_node(node->member_assign.value, depth + 1);
+        break;
+    case N_ELEMENT_ASSIGN:
+        printf(": [index= %d, type= ", node->element_assign.index);
+        print_type(node->type);
+        printf("]\n");
+        print_node(node->element_assign.value, depth + 1);
         break;
     }
 }

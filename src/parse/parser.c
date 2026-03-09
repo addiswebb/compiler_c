@@ -213,6 +213,16 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
             member_assign->member_assign.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
 
             p_append_element(node, member_assign);
+        } else if (p_peek(p)->type == TK_OPEN_SQUARE) {
+            p_consume(p);
+
+            const Token *t = p_consume_a(p, TK_INT_LITERAL);
+            p_consume_a(p, TK_CLOSE_SQUARE);
+            p_consume_a(p, TK_EQ);
+            Node *element_assign = new_node(nm, N_ELEMENT_ASSIGN);
+            element_assign->element_assign.index = (int)parse_int(t->value, t->size);
+            element_assign->element_assign.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+            p_append_element(node, element_assign);
         } else p_append_element(node, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
         if (p_peek(p)->type == TK_COMMA) p_consume(p);
         else break;
