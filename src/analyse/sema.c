@@ -491,16 +491,12 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                     exit(1);
                 }
                 node->type = infer_array_length(node->type, node->init_list.elements_array.count);
-            } else if (node->type->_array.array_len < node->init_list.elements_array.count) {
-                printf("Expected initializer list of length %d for ", node->type->_array.array_len);
-                print_type(node->type);
-                printf(", got %d\n", node->init_list.elements_array.count);
-                exit(1);
             }
+
             int a_index = 0;
             for (int i = 0; i < node->init_list.elements_array.count; i++) {
                 Node *e = get_node(&node->init_list.elements_array, i);
-                if (a_index > node->type->_array.array_len - 1 && e->kind != N_MEMBER_ASSIGN) {
+                if (a_index > node->type->_array.array_len - 1 && e->kind != N_ELEMENT_ASSIGN) {
                     printf("Too many initializers for ");
                     print_type(node->type);
                     printf("\n");

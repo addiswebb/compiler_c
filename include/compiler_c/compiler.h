@@ -17,12 +17,11 @@ typedef struct {
 } Compiler;
 
 // Generate and print Abstract Syntax Tree
-#define COMP_FLAG_AST (1u << 1)    // -t
+#define COMP_FLAG_AST (1u << 0)    // -t
 // Generate and print IR Module and instructions
-#define COMP_FLAG_IR (1u << 4)     // -ir
+#define COMP_FLAG_IR (1u << 1)     // -ir
 // Generate and save raw assembly
-#define COMP_FLAG_ASM (1u << 5)    // -a
-
+#define COMP_FLAG_ASM (1u << 2)    // -a
 
 /*
     Takes input from terminal and instantiates a compiler,

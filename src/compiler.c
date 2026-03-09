@@ -132,46 +132,45 @@ int compile(Compiler *compiler) {
 }
 
 static int load_src_file(Compiler *compiler, const char *file) {
-    FILE *fp = fopen(file, "rb");
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "cpp -P -std=c11 \"%s\"", file);
 
-    if (fp == NULL) {
+    FILE *fp = _popen(cmd, "r");
+    if (!fp) {
         printf("Failed to open %s\n", file);
         exit(1);
     }
 
-    if (fseek(fp, 0, SEEK_END) != 0) {
-        fclose(fp);
-        printf("Failed to read file size (SEEK)\n");
+    size_t capacity = 8192; // initial buffer
+    size_t size = 0;
+    char *src = malloc(capacity);
+    if (!src) {
+        _pclose(fp);
+        printf("Failed to allocate buffer\n");
         exit(1);
     }
 
-    const long size = ftell(fp);
-    if (size < 0) {
-        fclose(fp);
-        printf("Failed to read file size (TELL)\n");
-        exit(1);
+    int c;
+    for (;;) {
+        c = fgetc(fp);
+        if (c == EOF) break;
+
+        if (size + 1 >= capacity) {
+            capacity *= 2;
+            src = realloc(src, capacity);
+            if (!src) {
+                _pclose(fp);
+                printf("Failed to realloc buffer\n");
+                exit(1);
+            }
+        }
+        src[size++] = (char)c;
     }
 
-    rewind(fp);
-    char *src = malloc((size_t)size + 1);
-    if (src == NULL) {
-        fclose(fp);
-        printf("Failed to write to src buffer\n");
-        exit(1);
-    }
-
-    const size_t read = fread(src, 1, (size_t)size, fp);
-    fclose(fp);
-    if (read != (size_t)size) {
-        free(src);
-        printf("Inconsistent file sizes\n");
-        exit(1);
-    }
-
+    _pclose(fp);
     src[size] = '\0';
 
     compiler->src = src;
     compiler->src_size = size;
-
     return 0;
 }
