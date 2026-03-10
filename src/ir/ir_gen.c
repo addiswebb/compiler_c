@@ -383,9 +383,9 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
             if (is_array) {
                 for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
                     e = get_node(&l->init_list.elements_array, j);
-                    if (e->element_assign.index == i) {
+                    if (e->designated_initializer._array.index == i) {
                         use_zero = false;
-                        e = e->element_assign.value;
+                        e = e->designated_initializer.value;
                         break;
                     }
                 }
@@ -395,9 +395,9 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
                 // Find corresponding member assignment in the init list.
                 for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
                     e = get_node(&l->init_list.elements_array, j);
-                    if (strcmp(member->name, e->member_assign.name) == 0) {
+                    if (strcmp(member->name, e->designated_initializer._struct.name) == 0) {
                         use_zero = false;
-                        e = e->member_assign.value;
+                        e = e->designated_initializer.value;
                         break;
                     }
                 }

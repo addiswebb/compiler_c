@@ -492,25 +492,25 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             int a_index = 0;
             for (int i = 0; i < node->init_list.elements_array.count; i++) {
                 Node *e = get_node(&node->init_list.elements_array, i);
-                if (a_index > node->type->_array.array_len - 1 && e->kind != N_ELEMENT_ASSIGN) {
+                if (a_index > node->type->_array.array_len - 1 && e->kind != N_DESIGNATED_INITIALIZER) {
                     printf("Too many initializers for ");
                     print_type(node->type);
                     printf("\n");
                     exit(1);
                 }
-                Node *value = e->kind == N_ELEMENT_ASSIGN ? e->element_assign.value : e;
+                Node *value = e->kind == N_DESIGNATED_INITIALIZER ? e->designated_initializer.value : e;
                 semantic_analysis(sema_ctx, p, nm, value);
-                if (e->kind == N_ELEMENT_ASSIGN) a_index = e->element_assign.index;
+                if (e->kind == N_DESIGNATED_INITIALIZER) a_index = e->designated_initializer._array.index;
 
-                if (e->kind != N_ELEMENT_ASSIGN) {
-                    Node *element_assign = new_node(nm, N_ELEMENT_ASSIGN);
-                    element_assign->element_assign.value = e;
-                    element_assign->element_assign.index = a_index;
+                if (e->kind != N_DESIGNATED_INITIALIZER) {
+                    Node *element_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+                    element_assign->designated_initializer.value = e;
+                    element_assign->designated_initializer._array.index = a_index;
                     set_node(&node->init_list.elements_array, &element_assign, i);
                     e = element_assign;
                 }
                 e->type = node->type->base;
-                e->element_assign.index = a_index;
+                e->designated_initializer._array.index = a_index;
 
                 if (value->type != node->type->base) {
                     Node *casted_node = cast_node(nm, value, node->type->base);
@@ -523,26 +523,27 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             int s_index = 0;
             for (int i = 0; i < node->init_list.elements_array.count; i++) {
                 Node *e = get_node(&node->init_list.elements_array, i);
-                if (s_index > node->type->_struct.members_array.count - 1 && e->kind != N_MEMBER_ASSIGN) {
+                if (s_index > node->type->_struct.members_array.count - 1 && e->kind != N_DESIGNATED_INITIALIZER) {
                     printf("Too many initializers for ");
                     print_type(node->type);
                     printf("\n");
                     exit(1);
                 }
-                Node *value = e->kind == N_MEMBER_ASSIGN ? e->member_assign.value : e;
+                Node *value = e->kind == N_DESIGNATED_INITIALIZER ? e->designated_initializer.value : e;
                 semantic_analysis(sema_ctx, p, nm, value);
-                StructMember *member = e->kind == N_MEMBER_ASSIGN ? get_struct_member_named(node->type, e->member_assign.name, &s_index)
-                                                                  : get_struct_member(node->type, s_index);
-                if (e->kind != N_MEMBER_ASSIGN) {
-                    Node *member_assign = new_node(nm, N_MEMBER_ASSIGN);
-                    member_assign->member_assign.value = e;
-                    member_assign->member_assign.name = member->name;
+                StructMember *member = e->kind == N_DESIGNATED_INITIALIZER
+                                           ? get_struct_member_named(node->type, e->designated_initializer._struct.name, &s_index)
+                                           : get_struct_member(node->type, s_index);
+                if (e->kind != N_DESIGNATED_INITIALIZER) {
+                    Node *member_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+                    member_assign->designated_initializer._struct.name = member->name;
+                    member_assign->designated_initializer.value = e;
                     set_node(&node->init_list.elements_array, &member_assign, i);
                     e = member_assign;
                 }
 
                 e->type = member->type;
-                e->member_assign.member = member;
+                e->designated_initializer._struct.member = member;
 
                 if (value->type != member->type) {
                     Node *casted_node = cast_node(nm, value, member->type);
@@ -604,8 +605,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_GOTO:
     case N_LABEL:
         break;
-    case N_ELEMENT_ASSIGN:
-    case N_MEMBER_ASSIGN:
+    case N_DESIGNATED_INITIALIZER:
         printf("Unreachable\n");
         exit(1);
     }

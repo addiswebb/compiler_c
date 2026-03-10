@@ -187,11 +187,8 @@ void print_node_type(const NodeKind type) {
     case N_COMPOUND_LITERAL:
         printf("Compound Literal");
         break;
-    case N_MEMBER_ASSIGN:
-        printf("Member Assign");
-        break;
-    case N_ELEMENT_ASSIGN:
-        printf("Element Assign");
+    case N_DESIGNATED_INITIALIZER:
+        printf("Designated Initializer");
         break;
     }
 }
@@ -432,17 +429,12 @@ void print_node(const Node *node, const int depth) {
         printf("]\n");
         print_node(node->compound_literal.value, depth + 1);
         break;
-    case N_MEMBER_ASSIGN:
-        printf(": [name= %s, type= ", node->member_assign.name);
+    case N_DESIGNATED_INITIALIZER:
+        if (node->designated_initializer.kind == T_ARRAY) printf(": [index= %d, type= ", node->designated_initializer._array.index);
+        else printf(": [name= %s, type= ", node->designated_initializer._struct.name);
         print_type(node->type);
         printf("]\n");
-        print_node(node->member_assign.value, depth + 1);
-        break;
-    case N_ELEMENT_ASSIGN:
-        printf(": [index= %d, type= ", node->element_assign.index);
-        print_type(node->type);
-        printf("]\n");
-        print_node(node->element_assign.value, depth + 1);
+        print_node(node->designated_initializer.value, depth + 1);
         break;
     }
 }

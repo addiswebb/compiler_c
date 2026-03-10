@@ -208,9 +208,10 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
             Token *token = p_consume_a(p, TK_IDENTIFIER);
             p_consume_a(p, TK_EQ);
 
-            Node *member_assign = new_node(nm, N_MEMBER_ASSIGN);
-            member_assign->member_assign.name = token->value;
-            member_assign->member_assign.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+            Node *member_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+            member_assign->designated_initializer.kind = T_STRUCT;
+            member_assign->designated_initializer._struct.name = token->value;
+            member_assign->designated_initializer.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
 
             p_append_element(node, member_assign);
         } else if (p_peek(p)->type == TK_OPEN_SQUARE) {
@@ -219,9 +220,9 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
             const Token *t = p_consume_a(p, TK_INT_LITERAL);
             p_consume_a(p, TK_CLOSE_SQUARE);
             p_consume_a(p, TK_EQ);
-            Node *element_assign = new_node(nm, N_ELEMENT_ASSIGN);
-            element_assign->element_assign.index = (int)parse_int(t->value, t->size);
-            element_assign->element_assign.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+            Node *element_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+            element_assign->designated_initializer._array.index = (int)parse_int(t->value, t->size);
+            element_assign->designated_initializer.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
             p_append_element(node, element_assign);
         } else p_append_element(node, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
         if (p_peek(p)->type == TK_COMMA) p_consume(p);
