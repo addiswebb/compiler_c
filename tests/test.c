@@ -1,7 +1,6 @@
-extern int printf(const char *format, ...);
-static inline int foo(int x) {
-    printf("Foo: %d\n", x);
-    return x;
-}
+typedef struct A {
+    int x;
+    int y;
+} A;
 
-int main() { return foo(10); }
+int main() { A x = {.y = 1, .x = 2}; }

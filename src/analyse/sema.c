@@ -488,73 +488,56 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 }
                 node->type = infer_array_length(node->type, node->init_list.elements_array.count);
             }
-
-            int a_index = 0;
-            for (int i = 0; i < node->init_list.elements_array.count; i++) {
-                Node *e = get_node(&node->init_list.elements_array, i);
-                if (a_index > node->type->_array.array_len - 1 && e->kind != N_DESIGNATED_INITIALIZER) {
-                    printf("Too many initializers for ");
-                    print_type(node->type);
-                    printf("\n");
-                    exit(1);
-                }
-                Node *value = e->kind == N_DESIGNATED_INITIALIZER ? e->designated_initializer.value : e;
-                semantic_analysis(sema_ctx, p, nm, value);
-                if (e->kind == N_DESIGNATED_INITIALIZER) a_index = e->designated_initializer._array.index;
-
-                if (e->kind != N_DESIGNATED_INITIALIZER) {
-                    Node *element_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
-                    element_assign->designated_initializer.value = e;
-                    element_assign->designated_initializer._array.index = a_index;
-                    set_node(&node->init_list.elements_array, &element_assign, i);
-                    e = element_assign;
-                }
-                e->type = node->type->base;
-                e->designated_initializer._array.index = a_index;
-
-                if (value->type != node->type->base) {
-                    Node *casted_node = cast_node(nm, value, node->type->base);
-                    set_node(&node->init_list.elements_array, &casted_node, a_index);
-                }
-                a_index++;
-            }
-            break;
+            // Intentional passthrough in switch to handle T_ARRAY and T_STRUCT similarily
         case T_STRUCT:
-            int s_index = 0;
+            int index = 0;
+            bool is_array = node->type->kind == T_ARRAY;
+            int count = is_array ? node->type->_array.array_len : node->type->_struct.members_array.count;
             for (int i = 0; i < node->init_list.elements_array.count; i++) {
                 Node *e = get_node(&node->init_list.elements_array, i);
-                if (s_index > node->type->_struct.members_array.count - 1 && e->kind != N_DESIGNATED_INITIALIZER) {
+                bool is_designator = e->kind == N_DESIGNATED_INITIALIZER;
+                if (index >= count && !is_designator) {
                     printf("Too many initializers for ");
                     print_type(node->type);
                     printf("\n");
                     exit(1);
                 }
-                Node *value = e->kind == N_DESIGNATED_INITIALIZER ? e->designated_initializer.value : e;
+                Node *value = is_designator ? e->designated_init.value : e;
                 semantic_analysis(sema_ctx, p, nm, value);
-                StructMember *member = e->kind == N_DESIGNATED_INITIALIZER
-                                           ? get_struct_member_named(node->type, e->designated_initializer._struct.name, &s_index)
-                                           : get_struct_member(node->type, s_index);
-                if (e->kind != N_DESIGNATED_INITIALIZER) {
-                    Node *member_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
-                    member_assign->designated_initializer._struct.name = member->name;
-                    member_assign->designated_initializer.value = e;
-                    set_node(&node->init_list.elements_array, &member_assign, i);
-                    e = member_assign;
+
+                StructMember *member = NULL;
+                if (is_array) {
+                    if (is_designator) index = e->designated_init._array.index;
+                } else
+                    member = is_designator ? get_struct_member_named(node->type, e->designated_init._struct.name, &index)
+                                           : get_struct_member(node->type, index);
+
+                if (!is_designator) {
+                    Node *de = new_node(nm, N_DESIGNATED_INITIALIZER);
+
+                    if (is_array) de->designated_init._array.index = index;
+                    else de->designated_init._struct.name = member->name;
+
+                    de->designated_init.value = e;
+                    set_node(&node->init_list.elements_array, &de, i);
+                    e = de;
+                }
+                Type *target_type = is_array ? node->type->base : member->type;
+                e->type = target_type;
+
+                if (is_array) e->designated_init._array.index = index;
+                else e->designated_init._struct.member = member;
+
+                if (value->type != target_type) {
+                    Node *casted_node = cast_node(nm, value, target_type);
+                    set_node(&node->init_list.elements_array, &casted_node, i);
                 }
 
-                e->type = member->type;
-                e->designated_initializer._struct.member = member;
-
-                if (value->type != member->type) {
-                    Node *casted_node = cast_node(nm, value, member->type);
-                    set_node(&node->init_list.elements_array, &casted_node, s_index);
-                }
-
-                s_index++;
+                index++;
             }
             break;
         default:
-            printf("Initializer list can only be used for struct and arrays");
+            printf("Initializer list can currently only be used for struct and arrays\n");
             exit(1);
         }
         break;

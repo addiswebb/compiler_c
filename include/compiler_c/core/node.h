@@ -215,7 +215,7 @@ struct Node {
                 }_struct;
             };
             Node *value;
-        }designated_initializer;
+        }designated_init;
     };
 };
 
