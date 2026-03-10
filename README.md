@@ -81,7 +81,7 @@ E.g., given an **IR_RET** instruction, we first take the given virtual register 
 You can see how such a simple **IR** instruction can expand into a much more complex set of assembly instructions. This highlights the purpose of the intermediate representation, to hide away this overwhelming complexity so we can later focus on optimizaton and stuff.
 
 # Grammar
-The grammar supported by the compiler is as defined in the [GNU C Language Manual](gnu-c-language-manual.pdf). Some liberties have been taken in places where I felt supporting such grammar would be redundant in the short term. Below is an example of equivalent code.
+The grammar supported by the compiler is as defined in the [GNU C Language Manual](gnu-c-language-manual.pdf). Some liberties have been taken in places where I felt supporting such grammar would be redundant in the short term. Below is an example of equivalent code where only the former is supported.
 ```c
 char a[] = "Hello World";
 ```
