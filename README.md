@@ -4,6 +4,7 @@ With the goal of eventual self compilation.
 
 ## Table of Contents
 * [Compiler C](#compiler-c)
+* [Grammar](#grammar)
 * [Architecture](#architecture)
   * [The Tokenizer](#the-tokenizer)
   * [The Parser](#the-parser)
@@ -11,19 +12,6 @@ With the goal of eventual self compilation.
   * [IR Gen](#ir-gen)
   * [Analysis Pass](#analysis-pass)
   * [x86 Gen](#x86-gen)
-* [Grammar](#grammar)
-  * [1. `(type)`](#1-type)
-  * [2. `identifier`](#2-identifier)
-  * [3. `expr`](#3-expr)
-  * [4. `{compound}`](#4-compound)
-  * [5. `block item`](#5-block-item)
-  * [6. `statement`](#6-statement)
-  * [7. `var decl`](#7-var-decl)
-  * [8. Standard C Statements](#8-standard-c-statements)
-    * [`if` statement](#if-statement)
-    * [`while` loop](#while-loop)
-    * [`for` loop](#for-loop)
-    * [`return` statement](#return-statement)
 * [Compiler Features Implemented](#compiler-features-implemented)
   * [1. Types](#1-types)
   * [2. Literals](#2-literals)
@@ -33,6 +21,38 @@ With the goal of eventual self compilation.
   * [6. Functions](#6-functions)
   * [7. Pointers](#7-pointers)
 * [To be Implemented](#to-be-implemented-ordered-from-next-to-never)
+
+# Grammar
+The grammar supported by the compiler is as defined in the [GNU C Language Manual](gnu-c-language-manual.pdf). Some liberties have been taken in places where I felt supporting such grammar would be redundant in the short term. Below is an example of equivalent code where only the former is supported.
+```c
+char a[] = "Hello World";
+```
+
+```c
+char b[] = "Hello " "World";
+```
+Both of these are parsed to be identical strings `"Hello World"`, as option `a` is perfectly fine, I do not plan to support option `b` until absolutely necessary. While the goal is to fully support C89, some useful features from future standards are also supported. For example designated initliazers for `struct` and `array` types,
+```c
+int x[] = {[1] =5, 4,5, [5]= 6};
+```
+
+```c
+struct Point{ int x; int y;  };
+struct Point p = {.x = 10, .y=10};
+```
+Or compound literals
+```c
+void foo(int *a);
+foo(&(int){1});
+```
+
+GNU also features several compiler extensions, from which I have chosen the useful or interesting ones to implement aswell,
+* Binary Constants `0b101 = 5`
+
+Additionally digraphs and trigraphs will not be supported. Things like implicit `int` return types are also ignored.
+
+A good way to understand what is supported is as follows,
+> "Every language feature used in developing the compiler will be implemented, such that the compiler can compiler itself." 
 
 # Architecture
 The compiler is comprised of 6 major sections. Each one has a clear task. 
@@ -79,38 +99,6 @@ Here we lower the **IR** to raw assembly, replacing simplified **IR_BINARYOP**, 
 E.g., given an **IR_RET** instruction, we first take the given virtual register (Which promises to store a return value) and load it into the `%rax` CPU register. This register is used for all return values in the MS  ABI Function Call Convention. Then we reset the %rsp stack pointer back to the start of the function's stack frame, which was stored in %rbp. Then we pop the return address off the stack (Which is at the top of the stack, when we are at the start of the functions stack frame) and finally call `ret`. Which jumps back to the return address in `%rbp` and "brings" our return value along in `%rax`.
 
 You can see how such a simple **IR** instruction can expand into a much more complex set of assembly instructions. This highlights the purpose of the intermediate representation, to hide away this overwhelming complexity so we can later focus on optimizaton and stuff.
-
-# Grammar
-The grammar supported by the compiler is as defined in the [GNU C Language Manual](gnu-c-language-manual.pdf). Some liberties have been taken in places where I felt supporting such grammar would be redundant in the short term. Below is an example of equivalent code where only the former is supported.
-```c
-char a[] = "Hello World";
-```
-
-```c
-char b[] = "Hello " "World";
-```
-Both of these are parsed to be identical strings `"Hello World"`, as option `a` is perfectly fine, I do not plan to support option `b` until absolutely necessary. While the goal is to fully support C89, some useful features from future standards are also supported. For example designated initliazers for `struct` and `array` types,
-```c
-int x[] = {[1] =5, 4,5, [5]= 6};
-```
-
-```c
-struct Point{ int x; int y;  };
-struct Point p = {.x = 10, .y=10};
-```
-Or compound literals
-```c
-void foo(int *a);
-foo(&(int){1});
-```
-
-GNU also features several compiler extensions, from which I have chosen the useful or interesting ones to implement aswell,
-* Binary Constants `0b101 = 5`
-
-Additionally digraphs and trigraphs will not be supported. Things like implicit `int` return types are also ignored.
-
-A good way to understand what is supported is as follows,
-> "Every language feature used in developing the compiler will be implemented, such that the compiler can compiler itself." 
 
 # Compiler Features Implemented
 
