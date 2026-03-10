@@ -89,7 +89,7 @@ char a[] = "Hello World";
 ```c
 char b[] = "Hello " "World";
 ```
-Both of these are parsed to be identical strings `Hello World`, as the option `a` is perfectly fine, I don't plan to support option `b` until necessary. It is important to note, the goal is to fully support C89, however some features from future standards are also supported. For example,
+Both of these are parsed to be identical strings `"Hello World"`, as option `a` is perfectly fine, I do not plan to support option `b` until absolutely necessary. While the goal is to fully support C89, some useful features from future standards are also supported. For example designated initliazers for `struct` and `array` types,
 ```c
 int x[] = {[1] =5, 4,5, [5]= 6};
 ```
@@ -98,11 +98,19 @@ int x[] = {[1] =5, 4,5, [5]= 6};
 struct Point{ int x; int y;  };
 struct Point p = {.x = 10, .y=10};
 ```
+Or compound literals
+```c
+void foo(int *a);
+foo(&(int){1});
+```
 
 GNU also features several compiler extensions, from which I have chosen the useful or interesting ones to implement aswell,
 * Binary Constants `0b101 = 5`
 
 Additionally digraphs and trigraphs will not be supported. Things like implicit `int` return types are also ignored.
+
+A good way to understand what is supported is as follows,
+> "Every language feature used in developing the compiler will be implemented, such that the compiler can compiler itself." 
 
 # Compiler Features Implemented
 
