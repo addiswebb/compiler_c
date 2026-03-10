@@ -22,6 +22,8 @@ typedef struct {
 #define COMP_FLAG_IR (1u << 1)     // -ir
 // Generate and save raw assembly
 #define COMP_FLAG_ASM (1u << 2)    // -a
+// Build and run a single source file
+#define COMP_FLAG_RUN (1u << 3)    // -run
 
 /*
     Takes input from terminal and instantiates a compiler,

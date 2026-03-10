@@ -13,10 +13,13 @@ void array_free(const Array *arr);
 
 static void ensure_capacity(Array *arr);
 
+static void ensure_index(const Array *arr, int index);
+
 void *append(Array *arr, const void *element);
 void *insert(Array *arr, const void *element, int index);
 void pop(Array *arr);
 
 void *get(const Array *arr, int index);
+void set(const Array *arr, const void *element, int index);
 
 #endif // COMPILER_C_UTIL_H

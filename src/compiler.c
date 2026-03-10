@@ -18,8 +18,9 @@ Compiler init_compiler(const int argc, char *argv[]) {
     if (argc == 2 && strcmp(argv[1], "-h") == 0) {
         printf("compiler [input]\n");
         printf("\t-o [output] : Set output file path\n");
-        printf("\t-ir         : Compile to IR\n");
-        printf("\t-a          : Compile to assembly\n");
+        printf("\t-run        : Build and Run Single File\n");
+        printf("\t-a          : Compile to Assembly File\n");
+        printf("\t-ir         : Compile and print IR\n");
         printf("\t-t          : Print parse tree\n");
         printf("\t-h          : Get help\n");
         exit(0);
@@ -35,20 +36,23 @@ Compiler init_compiler(const int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0) {
             if (argv[i + 1] != NULL) {
-                if (strcmp(argv[i + 1], "-d") == 0 || strcmp(argv[i + 1], "-t") == 0) {
-                    printf("Improper Usage,\n  compiler [input] -o [output]\n");
+                if (argv[i + 1][0] == '-') {
+                    printf("Improper Usage,\n  compiler_c [input] -o [output]\n");
                     exit(1);
                 }
                 free(compiler.output_file);
                 compiler.output_file = argv[++i];
             } else {
-                printf("Improper Usage,\n  compiler [input] -o [output]\n");
+                printf("Improper Usage,\n  compiler_c [input] -o [output]\n");
                 exit(1);
             }
         } else if (strcmp(argv[i], "-t") == 0) {
             compiler.flags |= COMP_FLAG_AST;
         } else if (strcmp(argv[i], "-ir") == 0) {
             compiler.flags |= COMP_FLAG_IR;
+        } else if (strcmp(argv[i], "-run") == 0) {
+            compiler.flags |= COMP_FLAG_RUN;
+            compiler.flags |= COMP_FLAG_ASM;
         } else if (strcmp(argv[i], "-a") == 0) {
             compiler.flags |= COMP_FLAG_ASM;
         }
@@ -63,6 +67,9 @@ Compiler init_compiler(const int argc, char *argv[]) {
     printf("Compiling %s to %s ", input_file, compiler.output_file);
     if (compiler.flags != 0) {
         printf("with flags: ");
+        if (compiler.flags & COMP_FLAG_RUN) {
+            printf("-run ");
+        }
         if (compiler.flags & COMP_FLAG_AST) {
             printf("-t ");
         }
@@ -70,7 +77,7 @@ Compiler init_compiler(const int argc, char *argv[]) {
             printf("-ir ");
         }
         if (compiler.flags & COMP_FLAG_ASM) {
-            printf("-a ");
+            printf("-a");
         }
     }
     printf("\n");
@@ -103,7 +110,7 @@ int compile(Compiler *compiler) {
 
     lower_nodes(&compiler->nm);
 
-    if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {
+    if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR || compiler->flags) {
         IR_Context ctx = ir_init_ctx();
         IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
 
@@ -127,6 +134,25 @@ int compile(Compiler *compiler) {
         ir_free_module(module);
     }
     printf("Done.\n");
+    if (compiler->flags & COMP_FLAG_RUN) {
+        char base[256];
+        strncpy(base, compiler->output_file, sizeof(base));
+        int len = strlen(base);
+        while (base[len--] != '.' && len >= 0) {
+        }
+
+        if (len >= 0) base[len + 1] = '\0';
+        char cmd[512];
+
+        printf("Compiling %s.s to %s.exe (gcc)\n", base, base);
+        snprintf(cmd, sizeof(cmd), "gcc %s.s -o %s.exe", base, base);
+        system(cmd);
+
+        if (base[0] == '.') snprintf(cmd, sizeof(cmd), "%s.exe", base);
+        else snprintf(cmd, sizeof(cmd), ".\\%s.exe", base);
+        printf("Running %s\n", cmd);
+        system(cmd);
+    }
 
     return 1;
 }
@@ -140,37 +166,20 @@ static int load_src_file(Compiler *compiler, const char *file) {
         printf("Failed to open %s\n", file);
         exit(1);
     }
+    Array src;
+    array_init(&src, 1000, sizeof(char));
 
-    size_t capacity = 8192; // initial buffer
-    size_t size = 0;
-    char *src = malloc(capacity);
-    if (!src) {
-        _pclose(fp);
-        printf("Failed to allocate buffer\n");
-        exit(1);
-    }
-
-    int c;
+    char c;
     for (;;) {
-        c = fgetc(fp);
+        c = (char)fgetc(fp);
         if (c == EOF) break;
-
-        if (size + 1 >= capacity) {
-            capacity *= 2;
-            src = realloc(src, capacity);
-            if (!src) {
-                _pclose(fp);
-                printf("Failed to realloc buffer\n");
-                exit(1);
-            }
-        }
-        src[size++] = (char)c;
+        append(&src, &c);
     }
 
     _pclose(fp);
-    src[size] = '\0';
+    append(&src, &(char){'\0'});
 
-    compiler->src = src;
-    compiler->src_size = size;
+    compiler->src = (char *)src.data;
+    compiler->src_size = src.count - 1;
     return 0;
 }

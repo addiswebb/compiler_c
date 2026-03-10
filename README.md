@@ -319,9 +319,9 @@ Returns control flow to callee, also returns a value. If no value is given, retu
 * Dereference and member access `->`
 
 ## To be Implemented (Ordered from next to never...)
-* Unions
 * Variants
     * Unsigned assembly lowering
+* Unions
 * Bitfield in structs
     * `unsigned int flag : 1; // 1 bit`
 * Function ABI Calling Conventions

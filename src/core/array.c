@@ -25,6 +25,12 @@ static void ensure_capacity(Array *arr) {
         arr->data = new_data;
     }
 }
+static void ensure_index(const Array *arr, int index) {
+    if (__builtin_expect(index >= arr->count || index < 0, 0)) {
+        fprintf(stderr, "Index of %d is out of Array bounds of %d\n", index, arr->count);
+        abort();
+    }
+}
 
 void *append(Array *arr, const void *element) {
     ensure_capacity(arr);
@@ -34,10 +40,8 @@ void *append(Array *arr, const void *element) {
 
 void *insert(Array *arr, const void *element, int index) {
     ensure_capacity(arr);
-    if (index > arr->count - 1 || index < 0) {
-        printf("Cannot insert outside of the dimensions of the array\n");
-        exit(1);
-    }
+    ensure_index(arr, index);
+
     char *src = (char *)arr->data + index * arr->element_size;
     char *dst = src + arr->element_size;
     memmove(dst, src, arr->element_size * (arr->count - index));
@@ -50,11 +54,13 @@ void *insert(Array *arr, const void *element, int index) {
 void pop(Array *arr) { arr->count--; }
 
 void *get(const Array *arr, int index) {
-    if (__builtin_expect(index >= arr->count || index < 0, 0)) {
-        fprintf(stderr, "Index of %d is out of Array bounds of %d\n", index, arr->count);
-        abort();
-    }
+    ensure_index(arr, index);
     return (char *)arr->data + index * arr->element_size;
+}
+
+void set(const Array *arr, const void *element, int index) {
+    ensure_index(arr, index);
+    memcpy(((char *)arr->data + index * arr->element_size), element, sizeof(arr->element_size));
 }
 
 void array_free(const Array *arr) {
