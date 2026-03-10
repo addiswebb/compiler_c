@@ -370,7 +370,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
             v is the ir_value of the value being stored at the current location,
             when filling either struct or array.
         */
-        IR_Value v;
+        IR_Value ir_v;
 
         if (is_array) {
             type = var_decl->type->base;
@@ -378,39 +378,30 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
         }
 
         for (int i = 0; i < len; i++) {
-            bool use_zero = true;
-            Node *e = NULL;
-            if (is_array) {
-                for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
-                    e = get_node(&l->init_list.elements_array, j);
-                    if (e->designated_init._array.index == i) {
-                        use_zero = false;
-                        e = e->designated_init.value;
-                        break;
-                    }
+            Node *value = NULL;
+            StructMember *member = is_array ? NULL : get_struct_member(var_decl->type, i);
+            for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
+                Node *e = get_node(&l->init_list.elements_array, j);
+                if (is_array ? e->designated_init._array.index == i : strcmp(member->name, e->designated_init._struct.name) == 0) {
+                    value = e->designated_init.value;
+                    break;
                 }
-                dst.offset = type->align * i;
-            } else {
-                StructMember *member = get_struct_member(var_decl->type, i);
-                // Find corresponding member assignment in the init list.
-                for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
-                    e = get_node(&l->init_list.elements_array, j);
-                    if (strcmp(member->name, e->designated_init._struct.name) == 0) {
-                        use_zero = false;
-                        e = e->designated_init.value;
-                        break;
-                    }
-                }
+            }
+            if (is_array) dst.offset = type->align * i;
+            else {
                 type = member->type;
                 dst.offset = member->offset;
             }
-            if (use_zero) {
-                // If it is a struct, generate a zero in the correct member's type.
-                if (!is_array) zero = ir_append_const(ctx->module, &(IR_Literal){e->type, 0});
-                v = ir_const(ctx, zero, type);
-            } else v = ir_gen_rvalue(ctx, e);
 
-            ir_store(ctx, dst, v, type);
+            // If the corresponding value was found in the init list, use that, otherwise use a zero,
+            if (value) ir_v = ir_gen_rvalue(ctx, value);
+            else {
+                // If it is a struct, generate a zero in the correct member's type.
+                if (!is_array) zero = ir_append_const(ctx->module, &(IR_Literal){type, 0});
+                ir_v = ir_const(ctx, zero, type);
+            }
+
+            ir_store(ctx, dst, ir_v, type);
         }
         return;
     }
