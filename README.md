@@ -81,137 +81,28 @@ E.g., given an **IR_RET** instruction, we first take the given virtual register 
 You can see how such a simple **IR** instruction can expand into a much more complex set of assembly instructions. This highlights the purpose of the intermediate representation, to hide away this overwhelming complexity so we can later focus on optimizaton and stuff.
 
 # Grammar
-Below is the grammar for these comments to help understanding.
-
-Rules:
-* *Italics for unimplemented*.
-* `*` for any number, including zero.
-* `+` for any non-zero number.
-* `?` for optional
-* `[]` container for consumption, wraps general things like `expr` or `var decl`
-* `true` means any non-zero value
-* `false` means a value of zero only
-
->### 1.  `(type)`
-"any valid variable type"
-* int 
-* float
-* char
-* double
-* struct [label]? [{[struct member]*]}];
-* enum [label]? [{[enum field]*}]?;
-
-Can be prepended with any one of the following storage classifiers
-* static
-* extern
-
-Optionally also a mutability classifier:
-* *const*
-* *volatile*
-
-Optionally also a variant:
-* *unsigned*
-
-Typedef`ed `identifiers` are also included.
-
->### 2. `identifier` 
-"Any alpha-starting alpha-numeric string which may contain underscores `_` "
-
-Used to identify variables, functions, or typedef type aliases.
-Must be unique.
-
->### 3. `expr`
-"Anything that can be evaluated"
-* Function call
+The grammar supported by the compiler is as defined in the [GNU C Language Manual](gnu-c-language-manual.pdf). Some liberties have been taken in places where I felt supporting such grammar would be redundant in the short term. Below is an example of equivalent code.
 ```c
-    foo()
-```
-* Binary Operation
-```c
-    10 + a
-```
-* Unary Operation
-```c
-    i++
+char a[] = "Hello World";
 ```
 
->### 4. `{compound}`
-"A list of block items wrapped in curly braces"
 ```c
-{
-    [block item]*
-}
+char b[] = "Hello " "World";
+```
+Both of these are parsed to be identical strings `Hello World`, as the option `a` is perfectly fine, I don't plan to support option `b` until necessary. It is important to note, the goal is to fully support C89, however some features from future standards are also supported. For example,
+```c
+int x[] = {[1] =5, 4,5, [5]= 6};
 ```
 
->### 5. `block item`
-"Either a `var decl` or a `statement`"
-
->### 6. `statement`
-"Any self sufficient piece of code"
-* `identifier`;
-* `{compound}`
-* `expr`;
-* `;`
-
-Almost always ends with a `;`
-
-* Or Control Flow Statement
-    * \[ `if`, `for`, `while`, `return`, `break`, `continue`, `switch` \]
-    * *goto*
-
->### 7. `var decl`
-"A `(type)` followed by an `identifier`, may be uninitialized"
-* Simple Variable declaration:
 ```c
-int a;
-```
-* Variable declaration & Initialization:
-```c
-int a = 10;
+struct Point{ int x; int y;  };
+struct Point p = {.x = 10, .y=10};
 ```
 
->### 8. Standard C Statements
-### `if` statement
-Jumps to either `true` or `false` dependent on `cond``s value 
-*{0 => false, any other value => true}*
-```c
-if (cond) `true` [else `false`]?
-```
-* Where:
-    * `cond` is any `expr`
-    * `true` & `false` are any `statement`, most commonly `{compound}`
-    * `else` is optional. When present, must be followed by a `statement`
-    
-### `while` loop
-Executes `true` if `cond` is [true]
-```c
-while (cond) `true`
-```
-* Where:
-    * `cond` is any `expr`
-    * `true` is any `statement` most commonly `{compound}`
+GNU also features several compiler extensions, from which I have chosen the useful or interesting ones to implement aswell,
+* Binary Constants `0b101 = 5`
 
-### `for` loop
-Executes `init`, then on `cond` being [true], executes `true` then `iter` and finally loops back to check `cond`. 
-* `init` is executed once at the start
-* `cond` is checked before every iteration
-* `true` is executed only if `cond` is [true]
-* `iter` is executed after `true`
-```c
-for (init; cond; iter) `true`
-```
-* Where:
-    * `init` is either `var decl` or `statement` 
-    * `cond` & `iter` are any `expr`
-    * `true` is any `statement` most commonly `{compound}`
-    
-### `return` statement
-Returns control flow to callee, also returns a value. If no value is given, returns `0`.
-```c
-    return [`value`]?;
-```
-* Where:
-    * `value` is an optional `expr`
+Additionally digraphs and trigraphs will not be supported. Things like implicit `int` return types are also ignored.
 
 # Compiler Features Implemented
 
