@@ -6,12 +6,12 @@
 #include <string.h>
 
 const char *KEYWORDS[KEYWORDS_N] = {
-    [TK_BREAK] = "break",     [TK_CASE] = "case",         [TK_CHAR] = "char",     [TK_CONST] = "const",     [TK_CONTINUE] = "continue",
-    [TK_DEFAULT] = "default", [TK_DOUBLE] = "double",     [TK_ELSE] = "else",     [TK_ENUM] = "enum",       [TK_EXTERN] = "extern",
-    [TK_FLOAT] = "float",     [TK_FOR] = "for",           [TK_GOTO] = "goto",     [TK_IF] = "if",           [TK_INLINE] = "inline",
-    [TK_INT] = "int",         [TK_LONG] = "long",         [TK_RETURN] = "return", [TK_SIZEOF] = "sizeof",   [TK_SHORT] = "short",
-    [TK_STATIC] = "static",   [TK_STRUCT] = "struct",     [TK_SWITCH] = "switch", [TK_TYPEDEF] = "typedef", [TK_UNSIGNED] = "unsigned",
-    [TK_VOID] = "void",       [TK_VOLATILE] = "volatile", [TK_WHILE] = "while",
+    [TK_BREAK] = "break",       [TK_CASE] = "case",     [TK_CHAR] = "char",         [TK_CONST] = "const",   [TK_CONTINUE] = "continue",
+    [TK_DEFAULT] = "default",   [TK_DOUBLE] = "double", [TK_ELSE] = "else",         [TK_ENUM] = "enum",     [TK_EXTERN] = "extern",
+    [TK_FLOAT] = "float",       [TK_FOR] = "for",       [TK_GOTO] = "goto",         [TK_IF] = "if",         [TK_INLINE] = "inline",
+    [TK_INT] = "int",           [TK_LONG] = "long",     [TK_RETURN] = "return",     [TK_SIGNED] = "signed", [TK_SIZEOF] = "sizeof",
+    [TK_SHORT] = "short",       [TK_STATIC] = "static", [TK_STRUCT] = "struct",     [TK_SWITCH] = "switch", [TK_TYPEDEF] = "typedef",
+    [TK_UNSIGNED] = "unsigned", [TK_VOID] = "void",     [TK_VOLATILE] = "volatile", [TK_WHILE] = "while",
 };
 
 static void t_buffer_reset(Tokenizer *tk) {
@@ -306,8 +306,7 @@ static void t_consume_char_literal(Tokenizer *tk) {
         } else t_consume(tk);
     }
     // Multi literal char might be longer than 4, skip all these characters until \'
-    while (t_peek(tk) != '\'')
-        t_skip(tk);
+    while (t_peek(tk) != '\'') t_skip(tk);
     t_skip(tk);
     t_push_buffer(tk, TK_CHAR_LITERAL);
 }
@@ -904,6 +903,9 @@ void print_token_type(const TokenType type) {
         break;
     case TK_INLINE:
         printf("inline");
+        break;
+    case TK_SIGNED:
+        printf("signed");
         break;
     }
 }

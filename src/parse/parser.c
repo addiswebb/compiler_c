@@ -43,6 +43,7 @@ Token *p_peek_n(const Parser *p, const int n) {
 Token *p_peek(const Parser *p) { return p_peek_n(p, 0); }
 Token *p_peek_next(const Parser *p) { return p_peek_n(p, 1); }
 Token *p_consume_n(Parser *p, const int n) {
+    if (n == 0) return NULL;
     if (p->index + n > p->src->count) {
         printf("P_consume_n %d Reached the end of the token list %d/%d\n", n, p->index, p->src->count);
         return NULL;
@@ -324,33 +325,29 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
         if (p_peek(p)->type == TK_CONST) qualifiers |= QUAL_CONST;
         else if (p_peek(p)->type == TK_VOLATILE) qualifiers |= QUAL_VOLATILE;
         else if (p_peek(p)->type == TK_UNSIGNED) is_signed = UNSIGNED;
+        else if (p_peek(p)->type == TK_SIGNED) is_signed = SIGNED;
         else break;
         p_consume(p);
     }
-    if (p_peek(p)->type == TK_STRUCT) {
-        type = p_parse_struct(p, nm);
-    } else if (p_peek(p)->type == TK_ENUM) {
-        type = p_parse_enum(p, nm);
-    } else {
-        type = token_to_type(p, p_consume(p));
-    }
+    if (p_peek(p)->type == TK_STRUCT) type = p_parse_struct(p, nm);
+    else if (p_peek(p)->type == TK_ENUM) type = p_parse_enum(p, nm);
+    else type = token_to_type(p, p_consume(p));
+
     if (type == type_invalid) {
         printf("Tried to parse an unknown type\n");
         exit(1);
     }
 
-    if (type->kind == T_INT) {
-        if (!is_signed && is_signed != type->is_signed) {
-            type = get_unsigned_type(type);
-        }
-    }
+    // Find unsigned type if needed for T_INT only
+    if (type->kind == T_INT && !is_signed && is_signed != type->is_signed) type = get_unsigned_type(type);
+
     int ptrs = 0;
     while (p_peek(p)->type == TK_MULTIPLY) {
         ptrs++;
         p_consume(p);
     }
-    for (int i = 0; i < ptrs; i++)
-        type = get_pointer_type(type);
+
+    for (int i = 0; i < ptrs; i++) type = get_pointer_type(type);
 
     if (qualifiers != QUAL_NONE) type = get_qualified_type(type, qualifiers);
     return type;
@@ -972,7 +969,7 @@ bool is_qualifier_token(const TokenType type) {
     }
 }
 bool is_start_of_type(const Parser *p, const Token *t) {
-    return is_type_token(p, t) || is_qualifier_token(t->type) || p_peek(p)->type == TK_UNSIGNED;
+    return is_type_token(p, t) || is_qualifier_token(t->type) || p_peek(p)->type == TK_UNSIGNED || p_peek(p)->type == TK_SIGNED;
 }
 bool is_type_token(const Parser *p, const Token *t) {
     switch (t->type) {

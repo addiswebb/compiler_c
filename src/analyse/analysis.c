@@ -71,24 +71,20 @@ int bitset_has(const BitSet *s, const int reg) {
 }
 void bitset_union(const BitSet *dst, const BitSet *src) {
     assert(dst->capacity == src->capacity);
-    for (int i = 0; i < dst->capacity; i++)
-        dst->data[i] |= src->data[i];
+    for (int i = 0; i < dst->capacity; i++) dst->data[i] |= src->data[i];
 }
 void bitset_intersect(const BitSet *dst, const BitSet *src) {
     assert(dst->capacity == src->capacity);
-    for (int i = 0; i < dst->capacity; i++)
-        dst->data[i] &= src->data[i];
+    for (int i = 0; i < dst->capacity; i++) dst->data[i] &= src->data[i];
 }
 
 void bitset_difference(const BitSet *dst, const BitSet *src) {
     assert(dst->capacity == src->capacity);
-    for (int i = 0; i < dst->capacity; i++)
-        dst->data[i] &= ~src->data[i];
+    for (int i = 0; i < dst->capacity; i++) dst->data[i] &= ~src->data[i];
 }
 void bitset_copy(const BitSet *dst, const BitSet *src) {
     assert(dst->capacity == src->capacity);
-    for (int i = 0; i < dst->capacity; i++)
-        dst->data[i] = src->data[i];
+    for (int i = 0; i < dst->capacity; i++) dst->data[i] = src->data[i];
 }
 int bitset_equal(const BitSet *a, const BitSet *b) {
     assert(a->capacity == b->capacity);
@@ -255,8 +251,7 @@ void compute_bitset(const IR_Function *f, const int *rpo) {
             bitset_copy(&old_live_in, &b->live.live_in);
 
             bitset_clear(&b->live.live_out);
-            for (int j = 0; j < b->cfg.succ_count; j++)
-                bitset_union(&b->live.live_out, &get_block(f, b->cfg.succ[j])->live.live_in);
+            for (int j = 0; j < b->cfg.succ_count; j++) bitset_union(&b->live.live_out, &get_block(f, b->cfg.succ[j])->live.live_in);
             bitset_copy(&tmp, &b->live.live_out);
             bitset_difference(&tmp, &b->live.def);
             bitset_copy(&b->live.live_in, &b->live.use);
@@ -364,9 +359,7 @@ void lower_for_asm_gen(const IR_Function *f, const Lifetime *lts, const StackSlo
                         } else {
                             param_offset(a);
                         }
-                    } else {
-                        stack_offset(a, lts);
-                    }
+                    } else stack_offset(a, lts);
                     break;
                 case IR_MEM:
                     a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
@@ -531,15 +524,13 @@ void print_cfg(const IR_Function *func) {
         // Successors
         printf("  Succ: ");
         if (b->cfg.succ_count == 0) printf("None");
-        for (int j = 0; j < b->cfg.succ_count; j++)
-            printf("L%d ", b->cfg.succ[j]);
+        for (int j = 0; j < b->cfg.succ_count; j++) printf("L%d ", b->cfg.succ[j]);
         printf("\n");
 
         // Predecessors
         printf("  Pred: ");
         if (b->cfg.pred_count == 0) printf("None");
-        for (int j = 0; j < b->cfg.pred_count; j++)
-            printf("L%d ", b->cfg.pred[j]);
+        for (int j = 0; j < b->cfg.pred_count; j++) printf("L%d ", b->cfg.pred[j]);
         printf("\n");
 
         // Defined / Used
