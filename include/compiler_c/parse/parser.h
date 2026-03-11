@@ -2,7 +2,6 @@
 #define COMPILER_C_PARSER_H
 
 #include "compiler_c/core/node.h"
-#include "compiler_c/core/type.h"
 #include "compiler_c/tokenize/tokenizer.h"
 #include <stdbool.h>
 

@@ -1,7 +1,6 @@
 #ifndef COMPILER_C_IR_MODULE_H
 #define COMPILER_C_IR_MODULE_H
 
-#include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/analyse/analysis_types.h"
 #include <stdint.h>

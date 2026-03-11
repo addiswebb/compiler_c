@@ -405,7 +405,7 @@ void t_tokenize(Tokenizer *tk) {
                 } else break;
             }
             t_push_buffer(tk, is_float ? TK_FLT_LITERAL : TK_INT_LITERAL);
-        } else if (is_alpha(c)) {
+        } else if (is_alpha(c) || c == '_') {
             t_consume(tk);
             while (is_alpha_num(t_peek(tk))) {
                 t_consume(tk);
