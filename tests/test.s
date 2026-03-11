@@ -26,10 +26,10 @@ main_0:
     subq $48, %rsp
     movq -8(%rbp), %rcx
     movq -16(%rbp), %rdx
-    movsd -16(%rbp), %xmm0
+    movsd -16(%rbp), %xmm1
     movl -24(%rbp), %r8d
     movq -32(%rbp), %r9
-    movsd -32(%rbp), %xmm1
+    movsd -32(%rbp), %xmm3
     call printf
     addq $48, %rsp
     movl %eax, -8(%rbp)

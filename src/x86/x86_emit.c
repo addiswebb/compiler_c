@@ -154,7 +154,7 @@ const char *x86_rdx_reg(const Type *t) {
     exit(1);
 }
 
-const char *x86_op_float_suffix(int size) {
+const char *x86_float_op_suffix(int size) {
     switch (size) {
     case 4:
         return "ss";
@@ -166,7 +166,7 @@ const char *x86_op_float_suffix(int size) {
     }
 }
 
-const char *x86_op_integer_suffix(int size) {
+const char *x86_integer_op_suffix(int size) {
     switch (size) {
     case 1:
         return "b";
@@ -182,8 +182,8 @@ const char *x86_op_integer_suffix(int size) {
     }
 }
 const char *x86_op_suffix(const Type *t) {
-    if (t->kind == T_FLOAT) return x86_op_float_suffix(t->size);
-    if (t->kind == T_INT) return x86_op_integer_suffix(t->size);
+    if (t->kind == T_FLOAT) return x86_float_op_suffix(t->size);
+    if (t->kind == T_INT) return x86_integer_op_suffix(t->size);
     if (t->kind == T_POINTER) return "q";
     if (t->kind == T_ARRAY) return "q";
     printf("Tried to op of unsupported type\n");
@@ -193,8 +193,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const int dst_offset = instr->ops[0].stack_offset;
     Type *t = instr->call.type;
 
-    int gp_index = 0;
-    int xmm_index = 0;
+    int reg_index = 0;
     const int spilled_count = instr->call.arg_count > PARAM_REGISTERS ? instr->call.arg_count - PARAM_REGISTERS : 0;
     // +8 for push rbp (call emits push rbp, mov rsp, rbp)
     const int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count + 8, 16);
@@ -203,10 +202,14 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     for (int i = 0; i < instr->call.arg_count; i++) {
         const IR_Var *v = &instr->call.args[i];
         const bool is_register_param = i < PARAM_REGISTERS;
+        if (reg_index >= PARAM_REGISTERS) {
+            printf("Panicking because more than too many registers were used %d/%d\n", reg_index, PARAM_REGISTERS);
+            exit(1);
+        }
         switch (v->type->kind) {
         case T_INT:
             if (is_register_param) {
-                const char *x = gp_register_str[win64_int_param_regs[gp_index++]][reg_size(v->type->size)];
+                const char *x = gp_register_str[win64_int_param_regs[reg_index++]][reg_size(v->type->size)];
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x);
             } else {
                 const char *v_reg = x86_rax_reg(v->type);
@@ -220,12 +223,12 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             if (is_register_param) {
 #ifdef WIN64
                 if (i < WIN64_PARAM_REGISTERS) {
-                    const char *x = gp_register_str[win64_int_param_regs[gp_index++]][reg_size(v->type->size)];
-                    fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_integer_suffix(v->type->size), v->reg.stack_offset, x);
+                    const char *x = gp_register_str[win64_int_param_regs[reg_index]][reg_size(v->type->size)];
+                    fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_integer_op_suffix(v->type->size), v->reg.stack_offset, x);
                 }
 #endif
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", f_suffix, v->reg.stack_offset,
-                        xmm_register_str[win64_float_param_regs[xmm_index++]]);
+                        xmm_register_str[win64_float_param_regs[reg_index++]]);
             } else {
                 fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, v->reg.stack_offset);
                 fprintf(fp, "    subq $8, %%rsp\n");
@@ -235,7 +238,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             break;
         case T_POINTER:
             if (is_register_param) {
-                fprintf(fp, "    movq %d(%%rbp), %s\n", v->reg.stack_offset, gp_register_str[win64_int_param_regs[gp_index++]][REG_64]);
+                fprintf(fp, "    movq %d(%%rbp), %s\n", v->reg.stack_offset, gp_register_str[win64_int_param_regs[reg_index++]][REG_64]);
             } else {
                 fprintf(fp, "    movq %d(%%rbp), %%rax\n", v->reg.stack_offset);
                 fprintf(fp, "    movq %%rax, %d(%%rsp)\n", param_offset);
