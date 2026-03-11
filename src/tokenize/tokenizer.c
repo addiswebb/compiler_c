@@ -412,19 +412,12 @@ void t_tokenize(Tokenizer *tk) {
             }
             t_parse_and_push_buffer(tk);
             t_buffer_reset(tk);
-        } else if (is_whitespace(c)) {
-            t_skip(tk);
-        } else if (t_peek(tk) == '/' && (t_peek_next(tk) == '/' || t_peek_next(tk) == '*')) {
-            t_skip_comments(tk);
-        } else if (t_peek(tk) == '\'') {
-            t_consume_char_literal(tk);
-        } else if (t_peek(tk) == '\"') {
-            t_consume_string_literal(tk);
-        } else if (is_op_start(c)) {
-            t_consume_operator(tk);
-        } else {
-            t_consume_special_char(tk);
-        }
+        } else if (is_whitespace(c)) t_skip(tk);
+        else if (t_peek(tk) == '/' && (t_peek_next(tk) == '/' || t_peek_next(tk) == '*')) t_skip_comments(tk);
+        else if (t_peek(tk) == '\'') t_consume_char_literal(tk);
+        else if (t_peek(tk) == '\"') t_consume_string_literal(tk);
+        else if (is_op_start(c)) t_consume_operator(tk);
+        else t_consume_special_char(tk);
     }
 }
 
@@ -520,6 +513,7 @@ bool is_arithmetic_op(const TokenType type) {
         return false;
     }
 }
+
 bool is_bitwise_op(const TokenType type) {
     switch (type) {
     case TK_OR:
