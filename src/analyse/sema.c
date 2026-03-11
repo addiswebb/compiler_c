@@ -419,14 +419,19 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         data[node->literal.len] = '\0';
         switch (node->literal.kind) {
         case L_INT:
-            node->type = node->literal.raw_rata[node->literal.len - 1] == 'u' ? type_u32 : type_i32;
+            node->type = parse_int_suffix(node->literal.raw_rata, &node->literal.len);
             node->literal.i = parse_int(data, node->literal.len);
+            printf("integer: ");
+            print_type(node->type);
+            printf(" = %lld\n", node->literal.i);
             free(data);
             break;
         case L_FLOAT:
-            const bool is_float = node->literal.raw_rata[node->literal.len - 1] == 'f';
-            node->type = is_float ? type_f32 : type_f64;
+            node->type = parse_float_suffix(node->literal.raw_rata, &node->literal.len);
             node->literal.f = parse_float(data, node->literal.len);
+            printf("float: ");
+            print_type(node->type);
+            printf(" = %lf\n", node->literal.f);
             free(data);
             break;
         case L_CHAR:

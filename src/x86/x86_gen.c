@@ -192,7 +192,8 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
                 fprintf(fp, ".align 8\n.LC%d:\n    .quad 0x%016llx\n", i, bits);
             } else if (c->type == type_f32) {
                 uint32_t bits;
-                memcpy(&bits, &c->f, sizeof(bits));
+                float f = (float)c->f;
+                memcpy(&bits, &f, sizeof(bits));
                 fprintf(fp, ".align 4\n.LC%d:\n    .long 0x%08x\n", i, bits);
             } else if (c->type->kind == T_ARRAY && c->type->base == type_i8) {
                 fprintf(fp, ".LC%d:\n", i);

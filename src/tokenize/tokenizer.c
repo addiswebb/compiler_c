@@ -384,6 +384,26 @@ void t_tokenize(Tokenizer *tk) {
                     }
                 }
             }
+            int l_count = 0;
+            int u_count = 0;
+            int f_count = 0;
+            for (;;) {
+                char c = t_peek(tk);
+                if (c == 'u' || c == 'U') {
+                    if (u_count >= 1) break;
+                    u_count++;
+                    t_consume(tk);
+                } else if (c == 'l' || c == 'L') {
+                    if (l_count >= 2) break;
+                    l_count++;
+                    t_consume(tk);
+                } else if (c == 'f' || c == 'F') {
+                    if (f_count >= 1) break;
+                    f_count++;
+                    is_float = true;
+                    t_consume(tk);
+                } else break;
+            }
             t_push_buffer(tk, is_float ? TK_FLT_LITERAL : TK_INT_LITERAL);
         } else if (is_alpha(c)) {
             t_consume(tk);

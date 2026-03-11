@@ -300,6 +300,8 @@ StorageClass p_parse_storage_classifier(Parser *p, NodeManager *nm);
 
 /* ===== Parse Number Literals ===== */
 
+Type *parse_int_suffix(const char *raw, int *len);
+Type *parse_float_suffix(const char *raw, int *len);
 int64_t parse_int(const char *raw, int len);
 int64_t parse_binary(const char *raw, int len);
 int64_t parse_oct(const char *raw, int len);

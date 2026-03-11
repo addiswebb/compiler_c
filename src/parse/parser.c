@@ -1015,6 +1015,43 @@ Type *token_to_type(const Parser *p, const Token *t) {
 
 /* ===== Parse Literals ===== */
 
+Type *parse_int_suffix(const char *raw, int *len) {
+    int i = *len - 1;
+    int l_count = 0;
+    bool is_unsigned = false;
+    for (;;) {
+        if (i <= 0) break;
+        char c = raw[i];
+        if (c == 'u' || c == 'U') is_unsigned = true;
+        else if (c == 'l' || c == 'L') l_count++;
+        else break;
+        i--;
+    }
+    Type *type = type_i32;
+    *len -= *len - i - 1;
+    // in the future, l_count == 2 is i64 otherwise i32
+    // when long long int is supported properly
+    if (l_count > 0) type = type_i64;
+    if (is_unsigned) return get_unsigned_type(type);
+    return type;
+}
+
+Type *parse_float_suffix(const char *raw, int *len) {
+    Type *type = type_f64;
+    switch (raw[*len - 1]) {
+    case 'f':
+    case 'F':
+        type = type_f32;
+    case 'l':
+    case 'L':
+        *len -= 1;
+    default:
+        return type;
+    }
+}
+
+// const bool is_float = node->literal.raw_rata[node->literal.len - 1] == 'f';
+// node->type = is_float ? type_f32 : type_f64;
 int64_t parse_int(const char *raw, int len) {
     if (len > 20) {
         printf("Cannot parse an integer larger than 64 bytes\n");
@@ -1036,18 +1073,14 @@ int64_t parse_int(const char *raw, int len) {
 }
 
 int64_t parse_dec(const char *raw, int len) {
+    if (raw[0] == '-') return -parse_dec(raw + 1, len - 1);
     int64_t res = 0;
     const char *start = raw;
-    int is_negative = false;
-    if (raw[0] == '-') {
-        raw++;
-        is_negative = true;
-    }
     while (raw < start + len) {
         res = res * 10 + (*raw - '0');
         raw++;
     }
-    return is_negative ? -res : res;
+    return res;
 }
 int64_t parse_binary(const char *raw, int len) {
     int64_t res = 0;
