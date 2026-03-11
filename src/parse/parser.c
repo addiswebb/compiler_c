@@ -1057,6 +1057,7 @@ int64_t parse_int(const char *raw, int len) {
         printf("Cannot parse an integer larger than 64 bytes\n");
         exit(1);
     }
+    if (raw[0] == '-') return -parse_int(raw + 1, len - 1);
     if (raw[0] == '0' && len > 1) {
         switch (raw[1]) {
         case 'x':
@@ -1073,7 +1074,6 @@ int64_t parse_int(const char *raw, int len) {
 }
 
 int64_t parse_dec(const char *raw, int len) {
-    if (raw[0] == '-') return -parse_dec(raw + 1, len - 1);
     int64_t res = 0;
     const char *start = raw;
     while (raw < start + len) {

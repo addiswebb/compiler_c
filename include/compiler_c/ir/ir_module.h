@@ -232,6 +232,7 @@ typedef struct {
     Linkage linkage;
     Storage storage;
     int param_count;
+    Type *return_type;
 } IR_Function;
 
 
@@ -320,7 +321,7 @@ IR_Value ir_next_virtual_reg(IR_Function *func);
 IR_Module *ir_new_module();
 
 /* Creates a new IR Function with initialized blocks, locals, scopes and stack slots arrays. */
-IR_Function *ir_new_function(IR_Context *ctx,const char *name);
+IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type);
 /*
     Appends a function definition to the global array.
     At this point the FuncDef is a placeholder. Its actual index is -1/ undefined.

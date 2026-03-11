@@ -162,7 +162,7 @@ IR_Block *ir_new_block() {
     return block;
 }
 
-IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
+IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type) {
     IR_Function *func = malloc(sizeof(*func));
     if (!func) {
         printf("Failed to allocate IR_Function\n");
@@ -177,6 +177,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name) {
     func->max_reg = 0;
     func->param_count = 0;
     func->stack_size = 0;
+    func->return_type = type;
 
     func->stack_slot_capacity = 4;
     func->stack_slot_count = 0;

@@ -1,2 +1,10 @@
 extern int printf(const char *format, ...);
-int main() { return 0; }
+void buzz() { printf("buzz\n"); }
+void foo() {
+    printf("foo ");
+    return buzz();
+}
+int main() {
+    foo();
+    return 0;
+}

@@ -371,6 +371,7 @@ void lower_for_asm_gen(const IR_Function *f, const Lifetime *lts, const StackSlo
                 case IR_PHYS_REG:
                     break;
                 case IR_UNDEFINED:
+                    if (f->return_type == type_void && instr->op == IR_RET) break;
                     printf("An undefined IR value made it to analysis!!\n");
                     exit(1);
                 }
@@ -390,6 +391,7 @@ void verify_completion(const IR_Function *f) {
                 if (a->kind == IR_LITERAL && instr->op != IR_CALL) continue;
                 if (a->kind == IR_GLOBAL || a->kind == IR_PHYS_REG) continue;
                 if (a->kind != IR_STACK) {
+                    if (f->return_type == type_void && instr->op == IR_RET) continue;
                     print_ir_value(a);
                     printf(" was not converted to stack offset\n");
                     exit(1);

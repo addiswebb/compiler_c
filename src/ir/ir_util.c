@@ -172,6 +172,8 @@ static char ir_type_suffix(Type *type) {
         return 'p';
     case T_STRUCT:
         return 's';
+    case T_VOID:
+        return 'v';
     case T_INVALID:
         printf("Tried to print invalid type\n");
         exit(1);

@@ -137,8 +137,10 @@ You can see how such a simple **IR** instruction can expand into a much more com
 * Integer Literals
   * Decimal, Octal, Hexadecimal, Binary (`0bNN`) (C99/C11 for binary)
   * Unsigned variants
+  * Literal Suffixes `u`, `U`, `l`, `L`
 * Floating-Point Literals
   * Decimal floating literals
+  * Literal Suffixes `f`, `F`, `l`, `L`
 * Character Literals
   * Single character `'a'`
   * Multi-character literals `'abcd'` (implementation-defined)
@@ -206,8 +208,6 @@ You can see how such a simple **IR** instruction can expand into a much more com
 * Dereference and member access `->`
 
 ## To be Implemented (Ordered from next to never...)
-* Variants
-    * Unsigned assembly lowering
 * Unions
 * Bitfield in structs
     * `unsigned int flag : 1; // 1 bit`

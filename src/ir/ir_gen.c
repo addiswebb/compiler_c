@@ -490,7 +490,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
         return NULL;
     }
 
-    IR_Function *fn = ir_new_function(ctx, func->func.name);
+    IR_Function *fn = ir_new_function(ctx, func->func.name, func->type);
     if (func->func.body->kind != N_COMPOUND) {
         printf("Function body is not a compound,\n");
         exit(1);
@@ -511,6 +511,8 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {
         ir_gen_block_item(ctx, get_node(&func->func.body->compound.items_array, i));
     }
+    if (func->type == type_void) ir_return(ctx, ir_no_value);
+
     ir_end_scope(fn);
 
     return fn;

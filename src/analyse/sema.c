@@ -421,17 +421,11 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         case L_INT:
             node->type = parse_int_suffix(node->literal.raw_rata, &node->literal.len);
             node->literal.i = parse_int(data, node->literal.len);
-            printf("integer: ");
-            print_type(node->type);
-            printf(" = %lld\n", node->literal.i);
             free(data);
             break;
         case L_FLOAT:
             node->type = parse_float_suffix(node->literal.raw_rata, &node->literal.len);
             node->literal.f = parse_float(data, node->literal.len);
-            printf("float: ");
-            print_type(node->type);
-            printf(" = %lf\n", node->literal.f);
             free(data);
             break;
         case L_CHAR:

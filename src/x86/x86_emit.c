@@ -190,9 +190,6 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const int dst_offset = instr->ops[0].stack_offset;
     Type *t = instr->call.type;
 
-    const char *reg = x86_rax_reg(t);
-    const char *op_suffix = x86_op_suffix(t);
-
     int gp_index = 0;
     int xmm_index = 0;
     const int spilled_count = instr->call.arg_count > PARAM_REGISTERS ? instr->call.arg_count - PARAM_REGISTERS : 0;
@@ -247,7 +244,11 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     // int param_frame_size = (instr->call.arg_count - xmm_index - gp_index) * 8;
     fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);
 
-    fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+    if (t != type_void) {
+        const char *reg = x86_rax_reg(t);
+        const char *op_suffix = x86_op_suffix(t);
+        fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
+    }
 }
 
 void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, const IR_BINOP_OP op, Type *t) {
