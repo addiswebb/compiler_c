@@ -154,33 +154,36 @@ const char *x86_rdx_reg(const Type *t) {
     exit(1);
 }
 
+const char *x86_op_float_suffix(int size) {
+    switch (size) {
+    case 4:
+        return "ss";
+    case 8:
+        return "sd";
+    default:
+        printf("Tried to get float suffix of unsupported size\n");
+        exit(1);
+    }
+}
+
+const char *x86_op_integer_suffix(int size) {
+    switch (size) {
+    case 1:
+        return "b";
+    case 2:
+        return "w";
+    case 4:
+        return "l";
+    case 8:
+        return "q";
+    default:
+        printf("Tried to get int suffix of unsupported size\n");
+        exit(1);
+    }
+}
 const char *x86_op_suffix(const Type *t) {
-    if (t->kind == T_FLOAT) {
-        switch (t->size) {
-        case 4:
-            return "ss";
-        case 8:
-            return "sd";
-        default:
-            printf("Tried to get float suffix of unsupported size\n");
-            exit(1);
-        }
-    }
-    if (t->kind == T_INT) {
-        switch (t->size) {
-        case 1:
-            return "b";
-        case 2:
-            return "w";
-        case 4:
-            return "l";
-        case 8:
-            return "q";
-        default:
-            printf("Tried to get int suffix of unsupported size\n");
-            exit(1);
-        }
-    }
+    if (t->kind == T_FLOAT) return x86_op_float_suffix(t->size);
+    if (t->kind == T_INT) return x86_op_integer_suffix(t->size);
     if (t->kind == T_POINTER) return "q";
     if (t->kind == T_ARRAY) return "q";
     printf("Tried to op of unsupported type\n");
@@ -204,10 +207,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         case T_INT:
             if (is_register_param) {
                 const char *x = gp_register_str[win64_int_param_regs[gp_index++]][reg_size(v->type->size)];
-                // const char *y = xmm_register_str[win64_float_param_regs[gp_index++]];
-                // TODO, use correct register based of given type and if variadic with float, copy to gp reg also
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x);
-                // fprintf(fp, "    movq %d(%%rbp), %s\n", v->reg.stack_offset, y);
             } else {
                 const char *v_reg = x86_rax_reg(v->type);
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, v_reg);
@@ -218,12 +218,19 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         case T_FLOAT:
             const char *f_suffix = x86_op_suffix(v->type);
             if (is_register_param) {
+#ifdef WIN64
+                if (i < WIN64_PARAM_REGISTERS) {
+                    const char *x = gp_register_str[win64_int_param_regs[gp_index++]][reg_size(v->type->size)];
+                    fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_integer_suffix(v->type->size), v->reg.stack_offset, x);
+                }
+#endif
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", f_suffix, v->reg.stack_offset,
                         xmm_register_str[win64_float_param_regs[xmm_index++]]);
             } else {
                 fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, v->reg.stack_offset);
                 fprintf(fp, "    subq $8, %%rsp\n");
                 fprintf(fp, "    mov%s %%xmm0, (%%rsp)\n", f_suffix);
+                param_offset += 8;
             }
             break;
         case T_POINTER:
@@ -232,6 +239,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             } else {
                 fprintf(fp, "    movq %d(%%rbp), %%rax\n", v->reg.stack_offset);
                 fprintf(fp, "    movq %%rax, %d(%%rsp)\n", param_offset);
+                param_offset += 8;
             }
             break;
         default:
