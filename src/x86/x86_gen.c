@@ -122,27 +122,29 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
     case IR_CMP:
         x86_emit_xr(fp, "mov", "l", "", &instr->ops[1], "%eax");
         x86_emit_xr(fp, "cmp", "l", "", &instr->ops[2], "%eax");
+        bool use_unsigned = instr->cmp.type->kind == T_INT && !instr->cmp.type->is_signed;
+        const char *al_reg = "%al";
         switch (instr->cmp.op) {
         case LT:
-            fprintf(fp, "    setl %%al\n");
+            x86_emit_r(fp, "set", use_unsigned ? "b" : "l", "", al_reg);
             break;
         case LE:
-            fprintf(fp, "    setle %%al\n");
+            x86_emit_r(fp, "set", use_unsigned ? "be" : "le", "", al_reg);
             break;
         case GT:
-            fprintf(fp, "    setg %%al\n");
+            x86_emit_r(fp, "set", use_unsigned ? "a" : "g", "", al_reg);
             break;
         case GE:
-            fprintf(fp, "    setge %%al\n");
+            x86_emit_r(fp, "set", use_unsigned ? "ae" : "ge", "", al_reg);
             break;
         case EQ:
-            fprintf(fp, "    sete %%al\n");
+            x86_emit_r(fp, "set", "e", "", al_reg);
             break;
         case NEQ:
-            fprintf(fp, "    setne %%al\n");
+            x86_emit_r(fp, "set", "ne", "", al_reg);
             break;
         }
-        fprintf(fp, "    movzbl %%al, %%eax\n");
+        x86_emit_rr(fp, "mov", "zbl", "", "%al", "%eax");
         x86_emit_rx(fp, "mov", "l", "", "%eax", &instr->ops[0]);
         return;
     case IR_BR_COND:

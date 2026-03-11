@@ -55,6 +55,10 @@ void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, con
     fprintf(fp, "    %s%s%s %s\n", instr, s1, s2, operand_buf);
 }
 
+void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, const char *r) {
+    fprintf(fp, "    %s%s%s %s\n", instr, s1, s2, r);
+}
+
 const char *x86_rax_reg(Type *t) {
     if (t->kind == T_FLOAT) return "%xmm0";
     if (t->kind == T_INT) {
@@ -249,6 +253,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
 void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, const IR_BINOP_OP op, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
+    const char *sign_prefix = t->kind == T_INT && !t->is_signed ? "" : "i";
     switch (t->kind) {
     case T_INT:
         switch (op) {
@@ -264,7 +269,7 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             return;
         case MUL:
             x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
-            x86_emit_x(fp, "imul", op_suffix, "", rhs);
+            x86_emit_x(fp, sign_prefix, "mul", op_suffix, rhs);
             x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case DIV:
@@ -286,7 +291,7 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
                 printf("Tried to divide int with unsupported size\n");
                 exit(1);
             }
-            x86_emit_x(fp, "idiv", op_suffix, "", rhs);
+            x86_emit_x(fp, sign_prefix, "div", op_suffix, rhs);
             x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
             return;
         case MOD:
@@ -294,22 +299,26 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             switch (t->size) {
             case 1:
                 fprintf(fp, "    cbw\n");
-                x86_emit_x(fp, "idiv", "b", "", rhs);
+                // x86_emit_x(fp, "idiv", "b", "", rhs);
+                x86_emit_x(fp, sign_prefix, "div", "b", rhs);
                 x86_emit_rx(fp, "mov", "b", "", "%ah", dst);
                 return;
             case 2:
                 fprintf(fp, "    cwde\n");
-                x86_emit_x(fp, "idiv", "w", "", rhs);
+                // x86_emit_x(fp, "idiv", "w", "", rhs);
+                x86_emit_x(fp, sign_prefix, "div", "w", rhs);
                 x86_emit_rx(fp, "mov", "w", "", "%dx", dst);
                 return;
             case 4:
                 fprintf(fp, "    cltd\n");
-                x86_emit_x(fp, "idiv", "l", "", rhs);
+                // x86_emit_x(fp, "idiv", "l", "", rhs);
+                x86_emit_x(fp, sign_prefix, "div", "l", rhs);
                 x86_emit_rx(fp, "mov", "l", "", "%edx", dst);
                 return;
             case 8:
                 fprintf(fp, "    cqo\n");
-                x86_emit_x(fp, "idiv", "q", "", rhs);
+                // x86_emit_x(fp, "idiv", "q", "", rhs);
+                x86_emit_x(fp, sign_prefix, "div", "q", rhs);
                 x86_emit_rx(fp, "mov", "q", "", "%rdx", dst);
                 return;
             default:

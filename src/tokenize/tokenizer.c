@@ -342,7 +342,7 @@ void t_tokenize(Tokenizer *tk) {
                 t_consume_n(tk, 2);
                 t_push_buffer(tk, TK_ELLIPSES);
             } else t_push_buffer(tk, TK_DOT);
-        } else if (is_num(c) || c == '.') {
+        } else if (is_num(c) || c == '.' || c == '-' && is_num(t_peek_next(tk))) {
             int is_float = 0;
             t_consume(tk);
             if (c == '0') {

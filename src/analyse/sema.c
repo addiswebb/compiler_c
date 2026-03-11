@@ -91,8 +91,9 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
     }
 
     if (is_arithmetic_op(op)) return common;
-    if (is_comparison_op(op)) return type_i32;
-
+    // Review this to ensure correctness
+    if (is_comparison_op(op)) return common->is_signed ? type_i32 : type_u32;
+    // Review this to ensure correctness
     if (is_bitwise_op(op)) {
         if (lhs->type->kind != T_INT || rhs->type->kind != T_INT) {
             printf("Bitwise operation requires integers\n");

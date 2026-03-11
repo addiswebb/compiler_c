@@ -15,6 +15,7 @@ void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, co
 void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst);
 void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst);
 void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *operand);
+void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, const char *r);
 
 const char *x86_rax_reg(Type *t);
 const char *x86_rbx_reg(const Type *t);

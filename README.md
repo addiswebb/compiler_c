@@ -223,10 +223,6 @@ You can see how such a simple **IR** instruction can expand into a much more com
     * Function pointers
 * Use/Support a Preprocessor (~~Write a Preprocessor~~)
     * Automatically call preprocessor on source file.
-* Parse & Ignore
-    * `inline`
-    * `volatile`
-    * `...`
 * Support a standard library 
 * ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
     * Need to support SysV/Linux Abi for Musl libc :(

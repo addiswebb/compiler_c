@@ -50,8 +50,8 @@ IR_Value ir_unary(IR_Context *ctx, IR_UNARY_OP op, IR_Value expr_reg, Type *type
     IR_Instruction i;
     i.op = IR_UNOP;
     i.unary.op = op;
-    i.ops[1] = expr_reg;
     i.unary.type = type;
+    i.ops[1] = expr_reg;
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
     append(&ctx->block->instruction_array, &i);
@@ -61,18 +61,19 @@ IR_Value ir_binary(IR_Context *ctx, IR_BINOP_OP op, IR_Value dst, IR_Value lhs_r
     IR_Instruction i;
     i.op = IR_BINOP;
     i.binop.op = op;
+    i.binop.type = type;
     i.ops[1] = lhs_reg;
     i.ops[2] = rhs_reg;
-    i.binop.type = type;
     i.ops[0] = dst;
     i.op_count = 3;
     append(&ctx->block->instruction_array, &i);
     return i.ops[0];
 }
-IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg, IR_Value rhs_reg) {
+IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg, IR_Value rhs_reg, Type *type) {
     IR_Instruction i;
     i.op = IR_CMP;
     i.cmp.op = op;
+    i.cmp.type = type;
     i.ops[1] = lhs_reg;
     i.ops[2] = rhs_reg;
     i.ops[0] = ir_next_virtual_reg(ctx->func);

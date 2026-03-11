@@ -1038,11 +1038,16 @@ int64_t parse_int(const char *raw, int len) {
 int64_t parse_dec(const char *raw, int len) {
     int64_t res = 0;
     const char *start = raw;
+    int is_negative = false;
+    if (raw[0] == '-') {
+        raw++;
+        is_negative = true;
+    }
     while (raw < start + len) {
         res = res * 10 + (*raw - '0');
         raw++;
     }
-    return res;
+    return is_negative ? -res : res;
 }
 int64_t parse_binary(const char *raw, int len) {
     int64_t res = 0;

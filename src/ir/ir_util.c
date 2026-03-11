@@ -162,39 +162,19 @@ static void print_cmp_op(const IR_CMP_OP op) {
 
 static char ir_type_suffix(Type *type) {
     switch (type->kind) {
-    case T_INVALID:
-        printf("Tried to print invalid type\n");
-        exit(1);
     case T_INT:
-        switch (type->size) {
-        case 1:
-            return 'c';
-        case 2:
-            return 's';
-        case 4:
-            return 'i';
-        case 8:
-            return 'l';
-        default:
-            printf("Given invalid size of INT\n");
-            exit(1);
-        }
+        return type->is_signed ? 'i' : 'u';
     case T_FLOAT:
-        switch (type->size) {
-        case 4:
-            return 'f';
-        case 8:
-            return 'd';
-        default:
-            printf("Given invalid size of INT\n");
-            exit(1);
-        }
+        return 'f';
     case T_ARRAY:
         return 'a';
     case T_POINTER:
         return 'p';
     case T_STRUCT:
         return 's';
+    case T_INVALID:
+        printf("Tried to print invalid type\n");
+        exit(1);
     default:
         printf("Not handling this type ir_type_suffix: ");
         print_type(type);
@@ -303,9 +283,9 @@ static void print_ir_br_cond(IR_Context *ctx, const IR_Instruction *instr) {
 static void print_ir_cmp(IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
-    printf(" = CMP ");
+    printf(" = CMP:%c%d ", ir_type_suffix(instr->cmp.type), instr->cmp.type->size * 8);
     print_ir_value(&instr->ops[1]);
-    printf(" , ");
+    printf(", ");
     print_ir_value(&instr->ops[2]);
     printf(" ");
     print_cmp_op(instr->cmp.op);

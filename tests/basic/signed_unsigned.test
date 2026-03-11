@@ -1,4 +1,6 @@
-// 1 1 0 0 0 1 0 0 1 1 0 1 -120 120 -3 3 -2 2
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t.exe
+// RUN: %t.exe | %check_output "1 1 0 0 0 1 0 0 1 1 0 1 -120 120 -3 3 -2 2"
 extern int printf(const char *format, ...);
 
 int main() {

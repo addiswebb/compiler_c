@@ -107,8 +107,8 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         IR_Value lhs = ir_gen_rvalue(ctx, expr->binary.lhs);
 
         if (expr->binary.op == TK_OR_OR || expr->binary.op == TK_AND_AND) {
-            IR_Value zero = ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){type_i32, 0}), type_i32);
-            IR_Value lhs_cmp = ir_cmp(ctx, NEQ, lhs, zero);
+            IR_Value zero = ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){expr->type, 0}), expr->type);
+            IR_Value lhs_cmp = ir_cmp(ctx, NEQ, lhs, zero, expr->type);
 
             if (ir_is_within_cond(ctx)) {
                 if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, lhs_cmp, NULL, ctx->false_block);
@@ -116,7 +116,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             }
 
             IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
-            IR_Value rhs_cmp = ir_cmp(ctx, NEQ, rhs, zero);
+            IR_Value rhs_cmp = ir_cmp(ctx, NEQ, rhs, zero, expr->type);
             // No need to cmp both results, if we reach here it means lhs is 1 or rhs represents (lhs op rhs)
             // Early out
             if (ir_is_within_cond(ctx)) return rhs_cmp;
@@ -127,7 +127,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
 
         IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
         if (is_comparison_op(expr->binary.op)) {
-            return ir_cmp(ctx, ir_cmp_op(expr->binary.op), lhs, rhs);
+            return ir_cmp(ctx, ir_cmp_op(expr->binary.op), lhs, rhs, expr->type);
         } else {
             if (expr->binary.lhs->type->kind == T_POINTER && expr->binary.rhs->type->kind == T_INT) {
                 IR_Value c =
@@ -246,7 +246,7 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
         if (_case->_case.test) {
             cases[block_index++] = ir_new_block();
             IR_Value test_case = ir_gen_rvalue(ctx, _case->_case.test);
-            IR_Value cmp_reg = ir_cmp(ctx, NEQ, test, test_case);
+            IR_Value cmp_reg = ir_cmp(ctx, NEQ, test, test_case, _switch->type);
             // branch for fallthrough to the next test.
             ir_branch_cond(ctx, cmp_reg, NULL, cases[block_index - 1]);
         }

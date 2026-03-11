@@ -142,7 +142,7 @@ typedef struct {
         struct { Type *type; } store;
         struct { IR_UNARY_OP op; Type *type; } unary;
         struct { IR_BINOP_OP op; Type *type; } binop;
-        struct { IR_CMP_OP op; } cmp;
+        struct { IR_CMP_OP op; Type *type; } cmp;
         struct { IR_Func_Def* callee; IR_Var *args; int arg_count; Type *type; } call;
         struct { IR_Block *block; } br;
         struct { IR_Block *t_block, *f_block; } br_cond;
