@@ -60,7 +60,7 @@ void *get(const Array *arr, int index) {
 
 void set(const Array *arr, const void *element, int index) {
     ensure_index(arr, index);
-    memcpy(((char *)arr->data + index * arr->element_size), element, sizeof(arr->element_size));
+    memcpy(((char *)arr->data + index * arr->element_size), element, arr->element_size);
 }
 
 void array_free(const Array *arr) {

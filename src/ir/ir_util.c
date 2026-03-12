@@ -225,7 +225,7 @@ static void print_ir_binop(const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_load(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_load(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = LOAD:%c%d ", ir_type_suffix(instr->load.type), instr->load.type->size * 8);
@@ -233,7 +233,7 @@ static void print_ir_load(IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_store_mem(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_store_mem(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     printf("STORE_MEM:%c%d ", ir_type_suffix(instr->store.type), instr->store.type->size * 8);
     print_ir_value(&instr->ops[1]);
@@ -241,7 +241,7 @@ static void print_ir_store_mem(IR_Context *ctx, const IR_Instruction *instr) {
     print_ir_value(&instr->ops[0]);
     printf("\n");
 }
-static void print_ir_store(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_store(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     printf("STORE:%c%d ", ir_type_suffix(instr->store.type), instr->store.type->size * 8);
     print_ir_value(&instr->ops[1]);
@@ -250,29 +250,30 @@ static void print_ir_store(IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_ret(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_ret(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    RET ");
     print_ir_value(&instr->ops[0]);
     printf("\n");
 }
 
-static void print_ir_call(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_call(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = CALL:%c%d '%s', %d:[ ", ir_type_suffix(instr->call.type), instr->call.type->size * 8, instr->call.callee->name,
-           instr->call.arg_count);
-    for (int i = 0; i < instr->call.arg_count; i++) {
-        print_type(instr->call.args[i].type);
+           instr->call.arg_array.count);
+    for (int i = 0; i < instr->call.arg_array.count; i++) {
+        IR_Var *arg = get_arg(instr, i);
+        print_type(arg->type);
         printf("=");
-        print_ir_value(&instr->call.args[i].reg);
+        print_ir_value(&arg->reg);
 
-        if (i < instr->call.arg_count - 1) {
+        if (i < instr->call.arg_array.count - 1) {
             printf(", ");
         }
     }
     printf(" ]\n");
 }
-static void print_ir_br_cond(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_br_cond(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    BR_COND ");
     print_ir_value(&instr->ops[0]);
     if (instr->br_cond.t_block) printf(" L%d ", instr->br_cond.t_block->id);
@@ -282,7 +283,7 @@ static void print_ir_br_cond(IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_cmp(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_cmp(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = CMP:%c%d ", ir_type_suffix(instr->cmp.type), instr->cmp.type->size * 8);
@@ -294,7 +295,7 @@ static void print_ir_cmp(IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_unop(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_unop(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = UNARY ");
@@ -304,7 +305,7 @@ static void print_ir_unop(IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_cast(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_cast(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = CAST ");
@@ -316,7 +317,7 @@ static void print_ir_cast(IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_addr(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_addr(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = ADDR ");
@@ -327,20 +328,20 @@ static void print_ir_addr(IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_alloca(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_alloca(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = ALLOCA %d\n", instr->alloca.size);
 }
 
-static void print_ir_memcpy(IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_memcpy(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    MEMCPY ");
     print_ir_value(&instr->ops[1]);
     printf(" -> ");
     print_ir_value(&instr->ops[0]);
     printf(", %d\n", instr->memcpy.size);
 }
-void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
+void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_CONST:
         print_ir_const(ctx, instr);
@@ -396,13 +397,13 @@ void print_ir_instruction(IR_Context *ctx, const IR_Instruction *instr) {
     }
 }
 
-static void print_ir_block(IR_Context *ctx, const IR_Block *block) {
+static void print_ir_block(const IR_Context *ctx, const IR_Block *block) {
     for (int i = 0; i < block->instruction_array.count; i++) {
         print_ir_instruction(ctx, get_instruction(&block->instruction_array, i));
     }
 }
 
-static void print_ir_function(IR_Context *ctx, const IR_Function *func) {
+void print_ir_function(const IR_Context *ctx, const IR_Function *func) {
     printf("%s: [max_reg: %d]\n ", func->name, func->max_reg);
     for (int i = 0; i < func->blocks_array.count; i++) {
         printf("L%d:\n", i);
@@ -410,7 +411,7 @@ static void print_ir_function(IR_Context *ctx, const IR_Function *func) {
     }
 }
 
-void print_ir_module(IR_Context *ctx, const IR_Module *module) {
+void print_ir_module(const IR_Context *ctx, const IR_Module *module) {
     for (int i = 0; i < module->functions_array.count; i++) {
         print_ir_function(ctx, get_func(module, i));
     }

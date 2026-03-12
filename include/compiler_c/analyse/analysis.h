@@ -17,7 +17,7 @@ void param_offset(IR_Value *v);
 /*
     Converts the given IR_Value to an IR_STACK value with a stack offset. Uses the precomputed stack slot and offset from Lifetimes.
 */
-void stack_offset(IR_Value *v, const Lifetime *lts);
+void stack_offset(IR_Value *v, const Lifetime *lts, int lts_count);
 
 /*
     Constructs a control flow graph.
@@ -47,12 +47,16 @@ void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *
 int reg_bitset(const IR_Function *f);
 
 /*
+    Handles ABI conversions like struct to chunks/hidden pointer
+*/
+void lower_ir_for_asm(IR_Function *f);
+/*
     Converts virtual stack registers to physical offsets. (use physical soon...)
     Converts function param slots to physical registers or offsets.
     Converts virtual mem slots to physical stack slots.
     Converts ir_store for structs types to memcpy
 */
-void lower_for_asm_gen(const IR_Function *f, const Lifetime *lts, const StackSlot *mem_slots);
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const StackSlot *mem_slots);
 /*
     Add a successor block to the given `from` block.
 */
@@ -61,7 +65,7 @@ void add_successor(IR_Function *func, IR_Block *from, IR_Block *to);
 /*
     Computes the function relative line at which all virtual registers are first and last used.
 */
-Lifetime *compute_lifetimes(const IR_Function *f, int defined, const int *rpo);
+Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *rpo);
 
 /*
     Computes the order, effectively, that blocks will be executed.

@@ -1,4 +1,5 @@
 #include "compiler_c/analyse/analysis.h"
+#include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
@@ -330,23 +331,97 @@ void param_offset(IR_Value *v) {
     v->stack_offset = (-v->reg - 1) * 8 + 16;
 }
 
-void stack_offset(IR_Value *v, const Lifetime *lts) {
+const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) {
+    for (int i = 0; i < lts_count; i++) {
+        if (lts[i].reg == reg) {
+            return &lts[i];
+        }
+    }
+    printf("Failed to find lifetime of r%d\n", reg);
+    exit(1);
+}
+void stack_offset(IR_Value *v, const Lifetime *lts, int lts_count) {
     if (!lts) {
         printf("Lts is null\n");
         exit(1);
     }
     v->kind = IR_STACK;
-    v->stack_offset = -(lts[v->reg].stack_offset + 8);
+    const Lifetime *l = get_lifetime(lts, lts_count, v->reg);
+    v->stack_offset = -(l->stack_offset + 8);
 }
 
-void lower_for_asm_gen(const IR_Function *f, const Lifetime *lts, const StackSlot *mem_slots) {
+void lower_ir_for_asm(IR_Function *f) {
+    for (int i = 0; i < f->blocks_array.count; i++) {
+        IR_Block *b = get_block(f, i);
+        for (int j = 0; j < b->instruction_array.count; j++) {
+            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            if (instr->op == IR_CALL) {
+                // Convert to int chunks or pointer
+                for (int k = 0; k < instr->call.arg_array.count; k++) {
+                    IR_Var *arg = get_arg(instr, k);
+                    Type *s_t = arg->type;
+                    if (s_t->kind == T_STRUCT) {
+                        if (s_t->size <= 16) {
+                            int n_chunks = (s_t->size + 7) / 8;
+                            arg->type = type_u64;
+                            arg->name = "_tmp1";
+                            if (n_chunks == 2) {
+                                IR_Var a = *arg;
+                                a.reg.offset += 8;
+                                a.name = "_tmp2";
+                                append(&instr->call.arg_array, &a);
+                            }
+                        } else {
+                            f->max_reg++;
+                            IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
+                            IR_Instruction i = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = arg->reg}};
+                            arg->type = get_pointer_type(arg->type);
+                            arg->name = "_tmp_s_ptr";
+                            arg->reg = i.ops[0];
+                            insert(&b->instruction_array, &i, j++);
+                        }
+                    }
+                }
+            } else if (instr->op == IR_STORE && instr->store.type->kind == T_STRUCT) {
+                // Lower to memcpy or reg reading,
+                Type *s_t = instr->store.type;
+                if (s_t->size <= 16) {
+                    int n_chunks = (s_t->size + 7) / 8;
+                    IR_Instruction store = *instr;
+                    store.ops[0].size = 8;
+                    store.ops[1].size = 8;
+                    store.store.type = type_u64;
+                    set(&b->instruction_array, &store, j);
+                    if (n_chunks == 2) {
+                        store.ops[0].offset += 8;
+                        store.ops[1].reg -= 1;
+                        insert(&b->instruction_array, &store, ++j);
+                    }
+                } else {
+                    IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
+                    f->max_reg++;
+                    IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[0]}};
+                    insert(&b->instruction_array, &addr, j++);
+                    instr = get_instruction(&b->instruction_array, j);
+
+                    IR_Instruction memcpy = {
+                        .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[1]}, .memcpy = {.size = instr->store.type->size}};
+                    memcpy.ops[1].size = 8;
+                    set(&b->instruction_array, &memcpy, j);
+                }
+            }
+        }
+    }
+}
+
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const StackSlot *mem_slots) {
     for (int i = 0; i < f->blocks_array.count; i++) {
         const IR_Block *b = get_block(f, i);
         for (int j = 0; j < b->instruction_array.count; j++) {
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
+                IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_arg(instr, k - instr->op_count)->reg;
                 if (a->kind == IR_LITERAL) continue;
                 // offload the following switch to a function which correctly lowers IR_VREG, IR_MEM to IR_STACK
                 // leaving IR_GLOBAL, IR_LITERAL, IR_STACK
@@ -359,7 +434,7 @@ void lower_for_asm_gen(const IR_Function *f, const Lifetime *lts, const StackSlo
                         } else {
                             param_offset(a);
                         }
-                    } else stack_offset(a, lts);
+                    } else stack_offset(a, lts, lts_count);
                     break;
                 case IR_MEM:
                     a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
@@ -385,9 +460,9 @@ void verify_completion(const IR_Function *f) {
         const IR_Block *b = get_block(f, i);
         for (int j = 0; j < b->instruction_array.count; j++) {
             const IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
+                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_arg(instr, k - instr->op_count)->reg;
                 if (a->kind == IR_LITERAL && instr->op != IR_CALL) continue;
                 if (a->kind == IR_GLOBAL || a->kind == IR_PHYS_REG) continue;
                 if (a->kind != IR_STACK) {
@@ -425,6 +500,9 @@ StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size, const 
 void analysis(const IR_Context *ctx) {
     for (int i = 0; i < ctx->module->functions_array.count; i++) {
         IR_Function *f = get_func(ctx->module, i);
+
+        lower_ir_for_asm(f);
+
         // Initialize Control Flow Graph Variables per block
         ir_init_func_cfg(f);
         // Compute Function dependencies (successors, predecessors)
@@ -444,12 +522,14 @@ void analysis(const IR_Context *ctx) {
             compute_bitset(f, rpo);
 
             lifetimes = compute_lifetimes(f, reg_count, rpo);
+            qsort(lifetimes, reg_count, sizeof(Lifetime), cmp_lifetime);
+
             if (DEBUG_LIFETIMES) {
                 for (int j = 0; j < reg_count; j++) {
                     printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
                 }
+                printf("\n");
             }
-            qsort(lifetimes, reg_count, sizeof(Lifetime), cmp_lifetime);
         }
 
         int frame_size = 0;
@@ -462,7 +542,7 @@ void analysis(const IR_Context *ctx) {
         linear_stack_slot_allocation(lifetimes, reg_count, &frame_size, &slot_count);
 
         // Update all instances of IR_Value with the correct stack offsets
-        lower_for_asm_gen(f, lifetimes, mem_slots);
+        lower_ir_values_to_stack(f, lifetimes, reg_count, mem_slots);
 
         // Verify all IR_Values are now of IR_STACK kind,
         verify_completion(f);
@@ -482,10 +562,10 @@ Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *
         const IR_Block *b = get_block(f, rpo[i]);
         for (int j = 0; j < b->instruction_array.count; j++) {
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_count : instr->op_count;
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &instr->call.args[k - instr->op_count].reg;
-                const bool is_call_arg = k >= +instr->op_count;
+                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_arg(instr, k - instr->op_count)->reg;
+                const bool is_call_arg = k >= instr->op_count;
                 if (a->kind == IR_VREG) {
                     if (a->reg < 0) continue;
                     if (op_info[instr->op].def_mask & (1 << k)) {

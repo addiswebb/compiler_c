@@ -193,15 +193,15 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     Type *t = instr->call.type;
 
     int reg_index = 0;
-    const int spilled_count = instr->call.arg_count > PARAM_REGISTERS ? instr->call.arg_count - PARAM_REGISTERS : 0;
+    const int spilled_count = instr->call.arg_array.count > PARAM_REGISTERS ? instr->call.arg_array.count - PARAM_REGISTERS : 0;
     // +8 for push rbp (call emits push rbp, mov rsp, rbp)
     // 8 * spilled count, for n args after [0-3]
     // SHADOW_SPACE = 32, for windows ABI (linux = 0)
     const int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count + 8, 16);
     int param_offset = SHADOW_SPACE;
     if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
-    for (int i = 0; i < instr->call.arg_count; i++) {
-        const IR_Var *v = &instr->call.args[i];
+    for (int i = 0; i < instr->call.arg_array.count; i++) {
+        const IR_Var *v = get_arg(instr, i);
         const bool is_register_param = i < PARAM_REGISTERS;
         if (is_register_param && reg_index >= PARAM_REGISTERS) {
             printf("Panicking because more than too many registers were used %d/%d\n", reg_index, PARAM_REGISTERS);

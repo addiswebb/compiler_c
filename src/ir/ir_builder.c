@@ -1,3 +1,4 @@
+#include "compiler_c/core/array.h"
 #include "compiler_c/ir/ir_gen.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -83,18 +84,11 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     IR_Instruction i;
     i.op = IR_CALL;
     i.call.callee = ir_get_func_def(ctx, expr->func_call.identifier->identifier.name);
-    i.call.arg_count = expr->func_call.params_array.count;
-    i.call.args = malloc(sizeof(IR_Var) * i.call.arg_count);
+    array_init(&i.call.arg_array, expr->func_call.params_array.count, sizeof(IR_Var));
     i.call.type = expr->type;
-    if (!i.call.args) {
-        printf("Failed to alloc for IR_FUNC_CALL args\n");
-        exit(1);
-    }
-    for (int j = 0; j < i.call.arg_count; j++) {
+    for (int j = 0; j < i.call.arg_array.capacity; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
-        i.call.args[j].reg = ir_gen_rvalue(ctx, param);
-        i.call.args[j].type = param->type;
-        i.call.args[j].name = NULL;
+        append(&i.call.arg_array, &(IR_Var){.name = NULL, .type = param->type, .reg = ir_gen_rvalue(ctx, param)});
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 1;

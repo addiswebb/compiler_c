@@ -115,15 +115,19 @@ int compile(Compiler *compiler) {
         IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
 
         if (compiler->flags & COMP_FLAG_IR) {
+            printf("---- IR ----\n");
             print_ir_module(&ctx, module);
+            printf("\n");
         }
         analysis(&ctx);
 
         if (compiler->flags & COMP_FLAG_IR) {
-            for (int i = 0; i < module->functions_array.count; i++) {
-                print_cfg(get_func(module, i));
+            if (DEBUG_LIFETIMES) {
+                for (int i = 0; i < module->functions_array.count; i++) print_cfg(get_func(module, i));
             }
+            printf("---- Lowered IR ----\n");
             print_ir_module(&ctx, module);
+            printf("\n");
         }
 
         if (compiler->flags & COMP_FLAG_ASM) {

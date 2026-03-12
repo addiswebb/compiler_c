@@ -1,5 +1,13 @@
 extern int printf(const char *format, ...);
+
+typedef struct {
+    int a;
+    int b;
+} S;
+
+int foo(S s) { return s.b; }
+
 int main() {
-    printf("%lf %d %lf\n", 1.0, 2, 3.0);
-    return 0;
+    S s = {1234569, 6};
+    return foo(s);
 }

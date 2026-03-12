@@ -245,8 +245,7 @@ IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal) {
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
     const IR_Value next_var = ir_next_virtual_slot(func, align(type->size, 8), 8);
     append(&func->locals_array, &(IR_Var){name, next_var, type});
-    int tmp = func->locals_array.count - 1;
-    append(&get_current_scope(func)->var_array, &tmp);
+    append(&get_current_scope(func)->var_array, &(int){func->locals_array.count - 1});
     return next_var;
 }
 
@@ -268,7 +267,7 @@ IR_Value ir_value_from_global(IR_Global *g) {
     v.global = g;
     return v;
 }
-IR_Value ir_get_var_reg(IR_Context *ctx, const char *name) {
+IR_Value ir_get_var_reg(IR_Context *ctx, const char *name, bool give_lvalue) {
     const IR_Function *func = ctx->func;
     for (int i = func->scopes_array.count - 1; i >= 0; i--) {
         IR_Scope *scope = get_scope(func, i);
@@ -276,7 +275,7 @@ IR_Value ir_get_var_reg(IR_Context *ctx, const char *name) {
             const int k = get_var_index(scope, j);
             IR_Var *local = get_local(func, k);
             if (strcmp(local->name, name) == 0) {
-                if (local->type->kind == T_STRUCT) {
+                if (local->type->kind == T_STRUCT && give_lvalue) {
                     return ir_address(ctx, local->reg, 0);
                 }
                 return local->reg;

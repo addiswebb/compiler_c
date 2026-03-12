@@ -142,7 +142,7 @@ typedef struct {
         struct { IR_UNARY_OP op; Type *type; } unary;
         struct { IR_BINOP_OP op; Type *type; } binop;
         struct { IR_CMP_OP op; Type *type; } cmp;
-        struct { IR_Func_Def* callee; IR_Var *args; int arg_count; Type *type; } call;
+        struct { IR_Func_Def* callee; Array arg_array; Type *type; } call;
         struct { IR_Block *block; } br;
         struct { IR_Block *t_block, *f_block; } br_cond;
         struct { Type *from, *to; } cast;
@@ -356,7 +356,7 @@ IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);
     First checks the scope stack, top down. Then checks module globals array.
     Immediately returning the Value if found, otherwise it is considered an undefined variable.
 */
-IR_Value ir_get_var_reg(IR_Context *ctx, const char *name);
+IR_Value ir_get_var_reg(IR_Context *ctx, const char *name, bool give_lvalue);
 
 /*
     Retrieves the Block which has the corresponding label.
@@ -411,5 +411,9 @@ static inline IR_Function * get_func(const IR_Module *module, int index){
 
 static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int index){
     return (IR_LabeledBlock*) get(&module->labeled_block_array, index);
+}
+
+static inline IR_Var *get_arg(const IR_Instruction *call, int index){
+    return (IR_Var*) get(&call->call.arg_array, index);
 }
 #endif // COMPILER_C_IR_MODULE_H

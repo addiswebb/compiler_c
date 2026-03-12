@@ -49,6 +49,10 @@ static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
 
 static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr) {
     x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rax");
+    if (instr->addr.offset > 0) {
+        printf("Unsure how to lower this for now\n");
+        exit(1);
+    }
     x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
 }
 static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {

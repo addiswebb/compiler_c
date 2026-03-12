@@ -16,7 +16,7 @@
 static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
     case N_IDENTIFIER:
-        return ir_get_var_reg(ctx, expr->identifier.name);
+        return ir_get_var_reg(ctx, expr->identifier.name, true);
     case N_UNARY:
         if (expr->unary.op != TK_MULTIPLY) break;
         return ir_gen_rvalue(ctx, expr->unary.expr);
@@ -75,7 +75,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_INDEX:
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_IDENTIFIER:
-        return ir_gen_lvalue(ctx, expr);
+        return ir_get_var_reg(ctx, expr->identifier.name, false);
     case N_LITERAL:
         IR_Literal c = ir_literal(expr);
         return ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
@@ -501,7 +501,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     ir_begin_scope(fn);
     // handle (params)
     for (int i = 0; i < func->func.params_array.count; i++) {
-        // Copy from registers intsead
+        // Copy from registers instead
         Node *param = get_node(&func->func.params_array, i);
         ir_new_var(ctx->func, param->var_decl.identifier->identifier.name, param->type);
         ir_store(ctx, ir_mem_value(i, param->type), ir_vreg_value(-i - 1, param->type), param->type);

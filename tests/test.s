@@ -1,41 +1,48 @@
 .section .rodata
-.LC0:
-    .byte '%', 'l', 'f', ' ', '%', 'd', ' ', '%', 'l', 'f', 0x0A, 0
-.align 8
-.LC1:
-    .quad 0x3ff0000000000000
-.align 8
-.LC3:
-    .quad 0x4008000000000000
 
 .text
+.global foo
+foo:
+    push %rbp
+    mov %rsp, %rbp
+    subq $32, %rsp
+foo_0:
+    movq %rcx, %rax
+    movq %rax, -8(%rbp)
+    lea -8(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movl $4, %eax
+    movq %rax, -32(%rbp)
+    movq -24(%rbp), %rax
+    addq -32(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
 .global main
 main:
     push %rbp
     mov %rsp, %rbp
     subq $32, %rsp
 main_0:
-    lea .LC0(%rip), %rax
-    movq %rax, -8(%rbp)
-    movsd .LC1(%rip), %xmm0
-    movsd %xmm0, -16(%rbp)
-    movl $2, %eax
+    movl $1234569, %eax
     movl %eax, -24(%rbp)
-    movsd .LC3(%rip), %xmm0
-    movsd %xmm0, -32(%rbp)
+    movl -24(%rbp), %eax
+    movl %eax, -8(%rbp)
+    movl $6, %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    movl %eax, -4(%rbp)
     subq $48, %rsp
     movq -8(%rbp), %rcx
-    movq -16(%rbp), %rdx
-    movsd -16(%rbp), %xmm1
-    movl -24(%rbp), %r8d
-    movq -32(%rbp), %r9
-    movsd -32(%rbp), %xmm3
-    call printf
+    call foo
     addq $48, %rsp
-    movl %eax, -8(%rbp)
-    movl $0, %eax
-    movl %eax, -8(%rbp)
-    movl -8(%rbp), %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp
     ret
