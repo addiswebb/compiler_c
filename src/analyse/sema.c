@@ -1,6 +1,7 @@
 #include "compiler_c/analyse/sema.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
+#include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
 
@@ -34,19 +35,16 @@ Type *check_unary_op(NodeManager *nm, Node *unary_op) {
         if (is_lvalue(expr)) {
             return get_pointer_type(expr->type);
         }
-        printf("Tried to reference a non assignable term\n");
-        exit(1);
+        PANIC("Tried to reference a non assignable term\n");
     case TK_MULTIPLY:
         if (expr->type->kind == T_ARRAY) {
             unary_op->unary.expr = cast_node(nm, unary_op->unary.expr, get_pointer_type(expr->type->base));
         }
         if (expr->type->base && expr->type->base != type_invalid) return expr->type->base;
-        printf("Tried to dereference some nonexistent term\n");
-        exit(1);
+        PANIC("Tried to dereference some nonexistent term\n");
     case TK_SIZEOF:
         if (expr->type != type_invalid && expr->type->size) return type_i32;
-        printf("Tried to get the sizeof something without a size\n");
-        exit(1);
+        PANIC("Tried to get the sizeof something without a size\n");
     case TK_INCR:
     case TK_DECR:
         return expr->type;
@@ -76,20 +74,17 @@ bool is_valid_binary_op(TokenType op, const Node *lhs, const Node *rhs) {
 
 Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
     if (binop->binary.lhs->type == type_invalid || binop->binary.rhs->type == type_invalid) {
-        printf("Semantic Analysis: Binary op was given expression with an invalid type\n");
-        exit(1);
+        PANIC("Semantic Analysis: Binary op was given expression with an invalid type\n");
     }
     const Node *lhs = binop->binary.lhs;
     Node *rhs = binop->binary.rhs;
     // Only checks pointer arithmatic
     if (!is_valid_binary_op(op, lhs, rhs)) {
-        printf("Invalid arithmetic operands\n");
-        exit(1);
+        PANIC("Invalid arithmetic operands\n");
     }
     if (is_assignment_op(op)) {
         if (!is_lvalue(lhs)) {
-            printf("Semantic Analysis: Binary op lhs is not assignable\n");
-            exit(1);
+            PANIC("Semantic Analysis: Binary op lhs is not assignable\n");
         }
         const TokenType underlying = get_underlying_op(op);
         if (is_arithmetic_op(underlying) || is_bitwise_op(underlying)) {
@@ -106,8 +101,7 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
 
     Type *common = promote_binary_operands(nm, binop);
     if (!common || common == type_invalid) {
-        printf("Invalid arithmetic operands\n");
-        exit(1);
+        PANIC("Invalid arithmetic operands\n");
     }
 
     if (is_arithmetic_op(op)) return common;
@@ -116,8 +110,7 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
     // Review this to ensure correctness
     if (is_bitwise_op(op)) {
         if (lhs->type->kind != T_INT || rhs->type->kind != T_INT) {
-            printf("Bitwise operation requires integers\n");
-            exit(1);
+            PANIC("Bitwise operation requires integers\n");
         }
         return type_i32;
     }
@@ -166,8 +159,7 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     } else if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_POINTER) {
         return type_i64;
     } else {
-        printf("UNSURE HOW TO HANDLE COMMON CASE;\n");
-        exit(1);
+        PANIC("UNSURE HOW TO HANDLE COMMON CASE;\n");
     }
 
     if ((*lhs)->type != common) *lhs = cast_node(nm, (*lhs), common);
@@ -223,15 +215,13 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         p_pop_scope(p);
         if (node->func.storage_class == EXTERN) {
             if (node->func.is_defined) {
-                printf("External Function cannot have a definition\n");
-                exit(1);
+                PANIC("External Function cannot have a definition\n");
             }
         }
         Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC);
         if (func_symbol) {
             if (func_symbol->func_def->func.storage_class == STATIC && node->func.storage_class != STATIC) {
-                printf("Linkage conflict between function declarations of %s\n", node->func.name);
-                exit(1);
+                PANIC("Linkage conflict between function declarations of %s\n", node->func.name);
             }
             // If previous declaration was prototype, and current has {}
             if (!func_symbol->func_def->func.is_defined && node->func.is_defined) {
@@ -239,8 +229,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 func_symbol->func_def = node;
             } else if (node->func.is_defined && func_symbol->func_def->func.is_defined) {
                 // If symbol and current both have {}
-                printf("Redefinition of function %s\n", node->func.name);
-                exit(1);
+                PANIC("Redefinition of function %s\n", node->func.name);
             }
             node->func.symbol = func_symbol;
         } else node->func.symbol = p_append_func_def(p, node);
@@ -257,8 +246,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         // Skip extern nodes
         if (node->var_decl.storage_class == EXTERN) {
             if (node->var_decl.has_initializer) {
-                printf("External variable cannot be initialized in the same statement\n");
-                exit(1);
+                PANIC("External variable cannot be initialized in the same statement\n");
             }
         }
         Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR);
@@ -267,14 +255,12 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             // If we are within a function and var_symbol is a also a local variable
             if (p->scopes_array.count > 1) {
                 if (var_symbol->scope_depth == p->scopes_array.count - 1) {
-                    printf("Redeclaration of local variable %s\n", node->var_decl.identifier->identifier.name);
-                    exit(1);
+                    PANIC("Redeclaration of local variable %s\n", node->var_decl.identifier->identifier.name);
                 }
             } else if (!var_symbol->var_decl->var_decl.is_defined && node->var_decl.is_defined) {
                 var_symbol->var_decl = node;
             } else if (var_symbol->var_decl->var_decl.is_defined && node->var_decl.is_defined) {
-                printf("Redefinition of global variable %s\n", node->var_decl.identifier->identifier.name);
-                exit(1);
+                PANIC("Redefinition of global variable %s\n", node->var_decl.identifier->identifier.name);
             }
             node->var_decl.symbol = var_symbol;
         } else node->var_decl.symbol = p_append_var_decl(p, node);
@@ -290,6 +276,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         if (node->var_decl.expr->kind == N_LITERAL && node->var_decl.expr->literal.kind == L_STRING) {
             if (node->var_decl.expr->literal.kind == L_STRING) {
                 if (node->type->kind != T_ARRAY && node->type->base == type_i8) {
+                    log_start(LOG_ERROR);
                     printf("Cannot initialize ");
                     print_type(node->type);
                     printf(" with String Literal\n");
@@ -320,6 +307,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->type = node->cast.to;
             break;
         }
+        log_start(LOG_ERROR);
         printf("Invalid cast from ");
         print_type(node->cast.expr->type);
         printf(" to ");
@@ -329,9 +317,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_FUNCTION_CALL:
         const Node *func_def = p_get_func_def(p, node->func_call.identifier->identifier.name);
         if (!func_def->func.is_variadic && func_def->func.params_array.count != node->func_call.params_array.count) {
-            printf("Argument count mismatch: %s expects %d found %d\n", func_def->func.name, func_def->func.params_array.count,
-                   node->func_call.params_array.count);
-            exit(1);
+            PANIC("Argument count mismatch: %s expects %d found %d\n", func_def->func.name, func_def->func.params_array.count,
+                  node->func_call.params_array.count);
         }
         // TODO handle variadic with no named paramter here instead of parser.
         node->type = func_def->type;
@@ -365,8 +352,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_IDENTIFIER:
         Symbol *ident_symbol = p_get_symbol(p, node->identifier.name, ANY);
         if (!ident_symbol) {
-            printf("Failed to find symbol %s\n", node->identifier.name);
-            exit(1);
+            PANIC("Failed to find symbol %s\n", node->identifier.name);
         }
         switch (ident_symbol->kind) {
         case ENUM:
@@ -384,8 +370,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             break;
         case FUNC:
         case ANY:
-            printf("Should be unreachable\n");
-            exit(1);
+            PANIC("Should be unreachable\n");
         }
         break;
     case N_IF:
@@ -422,8 +407,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_RETURN:
         if (!sema_ctx->func) {
-            printf("Cannot call return outside of a function\n");
-            exit(1);
+            PANIC("Cannot call return outside of a function\n");
         }
         Type *return_type = sema_ctx->func->func.type->type;
         // Early exit if return type is void, and node is `return;`
@@ -434,8 +418,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
         } else {
             if (return_type != type_void) {
-                printf("Non-void type function \'%s\' should return a value\n", sema_ctx->func->func.name);
-                exit(1);
+                PANIC("Non-void type function \'%s\' should return a value\n", sema_ctx->func->func.name);
             }
         }
         sema_ctx->func = NULL;
@@ -443,8 +426,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_LITERAL:
         char *data = malloc(node->literal.len + 1);
         if (!data) {
-            printf("Failed to allocate for sema literal analysis\n");
-            exit(1);
+            PANIC("Failed to allocate for sema literal analysis\n");
         }
         memcpy(data, node->literal.raw_rata, node->literal.len);
         data[node->literal.len] = '\0';
@@ -492,22 +474,19 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_CONTINUE:
         if (!sema_ctx->loop) {
-            printf("Cannot call continue outside of a loop\n");
-            exit(1);
+            PANIC("Cannot call continue outside of a loop\n");
         }
         node->_continue.loop = sema_ctx->loop;
         break;
     case N_BREAK:
         if (!sema_ctx->loop) {
-            printf("Cannot call break outside of a loop or switch statement\n");
-            exit(1);
+            PANIC("Cannot call break outside of a loop or switch statement\n");
         }
         node->_break.loop = sema_ctx->loop;
         break;
     case N_INIT_LIST:
         if (node->type == type_invalid) {
-            printf("Semantic Analysis recieved an untyped initializer list\n");
-            exit(1);
+            PANIC("Semantic Analysis recieved an untyped initializer list\n");
         }
         switch (node->type->kind) {
         case T_INT:
@@ -516,6 +495,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         case T_UNION:
             if (node->init_list.elements_array.count == 0) break;
             if (node->init_list.elements_array.count > 1) {
+                log_start(LOG_ERROR);
                 printf("Excess elements in initializer list for");
                 print_type(node->type);
                 printf("\n");
@@ -527,6 +507,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             Node *value = e;
             if (e->kind == N_DESIGNATED_INITIALIZER) {
                 if (node->type->kind != T_UNION) {
+                    log_start(LOG_ERROR);
                     printf("Cannot use designated initializers for type ");
                     print_type(node->type);
                     printf("\n");
@@ -549,8 +530,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             // Infer the size from the initializer list
             if (node->type->_array.array_len == -1) {
                 if (!node || node->init_list.elements_array.count < 1) {
-                    printf("Inferred array must be initialized, and cannot be empty.\n");
-                    exit(1);
+                    PANIC("Inferred array must be initialized, and cannot be empty.\n");
                 }
                 node->type = infer_array_length(node->type, node->init_list.elements_array.count);
             }
@@ -563,6 +543,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 Node *e = get_node(&node->init_list.elements_array, i);
                 bool is_designator = e->kind == N_DESIGNATED_INITIALIZER;
                 if (index >= count && !is_designator) {
+                    log_start(LOG_ERROR);
                     printf("Too many initializers for ");
                     print_type(node->type);
                     printf("\n");
@@ -604,6 +585,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
             break;
         default:
+            log_start(LOG_ERROR);
             printf("Tried to assign initializer list to unsupported type ");
             print_type(node->type);
             printf("\n");
@@ -615,8 +597,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         Type *lhs_t = node->member_access.identifier->type;
         if (node->member_access.op == TK_ARROW) {
             if (lhs_t->kind != T_POINTER) {
-                printf("Dereference \'->\' can only be used on pointers\n");
-                exit(1);
+                PANIC("Dereference \'->\' can only be used on pointers\n");
             }
             lhs_t = lhs_t->base;
             Node *deref = new_node(nm, N_UNARY);
@@ -644,8 +625,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         semantic_analysis(sema_ctx, p, nm, node->_case.test);
         if (!node->_case.test) break;
         if (!(node->_case.test->type->kind == T_INT || node->_case.test->type->kind == T_ENUM)) {
-            printf("Not ready to handle non int test cases\n");
-            exit(1);
+            PANIC("Not ready to handle non int test cases\n");
         }
         break;
     case N_COMPOUND_LITERAL:
@@ -658,8 +638,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_LABEL:
         break;
     case N_DESIGNATED_INITIALIZER:
-        printf("Unreachable\n");
-        exit(1);
+        PANIC("Unreachable\n");
     }
 }
 void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n) {

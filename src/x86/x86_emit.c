@@ -1,6 +1,7 @@
 #include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/log/logger.h"
 #include "compiler_c/x86/x86.h"
 
 #include <stdio.h>
@@ -28,8 +29,7 @@ void x86_operand(const IR_Value *v, char *buf, const int n) {
     case IR_VREG:
     case IR_MEM:
     case IR_UNDEFINED:
-        printf("Tried to gen assembly for undefined IR_Value\n");
-        exit(1);
+        PANIC("Tried to gen assembly for undefined IR_Value\n");
     }
 }
 
@@ -72,12 +72,12 @@ const char *x86_rax_reg(Type *t) {
         case 8:
             return "%rax";
         default:
-            printf("Tried to get int register of unsupported size %d\n", t->size);
-            exit(1);
+            PANIC("Tried to get int register of unsupported size %d\n", t->size);
         }
     }
     if (t->kind == T_POINTER) return "%rax";
     if (t->kind == T_ARRAY) return "%rax";
+    log_start(LOG_ERROR);
     printf("Tried to get %%rax register of unsupported type ");
     print_type(t);
     printf("\n");
@@ -97,14 +97,12 @@ const char *x86_rbx_reg(const Type *t) {
         case 8:
             return "%rbx";
         default:
-            printf("Tried to get int register of unsupported size\n");
-            exit(1);
+            PANIC("Tried to get int register of unsupported size\n");
         }
     }
     if (t->kind == T_POINTER) return "%rbx";
     if (t->kind == T_ARRAY) return "%rbx";
-    printf("Tried to get %%rbx register of unsupported type\n");
-    exit(1);
+    PANIC("Tried to get %%rbx register of unsupported type\n");
 }
 
 const char *x86_rcx_reg(const Type *t) {
@@ -120,14 +118,12 @@ const char *x86_rcx_reg(const Type *t) {
         case 8:
             return "%rcx";
         default:
-            printf("Tried to get int register of unsupported size\n");
-            exit(1);
+            PANIC("Tried to get int register of unsupported size\n");
         }
     }
     if (t->kind == T_POINTER) return "%rcx";
     if (t->kind == T_ARRAY) return "%rcx";
-    printf("Tried to get %%rcx register of unsupported type\n");
-    exit(1);
+    PANIC("Tried to get %%rcx register of unsupported type\n");
 }
 
 const char *x86_rdx_reg(const Type *t) {
@@ -143,15 +139,13 @@ const char *x86_rdx_reg(const Type *t) {
         case 8:
             return "%rdx";
         default:
-            printf("Tried to get int register of unsupported size\n");
-            exit(1);
+            PANIC("Tried to get int register of unsupported size\n");
         }
     }
 
     if (t->kind == T_POINTER) return "%rdx";
     if (t->kind == T_ARRAY) return "%rdx";
-    printf("Tried to get %%rdx register of unsupported type\n");
-    exit(1);
+    PANIC("Tried to get %%rdx register of unsupported type\n");
 }
 
 const char *x86_float_op_suffix(int size) {
@@ -161,8 +155,7 @@ const char *x86_float_op_suffix(int size) {
     case 8:
         return "sd";
     default:
-        printf("Tried to get float suffix of unsupported size\n");
-        exit(1);
+        PANIC("Tried to get float suffix of unsupported size\n");
     }
 }
 
@@ -177,16 +170,14 @@ const char *x86_integer_op_suffix(int size) {
     case 8:
         return "q";
     default:
-        printf("Tried to get int suffix of unsupported size\n");
-        exit(1);
+        PANIC("Tried to get int suffix of unsupported size\n");
     }
 }
 const char *x86_op_suffix(const Type *t) {
     if (t->kind == T_FLOAT) return x86_float_op_suffix(t->size);
     if (t->kind == T_INT) return x86_integer_op_suffix(t->size);
     if (t->kind == T_POINTER || t->kind == T_ARRAY) return "q";
-    printf("Tried to op of unsupported type\n");
-    exit(1);
+    PANIC("Tried to op of unsupported type\n");
 }
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const int dst_offset = instr->ops[0].stack_offset;
@@ -204,8 +195,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         const IR_Var *v = get_arg(instr, i);
         const bool is_register_param = i < PARAM_REGISTERS;
         if (is_register_param && reg_index >= PARAM_REGISTERS) {
-            printf("Panicking because more than too many registers were used %d/%d\n", reg_index, PARAM_REGISTERS);
-            exit(1);
+            PANIC("Panicking because more than too many registers were used %d/%d\n", reg_index, PARAM_REGISTERS);
         }
         switch (v->type->kind) {
         case T_INT:
@@ -246,8 +236,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             }
             break;
         default:
-            printf("Tried to emit call arg for unsupported type\n");
-            exit(1);
+            PANIC("Tried to emit call arg for unsupported type\n");
         }
     }
 
@@ -300,8 +289,7 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
                 fprintf(fp, "    cqo\n");
                 break;
             default:
-                printf("Tried to divide int with unsupported size\n");
-                exit(1);
+                PANIC("Tried to divide int with unsupported size\n");
             }
             x86_emit_x(fp, sign_prefix, "div", op_suffix, rhs);
             x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
@@ -330,8 +318,7 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
                 x86_emit_rx(fp, "mov", "q", "", "%rdx", dst);
                 return;
             default:
-                printf("Tried to modulo int with unsupported size\n");
-                exit(1);
+                PANIC("Tried to modulo int with unsupported size\n");
             }
         case BW_AND:
             x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
@@ -364,8 +351,7 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             return;
         case L_AND:
         case L_OR:
-            printf("Logical operators && and || should not reach x86 gen\n");
-            exit(1);
+            PANIC("Logical operators && and || should not reach x86 gen\n");
         }
     case T_FLOAT:
         x86_emit_xr(fp, "mov", op_suffix, "", lhs, "%xmm0");
@@ -383,8 +369,7 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             x86_emit_xr(fp, "div", op_suffix, "", rhs, "%xmm0");
             break;
         default:
-            printf("Tried to perform unsupported binary operation on type float\n");
-            exit(1);
+            PANIC("Tried to perform unsupported binary operation on type float\n");
         }
         x86_emit_rx(fp, "mov", op_suffix, "", "%xmm0", dst);
         break;
@@ -396,12 +381,10 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
             return;
         default:
-            printf("Tried to perform unsupported binary op on pointer\n");
-            exit(1);
+            PANIC("Tried to perform unsupported binary op on pointer\n");
         }
     default:
-        printf("Tried to emit binary instruction of unsupported type\n");
-        exit(1);
+        PANIC("Tried to emit binary instruction of unsupported type\n");
     }
 }
 void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, const IR_UNARY_OP op, Type *t) {
@@ -457,14 +440,12 @@ void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, const I
             x86_emit_rx(fp, "mov", "l", "", "%eax", dst);
             return;
         case BNOT:
-            printf("Tried to perform Bitwise Not ~ on Type float\n");
-            exit(1);
+            PANIC("Tried to perform Bitwise Not ~ on Type float\n");
         default:
             return;
         }
     default:
-        printf("Tried to emit unary of unsupported type\n");
-        exit(1);
+        PANIC("Tried to emit unary of unsupported type\n");
     }
 }
 void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to) {
@@ -523,8 +504,7 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
         return;
     }
 
-    printf("Cast node did literally nothing?\n");
-    exit(1);
+    PANIC("Cast node did literally nothing?\n");
 }
 void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c, const int pool_index) {
     const char *reg = x86_rax_reg(t);
@@ -542,8 +522,7 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c,
             fprintf(fp, "    movl $%lld, %%eax\n", c->i);
             break;
         default:
-            printf("Tried to emit const int of unsupported size\n");
-            exit(1);
+            PANIC("Tried to emit const int of unsupported size\n");
         }
         break;
     case T_FLOAT:
@@ -553,8 +532,7 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c,
             fprintf(fp, "    mov%s .LC%d(%%rip), %s\n", op_suffix, pool_index, reg);
             break;
         default:
-            printf("Tried to emit const float of unsupported size\n");
-            exit(1);
+            PANIC("Tried to emit const float of unsupported size\n");
         }
         break;
     case T_ARRAY:

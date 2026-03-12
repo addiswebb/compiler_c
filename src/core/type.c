@@ -2,6 +2,8 @@
 #include "compiler_c/core/array.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
+#include "compiler_c/log/logger.h"
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,8 +58,7 @@ void init_types() {
 Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is_signed) {
     Type *t = new_type();
     if (!t) {
-        printf("Failed to alloc for new type\n");
-        exit(1);
+        PANIC("Failed to alloc for new type\n");
     }
     t->kind = type;
     t->size = size;
@@ -69,8 +70,7 @@ Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is
 }
 Type *new_type() {
     if (typepool.count >= typepool.capacity) {
-        printf("Too many types [%d/%d]\n", typepool.count, typepool.capacity);
-        exit(1);
+        PANIC("Too many types [%d/%d]\n", typepool.count, typepool.capacity);
     }
     return &typepool.types[typepool.count++];
 }
@@ -155,8 +155,7 @@ Type *get_qualified_type(Type *type, unsigned int qualifiers) {
 
 Type *get_unsigned_type(Type *type) {
     if (type->kind != T_INT) {
-        printf("Cannot retrieve signed/unsigned variant of non-integer type\n");
-        exit(1);
+        PANIC("Cannot retrieve signed/unsigned variant of non-integer type\n");
     }
     if (type->is_signed == UNSIGNED) return type;
     for (int i = 0; i < typepool.count; i++) {
@@ -268,8 +267,7 @@ StructMember *get_member(Type *struct_t, const char *name) {
         StructMember *member = get_struct_member(struct_t, i);
         if (strcmp(name, member->name) == 0) return member;
     }
-    printf("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
-    exit(1);
+    PANIC("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
 }
 
 void print_type(Type *type) {
@@ -303,8 +301,7 @@ void print_type(Type *type) {
             print_token_type(TK_LONG);
             break;
         default:
-            printf("Tried to type of int, with invalid size\n");
-            exit(1);
+            PANIC("Tried to type of int, with invalid size\n");
         }
         break;
     case T_FLOAT:
@@ -316,8 +313,7 @@ void print_type(Type *type) {
             print_token_type(TK_DOUBLE);
             break;
         default:
-            printf("Tried to type of float, with invalid size\n");
-            exit(1);
+            PANIC("Tried to type of float, with invalid size\n");
         }
         break;
     case T_POINTER:

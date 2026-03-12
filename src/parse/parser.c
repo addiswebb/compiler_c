@@ -3,6 +3,7 @@
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/core/util.h"
+#include "compiler_c/log/logger.h"
 #include "compiler_c/tokenize/tokenizer.h"
 
 #include <stdio.h>
@@ -66,6 +67,7 @@ void p_expect(const Parser *p, const TokenType expected_type) {
     if (!p_is_last_token(p)) {
         const TokenType token_type = get_token(p->src, p->index)->type;
         if (token_type != expected_type) {
+            log_start(LOG_ERROR);
             printf("Expected ");
             print_token_type(expected_type);
             printf(" got ");
@@ -163,6 +165,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         }
         return primary;
     default:
+        log_start(LOG_ERROR);
         printf("Expected term got ");
         print_token_type(p_peek(p)->type);
         printf("\n");
@@ -172,6 +175,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     if (p_peek(p)->type == TK_OPEN_SQUARE) {
         p_consume(p); // '['
         if (!is_lvalue(primary)) {
+            log_start(LOG_ERROR);
             print_node_type(primary->kind);
             printf(" is not a an lvalue, needed for indexing\n");
             exit(1);
@@ -184,6 +188,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     } else if (p_peek(p)->type == TK_OPEN_PAREN) {
         p_consume(p); // '('
         if (primary->kind != N_IDENTIFIER) {
+            log_start(LOG_ERROR);
             print_node_type(primary->kind);
             printf(" is not a function\n");
             exit(1);
@@ -336,8 +341,7 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
     else type = token_to_type(p, p_consume(p));
 
     if (type == type_invalid) {
-        printf("Tried to parse an unknown type\n");
-        exit(1);
+        PANIC("Tried to parse an unknown type\n");
     }
 
     // Find unsigned type if needed for T_INT only
@@ -388,8 +392,7 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
         if (enum_t._enum.complete) {
             if (s->_enum.complete) {
                 // If the enum is already defined elsewhere,
-                printf("Redefinition of enum %s\n", enum_t._enum.name);
-                exit(1);
+                PANIC("Redefinition of enum %s\n", enum_t._enum.name);
             } else *s = enum_t;
         }
         return s;
@@ -431,8 +434,7 @@ Type *p_parse_union(Parser *p, NodeManager *nm) {
         if (union_t._union.complete) {
             if (u->_union.complete) {
                 // If the union is already defined elsewhere,
-                printf("Redefinition of union %s\n", union_t._union.name);
-                exit(1);
+                PANIC("Redefinition of union %s\n", union_t._union.name);
             } else *u = union_t;
         }
         return u;
@@ -469,8 +471,7 @@ Type *p_parse_struct(Parser *p, NodeManager *nm) {
         if (struct_t._struct.complete) {
             if (s->_struct.complete) {
                 // If the struct is already defined elsewhere,
-                printf("Redefinition of struct %s\n", struct_t._struct.name);
-                exit(1);
+                PANIC("Redefinition of struct %s\n", struct_t._struct.name);
             } else *s = struct_t;
         }
         return s;
@@ -494,8 +495,7 @@ void p_append_param(Node *func, Node *param) {
     if (param != NULL) {
         append(&func->func.params_array, &param);
     } else {
-        printf("Recieved a NULL param node to append\n");
-        exit(1);
+        PANIC("Recieved a NULL param node to append\n");
     }
 }
 
@@ -519,14 +519,12 @@ Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind) {
 Typedef *p_get_typedef(const Parser *p, const char *name) {
     Symbol *s = p_get_symbol(p, name, TYPEDEF);
     if (s) return &s->_typedef;
-    printf("Tried to get the typedef of %s, which does not exist\n", name);
-    exit(1);
+    PANIC("Tried to get the typedef of %s, which does not exist\n", name);
 }
 Node *p_get_func_def(const Parser *p, const char *name) {
     const Symbol *s = p_get_symbol(p, name, FUNC);
     if (s) return s->func_def;
-    printf("Tried to call %s which does not exist\n", name);
-    exit(1);
+    PANIC("Tried to call %s which does not exist\n", name);
 }
 
 void p_append_typedef(Parser *p, const Typedef *t) {
@@ -539,8 +537,7 @@ void p_append_typedef(Parser *p, const Typedef *t) {
 }
 Symbol *p_append_func_def(Parser *p, Node *f) {
     if (p->scopes_array.count > 2) {
-        printf("Declaring function inside a function???\n");
-        exit(1);
+        PANIC("Declaring function inside a function???\n");
     }
     Linkage linkage = f->func.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
     ;
@@ -587,15 +584,13 @@ void p_append_element(Node *init_list, Node *element) { append(&init_list->init_
 Node *p_get_var_decl(const Parser *p, const char *name) {
     const Symbol *s = p_get_symbol(p, name, VAR);
     if (s) return s->var_decl;
-    printf("Tried to find variable %s which does not exist\n", name);
-    exit(1);
+    PANIC("Tried to find variable %s which does not exist\n", name);
 }
 
 EnumField *p_get_enum_const(const Parser *p, const char *name) {
     Symbol *s = p_get_symbol(p, name, ENUM);
     if (s) return &s->enum_field;
-    printf("Tried to find enum constant %s which does not exist\n", name);
-    exit(1);
+    PANIC("Tried to find enum constant %s which does not exist\n", name);
 }
 /*
     Consumes
@@ -658,6 +653,7 @@ UnionMember *get_union_member_named(Type *union_t, const char *name) {
         }
     }
     if (!found_member) {
+        log_start(LOG_ERROR);
         printf("No such member \'%s\' on ", name);
         print_type(union_t);
         printf("\n");
@@ -677,6 +673,7 @@ StructMember *get_struct_member_named(Type *struct_t, const char *name, int *ind
         }
     }
     if (!found_member) {
+        log_start(LOG_ERROR);
         printf("No such member \'%s\' on ", name);
         print_type(struct_t);
         printf("\n");
@@ -736,8 +733,7 @@ Node *p_get_current_func_definition(const Parser *p) {
             if (symbol->kind == FUNC) return symbol->func_def;
         }
     }
-    printf("Cannot return outside of a function\n");
-    exit(1);
+    PANIC("Cannot return outside of a function\n");
 }
 
 Node *p_parse_return(Parser *p, NodeManager *nm) {
@@ -788,8 +784,7 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
     case TK_OPEN_CURLY:
         return p_parse_compound(p, nm);
     case TK_SEMI:
-        printf("Null statement is currently unsupported ';'\n");
-        exit(1);
+        PANIC("Null statement is currently unsupported ';'\n");
     case TK_GOTO:
         return p_parse_goto_statement(p, nm);
     default:
@@ -828,8 +823,7 @@ int p_parse_parameter_list(Parser *p, NodeManager *nm, Node *func) {
                     p_consume_a(p, TK_CLOSE_PAREN);
                     return 1;
                 } else {
-                    printf("Variadic function declaration must have at least one named parameter.\n");
-                    exit(1);
+                    PANIC("Variadic function declaration must have at least one named parameter.\n");
                 }
             }
             Node *param = new_node(nm, N_VAR_DECL);
@@ -892,8 +886,7 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const Sto
         }
         // TODO: this assumes .complete is at the same offset for _enum
         if (!type_decl->type->_struct.complete) {
-            printf("Cannot instantiate an incomplete type\n");
-            exit(1);
+            PANIC("Cannot instantiate an incomplete type\n");
         }
     }
     Node *var_decl = new_node(nm, N_VAR_DECL);
@@ -985,8 +978,7 @@ Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
 
     if (p_peek(p)->type == TK_IDENTIFIER && p_peek_next(p)->type == TK_OPEN_PAREN) {
         // return p_parse_function(p, nm, type_decl);
-        printf("Function prototypes within blocks is unsupported\n");
-        exit(1);
+        PANIC("Function prototypes within blocks is unsupported\n");
     } else {
         return p_parse_declaration(p, nm, type_decl, storage_class, false);
     }
@@ -995,9 +987,8 @@ Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
 Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
     Node *root = init_translation_unit(nm);
     if (p->size == 0) {
-        printf("The token array is empty,\n Don't forget to initialize the parser after "
-               "tokenization.");
-        exit(1);
+        PANIC("The token array is empty,\n Don't forget to initialize the parser after "
+              "tokenization.");
     }
 
     while (!p_is_last_token(p)) {
@@ -1110,8 +1101,7 @@ Type *parse_float_suffix(const char *raw, int *len) {
 // node->type = is_float ? type_f32 : type_f64;
 int64_t parse_int(const char *raw, int len) {
     if (len > 20) {
-        printf("Cannot parse an integer larger than 64 bytes\n");
-        exit(1);
+        PANIC("Cannot parse an integer larger than 64 bytes\n");
     }
     if (raw[0] == '-') return -parse_int(raw + 1, len - 1);
     if (raw[0] == '0' && len > 1) {
@@ -1144,8 +1134,7 @@ int64_t parse_binary(const char *raw, int len) {
     while (raw < start + len) {
         int value = (*raw - '0');
         if (value > 1) {
-            printf("Parse Binary Failed: digit cannot be larger than 1\n");
-            exit(1);
+            PANIC("Parse Binary Failed: digit cannot be larger than 1\n");
         }
         res = res * 2 + value;
         raw++;
@@ -1158,8 +1147,7 @@ int64_t parse_oct(const char *raw, int len) {
     while (raw < start + len) {
         int value = (*raw - '0');
         if (value > 7) {
-            printf("Parse Octal Failed: digit cannot be larger than 7\n");
-            exit(1);
+            PANIC("Parse Octal Failed: digit cannot be larger than 7\n");
         }
         res = res * 8 + value;
         raw++;

@@ -7,6 +7,7 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
+#include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
 #include <compiler_c/core/node.h>
@@ -40,8 +41,7 @@ static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         break;
     }
 
-    printf("Tried to ir_gen_lvalue for a node which is not an lvalue\n");
-    exit(1);
+    PANIC("Tried to ir_gen_lvalue for a node which is not an lvalue\n");
 }
 
 IR_Literal ir_literal(const Node *node) {
@@ -63,8 +63,7 @@ IR_Literal ir_literal(const Node *node) {
         }
     case T_INVALID:
     default:
-        printf("Tried to create IR_CONST instruction with an invalid type\n");
-        exit(1);
+        PANIC("Tried to create IR_CONST instruction with an invalid type\n");
     }
     return c;
 }
@@ -88,8 +87,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             if (expr->binary.op != TK_EQ) {
                 IR_Value binop_val = dereference ? ir_load(ctx, addr, expr->binary.lhs->unary.expr->type) : addr;
                 if (expr->type->kind == T_POINTER) {
-                    printf("Cannot x= pointers rn\n");
-                    exit(1);
+                    PANIC("Cannot x= pointers rn\n");
                 }
                 val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
                                 expr->type);
@@ -147,8 +145,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                 Type *base = expr->binary.lhs->type->base;
                 if (base->size == 1) return lhs;
                 if (expr->type != type_i64) {
-                    printf("Recieved non ptrdiff type in (ptr-ptr) binary op\n");
-                    exit(1);
+                    PANIC("Recieved non ptrdiff type in (ptr-ptr) binary op\n");
                 }
                 IR_Value size = ir_append_const(ctx->module, &(IR_Literal){.type = expr->type, .i = base->size});
                 size = ir_const(ctx, size, expr->type);
@@ -159,8 +156,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_UNARY:
         if (expr->unary.op == TK_INCR || expr->unary.op == TK_DECR) {
             if (expr->unary.expr->kind != N_IDENTIFIER) {
-                printf("Can only increment on a identifieir/variable\n");
-                exit(1);
+                PANIC("Can only increment on a identifieir/variable\n");
             }
             IR_Literal c;
             c.type = expr->type;
@@ -172,8 +168,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                 c.f = 1.0;
                 break;
             default:
-                printf("Tried to increment a value which is neither float or int\n");
-                exit(1);
+                PANIC("Tried to increment a value which is neither float or int\n");
             }
             IR_Value addr_reg = ir_gen_lvalue(ctx, expr->unary.expr);
 
@@ -203,6 +198,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     default:
         break;
     }
+    log_start(LOG_ERROR);
     printf("Failed to gen expr for ");
     print_node_type(expr->kind);
     printf("\n");
@@ -250,8 +246,7 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
     if (_switch->_switch.cases_array.count == 0) return;
     IR_Block **cases = malloc(sizeof(IR_Block *) * _switch->_switch.cases_array.count);
     if (!cases) {
-        printf("Failed to allocate for ir_gen_switch cases\n");
-        exit(1);
+        PANIC("Failed to allocate for ir_gen_switch cases\n");
     }
     IR_Block *default_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
@@ -427,8 +422,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
             }
             break;
         default:
-            printf("Recieving unsupported type to lower var decl with initlist\n");
-            exit(1);
+            PANIC("Recieving unsupported type to lower var decl with initlist\n");
         }
         return;
     }
@@ -477,6 +471,7 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
         return ir_gen_label(ctx, stmt);
     default:
         // given invalid statement? probably an expression
+        log_start(LOG_ERROR);
         printf("Dont know what to do with the given statement: ir_gen_statement: ");
         print_node_type(stmt->kind);
         printf("\n");
@@ -494,8 +489,7 @@ static void ir_gen_label(IR_Context *ctx, const Node *label) {
     IR_LabeledBlock *lb = ir_get_labeled_block(ctx, label->label.identifier->identifier.name);
     if (lb) {
         if (!lb->placeholder) {
-            printf("Redefinition of label \'%s\'\n", label->label.identifier->identifier.name);
-            exit(1);
+            PANIC("Redefinition of label \'%s\'\n", label->label.identifier->identifier.name);
         }
     } else lb = ir_append_labeled_block(ctx, label->label.identifier->identifier.name);
 
@@ -510,8 +504,7 @@ static void ir_gen_return(IR_Context *ctx, const Node *_return) {
 
 static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     if (func->kind != N_FUNCTION) {
-        printf("Tried ir_gen_function but given node is not a function!\n");
-        exit(1);
+        PANIC("Tried ir_gen_function but given node is not a function!\n");
     }
     if (!func->func.is_defined) {
         return NULL;
@@ -519,8 +512,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
 
     IR_Function *fn = ir_new_function(ctx, func->func.name, func->type);
     if (func->func.body->kind != N_COMPOUND) {
-        printf("Function body is not a compound,\n");
-        exit(1);
+        PANIC("Function body is not a compound,\n");
     }
     fn->linkage = func->func.symbol->linkage;
     fn->storage = func->func.symbol->storage;
@@ -547,8 +539,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
 
 IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
     if (tu->kind != N_TRANSLATION_UNIT) {
-        printf("Tried ir_gen_function but given node is not a translation unit!\n");
-        exit(1);
+        PANIC("Tried ir_gen_function but given node is not a translation unit!\n");
     }
 
     IR_Module *module = ir_new_module();
@@ -562,8 +553,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
             if (func_def) {
                 if (func_def->is_defined) {
                     if (n->func.has_initializer) {
-                        printf("Redefinition of %s\n", n->func.name);
-                        exit(1);
+                        PANIC("Redefinition of %s\n", n->func.name);
                     }
                     break;
                 }
@@ -579,8 +569,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
             // Handled by parser or smt
             break;
         default:
-            printf("Recieved an unexpected thing\n");
-            exit(1);
+            PANIC("Recieved an unexpected thing\n");
         }
     }
     return module;

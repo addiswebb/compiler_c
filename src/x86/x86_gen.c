@@ -1,5 +1,6 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/x86/x86.h"
 
@@ -22,8 +23,7 @@ static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     case IR_VREG:
     case IR_MEM:
     case IR_UNDEFINED:
-        printf("Sanity check failed\n");
-        exit(1);
+        PANIC("Sanity check failed\n");
     }
 
     switch (instr->ops[0].kind) {
@@ -38,8 +38,7 @@ static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     case IR_VREG:
     case IR_MEM:
     case IR_UNDEFINED:
-        printf("Sanity check failed\n");
-        exit(1);
+        PANIC("Sanity check failed\n");
     }
     fprintf(fp, "    mov $%d, %%r8\n", instr->memcpy.size);
     fprintf(fp, "    sub $32, %%rsp\n");
@@ -49,10 +48,9 @@ static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
 
 static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr) {
     x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rax");
-    if (instr->addr.offset > 0) {
-        printf("Unsure how to lower this for now\n");
-        exit(1);
-    }
+
+    ASSERT(instr->addr.offset <= 0, "Unsure how to lower this for now\n");
+
     x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
 }
 static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
@@ -218,8 +216,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
             fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->type->align, g->name, g->type->size);
         } else {
             if (c->type == type_invalid) {
-                printf("Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
-                exit(1);
+                PANIC("Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
             }
             if (c->type == type_f64) {
                 uint64_t bits;

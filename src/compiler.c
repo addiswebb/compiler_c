@@ -2,6 +2,7 @@
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_util.h"
+#include "compiler_c/log/logger.h"
 #include <compiler_c/analyse/sema.h>
 #include <compiler_c/compiler.h>
 #include <compiler_c/x86/x86.h>
@@ -12,8 +13,7 @@
 
 Compiler init_compiler(const int argc, char *argv[]) {
     if (argc < 2) {
-        printf("Improper Usage,\n  compiler [input]\n");
-        exit(1);
+        PANIC("Improper Usage,\n  compiler [input]\n");
     }
     if (argc == 2 && strcmp(argv[1], "-h") == 0) {
         printf("compiler [input]\n");
@@ -37,14 +37,12 @@ Compiler init_compiler(const int argc, char *argv[]) {
         if (strcmp(argv[i], "-o") == 0) {
             if (argv[i + 1] != NULL) {
                 if (argv[i + 1][0] == '-') {
-                    printf("Improper Usage,\n  compiler_c [input] -o [output]\n");
-                    exit(1);
+                    PANIC("Improper Usage,\n  compiler_c [input] -o [output]\n");
                 }
                 free(compiler.output_file);
                 compiler.output_file = argv[++i];
             } else {
-                printf("Improper Usage,\n  compiler_c [input] -o [output]\n");
-                exit(1);
+                PANIC("Improper Usage,\n  compiler_c [input] -o [output]\n");
             }
         } else if (strcmp(argv[i], "-t") == 0) {
             compiler.flags |= COMP_FLAG_AST;
@@ -64,8 +62,8 @@ Compiler init_compiler(const int argc, char *argv[]) {
     compiler.nm = new_node_manager();
     compiler.p = new_parser();
 
-    printf("Compiling %s to %s ", input_file, compiler.output_file);
-    if (compiler.flags != 0) {
+    INFO("Compiling %s to %s ", input_file, compiler.output_file);
+    if (compiler.flags != 0 && logger.min_level <= LOG_INFO) {
         printf("with flags: ");
         if (compiler.flags & COMP_FLAG_RUN) {
             printf("-run ");
@@ -80,7 +78,7 @@ Compiler init_compiler(const int argc, char *argv[]) {
             printf("-a");
         }
     }
-    printf("\n");
+    if (logger.min_level <= LOG_INFO) printf("\n");
 
     return compiler;
 }
@@ -97,13 +95,16 @@ void free_compiler(Compiler *compiler) {
 
 int compile(Compiler *compiler) {
     init_types();
+    set_log_stage(STAGE_TOKENIZING);
     t_tokenize(&compiler->tk);
 
+    set_log_stage(STAGE_PARSING);
     init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
     SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL};
     array_init(&sema_ctx.i_array, 4, sizeof(int));
 
+    set_log_stage(STAGE_SEMA_ANALYSIS);
     semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, &compiler->nm.nodes[0]);
 
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
@@ -111,6 +112,7 @@ int compile(Compiler *compiler) {
     lower_nodes(&compiler->nm);
 
     if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR || compiler->flags) {
+        set_log_stage(STAGE_IR);
         IR_Context ctx = ir_init_ctx();
         IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
 
@@ -131,13 +133,15 @@ int compile(Compiler *compiler) {
         }
 
         if (compiler->flags & COMP_FLAG_ASM) {
+            set_log_stage(STAGE_X86_GEN);
             FILE *fp = fopen(compiler->output_file, "w");
             x86_gen_module(fp, &ctx);
             fclose(fp);
         }
         ir_free_module(module);
     }
-    printf("Done.\n");
+    set_log_stage(STAGE_COMPILER);
+    INFO("Done.\n");
     if (compiler->flags & COMP_FLAG_RUN) {
         char base[256];
         strncpy(base, compiler->output_file, sizeof(base));
@@ -148,13 +152,13 @@ int compile(Compiler *compiler) {
         if (len >= 0) base[len + 1] = '\0';
         char cmd[512];
 
-        printf("Compiling %s.s to %s.exe (gcc)\n", base, base);
+        INFO("Compiling %s.s to %s.exe (gcc)\n", base, base);
         snprintf(cmd, sizeof(cmd), "gcc %s.s -o %s.exe", base, base);
         system(cmd);
 
         if (base[0] == '.') snprintf(cmd, sizeof(cmd), "%s.exe", base);
         else snprintf(cmd, sizeof(cmd), ".\\%s.exe", base);
-        printf("Running %s\n", cmd);
+        INFO("Running %s\n", cmd);
         system(cmd);
     }
 
@@ -167,8 +171,7 @@ static int load_src_file(Compiler *compiler, const char *file) {
 
     FILE *fp = _popen(cmd, "r");
     if (!fp) {
-        printf("Failed to open %s\n", file);
-        exit(1);
+        PANIC("Failed to open %s\n", file);
     }
     Array src;
     array_init(&src, 1000, sizeof(char));

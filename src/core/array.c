@@ -1,4 +1,5 @@
 #include "compiler_c/core/array.h"
+#include "compiler_c/log/logger.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,8 +9,7 @@ void array_init(Array *arr, int initial_capacity, int element_size) {
     arr->capacity = initial_capacity;
     arr->data = malloc(arr->element_size * arr->capacity);
     if (!arr->data) {
-        printf("Failed to initialize Array\n");
-        exit(1);
+        PANIC("Failed to initialize Array\n");
     }
     arr->count = 0;
 }
@@ -19,8 +19,7 @@ static void ensure_capacity(Array *arr) {
         arr->capacity *= 2;
         void *new_data = realloc(arr->data, arr->element_size * arr->capacity);
         if (!new_data) {
-            printf("Failed to resize array\n");
-            exit(1);
+            PANIC("Failed to resize array\n");
         }
         arr->data = new_data;
     }

@@ -1,5 +1,6 @@
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
+#include "compiler_c/log/logger.h"
 #include "compiler_c/tokenize/tokenizer.h"
 #include <compiler_c/core/node.h>
 
@@ -12,8 +13,7 @@ NodeManager new_node_manager() {
     nm.capacity = NODE_ARENA_SIZE;
     nm.nodes = malloc(sizeof(Node) * nm.capacity);
     if (nm.nodes == NULL) {
-        printf("Failed to allocate node manager array");
-        exit(1);
+        PANIC("Failed to allocate node manager array");
     }
     nm.count = 0;
     return nm;
@@ -48,8 +48,7 @@ void free_node_manager(const NodeManager *nm) {
 Node *new_node(NodeManager *nm, const NodeKind kind) {
     if (nm->count >= nm->capacity) {
         // In the future, create a new arena for more nodes and link them.
-        printf("Node Arena overflow");
-        exit(1);
+        PANIC("Node Arena overflow");
     }
     Node *node = &nm->nodes[nm->count++];
     memset(node, 0, sizeof(Node));
@@ -67,6 +66,7 @@ Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type) {
 }
 Node *cast_node(NodeManager *nm, Node *node, Type *type) {
     if (!is_valid_cast(node->type, type)) {
+        log_start(LOG_ERROR);
         printf("Invalid conversion from ");
         print_type(node->type);
         printf(" to ");
@@ -103,8 +103,7 @@ LiteralKind literal_kind(const TokenType type) {
     case TK_STRING_LITERAL:
         return L_STRING;
     default:
-        printf("Given a non literal token\n");
-        exit(1);
+        PANIC("Given a non literal token\n");
     }
 }
 void print_node_type(const NodeKind type) {
@@ -254,8 +253,7 @@ void print_node(const Node *node, const int depth) {
                 break;
             default:
                 printf("size: %d\n", node->type->size);
-                printf("Given invalid size of int to print int literal\n");
-                exit(1);
+                PANIC("Given invalid size of int to print int literal\n");
             }
             break;
         case T_FLOAT:

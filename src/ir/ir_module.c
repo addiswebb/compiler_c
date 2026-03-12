@@ -1,12 +1,10 @@
-/*
-    Begin an IR Scope,
-    Tracks any variables added afterwards, and pops them from the IR virtual stack when `ir_end_scope()` is called.
-*/
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_builder.h"
 #include "compiler_c/parse/parser.h"
+#include "compiler_c/log/logger.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,8 +64,7 @@ IR_Value ir_vreg_value(const int reg, const Type *type) {
 void ir_begin_scope(IR_Function *func) {
     int *var_indices = malloc(sizeof(int) * 4);
     if (!var_indices) {
-        printf("Failed to allocate for scope var indices\n");
-        exit(1);
+        PANIC("Failed to allocate for scope var indices\n");
     }
     IR_Scope s;
     s.reg_count = 0;
@@ -117,8 +114,7 @@ IR_Value ir_next_virtual_reg(IR_Function *func) {
 IR_Module *ir_new_module() {
     IR_Module *module = malloc(sizeof(IR_Module));
     if (!module) {
-        printf("Failed to allocate new IR module\n");
-        exit(1);
+        PANIC("Failed to allocate new IR module\n");
     }
     array_init(&module->const_array, 4, sizeof(IR_Literal));
     array_init(&module->global_array, 4, sizeof(IR_Global));
@@ -165,8 +161,7 @@ IR_Block *ir_new_block() {
 IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type) {
     IR_Function *func = malloc(sizeof(*func));
     if (!func) {
-        printf("Failed to allocate IR_Function\n");
-        exit(1);
+        PANIC("Failed to allocate IR_Function\n");
     }
     array_init(&func->scopes_array, 4, sizeof(IR_Scope));
     array_init(&func->blocks_array, 4, sizeof(IR_Block *));
@@ -183,13 +178,12 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type) {
     func->stack_slot_count = 0;
     func->stack_slots = malloc(sizeof(StackSlot) * func->stack_slot_capacity);
     if (!func->stack_slots) {
-        printf("Failed to allocated IR_Stack_Objects\n");
         array_free(&func->blocks_array);
         array_free(&func->scopes_array);
         array_free(&func->locals_array);
         free(func->stack_slots);
         free(func);
-        exit(1);
+        PANIC("Failed to allocated IR_Stack_Objects\n");
     }
 
     ctx->func = func;
@@ -289,8 +283,7 @@ IR_Value ir_get_var_reg(IR_Context *ctx, const char *name, bool give_lvalue) {
         if (strcmp(global->name, name) == 0) return ir_value_from_global(global);
     }
 
-    printf("Undefined local or global variable \'%s\' \n", name);
-    exit(1);
+    PANIC("Undefined local or global variable \'%s\' \n", name);
 }
 
 IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined) {

@@ -3,6 +3,7 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
+#include "compiler_c/log/logger.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -35,10 +36,7 @@ void bitset_init(BitSet *s, const int reg_count) {
     s->capacity = (s->num_bits + 31) / 32;
     if (reg_count) {
         s->data = calloc(s->capacity, sizeof(int));
-        if (!s->data) {
-            printf("Failed to alloc for bitset init\n");
-            exit(1);
-        }
+        ASSERT(s->data, "Failed to alloc for bitset init\n");
     } else {
         s->data = NULL;
     }
@@ -50,8 +48,7 @@ void bitset_clear(const BitSet *s) {
 }
 void bitset_add(const BitSet *s, const int reg) {
     if (reg >= s->num_bits) {
-        printf("%d is too large a register for this bitset\n", reg);
-        exit(1);
+        PANIC("%d is too large a register for this bitset\n", reg);
     }
     assert(reg >= 0);
     const int word = reg / 32;
@@ -127,14 +124,12 @@ void dfs_postorder(IR_Function *func, const int block_id, bool *visited, int *po
 void compute_reverse_postorder(IR_Function *func, int *rpo) {
     bool *visited = calloc(func->blocks_array.count, sizeof(bool));
     if (!visited) {
-        printf("Failed to calloc for visited\n");
-        exit(1);
+        PANIC("Failed to calloc for visited\n");
     }
     int *postorder = malloc(func->blocks_array.count * sizeof(int));
     if (!postorder) {
-        printf("Failed to calloc for postorder\n");
         free(visited);
-        exit(1);
+        PANIC("Failed to calloc for postorder\n");
     }
     int count = 0;
     dfs_postorder(func, 0, visited, postorder, &count);
@@ -285,8 +280,7 @@ void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_siz
         if (!found_slot) {
             StackSlot *new_slots = realloc(slots, sizeof(StackSlot) * (*slot_count + 1));
             if (!new_slots) {
-                printf("Failed to realloc new_slots\n");
-                exit(1);
+                PANIC("Failed to realloc new_slots\n");
             }
             slots = new_slots;
             slots[*slot_count].size = l->v->size;
@@ -313,8 +307,7 @@ RegSize reg_size(const int size) {
         return REG_64;
     default:
         // Todo handle size of 3,5,6,7 for chars
-        printf("Given too large a size for a register, should have already been handled tho\n");
-        exit(1);
+        PANIC("Given too large a size for a register, should have already been handled tho\n");
     }
 }
 
@@ -337,13 +330,11 @@ const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) 
             return &lts[i];
         }
     }
-    printf("Failed to find lifetime of r%d\n", reg);
-    exit(1);
+    PANIC("Failed to find lifetime of r%d\n", reg);
 }
 void stack_offset(IR_Value *v, const Lifetime *lts, int lts_count) {
     if (!lts) {
-        printf("Lts is null\n");
-        exit(1);
+        PANIC("Lts is null\n");
     }
     v->kind = IR_STACK;
     const Lifetime *l = get_lifetime(lts, lts_count, v->reg);
@@ -447,8 +438,7 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
                     break;
                 case IR_UNDEFINED:
                     if (f->return_type == type_void && instr->op == IR_RET) break;
-                    printf("An undefined IR value made it to analysis!!\n");
-                    exit(1);
+                    PANIC("An undefined IR value made it to analysis!!\n");
                 }
             }
         }
@@ -468,8 +458,7 @@ void verify_completion(const IR_Function *f) {
                 if (a->kind != IR_STACK) {
                     if (f->return_type == type_void && instr->op == IR_RET) continue;
                     print_ir_value(a);
-                    printf(" was not converted to stack offset\n");
-                    exit(1);
+                    PANIC(" was not converted to stack offset\n");
                 }
             }
         }
@@ -479,8 +468,7 @@ void verify_completion(const IR_Function *f) {
 StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size, const int *slot_count) {
     StackSlot *mem_slots = malloc(sizeof(StackSlot) * f->locals_array.count);
     if (!mem_slots) {
-        printf("Failed to allocate memslots\n");
-        exit(1);
+        PANIC("Failed to allocate memslots\n");
     }
     for (int j = 0; j < f->locals_array.count; j++) {
         IR_Var *local = get_local(f, j);
@@ -511,8 +499,7 @@ void analysis(const IR_Context *ctx) {
         Lifetime *lifetimes = NULL;
         int *rpo = malloc(f->blocks_array.count * sizeof(int));
         if (!rpo) {
-            printf("Failed to allocate rpo\n");
-            exit(1);
+            PANIC("Failed to allocate rpo\n");
         }
         int reg_count = 0;
         // If any registers were used, compute their lifetimes

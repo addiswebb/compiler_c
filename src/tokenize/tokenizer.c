@@ -1,5 +1,6 @@
 #include "compiler_c/tokenize/tokenizer.h"
 #include "compiler_c/core/util.h"
+#include "compiler_c/log/logger.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,8 +70,7 @@ static char t_peek_next(const Tokenizer *tk) { return t_peek_n(tk, 1); }
 
 static void t_consume_n(Tokenizer *tk, const int n) {
     if (tk->index + n > tk->size) {
-        printf("T_Consume Reached the end of the file");
-        exit(1);
+        PANIC("T_Consume Reached the end of the file");
     } else {
         for (int i = 0; i < n; i++) {
             if (DEBUG_TOKENIZER) {
@@ -89,8 +89,7 @@ static void t_consume_a(Tokenizer *tk, const char c) { tk->buf.buf[tk->buf.size+
 
 static void t_skip_n(Tokenizer *tk, int n) {
     if (tk->index + n > tk->size) {
-        printf("T_Skip Reached end of the file");
-        exit(1);
+        PANIC("T_Skip Reached end of the file");
     } else {
         tk->index += n;
     }
@@ -104,8 +103,7 @@ static void t_push_buffer(Tokenizer *tk, const TokenType type) {
     }
     char *buf_dupe = malloc(sizeof(char) * tk->buf.size);
     if (!buf_dupe) {
-        printf("Failed to allocate for buffer duplicate\n");
-        exit(1);
+        PANIC("Failed to allocate for buffer duplicate\n");
     }
     memcpy(buf_dupe, tk->buf.buf, sizeof(char) * tk->buf.size);
     append(&tk->tokens_array, &(Token){type, buf_dupe, tk->buf.size});
@@ -216,8 +214,7 @@ static TokenMatch t_match_operator(const Tokenizer *tk) {
     case '.':
         return (TokenMatch){TK_DOT, 1};
     default:
-        printf("Unknown operator");
-        exit(1);
+        PANIC("Unknown operator");
     }
 }
 
@@ -258,8 +255,7 @@ static void t_consume_special_char(Tokenizer *tk) {
         type = TK_COLON;
         break;
     default:
-        printf("Unexpected \'%c\'\n", t_peek(tk));
-        exit(1);
+        PANIC("Unexpected \'%c\'\n", t_peek(tk));
     }
     t_consume(tk);
     t_consume_a(tk, '\0');
@@ -286,15 +282,12 @@ static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
         return 0;
     // Dont forget to update *length to correctly skip escaped characters.
     case 'x':
-        printf("Escaped hex sequences are currently unsupported\n");
-        exit(1);
+        PANIC("Escaped hex sequences are currently unsupported\n");
     default:
         if (is_oct(c)) {
-            printf("Escaped oct sequences are currently unsupported\n");
-            exit(1);
+            PANIC("Escaped oct sequences are currently unsupported\n");
         }
-        printf("Invalid escape sequence\n");
-        exit(1);
+        PANIC("Invalid escape sequence\n");
     }
 }
 static void t_consume_char_literal(Tokenizer *tk) {
@@ -319,8 +312,7 @@ static void t_consume_string_literal(Tokenizer *tk) {
     for (;;) {
         char c = t_peek(tk);
         if (c == '\n') {
-            printf("Found \'\\n\' in string literal.");
-            exit(1);
+            PANIC("Found \'\\n\' in string literal.");
         }
         if (c == '\"') {
             t_skip(tk); // "
@@ -587,6 +579,7 @@ TokenType get_underlying_op(const TokenType type) {
     case TK_EQ:
         return TK_EQ;
     default:
+        log_start(LOG_ERROR);
         printf("Tried to get the underlying operator of a non-eq operator\n");
         print_token_type(type);
         exit(1);
@@ -627,9 +620,8 @@ int op_associativity(const TokenType type) {
     case TK_MOD_EQ:
         return RIGHT_ASSOCIATIVITY;
     default:
-        printf("Tried to get the associativity of a token which is not a binary "
-               "operator");
-        exit(1);
+        PANIC("Tried to get the associativity of a token which is not a binary "
+              "operator");
     }
 }
 
@@ -677,6 +669,7 @@ int op_precedence(const TokenType type) {
     case TK_MOD:
         return 11;
     default:
+        log_start(LOG_ERROR);
         printf("Tried to get the precedence of a token which is not a binary operator");
         print_token_type(type);
         exit(1);

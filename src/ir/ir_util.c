@@ -1,7 +1,9 @@
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/log/logger.h"
 #include "compiler_c/tokenize/tokenizer.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -20,6 +22,7 @@ IR_CMP_OP ir_cmp_op(const TokenType type) {
     case TK_GE:
         return GE;
     default:
+        log_start(LOG_ERROR);
         printf("Given an unsupported token to convert to IR cmp op: ");
         print_token_type(type);
         printf("\n");
@@ -37,8 +40,7 @@ IR_UNARY_OP ir_unary_op(const TokenType type) {
     case TK_BW_NOT:
         return BNOT;
     default:
-        printf("IR Given unknown token as unary operator\n");
-        exit(1);
+        PANIC("IR Given unknown token as unary operator\n");
     }
 }
 IR_BINOP_OP ir_binary_op(const TokenType type) {
@@ -68,6 +70,7 @@ IR_BINOP_OP ir_binary_op(const TokenType type) {
     case TK_OR_OR:
         return L_OR;
     default:
+        log_start(LOG_ERROR);
         printf("Given an unsupported token to convert to IR Binary op: ");
         print_token_type(type);
         printf("\n");
@@ -175,9 +178,9 @@ static char ir_type_suffix(Type *type) {
     case T_VOID:
         return 'v';
     case T_INVALID:
-        printf("Tried to print invalid type\n");
-        exit(1);
+        PANIC("Tried to print invalid type\n");
     default:
+        log_start(LOG_ERROR);
         printf("Not handling this type ir_type_suffix: ");
         print_type(type);
         printf("\n");
@@ -207,8 +210,7 @@ static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
             break;
         }
     default:
-        printf("Tried to print IR_CONST of unknown type\n");
-        exit(1);
+        PANIC("Tried to print IR_CONST of unknown type\n");
     }
     printf("\n");
 }
