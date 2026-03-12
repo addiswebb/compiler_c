@@ -210,7 +210,7 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
             p_consume_a(p, TK_EQ);
 
             Node *member_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
-            member_assign->designated_init.kind = T_STRUCT;
+            member_assign->designated_init.kind = T_STRUCT; // Possibly also T_UNION
             member_assign->designated_init._struct.name = token->value;
             member_assign->designated_init.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
 
@@ -222,6 +222,7 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
             p_consume_a(p, TK_CLOSE_SQUARE);
             p_consume_a(p, TK_EQ);
             Node *element_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+            // element_assign->designated_init.kind = T_ARRAY;
             element_assign->designated_init._array.index = (int)parse_int(t->value, t->size);
             element_assign->designated_init.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
             p_append_element(node, element_assign);

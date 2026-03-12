@@ -130,6 +130,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         if (is_comparison_op(expr->binary.op)) {
             return ir_cmp(ctx, ir_cmp_op(expr->binary.op), lhs, rhs, expr->type);
         } else {
+            // Scale integer by ptr base size
             if (expr->binary.lhs->type->kind == T_POINTER && expr->binary.rhs->type->kind == T_INT) {
                 IR_Value c =
                     ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){type_i64, expr->binary.lhs->type->base->size}), type_i64);
@@ -139,7 +140,14 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                     ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){type_i64, expr->binary.rhs->type->base->size}), type_i64);
                 lhs = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), lhs, c, type_i64);
             }
-            return ir_binary(ctx, ir_binary_op(expr->binary.op), ir_next_virtual_reg(ctx->func), lhs, rhs, expr->type);
+            lhs = ir_binary(ctx, ir_binary_op(expr->binary.op), ir_next_virtual_reg(ctx->func), lhs, rhs, expr->type);
+            // Divide (ptr - ptr) difference by base type
+            if (expr->binary.lhs->type->kind == T_POINTER && expr->binary.rhs->type->kind == T_POINTER && expr->type->base->size >= 1) {
+                IR_Value size = ir_append_const(ctx->module, &(IR_Literal){.type = type_i64, .i = expr->type->base->size});
+                size = ir_const(ctx, size, type_i64);
+                return ir_binary(ctx, DIV, ir_next_virtual_reg(ctx->func), lhs, size, type_i64);
+            }
+            return lhs;
         }
     case N_UNARY:
         if (expr->unary.op == TK_INCR || expr->unary.op == TK_DECR) {

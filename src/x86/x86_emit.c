@@ -311,25 +311,21 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             switch (t->size) {
             case 1:
                 fprintf(fp, "    cbw\n");
-                // x86_emit_x(fp, "idiv", "b", "", rhs);
                 x86_emit_x(fp, sign_prefix, "div", "b", rhs);
                 x86_emit_rx(fp, "mov", "b", "", "%ah", dst);
                 return;
             case 2:
                 fprintf(fp, "    cwde\n");
-                // x86_emit_x(fp, "idiv", "w", "", rhs);
                 x86_emit_x(fp, sign_prefix, "div", "w", rhs);
                 x86_emit_rx(fp, "mov", "w", "", "%dx", dst);
                 return;
             case 4:
                 fprintf(fp, "    cltd\n");
-                // x86_emit_x(fp, "idiv", "l", "", rhs);
                 x86_emit_x(fp, sign_prefix, "div", "l", rhs);
                 x86_emit_rx(fp, "mov", "l", "", "%edx", dst);
                 return;
             case 8:
                 fprintf(fp, "    cqo\n");
-                // x86_emit_x(fp, "idiv", "q", "", rhs);
                 x86_emit_x(fp, sign_prefix, "div", "q", rhs);
                 x86_emit_rx(fp, "mov", "q", "", "%rdx", dst);
                 return;
@@ -368,7 +364,7 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             return;
         case L_AND:
         case L_OR:
-            printf("Logical operators && and || should not be given to x86 gen\n");
+            printf("Logical operators && and || should not reach x86 gen\n");
             exit(1);
         }
     case T_FLOAT:
@@ -409,7 +405,7 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             exit(1);
         }
     default:
-        printf("Tried to emit binary of unsupported type\n");
+        printf("Tried to emit binary instruction of unsupported type\n");
         exit(1);
     }
 }
@@ -494,7 +490,9 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
         return;
     }
     // char/short/int/long/ -> char/short/int/long
-    if (from->kind == T_INT && to->kind == T_INT) {
+    // pointer <-> char/short/int/long
+    if ((from->kind == T_INT || from->kind == T_POINTER) && (to->kind == T_INT || to->kind == T_POINTER)) {
+        // if (from->kind == T_INT && to->kind == T_INT) {
         if (from->size < to->size) {
             x86_emit_xr(fp, "movs", from_op_suffix, to_op_suffix, src, to_reg);
         } else {

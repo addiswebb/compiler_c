@@ -219,8 +219,6 @@ You can see how such a simple **IR** instruction can expand into a much more com
     * Automatically call preprocessor on source file.
 
 ## To be Implemented (Ordered from next to never...)
-* Bitfield in structs
-    * `unsigned int flag : 1; // 1 bit`
 * Function ABI Calling Conventions
     * Caller/Callee save registers
 * Pointers
@@ -240,3 +238,5 @@ You can see how such a simple **IR** instruction can expand into a much more com
 * Volatile/Atomic memory
 * SysV ABI
 * Inline functions
+* Bitfield in structs
+    * `unsigned int flag : 1; // 1 bit`

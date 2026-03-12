@@ -2,6 +2,7 @@
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/parse/parser.h"
+#include "compiler_c/tokenize/tokenizer.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -61,6 +62,18 @@ Type *check_unary_op(NodeManager *nm, Node *unary_op) {
     return type_invalid;
 }
 
+bool is_valid_binary_op(TokenType op, const Node *lhs, const Node *rhs) {
+    if (op == TK_EQ) return true;
+    if (is_assignment_op(op)) op = get_underlying_op(op);
+    bool is_lhs_ptr = lhs->type->kind == T_POINTER || lhs->type->kind == T_ARRAY;
+    bool is_rhs_ptr = rhs->type->kind == T_POINTER || rhs->type->kind == T_ARRAY;
+    if ((is_lhs_ptr || is_rhs_ptr) && is_bitwise_op(op)) return false;
+    if (is_lhs_ptr && !is_rhs_ptr) return op == TK_PLUS || op == TK_MINUS || op == TK_EQ_EQ || op == TK_NEQ;
+    if (!is_lhs_ptr && is_rhs_ptr) return op == TK_PLUS || op == TK_EQ_EQ || op == TK_NEQ;
+    if (is_lhs_ptr && is_rhs_ptr) return op == TK_MINUS || is_comparison_op(op);
+    return true;
+}
+
 Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
     if (binop->binary.lhs->type == type_invalid || binop->binary.rhs->type == type_invalid) {
         printf("Semantic Analysis: Binary op was given expression with an invalid type\n");
@@ -68,6 +81,11 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
     }
     const Node *lhs = binop->binary.lhs;
     Node *rhs = binop->binary.rhs;
+    // Only checks pointer arithmatic
+    if (!is_valid_binary_op(op, lhs, rhs)) {
+        printf("Invalid arithmetic operands\n");
+        exit(1);
+    }
     if (is_assignment_op(op)) {
         if (!is_lvalue(lhs)) {
             printf("Semantic Analysis: Binary op lhs is not assignable\n");
@@ -83,10 +101,12 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
         }
         return lhs->type;
     }
+    if (binop->binary.op != TK_MINUS || is_comparison_op(binop->binary.op)) {
+    }
 
     Type *common = promote_binary_operands(nm, binop);
     if (!common || common == type_invalid) {
-        printf("Invalid arithmetic operands");
+        printf("Invalid arithmetic operands\n");
         exit(1);
     }
 
@@ -126,12 +146,12 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
         *rhs = cast_node(nm, (*rhs), get_pointer_type((*rhs)->type->base));
     }
     // Integer promotion
-    if (is_arithmetic_op(binop->binary.op)) {
-        if ((*lhs)->type->kind == T_INT && (*lhs)->type->size < type_i32->size) *lhs = cast_node(nm, (*lhs), type_i32);
-        if ((*rhs)->type->kind == T_INT && (*rhs)->type->size < type_i32->size) *rhs = cast_node(nm, (*rhs), type_i32);
+    if (is_arithmetic_op(binop->binary.op) || is_comparison_op(binop->binary.op)) {
+        if ((*lhs)->type->kind == T_INT && (*lhs)->type->size < type_i32->size)
+            *lhs = cast_node(nm, (*lhs), (*lhs)->type->is_signed ? type_i32 : type_u32);
+        if ((*rhs)->type->kind == T_INT && (*rhs)->type->size < type_i32->size)
+            *rhs = cast_node(nm, (*rhs), (*rhs)->type->is_signed ? type_i32 : type_u32);
     }
-    // Check for pointer - pointer, only allowed binop with two pointers
-    if ((*lhs)->type == (*rhs)->type) return (*lhs)->type;
 
     if ((*lhs)->type->kind == T_FLOAT || (*rhs)->type->kind == T_FLOAT) {
         common = (*lhs)->type->size > (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
@@ -143,6 +163,8 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
         return (*rhs)->type;
     } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_INT) {
         common = (*lhs)->type->size >= (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
+    } else if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_POINTER) {
+        return (*lhs)->type;
     } else {
         printf("UNSURE HOW TO HANDLE COMMON CASE;\n");
         exit(1);
@@ -565,6 +587,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                     de->designated_init.value = e;
                     set_node(&node->init_list.elements_array, &de, i);
                     e = de;
+                    de->designated_init.kind = is_array ? T_ARRAY : T_STRUCT;
                 }
                 Type *target_type = is_array ? node->type->base : member->type;
                 e->type = target_type;
