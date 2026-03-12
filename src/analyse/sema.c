@@ -323,6 +323,15 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                     Node *casted_node = cast_node(nm, func_call_ptr, func_param->type);
                     set_node(&node->func_call.params_array, &casted_node, i);
                 }
+            } else {
+                // Promote Variadic args [T_INT < int -> int] [T_FLOAT < double -> double]
+                if (func_call_ptr->type->kind == T_INT && func_call_ptr->type->size < type_i32->size) {
+                    Node *casted_node = cast_node(nm, func_call_ptr, func_call_ptr->type->is_signed ? type_i32 : type_u32);
+                    set_node(&node->func_call.params_array, &casted_node, i);
+                } else if (func_call_ptr->type->kind == T_FLOAT && func_call_ptr->type->size < type_f64->size) {
+                    Node *casted_node = cast_node(nm, func_call_ptr, type_f64);
+                    set_node(&node->func_call.params_array, &casted_node, i);
+                }
             }
             // Always downcast arrays to pointers for functions
             if (func_call_ptr->type->kind == T_ARRAY) {
@@ -479,6 +488,41 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             exit(1);
         }
         switch (node->type->kind) {
+        case T_INT:
+        case T_FLOAT:
+        case T_POINTER:
+        case T_UNION:
+            if (node->init_list.elements_array.count == 0) break;
+            if (node->init_list.elements_array.count > 1) {
+                printf("Excess elements in initializer list for");
+                print_type(node->type);
+                printf("\n");
+                exit(1);
+            }
+
+            Node *e = get_node(&node->init_list.elements_array, 0);
+            Type *target_type = node->type->kind == T_UNION ? get_union_member(node->type, 0)->type : node->type;
+            Node *value = e;
+            if (e->kind == N_DESIGNATED_INITIALIZER) {
+                if (node->type->kind != T_UNION) {
+                    printf("Cannot use designated initializers for type ");
+                    print_type(node->type);
+                    printf("\n");
+                    exit(1);
+                }
+                UnionMember *member = get_union_member_named(node->type, e->designated_init._union.name);
+                target_type = member->type;
+                e->type = target_type;
+                e->designated_init._union.member = member;
+                value = e->designated_init.value;
+            }
+            semantic_analysis(sema_ctx, p, nm, value);
+
+            if (value->type != target_type) {
+                Node *casted_node = cast_node(nm, value, target_type);
+                set_node(&node->init_list.elements_array, &casted_node, 0);
+            }
+            break;
         case T_ARRAY:
             // Infer the size from the initializer list
             if (node->type->_array.array_len == -1) {
@@ -537,7 +581,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
             break;
         default:
-            printf("Initializer list can currently only be used for struct and arrays\n");
+            printf("Tried to assign initializer list to unsupported type ");
+            print_type(node->type);
+            printf("\n");
             exit(1);
         }
         break;
@@ -560,7 +606,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
         StructMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name);
         node->member_access.member->type = member_f->type;
-        node->member_access.offset = member_f->offset;
+        node->member_access.offset = lhs_t->kind == T_UNION ? 0 : member_f->offset;
         node->type = member_f->type;
 
         break;

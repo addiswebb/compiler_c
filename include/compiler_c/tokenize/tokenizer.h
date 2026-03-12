@@ -17,7 +17,7 @@ typedef struct {
     int size;
 } Buffer;
 
-#define KEYWORDS_N 29
+#define KEYWORDS_N 33
 
 /* All standard C keywords */
 extern const char* KEYWORDS[KEYWORDS_N];
@@ -34,12 +34,14 @@ extern const char* KEYWORDS[KEYWORDS_N];
 /* Set of all tokens */
 typedef enum {
     // Keywords
+    TK_AUTO,
     TK_BREAK,
     TK_CASE,
     TK_CHAR,
     TK_CONST,
     TK_CONTINUE,
     TK_DEFAULT,
+    TK_DO,
     TK_DOUBLE,
     TK_ELSE,
     TK_ENUM,
@@ -48,17 +50,19 @@ typedef enum {
     TK_FOR,
     TK_GOTO,
     TK_IF,
-    TK_INLINE,
+    TK_INLINE, // (C99)
     TK_INT,
     TK_LONG,
+    TK_REGISTER,
     TK_RETURN,
+    TK_SHORT,
     TK_SIGNED,
     TK_SIZEOF,
-    TK_SHORT,
     TK_STATIC,
     TK_STRUCT,
     TK_SWITCH,
     TK_TYPEDEF,
+    TK_UNION,
     TK_UNSIGNED,
     TK_VOID,
     TK_VOLATILE,
@@ -144,6 +148,8 @@ TokenType get_underlying_op(TokenType type);
 int op_associativity(TokenType type);
 /* Returns the precedence of the given operator token type. */
 int op_precedence(TokenType type);
+
+const char *token_type_str(const TokenType type);
 
 void print_token_type(TokenType type);
 void print_token(const Token *token);

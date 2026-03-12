@@ -6,12 +6,15 @@
 #include <string.h>
 
 const char *KEYWORDS[KEYWORDS_N] = {
-    [TK_BREAK] = "break",       [TK_CASE] = "case",     [TK_CHAR] = "char",         [TK_CONST] = "const",   [TK_CONTINUE] = "continue",
-    [TK_DEFAULT] = "default",   [TK_DOUBLE] = "double", [TK_ELSE] = "else",         [TK_ENUM] = "enum",     [TK_EXTERN] = "extern",
-    [TK_FLOAT] = "float",       [TK_FOR] = "for",       [TK_GOTO] = "goto",         [TK_IF] = "if",         [TK_INLINE] = "inline",
-    [TK_INT] = "int",           [TK_LONG] = "long",     [TK_RETURN] = "return",     [TK_SIGNED] = "signed", [TK_SIZEOF] = "sizeof",
-    [TK_SHORT] = "short",       [TK_STATIC] = "static", [TK_STRUCT] = "struct",     [TK_SWITCH] = "switch", [TK_TYPEDEF] = "typedef",
-    [TK_UNSIGNED] = "unsigned", [TK_VOID] = "void",     [TK_VOLATILE] = "volatile", [TK_WHILE] = "while",
+    [TK_AUTO] = "auto",     [TK_BREAK] = "break",       [TK_CASE] = "case",       [TK_CHAR] = "char",
+    [TK_CONST] = "const",   [TK_CONTINUE] = "continue", [TK_DEFAULT] = "default", [TK_DO] = "do",
+    [TK_DOUBLE] = "double", [TK_ELSE] = "else",         [TK_ENUM] = "enum",       [TK_EXTERN] = "extern",
+    [TK_FLOAT] = "float",   [TK_FOR] = "for",           [TK_GOTO] = "goto",       [TK_IF] = "if",
+    [TK_INLINE] = "inline", [TK_INT] = "int",           [TK_LONG] = "long",       [TK_REGISTER] = "register",
+    [TK_RETURN] = "return", [TK_SHORT] = "short",       [TK_SIGNED] = "signed",   [TK_SIZEOF] = "sizeof",
+    [TK_STATIC] = "static", [TK_STRUCT] = "struct",     [TK_SWITCH] = "switch",   [TK_TYPEDEF] = "typedef",
+    [TK_UNION] = "union",   [TK_UNSIGNED] = "unsigned", [TK_VOID] = "void",       [TK_VOLATILE] = "volatile",
+    [TK_WHILE] = "while",
 };
 
 static void t_buffer_reset(Tokenizer *tk) {
@@ -39,7 +42,7 @@ void t_free(Tokenizer *tokenizer) {
 }
 
 /*
-Is End of file?
+    Is End of file?
 */
 static bool t_is_eof(const Tokenizer *tk) { return tk->index >= tk->size; }
 
@@ -679,250 +682,148 @@ int op_precedence(const TokenType type) {
         exit(1);
     }
 }
-void print_token_type(const TokenType type) {
+
+const char *token_type_str(const TokenType type) {
     switch (type) {
     case TK_INT_LITERAL:
-        printf("Int Literal");
-        break;
+        return "Int Literal";
     case TK_FLT_LITERAL:
-        printf("Float Literal");
-        break;
+        return "Float Literal";
     case TK_CHAR_LITERAL:
-        printf("Char Literal");
-        break;
+        return "Char Literal";
     case TK_STRING_LITERAL:
-        printf("String Literal");
-        break;
+        return "String Literal";
     case TK_SEMI:
-        printf("\';\'");
-        break;
+        return "\';\'";
     case TK_PLUS:
-        printf("\'+\'");
-        break;
+        return "\'+\'";
     case TK_MINUS:
-        printf("\'-\'");
-        break;
+        return "\'-\'";
     case TK_MULTIPLY:
-        printf("\'*\'");
-        break;
+        return "\'*\'";
     case TK_DIVIDE:
-        printf("\'/\'");
-        break;
+        return "\'/\'";
     case TK_XOR:
-        printf("\'^\'");
-        break;
+        return "\'^\'";
     case TK_EXPR:
-        printf("Expr");
-        break;
+        return "Expr";
     case TK_EQ:
-        printf("\'=\'");
-        break;
-    case TK_INT:
-        printf("Int");
-        break;
-    case TK_FLOAT:
-        printf("float");
-        break;
-    case TK_CHAR:
-        printf("char");
-        break;
-    case TK_VOID:
-        printf("void");
-        break;
+        return "\'=\'";
     case TK_OPEN_PAREN:
-        printf("\'(\'");
-        break;
+        return "\'(\'";
     case TK_CLOSE_PAREN:
-        printf("\')\'");
-        break;
+        return "\')\'";
     case TK_OPEN_CURLY:
-        printf("\'{\'");
-        break;
+        return "\'{\'";
     case TK_CLOSE_CURLY:
-        printf("\'}\'");
-        break;
+        return "\'}\'";
     case TK_COMMA:
-        printf("\',\'");
-        break;
-    case TK_RETURN:
-        printf("Return");
-        break;
+        return "\',\'";
     case TK_IDENTIFIER:
-        printf("Identifier");
-        break;
-    case TK_IF:
-        printf("If");
-        break;
-    case TK_ELSE:
-        printf("Else");
-        break;
-    case TK_WHILE:
-        printf("While");
-        break;
-    case TK_FOR:
-        printf("For");
-        break;
+        return "Identifier";
     case TK_MOD:
-        printf("\'%%\'");
-        break;
+        return "\'%%\'";
     case TK_EQ_EQ:
-        printf("\'==\'");
-        break;
+        return "\'==\'";
     case TK_PLUS_EQ:
-        printf("\'+=\'");
-        break;
+        return "\'+=\'";
     case TK_MINUS_EQ:
-        printf("\'-=\'");
-        break;
+        return "\'-=\'";
     case TK_MULTIPLY_EQ:
-        printf("\'*=\'");
-        break;
+        return "\'*=\'";
     case TK_DIVIDE_EQ:
-        printf("\'/=\'");
-        break;
+        return "\'/=\'";
     case TK_MOD_EQ:
-        printf("\'%%=\'");
-        break;
+        return "\'%%=\'";
     case TK_NEQ:
-        printf("\'!=\'");
-        break;
+        return "\'!=\'";
     case TK_LT:
-        printf("\'<\'");
-        break;
+        return "\'<\'";
     case TK_LE:
-        printf("\'<=\'");
-        break;
+        return "\'<=\'";
     case TK_GT:
-        printf("\'>\'");
-        break;
+        return "\'>\'";
     case TK_GE:
-        printf("\'>=\'");
-        break;
+        return "\'>=\'";
     case TK_SHL:
-        printf("\'<<\'");
-        break;
+        return "\'<<\'";
     case TK_SHR:
-        printf("\'>>\'");
-        break;
+        return "\'>>\'";
     case TK_SHL_EQ:
-        printf("\'<<=\'");
-        break;
+        return "\'<<=\'";
     case TK_SHR_EQ:
-        printf("\'>>=\'");
-        break;
+        return "\'>>=\'";
     case TK_AND:
-        printf("\'&\'");
-        break;
+        return "\'&\'";
     case TK_AND_AND:
-        printf("\'&&\'");
-        break;
+        return "\'&&\'";
     case TK_AND_EQ:
-        printf("\'&=\'");
-        break;
+        return "\'&=\'";
     case TK_OR:
-        printf("\'|\'");
-        break;
+        return "\'|\'";
     case TK_OR_OR:
-        printf("\'||\'");
-        break;
+        return "\'||\'";
     case TK_OR_EQ:
-        printf("\'|=\'");
-        break;
+        return "\'|=\'";
     case TK_XOR_EQ:
-        printf("\'^=\'");
-        break;
+        return "\'^=\'";
     case TK_L_NOT:
-        printf("\'!\'");
-        break;
+        return "\'!\'";
     case TK_BW_NOT:
-        printf("\'~\'");
-        break;
+        return "\'~\'";
     case TK_INCR:
-        printf("\'++\'");
-        break;
+        return "\'++\'";
     case TK_DECR:
-        printf("\'--\'");
-        break;
+        return "\'--\'";
     case TK_OPEN_SQUARE:
-        printf("\'[\'");
-        break;
+        return "\'[\'";
     case TK_CLOSE_SQUARE:
-        printf("\']\'");
-        break;
-    case TK_DOUBLE:
-        printf("double");
-        break;
-    case TK_LONG:
-        printf("long");
-        break;
-    case TK_SIZEOF:
-        printf("sizeof");
-        break;
-    case TK_SHORT:
-        printf("short");
-        break;
-    case TK_BREAK:
-        printf("break");
-        break;
-    case TK_CONTINUE:
-        printf("continue");
-        break;
-    case TK_STRUCT:
-        printf("struct");
-        break;
+        return "\']\'";
     case TK_DOT:
-        printf("\'.\'");
-        break;
+        return "\'.\'";
     case TK_ARROW:
-        printf("\'->\'");
-        break;
-    case TK_ENUM:
-        printf("enum");
-        break;
-    case TK_CASE:
-        printf("Case");
-        break;
-    case TK_SWITCH:
-        printf("Switch");
-        break;
+        return "\'->\'";
     case TK_COLON:
-        printf("\':\'");
-        break;
-    case TK_DEFAULT:
-        printf("Default");
-        break;
-    case TK_TYPEDEF:
-        printf("Typedef");
-        break;
-    case TK_EXTERN:
-        printf("Extern");
-        break;
-    case TK_STATIC:
-        printf("Static");
-        break;
+        return "\':\'";
     case TK_ELLIPSES:
-        printf("\'...\'");
-        break;
-    case TK_GOTO:
-        printf("goto");
-        break;
+        return "\'...\'";
+    case TK_AUTO:
+    case TK_BREAK:
+    case TK_CASE:
+    case TK_CHAR:
     case TK_CONST:
-        printf("const");
-        break;
-    case TK_VOLATILE:
-        printf("volatile");
-        break;
-    case TK_UNSIGNED:
-        printf("unsigned");
-        break;
+    case TK_CONTINUE:
+    case TK_DEFAULT:
+    case TK_DO:
+    case TK_DOUBLE:
+    case TK_ELSE:
+    case TK_ENUM:
+    case TK_EXTERN:
+    case TK_FLOAT:
+    case TK_FOR:
+    case TK_GOTO:
+    case TK_IF:
     case TK_INLINE:
-        printf("inline");
-        break;
+    case TK_INT:
+    case TK_LONG:
+    case TK_REGISTER:
+    case TK_RETURN:
+    case TK_SHORT:
     case TK_SIGNED:
-        printf("signed");
-        break;
+    case TK_SIZEOF:
+    case TK_STATIC:
+    case TK_STRUCT:
+    case TK_SWITCH:
+    case TK_TYPEDEF:
+    case TK_UNION:
+    case TK_UNSIGNED:
+    case TK_VOID:
+    case TK_VOLATILE:
+    case TK_WHILE:
+        return KEYWORDS[type];
     }
 }
+void print_token_type(const TokenType type) { printf("%s", token_type_str(type)); }
 
 void print_token(const Token *token) {
     printf("Token { Type: ");

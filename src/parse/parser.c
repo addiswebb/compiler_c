@@ -331,6 +331,7 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
     }
     if (p_peek(p)->type == TK_STRUCT) type = p_parse_struct(p, nm);
     else if (p_peek(p)->type == TK_ENUM) type = p_parse_enum(p, nm);
+    else if (p_peek(p)->type == TK_UNION) type = p_parse_union(p, nm);
     else type = token_to_type(p, p_consume(p));
 
     if (type == type_invalid) {
@@ -388,17 +389,55 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
                 // If the enum is already defined elsewhere,
                 printf("Redefinition of enum %s\n", enum_t._enum.name);
                 exit(1);
-            }
-            *s = enum_t;
+            } else *s = enum_t;
         }
         return s;
     } else {
         // Add it to the type pool, at &t
         Type *t = new_type();
         *t = enum_t;
+        // Update the fields to have refernce to parent enum type
         for (int i = 0; i < enum_t._enum.fields_array.count; i++) {
             get_enum_field(&enum_t, i)->_enum_t = t;
         }
+        return t;
+    }
+}
+Type *p_parse_union(Parser *p, NodeManager *nm) {
+    Type union_t = union_type();
+    p_consume_a(p, TK_UNION);
+    if (p_peek(p)->type == TK_IDENTIFIER) {
+        union_t._union.name = p_consume(p)->value;
+    }
+
+    if (p_peek(p)->type == TK_OPEN_CURLY) {
+        array_init(&union_t._union.members_array, 4, sizeof(UnionMember));
+        p_consume(p); // {
+        while (p_peek(p)->type != TK_CLOSE_CURLY) {
+            UnionMember m;
+            Type *t = p_parse_type(p, nm);
+            m.name = p_consume_a(p, TK_IDENTIFIER)->value;
+            m.type = t;
+            append_union_member(&union_t, &m);
+            p_consume_semi(p);
+        }
+        p_consume(p); // }
+        union_t._union.complete = true;
+    }
+
+    Type *u = get_union_type(union_t._union.name);
+    if (u) {
+        if (union_t._union.complete) {
+            if (u->_union.complete) {
+                // If the union is already defined elsewhere,
+                printf("Redefinition of union %s\n", union_t._union.name);
+                exit(1);
+            } else *u = union_t;
+        }
+        return u;
+    } else {
+        Type *t = new_type();
+        *t = union_t;
         return t;
     }
 }
@@ -431,8 +470,7 @@ Type *p_parse_struct(Parser *p, NodeManager *nm) {
                 // If the struct is already defined elsewhere,
                 printf("Redefinition of struct %s\n", struct_t._struct.name);
                 exit(1);
-            }
-            *s = struct_t;
+            } else *s = struct_t;
         }
         return s;
     } else {
@@ -609,6 +647,23 @@ void p_append_case(Node *s, Node *c) {
     append(&s->_switch.cases_array, &c);
 }
 
+UnionMember *get_union_member_named(Type *union_t, const char *name) {
+    bool found_member = false;
+    for (int j = 0; j < union_t->_union.members_array.count; j++) {
+        UnionMember *member = get_union_member(union_t, j);
+        if (strcmp(member->name, name) == 0) {
+            found_member = true;
+            return member;
+        }
+    }
+    if (!found_member) {
+        printf("No such member \'%s\' on ", name);
+        print_type(union_t);
+        printf("\n");
+        exit(1);
+    }
+    return NULL;
+}
 StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index) {
     bool found_member = false;
     for (int j = 0; j < struct_t->_struct.members_array.count; j++) {

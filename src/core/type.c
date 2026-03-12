@@ -1,6 +1,7 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/parse/parser.h"
+#include "compiler_c/tokenize/tokenizer.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +29,7 @@ TypePool typepool;
 
 void init_types() {
     typepool.count = 0;
-    typepool.capacity = 32;
+    typepool.capacity = 64;
     typepool.types = malloc(sizeof(Type) * typepool.capacity);
     if (!typepool.types) {
         printf("Failed to allocate for global type pool\n");
@@ -170,14 +171,24 @@ Type *get_unsigned_type(Type *type) {
 }
 
 Type *get_enum_type(const char *name) {
+    if (name == NULL) return NULL;
     for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].kind == T_ENUM && strcmp(name, typepool.types[i]._struct.name) == 0) {
+        if (typepool.types[i].kind == T_ENUM && strcmp(name, typepool.types[i]._enum.name) == 0) {
             return &typepool.types[i];
         }
     }
     return NULL;
 }
 
+Type *get_union_type(const char *name) {
+    if (name == NULL) return NULL;
+    for (int i = 0; i < typepool.count; i++) {
+        if (typepool.types[i].kind == T_UNION && strcmp(name, typepool.types[i]._union.name) == 0) {
+            return &typepool.types[i];
+        }
+    }
+    return NULL;
+}
 Type *get_struct_type(const char *name) {
     if (name == NULL) return NULL;
     for (int i = 0; i < typepool.count; i++) {
@@ -190,21 +201,40 @@ Type *get_struct_type(const char *name) {
 
 void append_enum_field(Type *e, EnumField *f) { append(&e->_enum.fields_array, f); }
 
-void append_struct_member(Type *s, StructMember *f) {
-    if (f->type->align > s->align) s->align = f->type->align;
+void append_union_member(Type *u, UnionMember *m) {
+    if (m->type->size > u->size) u->size = align(m->type->size, m->type->align);
+    append(&u->_union.members_array, m);
+}
+void append_struct_member(Type *s, StructMember *m) {
+    if (m->type->align > s->align) s->align = m->type->align;
     s->size = align(s->size, s->align);
-    f->offset = s->size;
-    append(&s->_struct.members_array, f);
-    s->size += align(f->type->size, s->align);
+    m->offset = s->size;
+    append(&s->_struct.members_array, m);
+    s->size += align(m->type->size, s->align);
 }
 
+Type union_type() {
+    Type u;
+    u.kind = T_UNION;
+    u.base = NULL;
+    u.align = 0;
+    u.size = 0;
+    u.is_signed = SIGNED;
+    u.qualifiers = QUAL_NONE;
+    u._union.complete = false;
+    u._union.name = NULL;
+    u._union.members_array.capacity = 0;
+    u._union.members_array.count = 0;
+    u._union.members_array.element_size = -1;
+    u._union.members_array.data = NULL;
+    return u;
+}
 Type struct_type() {
     Type s;
     s.kind = T_STRUCT;
     s.base = NULL;
     s.align = 0;
     s.size = 0;
-    s._array.array_len = 0;
     s.is_signed = SIGNED;
     s.qualifiers = QUAL_NONE;
     s._struct.complete = false;
@@ -222,7 +252,6 @@ Type enum_type() {
     e.base = type_i32;
     e.align = 4;
     e.size = 4;
-    e._array.array_len = 0;
     e.is_signed = SIGNED;
     e.qualifiers = NONE;
     e._enum.complete = false;
@@ -248,9 +277,9 @@ void print_type(Type *type) {
         printf("NULL");
         return;
     }
-    if (type->qualifiers & QUAL_CONST) printf("const ");
-    if (type->qualifiers & QUAL_VOLATILE) printf("volatile ");
-    if (!type->is_signed) printf("unsigned ");
+    if (type->qualifiers & QUAL_CONST) printf("%s ", KEYWORDS[TK_CONST]);
+    if (type->qualifiers & QUAL_VOLATILE) printf("%s ", KEYWORDS[TK_VOLATILE]);
+    if (!type->is_signed) printf("%s ", KEYWORDS[TK_UNSIGNED]);
     switch (type->kind) {
     case T_INVALID:
         printf("[INVALID TYPE]");
@@ -262,16 +291,16 @@ void print_type(Type *type) {
     case T_INT:
         switch (type->size) {
         case 1:
-            printf("char");
+            print_token_type(TK_CHAR);
             break;
         case 2:
-            printf("short");
+            print_token_type(TK_SHORT);
             break;
         case 4:
-            printf("int");
+            print_token_type(TK_INT);
             break;
         case 8:
-            printf("long");
+            print_token_type(TK_LONG);
             break;
         default:
             printf("Tried to type of int, with invalid size\n");
@@ -281,10 +310,10 @@ void print_type(Type *type) {
     case T_FLOAT:
         switch (type->size) {
         case 4:
-            printf("float");
+            print_token_type(TK_FLOAT);
             break;
         case 8:
-            printf("double");
+            print_token_type(TK_DOUBLE);
             break;
         default:
             printf("Tried to type of float, with invalid size\n");
@@ -318,12 +347,21 @@ void print_type(Type *type) {
             printf("}");
         }
         break;
-    case T_VOID:
-        printf("void");
+    case T_UNION:
+        printf("union %s ", type->_union.name);
+        if (DEBUG_STRUCT_DETAILED) {
+            printf("{");
+            for (int i = 0; i < type->_union.members_array.count; i++) {
+                UnionMember *member = get_union_member(type, i);
+                print_type(member->type);
+                printf(" %s:[%d], ", member->name, member->type->size);
+            }
+            printf("}");
+        }
         break;
-    default:
-        printf("Not handling other types in print_type\n");
-        exit(1);
+    case T_VOID:
+        print_token_type(TK_VOID);
+        break;
     }
 }
 

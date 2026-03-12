@@ -2,6 +2,7 @@
 #define COMPILER_C_PARSER_H
 
 #include "compiler_c/core/node.h"
+#include "compiler_c/core/type.h"
 #include "compiler_c/tokenize/tokenizer.h"
 #include <stdbool.h>
 
@@ -288,6 +289,13 @@ Type *p_parse_enum(Parser *p, NodeManager *nm);
 Type *p_parse_struct(Parser *p, NodeManager *nm);
 
 /*
+    Consumes
+    `union [Tag]? [{[Member Declaration]*}]?`
+    Where `Member Declaration` is any `[var decl]`
+*/
+Type *p_parse_union(Parser *p, NodeManager *nm);
+
+/*
     Consumes either,
     `extern`
     `static`
@@ -332,15 +340,13 @@ Symbol * p_append_func_def(Parser *p, Node *f);
 void p_append_block_item(Node *root, Node *item);
 void p_append_case(Node *s, Node *c);
 
-static inline Array * get_symbol_table(const Parser *p, int index){
-    return (Array*) get(&p->scopes_array, index);
-}
-
+static inline Array * get_symbol_table(const Parser *p, int index){ return (Array*) get(&p->scopes_array, index); }
 static inline Array *get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count-1); }
 static inline Symbol *get_symbol(Array *symbol_table, int index) { return (Symbol *)get(symbol_table, index); }
 static inline EnumField *get_enum_field(Type *enum_t, int index) { return (EnumField*)get(&enum_t->_enum.fields_array, index); }
 static inline StructMember *get_struct_member(Type *struct_t, int index) { return (StructMember *)get(&struct_t->_struct.members_array, index); }
+static inline UnionMember *get_union_member(Type *union_t, int index) { return (UnionMember*)get(&union_t->_union.members_array, index); }
+UnionMember *get_union_member_named(Type *union_t, const char *name);
 StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index);
-
 
 #endif // COMPILER_C_PARSER_H

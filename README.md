@@ -34,7 +34,7 @@ char b[] = "Hello " "World";
 ```
 Both of these are parsed to be identical strings `"Hello World"`, as option `a` is perfectly fine, I do not plan to support option `b` until absolutely necessary. While the goal is to fully support C89, some useful features from future standards are also supported. For example designated initliazers for `struct` and `array` types,
 ```c
-int x[] = {[1] =5, 4,5, [5]= 6};
+int x[] = { [1] =5, 4, 5, [5]= 6 };
 ```
 
 ```c
@@ -219,7 +219,6 @@ You can see how such a simple **IR** instruction can expand into a much more com
     * Automatically call preprocessor on source file.
 
 ## To be Implemented (Ordered from next to never...)
-* Unions
 * Bitfield in structs
     * `unsigned int flag : 1; // 1 bit`
 * Function ABI Calling Conventions

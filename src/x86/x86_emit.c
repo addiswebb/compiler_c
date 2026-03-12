@@ -232,8 +232,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
                         xmm_register_str[win64_float_param_regs[reg_index++]]);
             } else {
                 fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, v->reg.stack_offset);
-                fprintf(fp, "    subq $8, %%rsp\n");
-                fprintf(fp, "    mov%s %%xmm0, (%%rsp)\n", f_suffix);
+                fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", f_suffix, param_offset);
                 param_offset += 8;
             }
             break;

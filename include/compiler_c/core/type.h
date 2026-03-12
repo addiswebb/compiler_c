@@ -19,6 +19,7 @@ typedef enum {
     T_ARRAY,
     T_STRUCT,
     T_ENUM,
+    T_UNION,
     T_INVALID,
 } TypeKind;
 
@@ -47,6 +48,11 @@ typedef struct{
     int value;
     Type* _enum_t;
 }EnumField;
+
+typedef struct{
+    char *name;
+    Type *type;
+}UnionMember;
 
 typedef enum{
     QUAL_NONE = 0u,
@@ -80,6 +86,11 @@ struct Type{
             bool complete;
             Array fields_array;
         }_enum;
+        struct{
+            char *name;
+            bool complete;
+            Array members_array;
+        }_union;
     };
 };
 
@@ -102,7 +113,6 @@ extern Type *type_void;
 /* Other Useful types */
 extern Type *type_void_ptr;
 extern Type *type_invalid;
-
 
 /* Global typepool */
 extern TypePool typepool;
@@ -135,6 +145,7 @@ Type *new_array_type(Type *type, int len);
 */
 Type *get_pointer_type(Type *type);
 Type *get_enum_type(const char *name);
+Type *get_union_type(const char *name);
 Type *get_struct_type(const char *name);
 Type *get_array_type(Type *type, int len);
 Type *get_qualified_type(Type *type, unsigned int qualifiers);
@@ -148,11 +159,15 @@ Type *get_unsigned_type(Type *type);
 */
 Type *infer_array_length(Type *arr_type, int len);
 
+/* Appends the given union field, sizing its array if needed */
+void append_union_member(Type *u, UnionMember *m);
 /* Appends the given enum field, sizing its array if needed */
 void append_enum_field(Type *e, EnumField *f);
 /* Appends the given struct field, sizing its array if needed */
 void append_struct_member(Type *s, StructMember *f);
 
+/* Helper for defining struct types */
+Type union_type();
 /* Helper for defining struct types */
 Type struct_type();
 /* Helper for defining enum types */

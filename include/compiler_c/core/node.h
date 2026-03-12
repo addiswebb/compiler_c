@@ -213,6 +213,10 @@ struct Node {
                     const char *name;
                     StructMember *member;
                 }_struct;
+                struct{
+                    const char *name;
+                    UnionMember *member;
+                }_union;
             };
             Node *value;
         }designated_init;

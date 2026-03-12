@@ -275,8 +275,10 @@ IR_Value ir_get_var_reg(IR_Context *ctx, const char *name, bool give_lvalue) {
             const int k = get_var_index(scope, j);
             IR_Var *local = get_local(func, k);
             if (strcmp(local->name, name) == 0) {
-                if (local->type->kind == T_STRUCT && give_lvalue) {
-                    return ir_address(ctx, local->reg, 0);
+                if (give_lvalue) {
+                    if (local->type->kind == T_STRUCT || local->type->kind == T_UNION) {
+                        return ir_address(ctx, local->reg, 0);
+                    }
                 }
                 return local->reg;
             }
