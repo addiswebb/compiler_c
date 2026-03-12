@@ -5,7 +5,7 @@
 #include "compiler_c/core/array.h"
 #define DEBUG_ENUM_DETAILED 0
 /* Include struct members when printing an enum type */
-#define DEBUG_STRUCT_DETAILED 0
+#define DEBUG_STRUCT_DETAILED 1
 #define SIGNED 1
 #define UNSIGNED 0
 

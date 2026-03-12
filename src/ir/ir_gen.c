@@ -84,6 +84,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
             bool dereference = expr->binary.lhs->kind == N_INDEX || expr->binary.lhs->kind == N_MEMBER_ACCESS || is_deref(expr->binary.lhs);
+            // If it is '+=' or some '=' variant
             if (expr->binary.op != TK_EQ) {
                 IR_Value binop_val = dereference ? ir_load(ctx, addr, expr->binary.lhs->unary.expr->type) : addr;
                 if (expr->type->kind == T_POINTER) {
@@ -94,9 +95,9 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                                 expr->type);
             } else if (expr->type->kind == T_STRUCT) {
                 // memcpy for `struct = struct;`
-                // addr = ir_address(ctx, addr, 0);
-                // IR_Value val_addr = ir_address(ctx, val, 0);
-                ir_memcpy(ctx, val, addr, expr->type->size);
+                // addr is already an address, val is not
+                IR_Value val_addr = ir_address(ctx, val, 0);
+                ir_memcpy(ctx, val_addr, addr, expr->type->size);
                 return val;
             }
             if (dereference) ir_store_mem(ctx, addr, val, expr->type);

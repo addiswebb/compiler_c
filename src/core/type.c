@@ -179,6 +179,7 @@ Type *get_enum_type(const char *name) {
 }
 
 Type *get_struct_type(const char *name) {
+    if (name == NULL) return NULL;
     for (int i = 0; i < typepool.count; i++) {
         if (typepool.types[i].kind == T_STRUCT && strcmp(name, typepool.types[i]._struct.name) == 0) {
             return &typepool.types[i];

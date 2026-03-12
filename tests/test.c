@@ -1,13 +1,27 @@
-extern int printf(const char *format, ...);
+struct Inner {
+    int x;
+};
 
-typedef struct {
-    int a;
-    int b;
-} S;
-
-int foo(S s) { return s.b; }
+struct Outer {
+    struct Inner inner;
+};
 
 int main() {
-    S s = {1234569, 6};
-    return foo(s);
+    struct Outer o;
+
+    o.inner.x = 5;
+
+    struct Inner tmp;
+    tmp.x = 15;
+    o.inner = tmp;
+
+    // // Reassign nested struct
+    // struct Inner tmp;
+    // tmp.c = 3;
+    // tmp.x = 7;
+    // o.inner = tmp;
+
+    // return o.a + o.inner.c + o.inner.x + o.tail;
+    // Expected exit code: 5 + 3 + 7 + 2 = 17
+    return o.inner.x;
 }
