@@ -164,7 +164,7 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_INT) {
         common = (*lhs)->type->size >= (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
     } else if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_POINTER) {
-        return (*lhs)->type;
+        return type_i64;
     } else {
         printf("UNSURE HOW TO HANDLE COMMON CASE;\n");
         exit(1);

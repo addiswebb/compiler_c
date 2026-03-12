@@ -1,7 +1,7 @@
 [
     {
         "label": "Build & Run Test.c",
-        "command": "cmake --build build;.\\build\\compiler_c .\\tests\\test.c -run -o .\\tests\\test.s; echo \"Exit Code: $LASTEXITCODE\"",
+        "command": "cmake --build build;.\\build\\compiler_c .\\tests\\test.c -run -o .\\tests\\test.s;",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,

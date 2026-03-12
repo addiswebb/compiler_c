@@ -142,10 +142,17 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             }
             lhs = ir_binary(ctx, ir_binary_op(expr->binary.op), ir_next_virtual_reg(ctx->func), lhs, rhs, expr->type);
             // Divide (ptr - ptr) difference by base type
-            if (expr->binary.lhs->type->kind == T_POINTER && expr->binary.rhs->type->kind == T_POINTER && expr->type->base->size >= 1) {
-                IR_Value size = ir_append_const(ctx->module, &(IR_Literal){.type = type_i64, .i = expr->type->base->size});
-                size = ir_const(ctx, size, type_i64);
-                return ir_binary(ctx, DIV, ir_next_virtual_reg(ctx->func), lhs, size, type_i64);
+
+            if (expr->binary.lhs->type->kind == T_POINTER && expr->binary.rhs->type->kind == T_POINTER) {
+                Type *base = expr->binary.lhs->type->base;
+                if (base->size == 1) return lhs;
+                if (expr->type != type_i64) {
+                    printf("Recieved non ptrdiff type in (ptr-ptr) binary op\n");
+                    exit(1);
+                }
+                IR_Value size = ir_append_const(ctx->module, &(IR_Literal){.type = expr->type, .i = base->size});
+                size = ir_const(ctx, size, expr->type);
+                return ir_binary(ctx, DIV, ir_next_virtual_reg(ctx->func), lhs, size, expr->type);
             }
             return lhs;
         }

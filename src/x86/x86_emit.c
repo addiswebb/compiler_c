@@ -395,11 +395,6 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             x86_emit_xr(fp, "add", "q", "", rhs, "%rax");
             x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
             return;
-        case SUB:
-            x86_emit_xr(fp, "mov", "q", "", lhs, "%rax");
-            x86_emit_xr(fp, "sub", "q", "", rhs, "%rax");
-            x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
-            return;
         default:
             printf("Tried to perform unsupported binary op on pointer\n");
             exit(1);
