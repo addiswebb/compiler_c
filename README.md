@@ -106,20 +106,21 @@ You can see how such a simple **IR** instruction can expand into a much more com
 
 * Primitive Types
   * `int`, `float`, `char`, `double`, `short`, `long`
-  * Unsigned variants: `unsigned int`, `unsigned char`, etc.
+  * Unsigned integer variants: `unsigned int`, `signed int`
 * Type Qualifiers
-  * `const`
-  * `volatile`
+  * `const` (Parsed but ignored)
+  * `volatile` (Parsed but ignored)
 * Type Conversion
   * Casts: `(int)x`, `(float*)y`
 * Compound Types
   * Arrays
     * Declaration: `type A[n]`
-    * C strings
-    * Indexing with `[]`
+    * C strings `"Hello World\n"`
+      * Auto null terminating `\0`
+    * Indexing with `[i]`
     * Array initialization: `= {}`
     * **Size inference** `int[]` (C99)
-    * **Designated index assignment** `[i] = value` (C99)
+    * **Designated initializers** `[i] = value` (C99)
   * Structs
     * Declaration: `struct A { ... }`
     * Nested structs
@@ -135,7 +136,7 @@ You can see how such a simple **IR** instruction can expand into a much more com
 ## 2. Literals
 
 * Integer Literals
-  * Decimal, Octal, Hexadecimal, Binary (`0bNN`) (C99/C11 for binary)
+  * Decimal, Octal, Hexadecimal, Binary (`0bNN`) (C99) (C11/GNU Extension for Binary)
   * Unsigned variants
   * Literal Suffixes `u`, `U`, `l`, `L`
 * Floating-Point Literals
@@ -188,24 +189,28 @@ You can see how such a simple **IR** instruction can expand into a much more com
   * `break`, `continue`
   * `goto` & labels
 * Nested loops/branches
+* Early jumping for `a && b` and `a || b` conditions.
 
 ## 6. Functions
 
 * Declarations & Calls
   * Parameters, return types
+    * `void` return type
   * `inline` (Parsed but ignored)
-* Variadic Functions
-  * Link with external variadic functions
-* Function ABI & Calling Conventions
-  * MS x64 ABI
-  * First 6 integer / 4 float args in registers, overflow to stack
-* Compound Literals as Arguments (C99)
-
+* Function ABI & Calling Conventions `MS x64 ABI`
+  * Shadow Space `32 bytes`
+  * First 4 args to registers, the rest spilled to stack
+  * Structs as function arguments
+    * `sizeof(struct A) < 16b` => 1-2 `u64` chunks
+    * `       ...       > 16b` => use hidden pointer to copy onto function stack 
+  * Variadic Functions
+    * Floating point arguments cloned to general purpose registers (For 4 args)
+    
 ## 7. Pointers
 
 * Basic pointers & addresses
 * Pointer arithmetic
-* Dereference and member access `->`
+* Dereference and member access `a->b` as `*(a).b`
 
 ## To be Implemented (Ordered from next to never...)
 * Unions
