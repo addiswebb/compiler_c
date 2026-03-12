@@ -20,6 +20,7 @@ With the goal of eventual self compilation.
   * [5. Control Flow](#5-control-flow)
   * [6. Functions](#6-functions)
   * [7. Pointers](#7-pointers)
+  * [8. Completeness](#8-completeness)
 * [To be Implemented](#to-be-implemented-ordered-from-next-to-never)
 
 # Grammar
@@ -212,22 +213,24 @@ You can see how such a simple **IR** instruction can expand into a much more com
 * Pointer arithmetic
 * Dereference and member access `a->b` as `*(a).b`
 
+## 8. Completeness
+
+* Use/Support a Preprocessor (~~Write a Preprocessor~~)
+    * Automatically call preprocessor on source file.
+
 ## To be Implemented (Ordered from next to never...)
 * Unions
 * Bitfield in structs
     * `unsigned int flag : 1; // 1 bit`
 * Function ABI Calling Conventions
-    * Handle Structs
-        * `sizeof(struct A) < 16b` => use registers
-        * `       ...       > 16b` => use hidden pointer to copy on function stack 
     * Caller/Callee save registers
-* Use physical registers
-    * Overflow to stack
 * Pointers
     * [Pointer,Pointer] Arithmetic
     * Function pointers
-* Use/Support a Preprocessor (~~Write a Preprocessor~~)
-    * Automatically call preprocessor on source file.
+* Compiler builtins
+    * `__builtin_va_list` etc.
+* Use physical registers
+    * Overflow to stack
 * Support a standard library 
 * ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
     * Need to support SysV/Linux Abi for Musl libc :(
