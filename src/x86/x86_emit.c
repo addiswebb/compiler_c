@@ -200,7 +200,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         switch (v->type->kind) {
         case T_INT:
             if (is_register_param) {
-                const char *x = gp_register_str[win64_int_param_regs[reg_index++]][reg_size(v->type->size)];
+                const char *x = gp_register_str[int_param_regs[reg_index++]][reg_size(v->type->size)];
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x);
             } else {
                 const char *v_reg = x86_rax_reg(v->type);
@@ -213,13 +213,13 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             const char *f_suffix = x86_op_suffix(v->type);
             if (is_register_param) {
 #ifdef WIN64
-                if (i < WIN64_PARAM_REGISTERS) {
+                if (i < PARAM_REGISTERS) {
                     const char *x = gp_register_str[win64_int_param_regs[reg_index]][reg_size(v->type->size)];
                     fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_integer_op_suffix(v->type->size), v->reg.stack_offset, x);
                 }
 #endif
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", f_suffix, v->reg.stack_offset,
-                        xmm_register_str[win64_float_param_regs[reg_index++]]);
+                        xmm_register_str[float_param_regs[reg_index++]]);
             } else {
                 fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, v->reg.stack_offset);
                 fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", f_suffix, param_offset);
@@ -228,7 +228,7 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             break;
         case T_POINTER:
             if (is_register_param) {
-                fprintf(fp, "    movq %d(%%rbp), %s\n", v->reg.stack_offset, gp_register_str[win64_int_param_regs[reg_index++]][REG_64]);
+                fprintf(fp, "    movq %d(%%rbp), %s\n", v->reg.stack_offset, gp_register_str[int_param_regs[reg_index++]][REG_64]);
             } else {
                 fprintf(fp, "    movq %d(%%rbp), %%rax\n", v->reg.stack_offset);
                 fprintf(fp, "    movq %%rax, %d(%%rsp)\n", param_offset);

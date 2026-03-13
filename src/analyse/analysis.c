@@ -9,12 +9,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-const GP_Reg win64_caller_saved[7] = {RAX, RCX, RDX, R8, R9, R10, R11};
-const GP_Reg win64_callee_saved[8] = {RBX, RBP, RDI, RSI, R12, R13, R14, R15};
-const GP_Reg win64_int_param_regs[WIN64_PARAM_REGISTERS] = {RCX, RDX, R8, R9};
-const XMM_Reg win64_float_param_regs[8] = {
-    XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7,
-};
+#ifdef _WIN64
+const GP_Reg caller_saved_regs[7] = {RAX, RCX, RDX, R8, R9, R10, R11};
+const GP_Reg callee_saved_regs[8] = {RBX, RBP, RDI, RSI, R12, R13, R14, R15};
+const GP_Reg int_param_regs[PARAM_REGISTERS] = {RCX, RDX, R8, R9};
+const XMM_Reg float_param_regs[PARAM_REGISTERS] = {XMM0, XMM1, XMM2, XMM3};
+#else
+
+const GP_Reg caller_saved_regs[9] = {RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11};
+const GP_Reg callee_saved_regs[6] = {RBX, RBP, R12, R13, R14, R15};
+const GP_Reg int_param_regs[PARAM_REGISTERS] = {RDI, RSI, RDX, RCX, R8, R9};
+const XMM_Reg float_param_regs[PARAM_REGISTERS] = {XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7};
+
+#endif
 
 const char *gp_register_str[16][4] = {
     [RAX] = {"%al", "%ax", "%eax", "%rax"},      [RBX] = {"%bl", "%bx", "%ebx", "%rbx"},      [RCX] = {"%cl", "%cx", "%ecx", "%rcx"},
@@ -311,7 +318,7 @@ void physical_register(IR_Value *v) {
     if (v->reg < 0) reg_index = -v->reg - 1;
     v->kind = IR_PHYS_REG;
     v->phys_reg.kind = REG_GP;
-    v->phys_reg.gp_reg = win64_int_param_regs[reg_index];
+    v->phys_reg.gp_reg = int_param_regs[reg_index];
     v->phys_reg.size = reg_size(v->size);
 }
 void param_offset(IR_Value *v) {
@@ -347,16 +354,18 @@ void lower_ir_for_asm(IR_Function *f) {
                     IR_Var *arg = get_arg(instr, k);
                     Type *s_t = arg->type;
                     if (s_t->kind == T_STRUCT) {
-                        if (s_t->size <= 16) {
+                        if (STRUCT_IN_REG(s_t->size)) {
+#ifdef _WIN64
+                            arg->type = get_unsigned_type(get_integer_type(s_t->size));
+#else
                             int n_chunks = (s_t->size + 7) / 8;
                             arg->type = type_u64;
-                            arg->name = "_tmp1";
                             if (n_chunks == 2) {
                                 IR_Var a = *arg;
                                 a.reg.offset += 8;
-                                a.name = "_tmp2";
                                 append(&instr->call.arg_array, &a);
                             }
+#endif
                         } else {
                             f->max_reg++;
                             IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
@@ -372,7 +381,12 @@ void lower_ir_for_asm(IR_Function *f) {
                 // Lower to memcpy or reg reading,
                 // Turns out this is for SysV calls not Win64 ABI ;_;
                 Type *s_t = instr->store.type;
-                if (s_t->size <= 16) {
+                if (STRUCT_IN_REG(s_t->size)) {
+#ifdef _WIN64
+                    IR_Instruction store = *instr;
+                    store.store.type = get_unsigned_type(get_integer_type(s_t->size));
+                    set(&b->instruction_array, &store, j);
+#else
                     int n_chunks = (s_t->size + 7) / 8;
                     IR_Instruction store = *instr;
                     store.ops[0].size = 8;
@@ -384,7 +398,9 @@ void lower_ir_for_asm(IR_Function *f) {
                         store.ops[1].reg -= 1;
                         insert(&b->instruction_array, &store, ++j);
                     }
+#endif
                 } else {
+                    // Hidden pointer
                     IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
                     f->max_reg++;
                     IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[0]}};
@@ -416,7 +432,7 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
                 case IR_VREG:
                     // a->reg is negative for function parameters
                     if (a->reg < 0) {
-                        if (-a->reg - 1 < WIN64_PARAM_REGISTERS) {
+                        if (-a->reg - 1 < PARAM_REGISTERS) {
                             physical_register(a);
                         } else {
                             param_offset(a);

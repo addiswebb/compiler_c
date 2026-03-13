@@ -200,13 +200,24 @@ You can see how such a simple **IR** instruction can expand into a much more com
     * `void` return type
   * `inline` (Parsed but ignored)
 * Function ABI & Calling Conventions `MS x64 ABI`
-  * Shadow Space `32 bytes`
-  * First 4 args to registers, the rest spilled to stack
+  * `Win64` only Shadow Space `32 bytes`
+  * Function Arguments
+    * `Win64`
+      * First `4` args to registers, then stack spilled
+    * `SysV`
+      * First `6` args to registers, then stack spilled
   * Structs as function arguments
-    * `sizeof(struct A) < 16b` => 1-2 `u64` chunks
-    * `       ...       > 16b` => use hidden pointer to copy onto function stack 
+    * `Win64`
+      * `sizeof(struct A) % 2 == 0 && sizeof(struct A) < 8b` => integer chunks
+      * `                       else                       ` => hidden pointer & memcpy
+    * `SysV`
+      * `sizeof(struct A) < 16b` => 1-2 `u64` chunks
+      * `       ...       > 16b` => hidden pointer & memcpy
   * Variadic Functions
-    * Floating point arguments cloned to general purpose registers (For 4 args)
+    * `Win64`
+      * Floating point arguments cloned to general purpose registers (For 4 args)
+    * `SysV`
+      * Currently Unsupported
     
 ## 7. Pointers
 
@@ -220,24 +231,22 @@ You can see how such a simple **IR** instruction can expand into a much more com
     * Automatically call preprocessor on source file.
 
 ## To be Implemented (Ordered from next to never...)
-* Function ABI Calling Conventions
-    * Caller/Callee save registers
-* Pointers
-    * [Pointer,Pointer] Arithmetic
-    * Function pointers
+* Function pointers
 * Compiler builtins
     * `__builtin_va_list` etc.
+* SysV ABI (Or support stdlib, whichever is easier)
 * Support a standard library 
-* ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
+    * ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
     * Need to support SysV/Linux Abi for Musl libc :(
     * `printf`
     * `malloc`
     * `free`
 * Use physical registers
     * Overflow to stack
-* Labels as values? (part of GCC, not standard C)
-* Volatile/Atomic memory
-* SysV ABI
-* Inline functions
+* Function ABI Calling Conventions
+    * Caller/Callee save registers
 * Bitfield in structs
     * `unsigned int flag : 1; // 1 bit`
+* Inline functions
+* Volatile/Atomic memory
+* Labels as values? (part of GCC, not standard C)

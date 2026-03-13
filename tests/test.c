@@ -1,5 +1,12 @@
-int main() {
-    int a = 0;
+typedef struct {
+    char a;
+    char b;
+    char c;
+} S;
 
-    return a;
+int foo(S s) { return s.b; }
+
+int main() {
+    S s = {.a = 5, .b = 'b', .c = 'a'};
+    return foo(s);
 }

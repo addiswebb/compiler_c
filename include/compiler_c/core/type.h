@@ -5,7 +5,7 @@
 #include "compiler_c/core/array.h"
 #define DEBUG_ENUM_DETAILED 0
 /* Include struct members when printing an enum type */
-#define DEBUG_STRUCT_DETAILED 1
+#define DEBUG_STRUCT_DETAILED 0
 #define SIGNED 1
 #define UNSIGNED 0
 
@@ -139,6 +139,7 @@ Type *new_unsigned_type(Type *type);
 /* Creates a sized array of the given type */
 Type *new_array_type(Type *type, int len);
 
+Type *get_integer_type(int size);
 /*
     Searches the typepool first for corresponding type falls back by creating a new corresponding type.
     Prevents duplicate type definitions.
@@ -150,6 +151,8 @@ Type *get_struct_type(const char *name);
 Type *get_array_type(Type *type, int len);
 Type *get_qualified_type(Type *type, unsigned int qualifiers);
 Type *get_unsigned_type(Type *type);
+/* Expects the signed type to promote to, selects sign from original type. */
+Type *promote_integer(Type *from, Type *to);
 
 /*
     Update the length of the given array type, which was previously uninitialized.

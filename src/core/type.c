@@ -1,8 +1,8 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/core/array.h"
+#include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
-#include "compiler_c/log/logger.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -131,7 +131,24 @@ Type *get_array_type(Type *type, int len) {
     }
     return new_array_type(type, len);
 }
-// Retrieves the given "type" wrapped in a pointer from global type pool if it exits, otherwise it creates one and adds it to the pool
+
+Type *get_integer_type(int size) {
+    switch (size) {
+    case 1:
+        return type_i8;
+    case 2:
+        return type_i16;
+    case 4:
+        return type_i32;
+    case 8:
+        return type_i64;
+    default:
+        PANIC("Invalid integer size\n");
+    }
+}
+
+Type *promote_integer(Type *from, Type *to) { return from->is_signed ? to : get_unsigned_type(to); }
+
 Type *get_pointer_type(Type *type) {
     for (int i = 0; i < typepool.count; i++) {
         if (typepool.types[i].base == type && typepool.types[i].kind == T_POINTER) {

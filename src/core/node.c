@@ -384,7 +384,9 @@ void print_node(const Node *node, const int depth) {
         printf("\n");
         break;
     case N_INIT_LIST:
-        printf(": [count= %d]\n", node->init_list.elements_array.count);
+        printf(": [count= %d, type=", node->init_list.elements_array.count);
+        print_type(node->type);
+        printf("]\n");
         for (int i = 0; i < node->init_list.elements_array.count; i++) {
             print_node(get_node(&node->init_list.elements_array, i), depth + 1);
         }

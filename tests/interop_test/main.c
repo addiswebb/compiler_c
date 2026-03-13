@@ -1,14 +1,21 @@
+// typedef struct {
+//     int a;
+//     int b;
+//     int c;
+//     int d;
+//     int e;
+// } A;
 typedef struct {
-    int a;
-    int b;
-    int c;
-    int d;
-    int e;
+    char a;
+    char b;
+    char c;
 } A;
 
-int foo(A s) { return s.a + s.b + s.c + s.d + s.e; }
+extern int foo(A s);
+// int foo(A s) { return s.a + s.b + s.c + s.d + s.e; }
 
 int main() {
-    A s = {1, 2, 3, 4, 5};
+    // A s = {1, 2, 3, 4, 5};
+    A s = {1, 'a', 2};
     return foo(s);
 }

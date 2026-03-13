@@ -36,24 +36,24 @@ struct PhysReg{
     RegSize size;
 };
 
-#ifndef WIN64
-#define WIN64
-#endif
+#ifdef _WIN64
 
-#ifdef WIN64
+#define STRUCT_IN_REG(s) ((s)==1 || (s)==2 || (s)==4 || (s)==8)
 #define SHADOW_SPACE 32
 #define PARAM_REGISTERS 4
+
 #else
+
+#define STRUCT_IN_REG(s) (s <= 16)
 #define SHADOW_SPACE 0
 #define PARAM_REGISTERS 6
+
 #endif
 
-#define WIN64_PARAM_REGISTERS 4
-
-extern const GP_Reg win64_int_param_regs[WIN64_PARAM_REGISTERS];
-extern const GP_Reg win64_caller_saved[7];
-extern const GP_Reg win64_callee_saved[8];
-extern const XMM_Reg win64_float_param_regs[8];
+extern const GP_Reg caller_saved_regs[7];
+extern const GP_Reg callee_saved_regs[8];
+extern const GP_Reg int_param_regs[PARAM_REGISTERS];
+extern const XMM_Reg float_param_regs[PARAM_REGISTERS];
 extern const char * gp_register_str[16][4];
 extern const char * xmm_register_str[16];
 

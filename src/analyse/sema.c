@@ -575,11 +575,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
 
                 if (is_array) e->designated_init._array.index = index;
                 else e->designated_init._struct.member = member;
-
-                if (value->type != target_type) {
-                    Node *casted_node = cast_node(nm, value, target_type);
-                    set_node(&node->init_list.elements_array, &casted_node, i);
-                }
+                if (value->type != target_type) e->designated_init.value = cast_node(nm, value, target_type);
 
                 index++;
             }
