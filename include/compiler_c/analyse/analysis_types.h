@@ -41,17 +41,23 @@ struct PhysReg{
 #define STRUCT_IN_REG(s) ((s)==1 || (s)==2 || (s)==4 || (s)==8)
 #define SHADOW_SPACE 32
 #define PARAM_REGISTERS 4
+#define CALLER_SAVED_REGISTERS 7
+#define CALLEE_SAVED_REGISTERS 8
 
 #else
 
 #define STRUCT_IN_REG(s) (s <= 16)
 #define SHADOW_SPACE 0
 #define PARAM_REGISTERS 6
+#define INTEGER_PARAM_REGISTERS 6
+#define FLOAT_PARAM_REGISTERS 8
+#define CALLER_SAVED_REGISTERS 9
+#define CALLEE_SAVED_REGISTERS 6
 
 #endif
 
-extern const GP_Reg caller_saved_regs[7];
-extern const GP_Reg callee_saved_regs[8];
+extern const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS];
+extern const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS];
 extern const GP_Reg int_param_regs[PARAM_REGISTERS];
 extern const XMM_Reg float_param_regs[PARAM_REGISTERS];
 extern const char * gp_register_str[16][4];

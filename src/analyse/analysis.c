@@ -10,16 +10,16 @@
 #include <stdlib.h>
 
 #ifdef _WIN64
-const GP_Reg caller_saved_regs[7] = {RAX, RCX, RDX, R8, R9, R10, R11};
-const GP_Reg callee_saved_regs[8] = {RBX, RBP, RDI, RSI, R12, R13, R14, R15};
+const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS] = {RAX, RCX, RDX, R8, R9, R10, R11};
+const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS] = {RBX, RBP, RDI, RSI, R12, R13, R14, R15};
 const GP_Reg int_param_regs[PARAM_REGISTERS] = {RCX, RDX, R8, R9};
 const XMM_Reg float_param_regs[PARAM_REGISTERS] = {XMM0, XMM1, XMM2, XMM3};
 #else
 
-const GP_Reg caller_saved_regs[9] = {RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11};
-const GP_Reg callee_saved_regs[6] = {RBX, RBP, R12, R13, R14, R15};
-const GP_Reg int_param_regs[PARAM_REGISTERS] = {RDI, RSI, RDX, RCX, R8, R9};
-const XMM_Reg float_param_regs[PARAM_REGISTERS] = {XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7};
+const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS] = {RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11};
+const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS] = {RBX, RBP, R12, R13, R14, R15};
+const GP_Reg int_param_regs[INTEGER_PARAM_REGISTERS] = {RDI, RSI, RDX, RCX, R8, R9};
+const XMM_Reg float_param_regs[FLOAT_PARAM_REGISTERS] = {XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7};
 
 #endif
 
