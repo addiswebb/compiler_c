@@ -615,9 +615,22 @@ Node *p_parse_if_statement(Parser *p, NodeManager *nm) {
     }
     return node;
 }
+Node *p_parse_do_while_loop(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_WHILE);
+    node->_while.is_do_while = true;
+    p_consume_a(p, TK_DO);
+    node->_while.block = p_parse_statement(p, nm);
+    p_consume_a(p, TK_WHILE);
+    p_consume_a(p, TK_OPEN_PAREN);
+    node->_while.cond = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+    p_consume_a(p, TK_CLOSE_PAREN);
+    p_consume_semi(p);
+    return node;
+}
 
 Node *p_parse_while_loop(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_WHILE);
+    node->_while.is_do_while = false;
     p_consume_a(p, TK_WHILE);
     p_consume_a(p, TK_OPEN_PAREN);
     node->_while.cond = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
@@ -763,6 +776,8 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
     switch (p_peek(p)->type) {
     case TK_IF:
         return p_parse_if_statement(p, nm);
+    case TK_DO:
+        return p_parse_do_while_loop(p, nm);
     case TK_WHILE:
         return p_parse_while_loop(p, nm);
     case TK_FOR:

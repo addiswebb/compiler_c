@@ -6,7 +6,6 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
@@ -22,6 +21,7 @@ static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
         break;
     case IR_VREG:
     case IR_MEM:
+        log_message(LOG_ERROR, "");
     case IR_UNDEFINED:
         PANIC("Sanity check failed\n");
     }

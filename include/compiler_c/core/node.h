@@ -105,6 +105,7 @@ struct Node {
         struct {
             Node *cond;
             Node *block;
+            bool is_do_while;
         } _while;
         // for (init; cond; end) {block}
         struct {

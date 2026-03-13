@@ -26,8 +26,7 @@ static void ensure_capacity(Array *arr) {
 }
 static void ensure_index(const Array *arr, int index) {
     if (__builtin_expect(index >= arr->count || index < 0, 0)) {
-        fprintf(stderr, "Index of %d is out of Array bounds of %d\n", index, arr->count);
-        abort();
+        PANIC("Index of %d is out of Array bounds of %d\n", index, arr->count);
     }
 }
 

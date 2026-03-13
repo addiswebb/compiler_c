@@ -177,7 +177,6 @@ void ir_compute_func_io(IR_Function *f) {
     for (int j = 0; j < f->blocks_array.count; j++) {
         IR_Block *b = get_block(f, j);
 
-        if (b->instruction_array.count == 0) continue;
         bool found = false;
         for (int i = 0; i < b->instruction_array.count; i++) {
             const IR_Instruction *instr = get_instruction(&b->instruction_array, i);
@@ -189,19 +188,15 @@ void ir_compute_func_io(IR_Function *f) {
             case IR_BR_COND:
                 if (instr->br_cond.f_block) add_successor(f, b, instr->br_cond.f_block);
                 if (instr->br_cond.t_block) add_successor(f, b, instr->br_cond.t_block);
-                found = true;
+                found = instr->br_cond.f_block && instr->br_cond.t_block;
                 break;
             case IR_RET:
             default:
                 break;
             }
         }
-        if (!found) {
-            if (j < f->blocks_array.count - 1) {
-                // TODO: give this more thought, can it fail...?
-                add_successor(f, b, get_block(f, j + 1));
-            }
-        }
+        // Means we may still be within the block, allow fallthrough to sequentially next block.
+        if (!found && j < f->blocks_array.count - 1) add_successor(f, b, get_block(f, j + 1));
     }
 }
 
@@ -375,6 +370,7 @@ void lower_ir_for_asm(IR_Function *f) {
                 }
             } else if (instr->op == IR_STORE && instr->store.type->kind == T_STRUCT) {
                 // Lower to memcpy or reg reading,
+                // Turns out this is for SysV calls not Win64 ABI ;_;
                 Type *s_t = instr->store.type;
                 if (s_t->size <= 16) {
                     int n_chunks = (s_t->size + 7) / 8;

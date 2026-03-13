@@ -165,6 +165,11 @@ Node *p_parse_if_statement(Parser *p, NodeManager *nm);
     `while ([cond]) {[compound]}`
 */
 Node *p_parse_while_loop(Parser *p, NodeManager *nm);
+/*
+    Consumes
+    `do {[compound]} while ([cond])`
+*/
+Node *p_parse_while_loop(Parser *p, NodeManager *nm);
 
 
 /*

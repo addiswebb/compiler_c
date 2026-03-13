@@ -184,6 +184,7 @@ You can see how such a simple **IR** instruction can expand into a much more com
   * Nested conditionals
 * Loops
   * `for`, `while`
+  * `do {} while()`
 * Switch
   * `switch`, `case`
 * Jump Statements
@@ -226,14 +227,14 @@ You can see how such a simple **IR** instruction can expand into a much more com
     * Function pointers
 * Compiler builtins
     * `__builtin_va_list` etc.
-* Use physical registers
-    * Overflow to stack
 * Support a standard library 
 * ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
     * Need to support SysV/Linux Abi for Musl libc :(
     * `printf`
     * `malloc`
     * `free`
+* Use physical registers
+    * Overflow to stack
 * Labels as values? (part of GCC, not standard C)
 * Volatile/Atomic memory
 * SysV ABI

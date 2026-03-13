@@ -550,7 +550,7 @@ void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t)
     x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
 }
 void x86_emit_store_mem(FILE *fp, const IR_Value *src, const IR_Value *dst, const Type *t) {
-    const char *v = x86_rbx_reg(t);
+    const char *v = x86_rcx_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     x86_emit_xr(fp, "mov", "q", "", dst, "%rax");
     x86_emit_xr(fp, "mov", op_suffix, "", src, v);

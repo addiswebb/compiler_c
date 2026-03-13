@@ -220,9 +220,13 @@ static void ir_gen_compound(IR_Context *ctx, const Node *comp) {
 
 static void ir_gen_while_loop(IR_Context *ctx, const Node *_while) {
     ir_begin_scope(ctx->func);
-    IR_Block *cond_block = ir_add_block(ctx);
     IR_Block *block_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
+    IR_Block *cond_block = ir_new_block();
+
+    if (_while->_while.is_do_while) ir_branch(ctx, block_block);
+
+    ir_append_block(ctx, cond_block);
 
     ir_push_loop_ctx(ctx, block_block, end_block);
 

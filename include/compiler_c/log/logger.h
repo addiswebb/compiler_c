@@ -1,6 +1,7 @@
 #ifndef COMPILER_C_LOGGER_H
 #define COMPILER_C_LOGGER_H
 
+#include <stdlib.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -93,6 +94,7 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     vfprintf(logger.file, fmt, args);
     va_end(args);
     fflush(logger.file);
+    if(lvl == LOG_PANIC) exit(1);
 }
 #define DEBUG(fmt, ...) log_message(LOG_DEBUG, fmt, ##__VA_ARGS__)
 #define INFO(fmt, ...) log_message(LOG_INFO, fmt, ##__VA_ARGS__)
