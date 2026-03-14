@@ -1,6 +1,6 @@
 // RUN: %cc %s -a -o %t.s
-// RUN: gcc %t.s -o %t.exe
-// RUN: pwsh -c "%t.exe ; %check_exit 11 $LASTEXITCODE"
+// RUN: gcc %t.s -o %t
+// RUN: %check_exit 11 %t
 
 int main() {
     int a[3] = {4, 2, 1};

@@ -1,6 +1,6 @@
 // RUN: %cc %s -a -o %t.s
-// RUN: gcc %t.s -o %t.exe
-// RUN: %t.exe | %check_output "0 5 0  0 5 7  1 0 3  4 0 0  1 0 9  6 2 3  1 2 3  1 2 3"
+// RUN: gcc %t.s -o %t
+// RUN: %t | %check_output "0 5 0  0 5 7  1 0 3  4 0 0  1 0 9  6 2 3  1 2 3  1 2 3"
 
 extern int printf(const char *format, ...);
 

@@ -1,6 +1,6 @@
 // RUN: %cc %s -a -o %t.s
-// RUN: gcc %t.s -o %t.exe
-// RUN: pwsh -c "%t.exe ; %check_exit 12 $LASTEXITCODE"
+// RUN: gcc %t.s -o %t
+// RUN: %check_exit 12 %t
 
 // courtesy of ChatGPT :)
 int main() {

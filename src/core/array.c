@@ -1,6 +1,5 @@
 #include "compiler_c/core/array.h"
 #include "compiler_c/log/logger.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

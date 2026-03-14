@@ -2,6 +2,7 @@
 # ruff: noqa: F821
 
 import os
+import sys
 
 import lit.formats
 
@@ -14,12 +15,33 @@ config.test_exec_root = config.test_source_root
 
 config.suffixes = [".test"]
 
-config.substitutions.append(("%cc", r"E:\dev\compiler_c\build\compiler_c.exe"))
+# Detect OS
+is_windows = sys.platform.startswith("win")
+
+# Determine build directory relative to project root
+# Adjust if your structure differs
+project_root = os.path.abspath(os.path.join(config.test_source_root, ".."))
+
+if is_windows:
+    compiler_exe = os.path.join(project_root, "build", "compiler_c.exe")
+    python_cmd = "python"
+else:
+    compiler_exe = os.path.join(project_root, "build_sysv", "compiler_c")
+    python_cmd = "python3"
+
+# Substitutions
+config.substitutions.append(("%cc", compiler_exe))
 
 config.substitutions.append(
-    ("%check_exit", r"python E:\dev\compiler_c\tests\check_exit.py")
+    (
+        "%check_exit",
+        f"{python_cmd} {os.path.join(config.test_source_root, 'check_exit.py')}",
+    )
 )
 
 config.substitutions.append(
-    ("%check_output", r"python E:\dev\compiler_c\tests\check_output.py")
+    (
+        "%check_output",
+        f"{python_cmd} {os.path.join(config.test_source_root, 'check_output.py')}",
+    )
 )
