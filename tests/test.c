@@ -1,7 +1,7 @@
 typedef struct {
-    char a;
-    char b;
-    char c;
+    int a;
+    int b;
+    int c;
 } S;
 
 int foo(S s) { return s.b; }

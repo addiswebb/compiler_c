@@ -139,6 +139,7 @@ Type *new_unsigned_type(Type *type);
 /* Creates a sized array of the given type */
 Type *new_array_type(Type *type, int len);
 
+Type *get_float_type(int size);
 Type *get_integer_type(int size);
 /*
     Searches the typepool first for corresponding type falls back by creating a new corresponding type.

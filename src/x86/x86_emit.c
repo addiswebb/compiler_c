@@ -9,7 +9,7 @@
 
 const char *x86_reg(const IR_Value *v) {
     if (v->phys_reg.kind == REG_GP) return gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size];
-    else return xmm_register_str[v->phys_reg.xmm_reg];
+    else return sse_register_str[v->phys_reg.xmm_reg];
 }
 
 void x86_operand(const IR_Value *v, char *buf, const int n) {
@@ -183,25 +183,43 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const int dst_offset = instr->ops[0].stack_offset;
     Type *t = instr->call.type;
 
-    int reg_index = 0;
+    int gp_index = 0;
+
+#ifdef _WIN64
     const int spilled_count = instr->call.arg_array.count > PARAM_REGISTERS ? instr->call.arg_array.count - PARAM_REGISTERS : 0;
+#else
+    int sse_index = 0;
+
+    const int spilled_count = 0;
+    for (int i = 0; i < instr->call.arg_array.count; i++) {
+        const IR_Var *v = get_arg(instr, i);
+        if ((v->type->kind == T_INT || v->type->kind == T_POINTER) && gp_index < INTEGER_PARAM_REGISTERS) gp_index++;
+        if (v->type->kind == T_FLOAT && sse_index < FLOAFLOAT_PARAM_REGISTERS) sse_index++;
+    }
+
+#endif
     // +8 for push rbp (call emits push rbp, mov rsp, rbp)
     // 8 * spilled count, for n args after [0-3]
     // SHADOW_SPACE = 32, for windows ABI (linux = 0)
+    // Prop shouldnt use/need align here,
     const int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count + 8, 16);
     int param_offset = SHADOW_SPACE;
     if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
         const IR_Var *v = get_arg(instr, i);
-        const bool is_register_param = i < PARAM_REGISTERS;
-        if (is_register_param && reg_index >= PARAM_REGISTERS) {
-            PANIC("Panicking because more than too many registers were used %d/%d\n", reg_index, PARAM_REGISTERS);
-        }
+        bool use_register = false;
+#ifdef _WIN64
+        use_register = gp_index < PARAM_REGISTERS;
+#else
+        if (v->type->kind == T_INT || v->type->kind == T_POINTER) is_register_param = gp_index < INTEGER_PARAM_REGISTERS;
+        if (v->type->kind == T_FLOAT) is_register_param = sse_index < FLOAT_PARAM_REGISTERS;
+#endif
         switch (v->type->kind) {
         case T_INT:
-            if (is_register_param) {
-                const char *x = gp_register_str[int_param_regs[reg_index++]][reg_size(v->type->size)];
-                fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, x);
+        case T_POINTER:
+            if (use_register) {
+                fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset,
+                        gp_register_str[int_param_regs[gp_index++]][reg_size(v->type->size)]);
             } else {
                 const char *v_reg = x86_rax_reg(v->type);
                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, v_reg);
@@ -211,27 +229,19 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             break;
         case T_FLOAT:
             const char *f_suffix = x86_op_suffix(v->type);
-            if (is_register_param) {
-#ifdef WIN64
-                if (i < PARAM_REGISTERS) {
-                    const char *x = gp_register_str[win64_int_param_regs[reg_index]][reg_size(v->type->size)];
-                    fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_integer_op_suffix(v->type->size), v->reg.stack_offset, x);
+            if (use_register) {
+#ifdef _WIN64
+                if (instr->call.callee->is_variadic) {
+                    fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_integer_op_suffix(v->type->size), v->reg.stack_offset,
+                            gp_register_str[int_param_regs[gp_index]][reg_size(v->type->size)]);
                 }
+                fprintf(fp, "    mov%s %d(%%rbp), %s\n", f_suffix, v->reg.stack_offset, sse_register_str[float_param_regs[gp_index++]]);
+#else
+                fprintf(fp, "    mov%s %d(%%rbp), %s\n", f_suffix, v->reg.stack_offset, sse_register_str[float_param_regs[sse_index++]]);
 #endif
-                fprintf(fp, "    mov%s %d(%%rbp), %s\n", f_suffix, v->reg.stack_offset,
-                        xmm_register_str[float_param_regs[reg_index++]]);
             } else {
                 fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, v->reg.stack_offset);
                 fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", f_suffix, param_offset);
-                param_offset += 8;
-            }
-            break;
-        case T_POINTER:
-            if (is_register_param) {
-                fprintf(fp, "    movq %d(%%rbp), %s\n", v->reg.stack_offset, gp_register_str[int_param_regs[reg_index++]][REG_64]);
-            } else {
-                fprintf(fp, "    movq %d(%%rbp), %%rax\n", v->reg.stack_offset);
-                fprintf(fp, "    movq %%rax, %d(%%rsp)\n", param_offset);
                 param_offset += 8;
             }
             break;
@@ -239,16 +249,15 @@ void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             PANIC("Tried to emit call arg for unsupported type\n");
         }
     }
-
+#ifndef _WIN64
+    if (instr->call.callee->is_variadic) fprintf(fp, "    mov $%d, %%al\n", sse_index);
+#endif
     fprintf(fp, "    call %s\n", instr->call.callee->name);
-    // int param_frame_size = (instr->call.arg_count - xmm_index - gp_index) * 8;
     fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);
 
-    if (t != type_void) {
-        const char *reg = x86_rax_reg(t);
-        const char *op_suffix = x86_op_suffix(t);
-        fprintf(fp, "    mov%s %s, %d(%%rbp)\n", op_suffix, reg, dst_offset);
-    }
+    if (t == type_void) return;
+
+    fprintf(fp, "    mov%s %s, %d(%%rbp)\n", x86_op_suffix(t), x86_rax_reg(t), dst_offset);
 }
 
 void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, const IR_BINOP_OP op, Type *t) {

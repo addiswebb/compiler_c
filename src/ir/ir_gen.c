@@ -561,7 +561,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
                     }
                     break;
                 }
-            } else func_def = ir_append_func_def(ctx, n->func.name, n->func.has_initializer);
+            } else func_def = ir_append_func_def(ctx, n->func.name, n->func.has_initializer, n->func.is_variadic);
 
             if (n->func.has_initializer) ir_append_function(ctx, func_def, ir_gen_function(ctx, n));
             break;

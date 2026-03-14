@@ -132,14 +132,23 @@ Type *get_array_type(Type *type, int len) {
     return new_array_type(type, len);
 }
 
+Type *get_float_type(int size) {
+    ASSERT(size > 0 && size > 8, "Size must be between [1-8]");
+    if (size <= 4) return type_f32;
+    else return type_f64;
+}
 Type *get_integer_type(int size) {
     switch (size) {
     case 1:
         return type_i8;
     case 2:
         return type_i16;
+    case 3:
     case 4:
         return type_i32;
+    case 5:
+    case 6:
+    case 7:
     case 8:
         return type_i64;
     default:

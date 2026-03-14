@@ -445,7 +445,7 @@ void print_ir_value(const IR_Value *v) {
         if (v->phys_reg.kind == REG_GP) {
             printf("%s", gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size]);
         } else {
-            printf("%s", xmm_register_str[v->phys_reg.gp_reg]);
+            printf("%s", sse_register_str[v->phys_reg.gp_reg]);
         }
         break;
     }

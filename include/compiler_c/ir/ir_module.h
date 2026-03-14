@@ -129,6 +129,7 @@ typedef struct{
     const char *name;
     int index;
     bool is_defined;
+    bool is_variadic;
 } IR_Func_Def;
 
 typedef struct {
@@ -327,7 +328,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type);
     If it is defined, immediately after, its index will be updated.
     Otherwise it gets updated when a defined N_Function node is lowered.
 */
-IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, bool is_defined);
+IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined, const bool is_variadic);
 /* Generates an IR Mem Value for the variable. Also appends it to the current scope.  */
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
 

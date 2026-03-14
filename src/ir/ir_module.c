@@ -2,8 +2,8 @@
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_builder.h"
-#include "compiler_c/parse/parser.h"
 #include "compiler_c/log/logger.h"
+#include "compiler_c/parse/parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -286,8 +286,9 @@ IR_Value ir_get_var_reg(IR_Context *ctx, const char *name, bool give_lvalue) {
     PANIC("Undefined local or global variable \'%s\' \n", name);
 }
 
-IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined) {
-    return (IR_Func_Def *)append(&ctx->module->func_defs_array, &(IR_Func_Def){.name = name, .index = -1, .is_defined = is_defined});
+IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined, const bool is_variadic) {
+    return (IR_Func_Def *)append(&ctx->module->func_defs_array,
+                                 &(IR_Func_Def){.name = name, .index = -1, .is_defined = is_defined, .is_variadic = is_variadic});
 }
 void ir_append_function(const IR_Context *ctx, IR_Func_Def *func_def, IR_Function *func) {
     func_def->index = ctx->module->functions_array.count;
