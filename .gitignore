@@ -5,3 +5,4 @@ tests/test.exe
 /tests/complex/Output
 /tests/.lit_test_times.txt
 /.idea
+/build_sysv

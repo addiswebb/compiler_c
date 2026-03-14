@@ -1,7 +1,6 @@
 #ifndef COMPILER_C_ANALYSIS_H
 #define COMPILER_C_ANALYSIS_H
 
-#include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/ir/ir_module.h"
 
 #define DEBUG_LIFETIMES 0
@@ -85,10 +84,6 @@ int cmp_lifetime(const void *a, const void *b);
 */
 void linear_stack_slot_allocation(Lifetime *lts, int count, int *stack_size, int *slot_count);
 
-ABI_TypeClass merge(ABI_TypeClass chunk_class, ABI_TypeClass field_class);
-
-ABI_Result classify_struct(Type *type);
-ABI_Result classify(Type *type);
 
 void bitset_init(BitSet *s, int reg_count);
 void bitset_expand(BitSet *s);

@@ -1,3 +1,4 @@
+#include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
@@ -29,7 +30,7 @@ Compiler init_compiler(const int argc, char *argv[]) {
     Compiler compiler;
     compiler.flags = 0;
     const char *input_file = argv[1];
-    compiler.output_file = _strdup(input_file);
+    compiler.output_file = strdup(input_file);
     compiler.output_file[strlen(input_file) - 1] = 's';
 
     // Loop and try find compile flags
@@ -169,7 +170,7 @@ static int load_src_file(Compiler *compiler, const char *file) {
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "cpp -P -std=c11 \"%s\"", file);
 
-    FILE *fp = _popen(cmd, "r");
+    FILE *fp = popen(cmd, "r");
     if (!fp) {
         PANIC("Failed to open %s\n", file);
     }
@@ -183,7 +184,7 @@ static int load_src_file(Compiler *compiler, const char *file) {
         append(&src, &c);
     }
 
-    _pclose(fp);
+    pclose(fp);
     append(&src, &(char){'\0'});
 
     compiler->src = (char *)src.data;

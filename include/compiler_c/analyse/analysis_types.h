@@ -37,47 +37,6 @@ struct PhysReg{
     RegSize size;
 };
 
-#ifdef _WIN64
-
-#define STRUCT_IN_REG(s) (s <= 8)
-#define SHADOW_SPACE 32
-#define PARAM_REGISTERS 4
-#define CALLER_SAVED_REGISTERS 7
-#define CALLEE_SAVED_REGISTERS 8
-#define HIDDEN_PTR_SIZE 8
-
-#else
-
-#define STRUCT_IN_REG(s) (s <= 16)
-#define SHADOW_SPACE 0
-#define PARAM_REGISTERS 6
-#define INTEGER_PARAM_REGISTERS 6
-#define FLOAT_PARAM_REGISTERS 8
-#define CALLER_SAVED_REGISTERS 9
-#define CALLEE_SAVED_REGISTERS 6
-#define HIDDEN_PTR_SIZE 16
-
-#endif
-
-// place in #else
-typedef enum{
-    ABI_NO_CLASS,
-    ABI_MEMORY,
-    ABI_INTEGER,
-    ABI_SSE,
-}ABI_TypeClass;
-
-typedef struct{
-    ABI_TypeClass class[2];
-    bool memory;
-}ABI_Result;
-
-extern const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS];
-extern const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS];
-extern const GP_Reg int_param_regs[PARAM_REGISTERS];
-extern const XMM_Reg float_param_regs[PARAM_REGISTERS];
-extern const char * gp_register_str[16][4];
-extern const char * sse_register_str[16];
 
 RegSize reg_size(int size);
 #endif // COMPILER_C_ANALYSIS_TYPES_H

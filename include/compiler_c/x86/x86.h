@@ -22,6 +22,8 @@ const char *x86_rbx_reg(const Type *t);
 const char *x86_rcx_reg(const Type *t);
 const char *x86_rdx_reg(const Type *t);
 const char *x86_op_suffix(const Type *t);
+const char *x86_integer_op_suffix(int size);
+const char *x86_float_op_suffix(int size);
 
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, IR_BINOP_OP op, Type *t);

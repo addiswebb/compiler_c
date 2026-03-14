@@ -9,6 +9,12 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
+if(WIN32)
+    set(ABI_SRC src/abi/win64.c)
+else()
+    set(ABI_SRC src/abi/sysv.c)
+endif()
+
 add_executable(compiler_c
     src/main.c
     src/compiler.c
@@ -26,6 +32,7 @@ add_executable(compiler_c
     src/ir/ir_module.c
     src/analyse/sema.c
     src/analyse/analysis.c
+    ${ABI_SRC}
     src/log/logger.c
 )
 

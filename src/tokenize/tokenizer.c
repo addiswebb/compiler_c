@@ -1,4 +1,5 @@
 #include "compiler_c/tokenize/tokenizer.h"
+#include "compiler_c/abi/abi.h"
 #include "compiler_c/core/util.h"
 #include "compiler_c/log/logger.h"
 
@@ -126,7 +127,7 @@ static void t_parse_and_push_buffer(Tokenizer *tk) {
     }
     if (!is_keyword) {
         token.type = TK_IDENTIFIER;
-        token.value = _strdup(tk->buf.buf);
+        token.value = strdup(tk->buf.buf);
     }
     append(&tk->tokens_array, &token);
 }

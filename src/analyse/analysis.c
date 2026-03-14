@@ -1,29 +1,15 @@
 #include "compiler_c/analyse/analysis.h"
+#include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
-#include "compiler_c/parse/parser.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifdef _WIN64
-const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS] = {RAX, RCX, RDX, R8, R9, R10, R11};
-const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS] = {RBX, RBP, RDI, RSI, R12, R13, R14, R15};
-const GP_Reg int_param_regs[PARAM_REGISTERS] = {RCX, RDX, R8, R9};
-const XMM_Reg float_param_regs[PARAM_REGISTERS] = {XMM0, XMM1, XMM2, XMM3};
-#else
-
-const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS] = {RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11};
-const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS] = {RBX, RBP, R12, R13, R14, R15};
-const GP_Reg int_param_regs[INTEGER_PARAM_REGISTERS] = {RDI, RSI, RDX, RCX, R8, R9};
-const XMM_Reg float_param_regs[FLOAT_PARAM_REGISTERS] = {XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6, XMM7};
-
-#endif
 
 const char *gp_register_str[16][4] = {
     [RAX] = {"%al", "%ax", "%eax", "%rax"},      [RBX] = {"%bl", "%bx", "%ebx", "%rbx"},      [RCX] = {"%cl", "%cx", "%ecx", "%rcx"},
@@ -343,171 +329,6 @@ void stack_offset(IR_Value *v, const Lifetime *lts, int lts_count) {
     v->kind = IR_STACK;
     const Lifetime *l = get_lifetime(lts, lts_count, v->reg);
     v->stack_offset = -(l->stack_offset + 8);
-}
-
-void lower_ir_for_asm(IR_Function *f) {
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        IR_Block *b = get_block(f, i);
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            if (instr->op == IR_CALL) {
-                // Convert to int chunks or pointer
-                for (int k = 0; k < instr->call.arg_array.count; k++) {
-                    IR_Var *arg = get_arg(instr, k);
-                    if (arg->type->kind == T_STRUCT) {
-                        Type *s_t = arg->type;
-                        ABI_Result res = classify(s_t);
-                        if (res.memory) {
-                            f->max_reg++;
-                            IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
-                            IR_Instruction i = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = arg->reg}};
-                            arg->type = get_pointer_type(arg->type);
-                            arg->name = "_tmp_s_ptr";
-                            arg->reg = i.ops[0];
-                            insert(&b->instruction_array, &i, j++);
-                        } else {
-#ifdef _WIN64
-                            arg->type = res.class[0] == ABI_INTEGER ? get_integer_type(s_t->size) : get_float_type(s_t->size);
-#else
-                            arg->type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
-                            if (res.class[1] != ABI_NO_CLASS) {
-                                IR_Var a = *arg;
-                                a.reg.offset += 8;
-                                a.type = res.class[1] == ABI_INTEGER ? type_u64 : type_f64;
-                                append(&instr->call.arg_array, &a);
-                            }
-#endif
-                        }
-                    }
-                }
-            } else if (instr->op == IR_STORE && instr->store.type->kind == T_STRUCT) {
-                // Lower to memcpy or reg reading,
-                // Turns out this is for SysV calls not Win64 ABI ;_;
-                Type *s_t = instr->store.type;
-                ABI_Result res = classify(s_t);
-                if (res.memory) {
-                    // Hidden pointer
-                    IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
-                    f->max_reg++;
-                    IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[0]}};
-                    insert(&b->instruction_array, &addr, j++);
-                    instr = get_instruction(&b->instruction_array, j);
-
-                    IR_Instruction memcpy = {
-                        .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[1]}, .memcpy = {.size = instr->store.type->size}};
-                    memcpy.ops[1].size = 8;
-                    set(&b->instruction_array, &memcpy, j);
-                } else {
-                    IR_Instruction store = *instr;
-#ifdef _WIN64
-                    store.store.type = res.class[0] == ABI_INTEGER ? get_integer_type(s_t->size) : get_float_type(s_t->size);
-                    store.ops[0].size = store.store.type->size;
-                    store.ops[1].size = store.store.type->size;
-                    set(&b->instruction_array, &store, j);
-#else
-                    store.ops[0].size = 8;
-                    store.ops[1].size = 8;
-                    store.store.type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
-                    set(&b->instruction_array, &store, j);
-                    if (res.class[1] != ABI_NO_CLASS) {
-                        store.ops[0].offset += 8;
-                        store.ops[1].reg -= 1;
-                        store.store.type = res.class[1] == ABI_INTEGER ? type_u64 : type_f64;
-                        insert(&b->instruction_array, &store, ++j);
-                    }
-#endif
-                }
-            }
-        }
-    }
-}
-
-void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const StackSlot *mem_slots) {
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        const IR_Block *b = get_block(f, i);
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
-            for (int k = 0; k < value_count; k++) {
-                IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_arg(instr, k - instr->op_count)->reg;
-                if (a->kind == IR_LITERAL) continue;
-                // offload the following switch to a function which correctly lowers IR_VREG, IR_MEM to IR_STACK
-                // leaving IR_GLOBAL, IR_LITERAL, IR_STACK
-                switch (a->kind) {
-                case IR_VREG:
-                    // a->reg is negative for function parameters
-                    if (a->reg < 0) {
-                        if (-a->reg - 1 < PARAM_REGISTERS) {
-                            physical_register(a);
-                        } else {
-                            param_offset(a);
-                        }
-                    } else stack_offset(a, lts, lts_count);
-                    break;
-                case IR_MEM:
-                    a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
-                    a->kind = IR_STACK;
-                    break;
-                case IR_STACK:
-                case IR_LITERAL:
-                case IR_GLOBAL:
-                case IR_PHYS_REG:
-                    break;
-                case IR_UNDEFINED:
-                    if (f->return_type == type_void && instr->op == IR_RET) break;
-                    PANIC("An undefined IR value made it to analysis!!\n");
-                }
-            }
-        }
-    }
-}
-
-ABI_TypeClass merge(ABI_TypeClass a, ABI_TypeClass b) {
-    if (a == b) return a;
-    if (a == ABI_NO_CLASS) return b;
-    if (b == ABI_NO_CLASS) return a;
-    if (a == ABI_INTEGER || b == ABI_INTEGER) return ABI_INTEGER;
-    if (a == ABI_SSE && b == ABI_SSE) return ABI_SSE;
-    PANIC("Invalid classification merge\n");
-}
-ABI_Result classify_struct(Type *type) {
-    if (type->size > 16) return (ABI_Result){.memory = true};
-    ABI_Result res = {.class = {ABI_NO_CLASS, ABI_NO_CLASS}, .memory = false};
-    for (int i = 0; i < type->_struct.members_array.count; i++) {
-        StructMember *m = get_struct_member(type, i);
-        ABI_Result field_res = classify(m->type);
-        if (field_res.memory) return field_res;
-
-        int start = m->offset;
-        int end = m->offset + m->type->size - 1;
-
-        int low = start / 8;
-        int high = end / 8;
-        if (field_res.memory) return field_res;
-        for (int j = low; j <= high; j++) {
-            res.class[j] = merge(res.class[j], field_res.class[j - low]);
-        }
-    }
-    return res;
-}
-
-ABI_Result classify(Type *type) {
-    if (type->size > HIDDEN_PTR_SIZE) return (ABI_Result){.class = {}, .memory = true};
-    switch (type->kind) {
-    case T_INT:
-    case T_POINTER:
-        return (ABI_Result){.class = {ABI_INTEGER, ABI_NO_CLASS}, 0};
-    case T_FLOAT:
-        return (ABI_Result){.class = {ABI_SSE, ABI_NO_CLASS}, 0};
-    case T_STRUCT:
-#ifdef _WIN64
-        return (ABI_Result){.class = {ABI_INTEGER, ABI_NO_CLASS}, 0};
-#else
-        return classify_struct(type, class);
-#endif
-    default:
-        PANIC("Classification failed\n");
-    }
 }
 
 void verify_completion(const IR_Function *f) {
