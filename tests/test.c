@@ -5,12 +5,7 @@ typedef struct {
     int c;
 } S;
 
-int foo(S s) {
-    printf("Hello %d\n", s.b);
-    return s.b;
-}
-
 int main() {
-    S s = {.a = 5, .b = 'b', .c = 'a'};
-    return foo(s);
+    printf("%d %d %d %d %d %d %d %d\n", 1, 2, 3, 4, 5, 6, 7, 8);
+    return 0;
 }

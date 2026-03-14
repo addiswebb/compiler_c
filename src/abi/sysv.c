@@ -173,11 +173,11 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         if ((v->type->kind == T_INT || v->type->kind == T_POINTER) && gp_index < INTEGER_PARAM_REGISTERS) gp_index++;
         if (v->type->kind == T_FLOAT && sse_index < FLOAT_PARAM_REGISTERS) sse_index++;
     }
-    const int spilled_count = sse_index + gp_index;
+    const int spilled_count = instr->call.arg_array.count - (sse_index + gp_index);
     sse_index = 0;
     gp_index = 0;
 
-    const int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count + 8, 16);
+    const int param_frame_size = 8 * spilled_count;
     int param_offset = 0;
     if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
@@ -185,13 +185,14 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         switch (v->type->kind) {
         case T_INT:
         case T_POINTER:
+            const char *suffix = x86_op_suffix(v->type);
             if (gp_index < INTEGER_PARAM_REGISTERS) {
-                fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset,
+                fprintf(fp, "    mov%s %d(%%rbp), %s\n", suffix, v->reg.stack_offset,
                         gp_register_str[int_param_regs[gp_index++]][reg_size(v->type->size)]);
             } else {
-                const char *v_reg = x86_rax_reg(v->type);
-                fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, v_reg);
-                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", x86_op_suffix(v->type), v_reg, param_offset);
+                const char *reg = x86_rax_reg(v->type);
+                fprintf(fp, "    mov%s %d(%%rbp), %s\n", suffix, v->reg.stack_offset, reg);
+                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", suffix, reg, param_offset);
                 param_offset += 8;
             }
             break;
@@ -209,7 +210,10 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             PANIC("Tried to emit call arg for unsupported type\n");
         }
     }
-    if (instr->call.callee->is_variadic) fprintf(fp, "    mov $%d, %%al\n", sse_index);
+    if (instr->call.callee->is_variadic) {
+        if (sse_index) fprintf(fp, "    movl $%d, %%eax\n", sse_index);
+        else fprintf(fp, "    xor %%eax, %%eax\n");
+    }
 
     fprintf(fp, "    call %s\n", instr->call.callee->name);
     fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);

@@ -1,80 +1,52 @@
 .section .rodata
 .LC0:
-    .byte 'H', 'e', 'l', 'l', 'o', ' ', '%', 'd', 0x0A, 0
+    .byte '%', 'd', ' ', '%', 'd', ' ', '%', 'd', ' ', '%', 'd', ' ', '%', 'd', ' ', '%', 'd', ' ', '%', 'd', ' ', '%', 'd', 0x0A, 0
 
 .text
-.global foo
-foo:
-    push %rbp
-    mov %rsp, %rbp
-    subq $64, %rsp
-foo_0:
-    movq %rdi, %rax
-    movq %rax, -16(%rbp)
-    movq %rsi, %rax
-    movq %rax, -8(%rbp)
-    lea .LC0(%rip), %rax
-    movq %rax, -40(%rbp)
-    lea -16(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movl $4, %eax
-    movq %rax, -56(%rbp)
-    movq -48(%rbp), %rax
-    addq -56(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -48(%rbp)
-    subq $32, %rsp
-    movq -40(%rbp), %rdi
-    movl -48(%rbp), %esi
-    mov $0, %al
-    call printf
-    addq $32, %rsp
-    movl %eax, -40(%rbp)
-    lea -16(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movl $4, %eax
-    movq %rax, -48(%rbp)
-    movq -40(%rbp), %rax
-    addq -48(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
 .global main
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $48, %rsp
+    subq $80, %rsp
 main_0:
-    movl $5, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
+    lea .LC0(%rip), %rax
+    movq %rax, -8(%rbp)
+    movl $1, %eax
     movl %eax, -16(%rbp)
-    movl $98, %eax
+    movl $2, %eax
+    movl %eax, -24(%rbp)
+    movl $3, %eax
+    movl %eax, -32(%rbp)
+    movl $4, %eax
     movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    movl %eax, -12(%rbp)
-    movl $97, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
+    movl $5, %eax
+    movl %eax, -48(%rbp)
+    movl $6, %eax
+    movl %eax, -56(%rbp)
+    movl $7, %eax
+    movl %eax, -64(%rbp)
+    movl $8, %eax
+    movl %eax, -72(%rbp)
+    subq $24, %rsp
+    movq -8(%rbp), %rdi
+    movl -16(%rbp), %esi
+    movl -24(%rbp), %edx
+    movl -32(%rbp), %ecx
+    movl -40(%rbp), %r8d
+    movl -48(%rbp), %r9d
+    movl -56(%rbp), %eax
+    movl %eax, 0(%rsp)
+    movl -64(%rbp), %eax
+    movl %eax, 8(%rsp)
+    movl -72(%rbp), %eax
+    movl %eax, 16(%rsp)
+    xor %eax, %eax
+    call printf
+    addq $24, %rsp
     movl %eax, -8(%rbp)
-    subq $32, %rsp
-    movq -16(%rbp), %rdi
-    movq -8(%rbp), %rsi
-    call foo
-    addq $32, %rsp
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
+    movl $0, %eax
+    movl %eax, -8(%rbp)
+    movl -8(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp
     ret
