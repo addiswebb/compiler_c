@@ -1,59 +1,6 @@
 # Compiler C
 An unoptimised C compiler written in C supporting C89 following Win64 MS ABI Conventions.
-With the goal of eventual self compilation.
-
-## Table of Contents
-* [Compiler C](#compiler-c)
-* [Grammar](#grammar)
-* [Architecture](#architecture)
-  * [The Tokenizer](#the-tokenizer)
-  * [The Parser](#the-parser)
-  * [Semantic Analysis Pass](#semantic-analysis-pass)
-  * [IR Gen](#ir-gen)
-  * [Analysis Pass](#analysis-pass)
-  * [x86 Gen](#x86-gen)
-* [Compiler Features Implemented](#compiler-features-implemented)
-  * [1. Types](#1-types)
-  * [2. Literals](#2-literals)
-  * [3. Variables & Storage](#3-variables--storage)
-  * [4. Expressions](#4-expressions)
-  * [5. Control Flow](#5-control-flow)
-  * [6. Functions](#6-functions)
-  * [7. Pointers](#7-pointers)
-  * [8. Completeness](#8-completeness)
-* [To be Implemented](#to-be-implemented-ordered-from-next-to-never)
-
-# Grammar
-The grammar supported by the compiler is as defined in the [GNU C Language Manual](gnu-c-language-manual.pdf). Some liberties have been taken in places where I felt supporting such grammar would be redundant in the short term. Below is an example of equivalent code where only the former is supported.
-```c
-char a[] = "Hello World";
-```
-
-```c
-char b[] = "Hello " "World";
-```
-Both of these are parsed to be identical strings `"Hello World"`, as option `a` is perfectly fine, I do not plan to support option `b` until absolutely necessary. While the goal is to fully support C89, some useful features from future standards are also supported. For example designated initliazers for `struct` and `array` types,
-```c
-int x[] = { [1] =5, 4, 5, [5]= 6 };
-```
-
-```c
-struct Point{ int x; int y;  };
-struct Point p = {.x = 10, .y=10};
-```
-Or compound literals
-```c
-void foo(int *a);
-foo(&(int){1});
-```
-
-GNU also features several compiler extensions, from which I have chosen the useful or interesting ones to implement aswell,
-* Binary Constants `0b101 = 5`
-
-Additionally digraphs and trigraphs will not be supported. Things like implicit `int` return types are also ignored.
-
-A good way to understand what is supported is as follows,
-> "Every language feature used in developing the compiler will be implemented, such that the compiler can compiler itself." 
+With the goal of eventual self compilation. 
 
 # Architecture
 The compiler is comprised of 6 major sections. Each one has a clear task. 
@@ -101,152 +48,246 @@ E.g., given an **IR_RET** instruction, we first take the given virtual register 
 
 You can see how such a simple **IR** instruction can expand into a much more complex set of assembly instructions. This highlights the purpose of the intermediate representation, to hide away this overwhelming complexity so we can later focus on optimizaton and stuff.
 
-# Compiler Features Implemented
+# Grammar
+Below is the grammar for these comments to help understanding.
 
-## 1. Types
+Rules:
+* *Italics for unimplemented*.
+* `*` for any number, including zero.
+* `+` for any non-zero number.
+* `?` for optional
+* `[]` container for consumption, wraps general things like `expr` or `var decl`
+* `true` means any non-zero value
+* `false` means a value of zero only
 
-* Primitive Types
-  * `int`, `float`, `char`, `double`, `short`, `long`
-  * Unsigned integer variants: `unsigned int`, `signed int`
-* Type Qualifiers
-  * `const` (Parsed but ignored)
-  * `volatile` (Parsed but ignored)
-* Type Conversion
-  * Casts: `(int)x`, `(float*)y`
-* Compound Types
-  * Arrays
-    * Declaration: `type A[n]`
-    * C strings `"Hello World\n"`
-      * Auto null terminating `\0`
-    * Indexing with `[i]`
-    * Array initialization: `= {}`
-    * **Size inference** `int[]` (C99)
-    * **Designated initializers** `[i] = value` (C99)
-  * Structs
-    * Declaration: `struct A { ... }`
-    * Nested structs
-    * Member access: `.` and `->`
-    * Padding rules
-    * **Designated initializers** `.member = value` (C99)
-  * Unions
-  * Enums
-    * Explicit values: `enum C { ONE = 1, TWO, }`
-* Typedef
-  * Aliases: `typedef type name`
+>### 1.  `(type)`
+"any valid variable type"
+* int 
+* float
+* char
+* double
+* struct [label]? [{[struct member]*]}];
+* enum [label]? [{[enum field]*}]?;
 
-## 2. Literals
+Can be prepended with any one of the following storage classifiers
+* static
+* extern
 
-* Integer Literals
-  * Decimal, Octal, Hexadecimal, Binary (`0bNN`) (C99) (C11/GNU Extension for Binary)
-  * Unsigned variants
-  * Literal Suffixes `u`, `U`, `l`, `L`
-* Floating-Point Literals
-  * Decimal floating literals
-  * Literal Suffixes `f`, `F`, `l`, `L`
-* Character Literals
-  * Single character `'a'`
-  * Multi-character literals `'abcd'` (implementation-defined)
-  * Escape sequences: `\n`, `\t`, etc.
-* String Literals
-  * `"..."`  
-* Compound Literals
-  * `(Type){ ... }` (C99)
+Optionally also a mutability classifier:
+* *const*
+* *volatile*
 
-## 3. Variables & Storage
+Optionally also a variant:
+* *unsigned*
 
-* Declaration & Scoping
-  * Local and global variables
-  * Shadowing
-* Storage Specifiers
-  * `extern`
-  * `static`
+Typedef`ed `identifiers` are also included.
 
-## 4. Expressions
+>### 2. `identifier` 
+"Any alpha-starting alpha-numeric string which may contain underscores `_` "
 
-* Unary Operators
-  * Arithmetic: `+`, `-`, `!`, `++`, `--`
-  * Bitwise: `~`
-  * `sizeof`
-* Binary Operators
-  * Arithmetic: `+`, `-`, `*`, `/`
-  * Bitwise: `&`, `|`, `^`, `<<`, `>>`
-  * Comparison: `<`, `>`, `<=`, `>=`, `==`, `!=`
-  * Logical: `&&`, `||`
-  * Assignment: `=`, `+=`, `-=`, `*=`, `/=`, `&=`, `|=`, `^=`, `<<=`, `>>=`
-* Pointer & Address Operators
-  * `&`, `*`
-  * Pointer arithmetic
+Used to identify variables, functions, or typedef type aliases.
+Must be unique.
 
-## 5. Control Flow
+>### 3. `expr`
+"Anything that can be evaluated"
+* Function call
+```c
+    foo()
+```
+* Binary Operation
+```c
+    10 + a
+```
+* Unary Operation
+```c
+    i++
+```
 
-* Conditional
-  * `if` / `else`
-  * Nested conditionals
-* Loops
-  * `for`, `while`
-  * `do {} while()`
-* Switch
-  * `switch`, `case`
-* Jump Statements
-  * `break`, `continue`
-  * `goto` & labels
-* Nested loops/branches
-* Early jumping for `a && b` and `a || b` conditions.
+>### 4. `{compound}`
+"A list of block items wrapped in curly braces"
+```c
+{
+    [block item]*
+}
+```
 
-## 6. Functions
+>### 5. `block item`
+"Either a `var decl` or a `statement`"
 
-* Declarations & Calls
-  * Parameters, return types
-    * `void` return type
-  * `inline` (Parsed but ignored)
-* Function ABI & Calling Conventions `MS x64 ABI`
-  * `Win64` only Shadow Space `32 bytes`
-  * Function Arguments
-    * `Win64`
-      * First `4` args to registers, then stack spilled
-    * `SysV`
-      * First `6` args to registers, then stack spilled
-  * Structs as function arguments
-    * `Win64`
-      * `sizeof(struct A) % 2 == 0 && sizeof(struct A) < 8b` => integer chunks
-      * `                       else                       ` => hidden pointer & memcpy
-    * `SysV`
-      * `sizeof(struct A) < 16b` => 1-2 `u64` chunks
-      * `       ...       > 16b` => hidden pointer & memcpy
-  * Variadic Functions
-    * `Win64`
-      * Floating point arguments cloned to general purpose registers (For 4 args)
-    * `SysV`
-      * Currently Unsupported
+>### 6. `statement`
+"Any self sufficient piece of code"
+* `identifier`;
+* `{compound}`
+* `expr`;
+* `;`
+
+Almost always ends with a `;`
+
+* Or Control Flow Statement
+    * \[ `if`, `for`, `while`, `return`, `break`, `continue`, `switch` \]
+    * *goto*
+
+>### 7. `var decl`
+"A `(type)` followed by an `identifier`, may be uninitialized"
+* Simple Variable declaration:
+```c
+int a;
+```
+* Variable declaration & Initialization:
+```c
+int a = 10;
+```
+
+>### 8. Standard C Statements
+### `if` statement
+Jumps to either `true` or `false` dependent on `cond``s value 
+*{0 => false, any other value => true}*
+```c
+if (cond) `true` [else `false`]?
+```
+* Where:
+    * `cond` is any `expr`
+    * `true` & `false` are any `statement`, most commonly `{compound}`
+    * `else` is optional. When present, must be followed by a `statement`
     
-## 7. Pointers
+### `while` loop
+Executes `true` if `cond` is [true]
+```c
+while (cond) `true`
+```
+* Where:
+    * `cond` is any `expr`
+    * `true` is any `statement` most commonly `{compound}`
 
-* Basic pointers & addresses
-* Pointer arithmetic
-* Dereference and member access `a->b` as `*(a).b`
+### `for` loop
+Executes `init`, then on `cond` being [true], executes `true` then `iter` and finally loops back to check `cond`. 
+* `init` is executed once at the start
+* `cond` is checked before every iteration
+* `true` is executed only if `cond` is [true]
+* `iter` is executed after `true`
+```c
+for (init; cond; iter) `true`
+```
+* Where:
+    * `init` is either `var decl` or `statement` 
+    * `cond` & `iter` are any `expr`
+    * `true` is any `statement` most commonly `{compound}`
+    
+### `return` statement
+Returns control flow to callee, also returns a value. If no value is given, returns `0`.
+```c
+    return [`value`]?;
+```
+* Where:
+    * `value` is an optional `expr`
 
-## 8. Completeness
-
-* Use/Support a Preprocessor (~~Write a Preprocessor~~)
-    * Automatically call preprocessor on source file.
+# Implemented
+* Scopes
+* Variable Declaration
+    * Shadowing
+* Types:
+    * Int, Float, Char, Double, Short, Long
+* Literals 
+    * Octal, Hexadecimal, Decimal, Binary
+    * Floating Point
+    * Strings
+    * Char
+* All Binary operators:
+    * Arithmetic:  \[ `+`, `-`, `*`, `/` \]
+    * Bitwise:  \[ `&`, `|`, `^`, `<<`, `>>` \]
+    * Comparitive: \[ `<`, `>`, `<=`, `>=`, `==`, `!=` \]
+    * Logical: \[ `&&`, `||` \]
+    * Assignment
+        * Any arithmetic or bitwise operator appended by `=`, assigns the value of the operation e.g `+=`.
+* All Unary operators:
+    * Arithmetic:  \[ `+`, `-`, `!`, `++`, `--` \]
+    * Bitwise: \[ `~` ]
+    * sizeof
+* Control Flow
+    * If/Else branching
+    * For Loops
+    * While Loops
+    * Nested branches
+* Advanced Control Flow
+    * continue, break
+    * switch, case
+* Functions
+    * Passing Parameters
+* Pointers & Addresses 
+    *   [Pointer,int] Arithmetic
+* Type conversion
+    * `(int)x`, `(float *)y`
+* Arrays
+    * Declaring arrays
+    * C Strings
+    * Indexing with `[]`
+* Array Initialization
+    * Using `= {};`
+        * Empty, Undersized, Oversized
+    * size inference
+    * Allow infered size allocation `int[]`
+* Structs
+    * `struct A {}`
+    * Member access using `.` and `->`
+    * Padding rules
+    * Nested structs
+* Enums
+    * `enum B {}`
+    * Specify value `enum C { ONE = 1, TWO, }`
+* Storage Specifiers
+    * extern
+    * static
+* typedef
+* Function ABI Calling Conventions
+    * MS x64 ABI
+    * Use registers for Parameters
+    * Overflow 6/4+ to stack
+* Escaped characters in literals
+    * `\n`, `\t`, `\a`, `\b`, `\e`, `\f`, `\r`, `\v`
+    * `\\`, `\'`, `\"`
+    * `\x' Hex
+    * `\nnn` Octal
+* Variadic Functions
+    * Link with external variadic functions
+* Advanced Control Flow:
+    * goto & labels
+* Compound literals (C99)
+    * `(Type){}`
+* Comments
+    * Multi-line `/* ... */`
+    * Single-line `// ...` (C99)
 
 ## To be Implemented (Ordered from next to never...)
-* Function pointers
-* Compiler builtins
-    * `__builtin_va_list` etc.
-* SysV ABI (Or support stdlib, whichever is easier)
-* Support a standard library 
-    * ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
-    * Need to support SysV/Linux Abi for Musl libc :(
+* Function ABI Calling Conventions
+    * Handle Structs
+        * `sizeof(struct A) < 16b` => use registers
+        * `       ...       > 16b` => use hidden pointer to copy on function stack 
+    * Caller/Callee save registers
+* Use physical registers
+    * Overflow to stack
+* Pointers
+    * [Pointer,Pointer] Arithmetic
+    * Function pointers
+* Literals
+    * Handle overflows and multi char literal `char a = `abcd`;`
+* Structs and Unions, Enums
+    * Designated Initializers (C99)
+        * `.member = value` 
+        * `[n] = x`
+    * Bitfield in structs
+        * `unsigned int flag : 1; // 1 bit`
+* Variants
+    * Unsigned
+* Qualifiers
+    * const, volatile
+* Variadic Functions
+    * Compile variadic functions
+* Use/Support a Preprocessor (~~Write a Preprocessor~~)
+* Inline functions
+* Labels as values? (part of GCC, not standard C)
+* Volatile/Atomic memory
+* SysV ABI
+* Support a standard library. (~~Create a standard library~~)
     * `printf`
     * `malloc`
     * `free`
-* Use physical registers
-    * Overflow to stack
-* Function ABI Calling Conventions
-    * Caller/Callee save registers
-* Bitfield in structs
-    * `unsigned int flag : 1; // 1 bit`
-* Inline functions
-* Volatile/Atomic memory
-* Labels as values? (part of GCC, not standard C)
