@@ -12,6 +12,7 @@ With the goal of eventual self compilation.
   * [IR Gen](#ir-gen)
   * [Analysis Pass](#analysis-pass)
   * [x86 Gen](#x86-gen)
+  * [ABI](#abi)
 * [Compiler Features Implemented](#compiler-features-implemented)
   * [1. Types](#1-types)
   * [2. Literals](#2-literals)
@@ -100,6 +101,10 @@ Here we lower the **IR** to raw assembly, replacing simplified **IR_BINARYOP**, 
 E.g., given an **IR_RET** instruction, we first take the given virtual register (Which promises to store a return value) and load it into the `%rax` CPU register. This register is used for all return values in the MS  ABI Function Call Convention. Then we reset the %rsp stack pointer back to the start of the function's stack frame, which was stored in %rbp. Then we pop the return address off the stack (Which is at the top of the stack, when we are at the start of the functions stack frame) and finally call `ret`. Which jumps back to the return address in `%rbp` and "brings" our return value along in `%rax`.
 
 You can see how such a simple **IR** instruction can expand into a much more complex set of assembly instructions. This highlights the purpose of the intermediate representation, to hide away this overwhelming complexity so we can later focus on optimizaton and stuff.
+### ABI
+As the compiler supports both Win64 and SysV platforms it is neccary to have differing implementations which correspond to the correct Application Binary Interface. This is done by selectively compiling either `win64.c` or `sysv.c`, which both implement the functions found in `abi.h` and are ABI conformant. 
+Any function whose implementation changes by platform is prefixed with `abi_`.  Much of the differences in ABI standards are found in IR or x86 lowering. My goal was to have a high level version of a translation unit's IR, which is the same regardless of platform. This then gets "lowered" to be ABI specific. Things like `call` or `ret` instructions. This mimics how `IR_Value`s go from virtual concepts to physical registers and defined stack offsets. Both take place together after IR has been fully generated.
+As both platforms use registers for different things and in different orders, the corresponding static arrays which define this are intialized in their respective implementation source file, so that anywhere else `int_param_reg[0]` gives the correct register.
 
 # Compiler Features Implemented
 
@@ -205,19 +210,20 @@ You can see how such a simple **IR** instruction can expand into a much more com
     * `Win64`
       * First `4` args to registers, then stack spilled
     * `SysV`
-      * First `6` args to registers, then stack spilled
-  * Structs as function arguments
+      * First `6` integer args to registers, then stack spilled
+      * First `8` floating point args to registers, then stack spilled
+  * Structs as function arguments and **return values**
     * `Win64`
-      * `sizeof(struct A) % 2 == 0 && sizeof(struct A) < 8b` => integer chunks
-      * `                       else                       ` => hidden pointer & memcpy
+      * `sizeof(struct A) <= 8b` => 1-2 integer chunks
+      * `         ...          ` => hidden pointer & memcpy
     * `SysV`
-      * `sizeof(struct A) < 16b` => 1-2 `u64` chunks
-      * `       ...       > 16b` => hidden pointer & memcpy
+      * `sizeof(struct A) <= 16b` => 1-2 integer/SSE chunks
+      * `       ...        > 16b` => hidden pointer & memcpy
   * Variadic Functions
     * `Win64`
       * Floating point arguments cloned to general purpose registers (For 4 args)
     * `SysV`
-      * Currently Unsupported
+      * Number of SSE registers used stored in `%al`
     
 ## 7. Pointers
 
