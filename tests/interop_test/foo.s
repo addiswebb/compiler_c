@@ -1,3 +1,4 @@
+.section .note.GNU-stack,"",@progbits
 .section .rodata
 
 .text
@@ -7,14 +8,8 @@ foo:
     mov %rsp, %rbp
     subq $48, %rsp
 foo_0:
-    lea -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq %rcx, %rdx
-    movq -24(%rbp), %rcx
-    mov $3, %r8
-    sub $32, %rsp
-    call memcpy
-    add $32, %rsp
+    movq %rdi, %rax
+    movq %rax, -8(%rbp)
     lea -8(%rbp), %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax

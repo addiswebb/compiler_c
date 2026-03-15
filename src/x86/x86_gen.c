@@ -148,7 +148,10 @@ static void x86_gen_function(FILE *fp, IR_Context *ctx) {
     }
 }
 void x86_gen_module(FILE *fp, IR_Context *ctx) {
-    // Const floats/strings
+#ifndef _WIN64
+    fprintf(fp, ".section .note.GNU-stack,\"\",@progbits\n");
+#endif
+    // Const data floats/strings
     if (ctx->module->const_array.count > 0) {
         fprintf(fp, ".section .rodata\n");
         for (int i = 0; i < ctx->module->const_array.count; i++) {
