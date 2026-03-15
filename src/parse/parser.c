@@ -248,7 +248,6 @@ Node *new_function_node(NodeManager *nm) {
     Node *node = new_node(nm, N_FUNCTION);
     array_init(&node->func.params_array, 4, sizeof(Node **));
     node->func.body = NULL;
-    node->func.type = NULL;
     return node;
 }
 Node *new_function_call_node(NodeManager *nm, Node *identifier) {
@@ -354,6 +353,19 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
     }
 
     for (int i = 0; i < ptrs; i++) type = get_pointer_type(type);
+
+    if (p_peek(p)->type == TK_OPEN_SQUARE) {
+        p_consume(p); // [
+        int len = -1; // -1 for inferred size
+        if (p_peek(p)->type != TK_CLOSE_SQUARE) {
+            // Only works for a[5], not a[b + 1] (can fix later)
+            // Todo; allow for const expressions like [5 + 6] or smt
+            const Token *t = p_consume_a(p, TK_INT_LITERAL);
+            len = (int)parse_int(t->value, t->size);
+        }
+        p_consume_a(p, TK_CLOSE_SQUARE);
+        type = get_array_type(type, len);
+    }
 
     if (qualifiers != QUAL_NONE) type = get_qualified_type(type, qualifiers);
     return type;
@@ -554,7 +566,7 @@ Symbol *p_append_var_decl(Parser *p, Node *v) {
     Linkage linkage = LINK_NONE;
     Storage storage = STORAGE_NONE;
     if (v->var_decl.is_global) {
-        storage = v->var_decl.has_initializer ? STORAGE_DATA : STORAGE_BSS;
+        storage = v->var_decl.is_defined ? STORAGE_DATA : STORAGE_BSS;
         linkage = v->var_decl.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
     } else {
         // local variable
@@ -864,21 +876,18 @@ int p_parse_parameter_list(Parser *p, NodeManager *nm, Node *func) {
 Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, const StorageClass storage_class, bool is_inline) {
     Node *node = new_function_node(nm);
     node->func.name = p_consume_a(p, TK_IDENTIFIER)->value;
-    node->func.type = type;
     node->func.is_inline = is_inline;
     node->type = type->type;
 
     node->func.is_variadic = p_parse_parameter_list(p, nm, node);
     if (p_peek(p)->type == TK_SEMI) {
         p_consume(p);
-        node->func.has_initializer = false;
         node->func.is_defined = false;
     } else {
-        node->func.has_initializer = true;
         node->func.is_defined = true;
     }
     node->func.storage_class = storage_class;
-    if (node->func.has_initializer) node->func.body = p_parse_compound(p, nm);
+    if (node->func.is_defined) node->func.body = p_parse_compound(p, nm);
     return node;
 }
 
@@ -926,14 +935,13 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const Sto
     if (p_peek(p)->type == TK_EQ) {
         p_consume(p);
         var_decl->var_decl.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-        var_decl->var_decl.has_initializer = true;
+        var_decl->var_decl.is_defined = true;
     } else {
         // Forward declaration
-        var_decl->var_decl.has_initializer = false;
+        var_decl->var_decl.is_defined = false;
         var_decl->var_decl.expr = NULL;
     }
     var_decl->var_decl.storage_class = storage_class;
-    var_decl->var_decl.is_defined = storage_class != EXTERN;
     p_consume_semi(p);
 
     return var_decl;

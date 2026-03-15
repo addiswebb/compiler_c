@@ -354,7 +354,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
         if (var_decl->var_decl.storage_class == EXTERN) return;
         IR_Literal x;
         IR_Literal *l = &x;
-        if (var_decl->var_decl.has_initializer) {
+        if (var_decl->var_decl.is_defined) {
             Node *x = var_decl->var_decl.expr;
             *l = ir_literal(var_decl->var_decl.expr);
         } else l = NULL;
@@ -364,7 +364,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
 
     // Handle locals
     IR_Value dst = ir_new_var(ctx->func, var_decl->var_decl.identifier->identifier.name, var_decl->type);
-    if (!var_decl->var_decl.has_initializer) return;
+    if (!var_decl->var_decl.is_defined) return;
 
     if (var_decl->var_decl.expr->kind == N_INIT_LIST) {
         IR_Value zero;
@@ -556,14 +556,14 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
             IR_Func_Def *func_def = ir_get_func_def(ctx, n->func.name);
             if (func_def) {
                 if (func_def->is_defined) {
-                    if (n->func.has_initializer) {
+                    if (n->func.is_defined) {
                         PANIC("Redefinition of %s\n", n->func.name);
                     }
                     break;
                 }
-            } else func_def = ir_append_func_def(ctx, n->func.name, n->func.has_initializer, n->func.is_variadic);
+            } else func_def = ir_append_func_def(ctx, n->func.name, n->func.is_variadic, n->func.is_variadic);
 
-            if (n->func.has_initializer) ir_append_function(ctx, func_def, ir_gen_function(ctx, n));
+            if (n->func.is_defined) ir_append_function(ctx, func_def, ir_gen_function(ctx, n));
             break;
         case N_TYPEDEF:
         case N_TYPE:

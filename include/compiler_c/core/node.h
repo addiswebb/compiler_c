@@ -63,13 +63,12 @@ struct Node {
         } translation_unit;
         // type name(params) [body]
         struct {
-            Node *type;
+            // Node *type;
             const char *name;
             Array params_array;
             Node *body;
             StorageClass storage_class;
             Symbol *symbol;
-            bool has_initializer;
             bool is_global;
             bool is_defined;
             bool is_inline;
@@ -143,7 +142,6 @@ struct Node {
             Node *identifier;
             Node *expr;
             StorageClass storage_class;
-            bool has_initializer;
             bool is_global;
             bool is_defined;
             Symbol *symbol;

@@ -286,7 +286,7 @@ void print_node(const Node *node, const int depth) {
         print_type(node->type);
 
         printf(", has_initializer=");
-        if (node->func.has_initializer) printf("true");
+        if (node->func.is_defined) printf("true");
         else printf("false");
 
         if (node->func.is_variadic) printf(", variadic");
@@ -305,14 +305,14 @@ void print_node(const Node *node, const int depth) {
             printf("}");
         }
         printf("\n");
-        if (node->func.has_initializer) print_node(node->func.body, depth + 1);
+        if (node->func.is_defined) print_node(node->func.body, depth + 1);
         break;
     case N_VAR_DECL:
         printf(": [type= ");
         print_type(node->type);
         printf(", name= %s", node->var_decl.identifier->identifier.name);
         printf(", has_initializer=");
-        if (node->var_decl.has_initializer) printf("true");
+        if (node->var_decl.is_defined) printf("true");
         else printf("false");
         if (node->var_decl.storage_class == EXTERN) printf(", extern");
         if (node->var_decl.storage_class == STATIC) printf(", static");

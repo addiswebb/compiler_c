@@ -20,6 +20,7 @@ typedef enum {
     T_STRUCT,
     T_ENUM,
     T_UNION,
+    T_FUNCTION,
     T_INVALID,
 } TypeKind;
 
@@ -91,6 +92,11 @@ struct Type{
             bool complete;
             Array members_array;
         }_union;
+        struct{
+            Type *return_type;
+            Array params;
+            bool is_variadic;
+        }_func;
     };
 };
 

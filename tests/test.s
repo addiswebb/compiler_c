@@ -27,22 +27,23 @@ main_0:
     movl %eax, -64(%rbp)
     movl $8, %eax
     movl %eax, -72(%rbp)
-    subq $24, %rsp
-    movq -8(%rbp), %rdi
-    movl -16(%rbp), %esi
-    movl -24(%rbp), %edx
-    movl -32(%rbp), %ecx
-    movl -40(%rbp), %r8d
-    movl -48(%rbp), %r9d
+    subq $80, %rsp
+    movq -8(%rbp), %rcx
+    movl -16(%rbp), %edx
+    movl -24(%rbp), %r8d
+    movl -32(%rbp), %r9d
+    movl -40(%rbp), %eax
+    movl %eax, 32(%rsp)
+    movl -48(%rbp), %eax
+    movl %eax, 40(%rsp)
     movl -56(%rbp), %eax
-    movl %eax, 0(%rsp)
+    movl %eax, 48(%rsp)
     movl -64(%rbp), %eax
-    movl %eax, 8(%rsp)
+    movl %eax, 56(%rsp)
     movl -72(%rbp), %eax
-    movl %eax, 16(%rsp)
-    xor %eax, %eax
+    movl %eax, 64(%rsp)
     call printf
-    addq $24, %rsp
+    addq $80, %rsp
     movl %eax, -8(%rbp)
     movl $0, %eax
     movl %eax, -8(%rbp)

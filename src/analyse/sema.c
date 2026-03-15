@@ -180,7 +180,6 @@ void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *n
     d->type = node->type;
 
     d->var_decl.expr = node->compound_literal.value;
-    d->var_decl.has_initializer = true;
     d->var_decl.is_defined = true;
     d->var_decl.storage_class = STATIC;
     d->var_decl.is_global = false;
@@ -245,7 +244,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_VAR_DECL:
         // Skip extern nodes
         if (node->var_decl.storage_class == EXTERN) {
-            if (node->var_decl.has_initializer) {
+            if (node->var_decl.is_defined) {
                 PANIC("External variable cannot be initialized in the same statement\n");
             }
         }
@@ -409,18 +408,17 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         if (!sema_ctx->func) {
             PANIC("Cannot call return outside of a function\n");
         }
-        Type *return_type = sema_ctx->func->func.type->type;
+        Type *return_type = sema_ctx->func->type;
         // Early exit if return type is void, and node is `return;`
+        ASSERT(return_type != type_void && node->_return.expr, "Non-void type function \'%s\' should return a value\n");
+
         if (node->_return.expr) {
             semantic_analysis(sema_ctx, p, nm, node->_return.expr);
             if (node->_return.expr->type != return_type) {
                 node->_return.expr = cast_node(nm, node->_return.expr, return_type);
             }
-        } else {
-            if (return_type != type_void) {
-                PANIC("Non-void type function \'%s\' should return a value\n", sema_ctx->func->func.name);
-            }
         }
+
         sema_ctx->func = NULL;
         break;
     case N_LITERAL:
