@@ -83,6 +83,8 @@ During semantic analysis, the symbol table is added to for all declarations. Sym
 ### IR Gen
 This step involves taking the **AST** and converting it from the recursive structured tree (where nodes link to nodes linking to other nodes), into a more linear and assembly like "Intermediate Representation", **IR**. The **IR** generator, traverses the tree according to our definition, and when it reaches a statement or expression, it converts it to corresponding **IR**  instructions. 
 
+IR takes two forms, an intitial generic representation and a final ABI specific representation. The conversion happens in the **Analysis** pass, the goal is to have a more human readable generic version and a more literal platform specific, later version which closer reflects the final assembly code.
+
 E.g., We reach a **N_RETURN** node. It has an `expr`, which we need to generate **IR** for before we can call **IR_RET**. First, we call `ir_gen_expression`, which creates the **IR** for the return expression and stores the result in some virtual register. `ir_gen_expression` then returns the register, which we can give to our **IR_RET** instruction. Now the **IR_RET** has only the register where its return value is. This makes converting to assembly very easy later on. Its similar to assembly but it only represents what the code will do, where assembly represents exactly what the computer will do (which as a human, is not always as clear). 
 
 The **IR_Module** makes use of pools to store symbols and their definitons. There is a const pool which stores all literals and can be referenced to using an index. The globals pool acts similarly, storing a literal but also a identifier. Finally the var pool which tracks defined locals. It exists its self as a stack of pools, one for each scope entered.
@@ -91,19 +93,24 @@ This simplicity is vital for easily translating **IR** into actual assembly, whi
 
 ### Analysis Pass
 When **IR** is generated, the instructions mostly use Virtual Registers. A virtual register is defined once and its value is read from many times. A virtual register does not get redefined nor does it actually exist in memory. The job of the Analysis pass is to replace these virtual registers with physical stack slots and registers. To achieve this, first a Control Flow Graph is generated from the **IR Blocks**. Each block is read to determine where it can branch to. The result is that every block has a list of successor blocks and predecessor blocks. The next step is to define what virtual registers a block defines/creates and what registers it uses but did not create. This is done by looping over every instruction within the block, it is known for each instruction which operand is a definition and which operands are just used. With this information we populate the blocks `used` and `defined` arrays.
+
 The next step is to compute for each block, the virtual registers which come from outside the block and which exist after the block ends. These are called the `live_in` and `live_out` arrays. The details of this are complex and will be skipped for brevity. At this point it can be concluded that for every block, where a virtual register is in its `live_in` but not the `live_out`, the register dies within the block. For such instances we search for the last occurence of it and set that as the registers end instruction. The start instruction of every virtual register is simply found by looping over all instructions and recording when it is defined.
+
 With the liveness/lifetimes of every virtual register computed, we can now allocate them to reusable stack slots. This process is simple, given the virtual registers sorted from first defined to last defined, we check if their is a suitable stack slot availiable, if so we assign the register to it. Otherwise we create a new stack slot with the correct size and set its `next_free` variable to the registers `last_used`. This results in stack slots being reused once they are free.
+
 These slots can then be allocated on the stack as physical slots. Later, the first n compatible stack slots can be assigned to registers instead for optimisations. 
 
 ### x86 Gen
 Here we lower the **IR** to raw assembly, replacing simplified **IR_BINARYOP**, or other instruction with hardware specific instructions. Loading memory to and from registers, handling bit flags etc. While the assembly can be tricky to come to terms with, converting the generated **IR** to x86-64 assembly is actually the easiest step. This is thanks to the work done by the Tokenizer, Parser and **IR** gen.
 
-E.g., given an **IR_RET** instruction, we first take the given virtual register (Which promises to store a return value) and load it into the `%rax` CPU register. This register is used for all return values in the MS  ABI Function Call Convention. Then we reset the %rsp stack pointer back to the start of the function's stack frame, which was stored in %rbp. Then we pop the return address off the stack (Which is at the top of the stack, when we are at the start of the functions stack frame) and finally call `ret`. Which jumps back to the return address in `%rbp` and "brings" our return value along in `%rax`.
+E.g., given an **IR_RET** instruction, we first take the given virtual register (Which promises to store a return value) and load it into the `%rax` CPU register. This register is used for return values. Then we reset the `%rsp` stack pointer back to the start of the function's stack frame, which was stored in `%rbp`. Then we pop the return address off the stack (Which is at the top of the stack, when we are at the start of the functions stack frame) and finally call `ret`. Which jumps back to the return address in `%rbp` and "brings" our return value along in `%rax`.
 
 You can see how such a simple **IR** instruction can expand into a much more complex set of assembly instructions. This highlights the purpose of the intermediate representation, to hide away this overwhelming complexity so we can later focus on optimizaton and stuff.
 ### ABI
 As the compiler supports both Win64 and SysV platforms it is neccary to have differing implementations which correspond to the correct Application Binary Interface. This is done by selectively compiling either `win64.c` or `sysv.c`, which both implement the functions found in `abi.h` and are ABI conformant. 
+
 Any function whose implementation changes by platform is prefixed with `abi_`.  Much of the differences in ABI standards are found in IR or x86 lowering. My goal was to have a high level version of a translation unit's IR, which is the same regardless of platform. This then gets "lowered" to be ABI specific. Things like `call` or `ret` instructions. This mimics how `IR_Value`s go from virtual concepts to physical registers and defined stack offsets. Both take place together after IR has been fully generated.
+
 As both platforms use registers for different things and in different orders, the corresponding static arrays which define this are intialized in their respective implementation source file, so that anywhere else `int_param_reg[0]` gives the correct register.
 
 # Compiler Features Implemented
@@ -127,13 +134,12 @@ As both platforms use registers for different things and in different orders, th
     * Array initialization: `= {}`
     * **Size inference** `int[]` (C99)
     * **Designated initializers** `[i] = value` (C99)
-  * Structs
+  * Structs/Unions
     * Declaration: `struct A { ... }`
-    * Nested structs
+    * Nested structs/unions
     * Member access: `.` and `->`
     * Padding rules
     * **Designated initializers** `.member = value` (C99)
-  * Unions
   * Enums
     * Explicit values: `enum C { ONE = 1, TWO, }`
 * Typedef
@@ -232,21 +238,16 @@ As both platforms use registers for different things and in different orders, th
 * Dereference and member access `a->b` as `*(a).b`
 
 ## 8. Completeness
-
-* Use/Support a Preprocessor (~~Write a Preprocessor~~)
-    * Automatically call preprocessor on source file.
+* Automatically call `gcc` preprocessor on source file.
+* Win64 ABI
+* SysV ABI
 
 ## To be Implemented (Ordered from next to never...)
 * Function pointers
 * Compiler builtins
     * `__builtin_va_list` etc.
-* SysV ABI (Or support stdlib, whichever is easier)
 * Support a standard library 
     * ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
-    * Need to support SysV/Linux Abi for Musl libc :(
-    * `printf`
-    * `malloc`
-    * `free`
 * Use physical registers
     * Overflow to stack
 * Function ABI Calling Conventions
