@@ -129,6 +129,7 @@ void t_free(Tokenizer *tokenizer);
 /* Converts the tokenizer's source file into tokens in the token array. */
 void t_tokenize(Tokenizer *tk);
 
+bool is_postfix_operator(const TokenType type);
 bool is_unary_operator(const TokenType type);
 bool is_binary_operator(const TokenType type);
 bool is_assignment_op(const TokenType type);

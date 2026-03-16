@@ -306,7 +306,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_BINARY:
         semantic_analysis(sema_ctx, p, nm, node->binary.lhs);
+        sema_ctx->expect_value = true;
         semantic_analysis(sema_ctx, p, nm, node->binary.rhs);
+        sema_ctx->expect_value = false;
         node->type = check_binary_op(nm, node->binary.op, node);
         break;
     case N_CAST:
@@ -324,19 +326,37 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         printf("\n");
         exit(1);
     case N_FUNCTION_CALL:
-        const Node *func_def = p_get_func_def(p, node->func_call.identifier->identifier.name);
-        if (!func_def->type->_func.is_variadic && func_def->type->_func.params.count != node->func_call.params_array.count) {
-            PANIC("Argument count mismatch: %s expects %d found %d\n", func_def->func.name, func_def->type->_func.params.count,
+        semantic_analysis(sema_ctx, p, nm, node->func_call.callee);
+        Type *callee_type = node->func_call.callee->type;
+        const char *fn_name = TK_IDENTIFIER ? node->func_call.callee->identifier.name : "";
+
+        ASSERT(callee_type != type_invalid, "Invalid type of Function %s\n", fn_name);
+
+        if (callee_type->kind == T_FUNCTION) {
+            callee_type = get_pointer_type(callee_type);
+            node->func_call.callee->type = callee_type;
+        }
+        ASSERT(callee_type->kind == T_POINTER && callee_type->base->kind == T_FUNCTION, "Cannot call non function type\n");
+
+        Type *fn_type = callee_type->base;
+        if (!fn_type->_func.is_variadic && fn_type->_func.params.count != node->func_call.params_array.count) {
+            PANIC("Argument count mismatch: Function %s expects %d found %d\n", fn_name, fn_type->_func.params.count,
                   node->func_call.params_array.count);
         }
         // TODO handle variadic with no named paramter here instead of parser.
-        node->type = func_def->type->_func.return_type;
+        node->type = fn_type->_func.return_type;
         for (int i = 0; i < node->func_call.params_array.count; i++) {
             Node *fn_call_param = get_node(&node->func_call.params_array, i);
             semantic_analysis(sema_ctx, p, nm, fn_call_param);
             // Only type check named params, skip variadic params.
-            if (i < func_def->type->_func.params.count) {
-                ParamDecl *fn_param = (ParamDecl *)get(&func_def->type->_func.params, i);
+
+            // Always downcast arrays to pointers for functions
+            if (fn_call_param->type->kind == T_ARRAY) {
+                Node *casted_node = cast_node(nm, fn_call_param, get_pointer_type(fn_call_param->type->base));
+                set_node(&node->func_call.params_array, &casted_node, i);
+            }
+            if (i < fn_type->_func.params.count) {
+                ParamDecl *fn_param = (ParamDecl *)get(&fn_type->_func.params, i);
                 if (fn_param->type != fn_call_param->type) {
                     Node *casted_node = cast_node(nm, fn_call_param, fn_param->type);
                     set_node(&node->func_call.params_array, &casted_node, i);
@@ -351,11 +371,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                     set_node(&node->func_call.params_array, &casted_node, i);
                 }
             }
-            // Always downcast arrays to pointers for functions
-            if (fn_call_param->type->kind == T_ARRAY) {
-                Node *casted_node = cast_node(nm, fn_call_param, get_pointer_type(fn_call_param->type->base));
-                set_node(&node->func_call.params_array, &casted_node, i);
-            }
         }
         break;
     case N_IDENTIFIER:
@@ -363,6 +378,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         if (!ident_symbol) {
             PANIC("Failed to find symbol %s\n", node->identifier.name);
         }
+        node->identifier.symbol = ident_symbol;
         switch (ident_symbol->kind) {
         case ENUM:
             node->kind = N_LITERAL;
@@ -378,8 +394,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->type = ident_symbol->_typedef.type;
             break;
         case FUNC:
-            
             node->type = ident_symbol->func_def->type;
+            if (sema_ctx->expect_value) node->type = get_pointer_type(node->type);
+            sema_ctx->expect_value = false;
             break;
         case ANY:
             PANIC("Should be unreachable\n");
@@ -423,7 +440,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
         Type *expected_type = sema_ctx->func->type->_func.return_type;
         // Early exit if return type is void, and node is `return;`
-        ASSERT(expected_type != type_void && node->_return.expr, "Non-void type function \'%s\' should return a value\n");
+        ASSERT(expected_type != type_void && node->_return.expr, "Non-void type function '%s' should return a value\n");
 
         if (node->_return.expr) {
             semantic_analysis(sema_ctx, p, nm, node->_return.expr);
@@ -432,8 +449,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 node->_return.expr = cast_node(nm, node->_return.expr, expected_type);
             }
         }
-
-        sema_ctx->func = NULL;
         break;
     case N_LITERAL:
         char *data = malloc(node->literal.len + 1);
@@ -605,7 +620,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         Type *lhs_t = node->member_access.identifier->type;
         if (node->member_access.op == TK_ARROW) {
             if (lhs_t->kind != T_POINTER) {
-                PANIC("Dereference \'->\' can only be used on pointers\n");
+                PANIC("Dereference '->' can only be used on pointers\n");
             }
             lhs_t = lhs_t->base;
             Node *deref = new_node(nm, N_UNARY);

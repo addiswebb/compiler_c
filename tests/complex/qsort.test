@@ -1,4 +1,8 @@
-extern void qsort(void *Base, long NumOfElements, long SizeOfElements, int (*c)(const int *, const int *));
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t
+// RUN: %t | %check_output "1 2 3 4 5"
+
+extern void qsort(int *Base, long NumOfElements, long SizeOfElements, int (*cmp)(const int *, const int *));
 extern int printf(const char *fmt, ...);
 
 int cmp_int(const int *a, const int *b) {
@@ -14,7 +18,6 @@ int main() {
     int arr[] = {5, 1, 4, 2, 3};
     int n = 5;
 
-    int (*cmp)(const int *, const int *);
     qsort(arr, n, 4, cmp_int);
 
     for (int i = 0; i < n; i++) {

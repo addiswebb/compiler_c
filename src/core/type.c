@@ -184,7 +184,21 @@ Type *get_function_type(Type *type, Array params, bool is_variadic) {
     for (int i = 0; i < typepool.count; i++) {
         Type *t = &typepool.types[i];
         if (t->kind == T_FUNCTION && t->_func.return_type == type && t->_func.is_variadic == is_variadic) {
-            if (t->_func.params.data == params.data) { // Parsed params mem ptr should be copied to type
+            if (t->_func.params.count != params.count) continue;
+            bool match = true;
+            for (int j = 0; j < params.count; j++) {
+                ParamDecl *p_a = get(&params, j);
+                ParamDecl *p_b = get(&t->_func.params, j);
+                if (p_a->type != p_b->type) {
+                    match = false;
+                    break;
+                }
+                if (p_a->name != p_b->name) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
                 return t;
             }
         }
@@ -209,9 +223,11 @@ Type *get_modified_type(Type *type, Declarator *decl) {
 
 Type *get_qualified_type(Type *type, unsigned int qualifiers) {
     for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].base == type && typepool.types[i].kind == type->kind && typepool.types[i].size == type->size &&
-            typepool.types[i].qualifiers == qualifiers && typepool.types[i].is_signed == type->is_signed) {
-            return &typepool.types[i];
+        Type *t = &typepool.types[i];
+
+        if (t->base == type->base && t->kind == type->kind && t->size == type->size && t->qualifiers == qualifiers &&
+            t->is_signed == type->is_signed) {
+            return t;
         }
     }
 
@@ -240,9 +256,8 @@ Type *get_unsigned_type(Type *type) {
     if (type->is_signed == UNSIGNED) return type;
     for (int i = 0; i < typepool.count; i++) {
         Type *t = &typepool.types[i];
-        if (typepool.types[i].kind == type->kind && typepool.types[i].size == type->size && typepool.types[i].is_signed == UNSIGNED &&
-            typepool.types[i].qualifiers == type->qualifiers) {
-            return &typepool.types[i];
+        if (t->kind == type->kind && t->size == type->size && t->is_signed == UNSIGNED && t->qualifiers == type->qualifiers) {
+            return t;
         }
     }
 
@@ -360,7 +375,7 @@ void print_type(const Type *type) {
     if (type->kind == T_INT && !type->is_signed) printf("%s ", KEYWORDS[TK_UNSIGNED]);
     switch (type->kind) {
     case T_INVALID:
-        printf("[INVALID TYPE]");
+        printf("[###]");
         break;
     case T_ARRAY:
         print_type(type->base);
@@ -441,8 +456,8 @@ void print_type(const Type *type) {
         break;
     case T_FUNCTION:
         print_type(type->_func.return_type);
-        if (type->_func.params.count == 0) break;
         printf("(");
+        if (type->_func.params.count == 0) printf("void");
         for (int i = 0; i < type->_func.params.count; i++) {
             ParamDecl *param = (ParamDecl *)get(&type->_func.params, i);
             print_param_decl(param);

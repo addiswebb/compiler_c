@@ -4,6 +4,7 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
+#include "compiler_c/tokenize/tokenizer.h"
 #include <compiler_c/analyse/sema.h>
 #include <compiler_c/compiler.h>
 #include <compiler_c/x86/x86.h>
@@ -102,7 +103,7 @@ int compile(Compiler *compiler) {
     set_log_stage(STAGE_PARSING);
     init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
-    SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL};
+    SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL, .expect_value = false};
     array_init(&sema_ctx.i_array, 4, sizeof(int));
 
     set_log_stage(STAGE_SEMA_ANALYSIS);

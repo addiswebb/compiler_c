@@ -133,6 +133,7 @@ struct Node {
         struct {
             const char *name;
             int len;
+            Symbol *symbol;
         } identifier;
         // type name = expr;
         struct {
@@ -145,8 +146,9 @@ struct Node {
         } var_decl;
         // identifier(params*)
         struct {
-            Node *identifier;
+            Node *callee;
             Array params_array;
+            Symbol *symbol;
         } func_call;
         // (int)0.5
         struct {

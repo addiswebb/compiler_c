@@ -256,7 +256,7 @@ static void t_consume_special_char(Tokenizer *tk) {
         type = TK_COLON;
         break;
     default:
-        PANIC("Unexpected \'%c\'\n", t_peek(tk));
+        PANIC("Unexpected '%c'\n", t_peek(tk));
     }
     t_consume(tk);
     t_consume_a(tk, '\0');
@@ -313,7 +313,7 @@ static void t_consume_string_literal(Tokenizer *tk) {
     for (;;) {
         char c = t_peek(tk);
         if (c == '\n') {
-            PANIC("Found \'\\n\' in string literal.");
+            PANIC("Found '\\n' in string literal.");
         }
         if (c == '\"') {
             t_skip(tk); // "
@@ -428,6 +428,20 @@ bool is_unary_operator(const TokenType type) {
     case TK_AND:
     case TK_MULTIPLY:
     case TK_SIZEOF:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool is_postfix_operator(const TokenType type) {
+    switch (type) {
+    case TK_INCR:
+    case TK_DECR:
+    case TK_OPEN_PAREN:
+    case TK_OPEN_SQUARE:
+    case TK_DOT:
+    case TK_ARROW:
         return true;
     default:
         return false;
@@ -688,31 +702,31 @@ const char *token_type_str(const TokenType type) {
     case TK_STRING_LITERAL:
         return "String Literal";
     case TK_SEMI:
-        return "\';\'";
+        return "';'";
     case TK_PLUS:
-        return "\'+\'";
+        return "'+'";
     case TK_MINUS:
-        return "\'-\'";
+        return "'-'";
     case TK_MULTIPLY:
-        return "\'*\'";
+        return "'*'";
     case TK_DIVIDE:
-        return "\'/\'";
+        return "'/'";
     case TK_XOR:
-        return "\'^\'";
+        return "'^'";
     case TK_EXPR:
         return "Expr";
     case TK_EQ:
-        return "\'=\'";
+        return "'='";
     case TK_OPEN_PAREN:
-        return "\'(\'";
+        return "'('";
     case TK_CLOSE_PAREN:
-        return "\')\'";
+        return "')'";
     case TK_OPEN_CURLY:
-        return "\'{\'";
+        return "'{'";
     case TK_CLOSE_CURLY:
-        return "\'}\'";
+        return "'}'";
     case TK_COMMA:
-        return "\',\'";
+        return "','";
     case TK_IDENTIFIER:
         return "Identifier";
     case TK_MOD:
@@ -829,7 +843,7 @@ void print_token(const Token *token) {
         } else if (token->value[0] == '\n') {
             printf("\\n");
         }
-        printf("%s ", token->value);
+        // printf("%c ", token->value[0]);
     }
     printf("}\n");
 }

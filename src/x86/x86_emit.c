@@ -26,6 +26,9 @@ void x86_operand(const IR_Value *v, char *buf, const int n) {
     case IR_PHYS_REG:
         snprintf(buf, n, "%s", x86_reg(v));
         return;
+    case IR_FUNCTION:
+        snprintf(buf, n, "%s(%%rip)", v->func.name);
+        return;
     case IR_VREG:
     case IR_MEM:
     case IR_UNDEFINED:
@@ -378,6 +381,11 @@ void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, const I
         PANIC("Tried to emit unary of unsupported type\n");
     }
 }
+
+void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst) {
+    x86_emit_xr(fp, "leaq", "", "", src, "%rax");
+    x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
+}
 void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to) {
     const char *from_reg = x86_rax_reg(from);
     const char *from_op_suffix = x86_op_suffix(from);
@@ -500,7 +508,7 @@ void x86_emit_string(FILE *fp, const char *str) {
     while (*str) {
         unsigned char c = *str;
         if (c >= 0x20 && c <= 0x7E && c != '\'' && c != '\\' && c != '"') {
-            fprintf(fp, "\'%c\', ", c);
+            fprintf(fp, "'%c', ", c);
         } else {
             fprintf(fp, "0x%02X, ", c);
         }

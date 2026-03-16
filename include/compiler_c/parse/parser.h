@@ -121,6 +121,20 @@ void p_pop_scope(Parser *p);
 Node *p_parse_primary_expression(Parser *p, NodeManager *nm);
 
 /*
+    Consumes any
+    `primary expr[expr]`
+    `primary expr(param-list)`
+*/
+Node *p_parse_postfix_expression(Parser *p, NodeManager *nm);
+/*
+    Consumes
+    `unary op`
+    or
+    `postfix`
+    If unary op, parses it and then a postfix, otherwise postfix
+*/
+Node *p_parse_unary(Parser *p, NodeManager *nm);
+/*
     Consumes
     `{ [expr]* }`.
     Where each `expr` is seperated by a `,`.

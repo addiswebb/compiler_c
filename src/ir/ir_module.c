@@ -1,5 +1,6 @@
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/core/array.h"
+#include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_builder.h"
 #include "compiler_c/log/logger.h"
@@ -17,7 +18,7 @@ IR_OpInfo op_info[] = {
     [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},    [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},
     [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},  [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},   [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b000} // IR_CALL uses handled separately
+    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b010} // IR_CALL uses handled separately
 };
 const IR_Value ir_no_value = (IR_Value){IR_UNDEFINED, 0, 0, 0};
 
@@ -252,6 +253,15 @@ IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name) {
     }
     return NULL;
 }
+IR_Value ir_value_from_func_def(IR_Func_Def *f) {
+    IR_Value v;
+    v.kind = IR_FUNCTION;
+    v.size = 0;
+    v.align = 0;
+    v.func.name = f->name;
+    v.func.index = 69;
+    return v;
+}
 
 IR_Value ir_value_from_global(IR_Global *g) {
     IR_Value v;
@@ -261,7 +271,7 @@ IR_Value ir_value_from_global(IR_Global *g) {
     v.global = g;
     return v;
 }
-IR_Value ir_get_var_reg(IR_Context *ctx, const char *name, bool give_lvalue) {
+IR_Value ir_get_symbol_value(IR_Context *ctx, const char *name, bool give_lvalue) {
     const IR_Function *func = ctx->func;
     for (int i = func->scopes_array.count - 1; i >= 0; i--) {
         IR_Scope *scope = get_scope(func, i);
@@ -271,6 +281,7 @@ IR_Value ir_get_var_reg(IR_Context *ctx, const char *name, bool give_lvalue) {
             if (strcmp(local->name, name) == 0) {
                 if (give_lvalue) {
                     if (local->type->kind == T_STRUCT || local->type->kind == T_UNION) {
+                        printf("2\n");
                         return ir_address(ctx, local->reg, 0);
                     }
                 }
@@ -282,13 +293,22 @@ IR_Value ir_get_var_reg(IR_Context *ctx, const char *name, bool give_lvalue) {
         IR_Global *global = get_global(ctx, i);
         if (strcmp(global->name, name) == 0) return ir_value_from_global(global);
     }
+    for (int i = 0; i < ctx->module->func_defs_array.count; i++) {
+        IR_Func_Def *func_def = get_func_def(ctx, i);
+        if (strcmp(func_def->name, name) == 0) {
+            IR_Value v = ir_value_from_func_def(func_def);
+            return give_lvalue ? ir_address(ctx, v, 0) : v;
+        }
+    }
 
-    PANIC("Undefined local or global variable \'%s\' \n", name);
+    PANIC("Undefined local or global variable '%s' \n", name);
 }
 
-IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined, const bool is_variadic) {
-    return (IR_Func_Def *)append(&ctx->module->func_defs_array,
-                                 &(IR_Func_Def){.name = name, .index = -1, .is_defined = is_defined, .is_variadic = is_variadic});
+IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined, const bool is_variadic,
+                                const StorageClass storage_class) {
+    return (IR_Func_Def *)append(
+        &ctx->module->func_defs_array,
+        &(IR_Func_Def){.name = name, .index = -1, .is_defined = is_defined, .is_variadic = is_variadic, .storage_class = storage_class});
 }
 void ir_append_function(const IR_Context *ctx, IR_Func_Def *func_def, IR_Function *func) {
     func_def->index = ctx->module->functions_array.count;

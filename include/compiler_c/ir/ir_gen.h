@@ -8,7 +8,7 @@
     Returns the IR Value which represents a way to access the memory the node represents.
     The IR Value must be assignable.
 */
-static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr);
+IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr);
 /* Lowers an N_LITERAL node to an IR_LITERAL. */
 IR_Literal ir_literal(const Node *node);
 

@@ -1,5 +1,6 @@
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis.h"
+#include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/x86/x86.h"
@@ -41,6 +42,7 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
                 case IR_LITERAL:
                 case IR_GLOBAL:
                 case IR_PHYS_REG:
+                case IR_FUNCTION:
                     break;
                 case IR_UNDEFINED:
                     if (f->return_type == type_void && instr->op == IR_RET) break;
@@ -111,7 +113,7 @@ void lower_ir_for_asm(IR_Function *f) {
 
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const int dst_offset = instr->ops[0].stack_offset;
-    Type *t = instr->call.type;
+    Type *t = instr->call.type->_func.return_type;
 
     int gp_index = 0;
 
@@ -143,7 +145,7 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         case T_FLOAT:
             const char *f_suffix = x86_op_suffix(v->type);
             if (use_register) {
-                if (instr->call.callee->is_variadic) {
+                if (instr->call.type->_func.is_variadic) {
                     fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_integer_op_suffix(v->type->size), v->reg.stack_offset,
                             gp_register_str[int_param_regs[gp_index]][reg_size(v->type->size)]);
                 }
@@ -155,10 +157,20 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             }
             break;
         default:
-            PANIC("Tried to emit call arg for unsupported type\n");
+            log_start(LOG_ERROR);
+            printf("Tried to emit call arg for unsupported type ");
+            print_type(v->type);
+            printf("\n");
+            exit(1);
         }
     }
-    fprintf(fp, "    call %s\n", instr->call.callee->name);
+
+    if (instr->ops[1].kind == IR_FUNCTION) {
+        fprintf(fp, "    call %s\n", instr->ops[1].func.name);
+    } else {
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
+        fprintf(fp, "    call *%%rax\n");
+    }
     fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);
 
     if (t == type_void) return;
@@ -179,6 +191,7 @@ void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
         break;
     case IR_VREG:
     case IR_MEM:
+    case IR_FUNCTION:
     case IR_UNDEFINED:
         PANIC("Sanity check failed\n");
     }
@@ -194,6 +207,7 @@ void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
         break;
     case IR_VREG:
     case IR_MEM:
+    case IR_FUNCTION:
     case IR_UNDEFINED:
         PANIC("Sanity check failed\n");
     }

@@ -1,6 +1,7 @@
 #ifndef COMPILER_C_IR_MODULE_H
 #define COMPILER_C_IR_MODULE_H
 
+#include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/analyse/analysis_types.h"
 #include <stdint.h>
@@ -53,7 +54,7 @@ typedef enum {
 } IR_OP;
 
 typedef enum{
-     IR_UNDEFINED, IR_PHYS_REG, IR_VREG, IR_MEM, IR_STACK, IR_LITERAL, IR_GLOBAL
+     IR_UNDEFINED, IR_PHYS_REG, IR_VREG, IR_MEM, IR_STACK, IR_LITERAL, IR_GLOBAL, IR_FUNCTION,
 }IR_ValueKind;
 
 /* A IR literal integer, float or string. */
@@ -102,6 +103,11 @@ typedef struct IR_Value{
         IR_Global *global;
         // IR_PHYS_REG
         PhysReg phys_reg;
+        // IR_FUNCTION
+        struct{
+            const char *name;
+            int index;
+        }func;
     };
     int size;
     int align;
@@ -130,6 +136,7 @@ typedef struct{
     int index;
     bool is_defined;
     bool is_variadic;
+    StorageClass storage_class;
 } IR_Func_Def;
 
 typedef struct {
@@ -143,7 +150,7 @@ typedef struct {
         struct { IR_UNARY_OP op; Type *type; } unary;
         struct { IR_BINOP_OP op; Type *type; } binop;
         struct { IR_CMP_OP op; Type *type; } cmp;
-        struct { IR_Func_Def* callee; Array arg_array; Type *type; } call;
+        struct { Array arg_array; Type *type; } call;
         struct { IR_Block *block; } br;
         struct { IR_Block *t_block, *f_block; } br_cond;
         struct { Type *from, *to; } cast;
@@ -328,7 +335,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type);
     If it is defined, immediately after, its index will be updated.
     Otherwise it gets updated when a defined N_Function node is lowered.
 */
-IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined, const bool is_variadic);
+IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined, const bool is_variadic, const StorageClass storage_class);
 /* Generates an IR Mem Value for the variable. Also appends it to the current scope.  */
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
 
@@ -357,8 +364,10 @@ IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);
     First checks the scope stack, top down. Then checks module globals array.
     Immediately returning the Value if found, otherwise it is considered an undefined variable.
 */
-IR_Value ir_get_var_reg(IR_Context *ctx, const char *name, bool give_lvalue);
+IR_Value ir_get_symbol_value(IR_Context *ctx, const char *name, bool give_lvalue);
 
+IR_Value ir_value_from_global(IR_Global *g);
+IR_Value ir_value_from_func_def(IR_Func_Def *f);
 /*
     Retrieves the Block which has the corresponding label.
 */

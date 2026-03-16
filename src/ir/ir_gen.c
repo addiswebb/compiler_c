@@ -14,10 +14,10 @@
 #include <compiler_c/ir/ir_builder.h>
 #include <compiler_c/ir/ir_gen.h>
 
-static IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
+IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
     case N_IDENTIFIER:
-        return ir_get_var_reg(ctx, expr->identifier.name, true);
+        return ir_get_symbol_value(ctx, expr->identifier.name, true);
     case N_UNARY:
         if (expr->unary.op != TK_MULTIPLY) break;
         return ir_gen_rvalue(ctx, expr->unary.expr);
@@ -74,7 +74,8 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_INDEX:
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_IDENTIFIER:
-        return ir_get_var_reg(ctx, expr->identifier.name, false);
+        IR_Value v = ir_get_symbol_value(ctx, expr->identifier.name, false);
+        return v;
     case N_LITERAL:
         IR_Literal c = ir_literal(expr);
         return ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
@@ -82,6 +83,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         if (is_assignment_op(expr->binary.op)) {
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
+            if (val.kind == IR_FUNCTION) val = ir_address(ctx, val, 0);
             bool dereference = expr->binary.lhs->kind == N_INDEX || expr->binary.lhs->kind == N_MEMBER_ACCESS || is_deref(expr->binary.lhs);
             // If it is '+=' or some '=' variant
             if (expr->binary.op != TK_EQ) {
@@ -178,7 +180,8 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             return expr->unary.associativity ? store_dst : binary_dst;
         } else if (expr->unary.op == TK_AND) { // & ref
             const IR_Value addr = ir_gen_lvalue(ctx, expr->unary.expr);
-            if (expr->unary.expr->kind == N_INDEX) {
+            if (expr->unary.expr->kind == N_INDEX ||
+                (expr->unary.expr->type->kind == T_POINTER && expr->unary.expr->type->base->kind == T_FUNCTION)) {
                 return addr;
             }
             return ir_address(ctx, addr, 0);
@@ -435,7 +438,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
 
     if (var_decl->type->kind == T_ARRAY || var_decl->type->kind == T_STRUCT) {
         ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
-        // printf("dst: %d\n", dst.kind);
+        printf("1\n");
         dst = ir_address(ctx, dst, 0);
         ir_memcpy(ctx, addr, dst, var_decl->type->size);
     } else ir_store(ctx, dst, addr, var_decl->type);
@@ -493,7 +496,7 @@ static void ir_gen_label(IR_Context *ctx, const Node *label) {
     IR_LabeledBlock *lb = ir_get_labeled_block(ctx, label->label.identifier->identifier.name);
     if (lb) {
         if (!lb->placeholder) {
-            PANIC("Redefinition of label \'%s\'\n", label->label.identifier->identifier.name);
+            PANIC("Redefinition of label '%s'\n", label->label.identifier->identifier.name);
         }
     } else lb = ir_append_labeled_block(ctx, label->label.identifier->identifier.name);
 
@@ -561,7 +564,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
                     }
                     break;
                 }
-            } else func_def = ir_append_func_def(ctx, n->func.name, n->func.is_defined, n->type->_func.is_variadic);
+            } else func_def = ir_append_func_def(ctx, n->func.name, n->func.is_defined, n->type->_func.is_variadic, n->func.storage_class);
 
             if (n->func.is_defined) ir_append_function(ctx, func_def, ir_gen_function(ctx, n));
             break;

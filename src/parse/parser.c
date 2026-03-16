@@ -110,17 +110,82 @@ Node *new_compound_node(NodeManager *nm) {
     return node;
 }
 
+Node *p_parse_postfix_expression(Parser *p, NodeManager *nm) {
+    Node *expr = p_parse_primary_expression(p, nm);
+    for (;;) {
+        switch (p_peek(p)->type) {
+        case TK_OPEN_PAREN:
+            p_consume(p); // '('
+            if (expr->kind != N_IDENTIFIER && !is_deref(expr)) {
+                log_start(LOG_ERROR);
+                print_node_type(expr->kind);
+                printf(" is not allowed for a function call.\n");
+                exit(1);
+            }
+            Node *func_call = new_function_call_node(nm, expr);
+
+            while (p_peek(p)->type != TK_CLOSE_PAREN) {
+                p_append_call_param(func_call, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
+                if (p_peek(p)->type == TK_COMMA) p_consume(p);
+                else break;
+            }
+            p_consume_a(p, TK_CLOSE_PAREN);
+            expr = func_call;
+            break;
+        case TK_OPEN_SQUARE:
+            p_consume(p); // '['
+            if (!is_lvalue(expr)) {
+                log_start(LOG_ERROR);
+                print_node_type(expr->kind);
+                printf(" is not a an lvalue, needed for indexing\n");
+                exit(1);
+            }
+            Node *node = new_node(nm, N_INDEX);
+            node->index.index = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+            node->index.identifier = expr;
+            expr = node;
+            p_consume_a(p, TK_CLOSE_SQUARE);
+            break;
+        case TK_DOT:
+        case TK_ARROW:
+            TokenType op = p_consume(p)->type;
+            Token *t = p_consume_a(p, TK_IDENTIFIER);
+            Node *member = new_node(nm, N_IDENTIFIER);
+            member->identifier.name = t->value;
+            member->identifier.len = t->size;
+
+            Node *access = new_node(nm, N_MEMBER_ACCESS);
+            access->member_access.op = op;
+            access->member_access.identifier = expr;
+            access->member_access.member = member;
+            expr = access;
+            break;
+        case TK_INCR:
+        case TK_DECR:
+            Node *unary = new_node(nm, N_UNARY);
+            unary->unary.op = p_consume(p)->type;
+            unary->unary.associativity = LEFT_ASSOCIATIVITY;
+            unary->unary.expr = expr;
+            expr = unary;
+            break;
+        default:
+            return expr;
+        }
+    }
+}
+Node *p_parse_unary(Parser *p, NodeManager *nm) {
+    if (is_unary_operator(p_peek(p)->type)) {
+        Node *node = new_node(nm, N_UNARY);
+        node->unary.op = p_consume(p)->type;
+        node->unary.associativity = RIGHT_ASSOCIATIVITY;
+        node->unary.expr = p_parse_unary(p, nm);
+        return node;
+    }
+    return p_parse_postfix_expression(p, nm);
+}
 Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
-    if (p_peek(p)->type == TK_OPEN_CURLY) return p_parse_init_list(p, nm);
     Node *primary = NULL;
     Token *tk;
-    if (is_unary_operator(p_peek(p)->type)) {
-        primary = new_node(nm, N_UNARY);
-        primary->unary.op = p_consume(p)->type;
-        primary->unary.associativity = RIGHT_ASSOCIATIVITY;
-        primary->unary.expr = p_parse_primary_expression(p, nm);
-        return primary;
-    }
 
     switch (p_peek(p)->type) {
     case TK_INT_LITERAL:
@@ -141,69 +206,19 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         break;
     case TK_OPEN_PAREN:
         p_consume_a(p, TK_OPEN_PAREN);
-        // Try parse a cast (Type) or compound literal (Type){}
-        if (is_start_of_type(p, p_peek(p))) {
-            Node *node = new_node(nm, N_TYPE);
-            node->type = p_parse_abstract_type(p);
-            p_consume_a(p, TK_CLOSE_PAREN);
-            // Is a compound literal
-            if (p_peek(p)->type == TK_OPEN_CURLY) {
-                node->kind = N_COMPOUND_LITERAL;
-                node->compound_literal.value = p_parse_init_list(p, nm);
-                return node;
-            }
-            // If this is the end of the term/expression, return it
-            if (is_unary_operator(p_peek(p)->type) || is_binary_operator(p_peek(p)->type) || p_peek(p)->type == TK_SEMI ||
-                p_peek(p)->type == TK_CLOSE_PAREN) {
-                return node;
-            }
-            // Otherwise parse the expression after it, and cast it using the (Type)
-            primary = p_parse_primary_expression(p, nm);
-            primary = cast_node_unchecked(nm, primary, node->type);
-        } else {
-            primary = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-            p_consume_a(p, TK_CLOSE_PAREN);
-        }
+        primary = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+        p_consume_a(p, TK_CLOSE_PAREN);
         return primary;
+    case TK_OPEN_CURLY:
+        return p_parse_init_list(p, nm);
     default:
         log_start(LOG_ERROR);
-        printf("Expected term got ");
+        printf("Expected primary expression got ");
         print_token_type(p_peek(p)->type);
         printf("\n");
         exit(1);
     }
 
-    if (p_peek(p)->type == TK_OPEN_SQUARE) {
-        p_consume(p); // '['
-        if (!is_lvalue(primary)) {
-            log_start(LOG_ERROR);
-            print_node_type(primary->kind);
-            printf(" is not a an lvalue, needed for indexing\n");
-            exit(1);
-        }
-        Node *node = new_node(nm, N_INDEX);
-        node->index.index = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-        node->index.identifier = primary;
-        primary = node;
-        p_consume_a(p, TK_CLOSE_SQUARE);
-    } else if (p_peek(p)->type == TK_OPEN_PAREN) {
-        p_consume(p); // '('
-        if (primary->kind != N_IDENTIFIER) {
-            log_start(LOG_ERROR);
-            print_node_type(primary->kind);
-            printf(" is not a function\n");
-            exit(1);
-        }
-        Node *func_call = new_function_call_node(nm, primary);
-
-        while (p_peek(p)->type != TK_CLOSE_PAREN) {
-            p_append_call_param(func_call, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
-            if (p_peek(p)->type == TK_COMMA) p_consume(p);
-            else break;
-        }
-        p_consume_a(p, TK_CLOSE_PAREN);
-        primary = func_call;
-    }
     return primary;
 }
 Node *p_parse_init_list(Parser *p, NodeManager *nm) {
@@ -253,7 +268,7 @@ Node *new_function_node(NodeManager *nm) {
 }
 Node *new_function_call_node(NodeManager *nm, Node *identifier) {
     Node *node = new_node(nm, N_FUNCTION_CALL);
-    node->func_call.identifier = identifier;
+    node->func_call.callee = identifier;
     array_init(&node->func_call.params_array, 4, sizeof(Node *));
     return node;
 }
@@ -280,28 +295,30 @@ Node *p_parse_label(Parser *p, NodeManager *nm) {
     return node;
 }
 
+Node *p_parse_cast(Parser *p, NodeManager *nm) {
+    // Try parse a cast (Type) or compound literal (Type){}
+    if (p_peek(p)->type == TK_OPEN_PAREN && is_start_of_type(p, p_peek_next(p))) {
+        p_consume_a(p, TK_OPEN_PAREN);
+        Type *type = p_parse_abstract_type(p);
+        p_consume_a(p, TK_CLOSE_PAREN);
+        if (p_peek(p)->type == TK_OPEN_CURLY) {
+            Node *comp_node = new_node(nm, N_COMPOUND_LITERAL);
+            comp_node->type = type;
+            comp_node->compound_literal.value = p_parse_init_list(p, nm);
+            return comp_node;
+        }
+        Node *cast_node = new_node(nm, N_CAST);
+        cast_node->type = type;
+        cast_node->cast.to = type;
+        cast_node->cast.expr = p_parse_cast(p, nm);
+        return cast_node;
+    }
+    return p_parse_unary(p, nm);
+}
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
-    Node *primary = p_parse_primary_expression(p, nm);
-    if (p_peek(p)->type == TK_INCR || p_peek(p)->type == TK_DECR) {
-        Node *node = new_node(nm, N_UNARY);
-        node->unary.op = p_consume(p)->type;
-        node->unary.associativity = LEFT_ASSOCIATIVITY;
-        node->unary.expr = primary;
-        primary = node;
-    }
-    while (p_peek(p)->type == TK_DOT || p_peek(p)->type == TK_ARROW) {
-        TokenType op = p_consume(p)->type;
-        Token *t = p_consume_a(p, TK_IDENTIFIER);
-        Node *member = new_node(nm, N_IDENTIFIER);
-        member->identifier.name = t->value;
-        member->identifier.len = t->size;
-
-        Node *access = new_node(nm, N_MEMBER_ACCESS);
-        access->member_access.op = op;
-        access->member_access.identifier = primary;
-        access->member_access.member = member;
-        primary = access;
-    }
+    Node *primary = p_parse_cast(p, nm);
+    // post decrement/increment
+    while (is_postfix_operator(p_peek(p)->type)) primary = p_parse_postfix_expression(p, nm);
 
     while (is_binary_operator(p_peek(p)->type) && !p_is_last_token(p) && op_precedence(p_peek(p)->type) >= min_prec) {
         const int prec = op_precedence(p_peek(p)->type);
@@ -392,36 +409,6 @@ Declarator p_parse_declarator(Parser *p) {
     }
     return d;
 }
-
-// Type *p_parse_declarator(Parser *p, NodeManager *nm, Type *type) {
-//     int ptrs = 0;
-//     while (p_peek(p)->type == TK_MULTIPLY) {
-//         ptrs++;
-//         p_consume(p);
-//     }
-
-//     for (int i = 0; i < ptrs; i++) type = get_pointer_type(type);
-
-//     for (;;) {
-//         if (p_peek(p)->type == TK_OPEN_SQUARE) {
-//             p_consume(p); // [
-//             int len = -1; // -1 for inferred size
-//             if (p_peek(p)->type != TK_CLOSE_SQUARE) {
-//                 // Only works for a[5], not a[b + 1] (can fix later)
-//                 // Todo; allow for const expressions like [5 + 6] or smt
-//                 const Token *t = p_consume_a(p, TK_INT_LITERAL);
-//                 len = (int)parse_int(t->value, t->size);
-//             }
-//             p_consume_a(p, TK_CLOSE_SQUARE);
-//             type = get_array_type(type, len);
-//         } else if (p_peek(p)->type == TK_OPEN_PAREN) {
-//             p_consume(p);
-//             bool is_variadic = p_parse_parameter_list(p, nm, NULL);
-//         } else break;
-//     }
-
-//     return type_invalid;
-// }
 
 Type *p_parse_enum(Parser *p) {
     Type enum_t = enum_type();
@@ -587,11 +574,7 @@ Typedef *p_get_typedef(const Parser *p, const char *name) {
     if (s) return &s->_typedef;
     PANIC("Tried to get the typedef of %s, which does not exist\n", name);
 }
-Node *p_get_func_def(const Parser *p, const char *name) {
-    const Symbol *s = p_get_symbol(p, name, FUNC);
-    if (s) return s->func_def;
-    PANIC("Tried to call %s which does not exist\n", name);
-}
+Node *p_get_func_def(const Parser *p, const char *name) { PANIC("Tried to get function definition for '%s' which does not exist\n", name); }
 
 void p_append_typedef(Parser *p, const Typedef *t) {
     p_append_symbol(get_current_symbol_table(p), &(Symbol){.name = t->new_def,
@@ -743,7 +726,7 @@ UnionMember *get_union_member_named(const Type *union_t, const char *name) {
     }
     if (!found_member) {
         log_start(LOG_ERROR);
-        printf("No such member \'%s\' on ", name);
+        printf("No such member '%s' on ", name);
         print_type(union_t);
         printf("\n");
         exit(1);
@@ -763,7 +746,7 @@ StructMember *get_struct_member_named(const Type *struct_t, const char *name, in
     }
     if (!found_member) {
         log_start(LOG_ERROR);
-        printf("No such member \'%s\' on ", name);
+        printf("No such member '%s' on ", name);
         print_type(struct_t);
         printf("\n");
         exit(1);
@@ -908,19 +891,17 @@ Modifier p_parse_parameter_list(Parser *p) {
     Modifier mod = {.kind = MOD_FUNCTION, .function = {.is_variadic = false}};
     array_init(&mod.function.params, 4, sizeof(ParamDecl));
     p_consume_a(p, TK_OPEN_PAREN);
-    if (p_peek(p)->type != TK_VOID) {
-        while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
-            if (p_peek(p)->type == TK_ELLIPSES) {
-                p_consume(p);
-                mod.function.is_variadic = true;
-                break;
-            }
-            const char *name = NULL;
-            append(&mod.function.params, &(ParamDecl){.type = p_parse_type(p, &name), .name = name});
-            if (p_peek(p)->type == TK_COMMA) p_consume(p);
-            else break;
+    while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
+        if (p_peek(p)->type == TK_ELLIPSES) {
+            p_consume(p);
+            mod.function.is_variadic = true;
+            break;
         }
-    } else p_consume(p);
+        const char *name = NULL;
+        append(&mod.function.params, &(ParamDecl){.type = p_parse_type(p, &name), .name = name});
+        if (p_peek(p)->type == TK_COMMA) p_consume(p);
+        else break;
+    }
     p_consume_a(p, TK_CLOSE_PAREN);
     return mod;
 }
@@ -1087,7 +1068,7 @@ bool is_qualifier_token(const TokenType type) {
     }
 }
 bool is_start_of_type(const Parser *p, const Token *t) {
-    return is_type_token(p, t) || is_qualifier_token(t->type) || p_peek(p)->type == TK_UNSIGNED || p_peek(p)->type == TK_SIGNED;
+    return p_peek(p)->type == TK_UNSIGNED || p_peek(p)->type == TK_SIGNED || is_type_token(p, t) || is_qualifier_token(t->type);
 }
 bool is_type_token(const Parser *p, const Token *t) {
     switch (t->type) {

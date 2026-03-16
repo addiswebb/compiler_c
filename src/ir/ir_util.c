@@ -262,8 +262,9 @@ static void print_ir_ret(const IR_Context *ctx, const IR_Instruction *instr) {
 static void print_ir_call(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
-    printf(" = CALL:%c%d '%s', %d:[ ", ir_type_suffix(instr->call.type), instr->call.type->size * 8, instr->call.callee->name,
-           instr->call.arg_array.count);
+    printf(" = CALL:%c%d ", ir_type_suffix(instr->call.type->_func.return_type), instr->call.type->size * 8);
+    print_ir_value(&instr->ops[1]);
+    printf(", %d:[ ", instr->call.arg_array.count);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
         IR_Var *arg = get_arg(instr, i);
         print_type(arg->type);
@@ -437,7 +438,7 @@ void print_ir_value(const IR_Value *v) {
         printf(".LC%d", v->const_index);
         break;
     case IR_UNDEFINED:
-        printf("Undefined");
+        printf("[###]");
         break;
     case IR_GLOBAL:
         printf("g[%s]", v->global->name);
@@ -448,6 +449,9 @@ void print_ir_value(const IR_Value *v) {
         } else {
             printf("%s", sse_register_str[v->phys_reg.gp_reg]);
         }
+        break;
+    case IR_FUNCTION:
+        printf("%s", v->func.name);
         break;
     }
 }

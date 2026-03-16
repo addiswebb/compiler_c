@@ -65,6 +65,14 @@ Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type) {
     return cast;
 }
 Node *cast_node(NodeManager *nm, Node *node, Type *type) {
+
+    if (node->type->kind == T_FUNCTION && type->kind == T_POINTER && type->base->kind == T_FUNCTION &&
+        cmp_func_types(node->type, type->base)) {
+
+        node->type = get_pointer_type(node->type);
+        return node;
+    }
+
     if (!is_valid_cast(node->type, type)) {
         log_start(LOG_ERROR);
         printf("Invalid conversion from ");
@@ -90,7 +98,7 @@ bool is_valid_cast(const Type *from, const Type *to) {
     }
     if (from->kind == T_ARRAY) {
         // Can only cast array->pointer (pointer decay)
-        return to->kind == T_POINTER && from->base == to->base;
+        return to->kind == T_POINTER && (from->base == to->base || to->base == type_void);
     }
     if (to->kind == T_POINTER) return to->base == from;
     return true;
@@ -244,7 +252,7 @@ void print_node(const Node *node, const int depth) {
         case T_INT:
             switch (node->type->size) {
             case 1:
-                printf("value= \'%c\']\n", (char)node->literal.i);
+                printf("value= '%c']\n", (char)node->literal.i);
                 break;
             case 2:
                 printf("value= %d]\n", (short)node->literal.i);
@@ -264,7 +272,7 @@ void print_node(const Node *node, const int depth) {
             printf("value= %g]\n", node->literal.f);
             break;
         case T_INVALID:
-            printf("value= [INVALID TYPE]]\n");
+            printf("value= [###]]\n");
             break;
         case T_ARRAY:
             if (node->type->base == type_i8) {
@@ -286,7 +294,7 @@ void print_node(const Node *node, const int depth) {
         }
         break;
     case N_FUNCTION:
-        printf(": [name= %s, param_count= %d, return_type= ", node->func.name, node->type->_func.params.count);
+        printf(": [name= %s, param_count= %d, type= ", node->func.name, node->type->_func.params.count);
         print_type(node->type);
 
         printf(", has_initializer=");
@@ -352,10 +360,15 @@ void print_node(const Node *node, const int depth) {
         print_node(node->_for.block, depth + 1);
         break;
     case N_FUNCTION_CALL:
-        printf(": [name: %s, param_count: %d]\n", node->func_call.identifier->identifier.name, node->func_call.params_array.count);
+        printf(": [name, param_count: %d]\n", node->func_call.params_array.count);
+        print_node(node->func_call.callee, depth + 1);
+        print_indent(depth + 1);
+        printf("Params: (\n");
         for (int i = 0; i < node->func_call.params_array.count; i++) {
-            print_node(get_node(&node->func_call.params_array, i), depth + 1);
+            print_node(get_node(&node->func_call.params_array, i), depth + 2);
         }
+        print_indent(depth + 1);
+        printf(")\n");
         break;
     case N_UNARY:
         printf(": [op= ");

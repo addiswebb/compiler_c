@@ -1,5 +1,8 @@
+#include "compiler_c/ir/ir_builder.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/ir/ir_gen.h"
+#include "compiler_c/ir/ir_module.h"
+#include "compiler_c/log/logger.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -83,15 +86,19 @@ IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg, IR_Value rhs_re
 IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     IR_Instruction i;
     i.op = IR_CALL;
-    i.call.callee = ir_get_func_def(ctx, expr->func_call.identifier->identifier.name);
+    i.ops[1] = ir_gen_rvalue(ctx, expr->func_call.callee);
     array_init(&i.call.arg_array, expr->func_call.params_array.count, sizeof(IR_Var));
-    i.call.type = expr->type; // TODO change to func def given type maybe? Currently trusting sema
+    i.call.type = expr->func_call.callee->type->base; // TODO change to func def given type maybe? Currently trusting sema
     for (int j = 0; j < i.call.arg_array.capacity; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
-        append(&i.call.arg_array, &(IR_Var){.name = NULL, .type = param->type, .reg = ir_gen_rvalue(ctx, param)});
+
+        IR_Value val = ir_gen_rvalue(ctx, param);
+        if (val.kind == IR_FUNCTION) val = ir_address(ctx, val, 0);
+
+        append(&i.call.arg_array, &(IR_Var){.name = NULL, .type = param->type, .reg = val});
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
-    i.op_count = 1;
+    i.op_count = 2;
     append(&ctx->block->instruction_array, &i);
     return i.ops[0];
 }
@@ -155,7 +162,10 @@ IR_Value ir_address(IR_Context *ctx, IR_Value src, int offset) {
     i.op = IR_ADDR;
     i.ops[1] = src;
     i.addr.offset = offset;
-    i.ops[1].offset = offset;
+    if (offset != 0) {
+        ASSERT(src.kind == IR_MEM, "Only IR_MEM values can be offset\n");
+        i.ops[1].offset = offset;
+    }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
     append(&ctx->block->instruction_array, &i);

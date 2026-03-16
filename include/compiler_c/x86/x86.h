@@ -28,6 +28,7 @@ const char *x86_float_op_suffix(int size);
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, IR_BINOP_OP op, Type *t);
 void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNARY_OP op, Type *t);
+void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst);
 void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to);
 void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c, int pool_index);
 void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);

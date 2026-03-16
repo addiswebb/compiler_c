@@ -1,3 +1,4 @@
+#include "compiler_c/ir/ir_module.h"
 #ifndef _WIN64
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis.h"
@@ -163,7 +164,7 @@ void lower_ir_for_asm(IR_Function *f) {
 
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const int dst_offset = instr->ops[0].stack_offset;
-    Type *t = instr->call.type;
+    Type *t = instr->call.type->_func.return_type;
 
     int gp_index = 0;
     int sse_index = 0;
@@ -210,12 +211,21 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             PANIC("Tried to emit call arg for unsupported type\n");
         }
     }
-    if (instr->call.callee->is_variadic) {
+    if (instr->call.type->_func.is_variadic) {
         if (sse_index) fprintf(fp, "    movl $%d, %%eax\n", sse_index);
         else fprintf(fp, "    xor %%eax, %%eax\n");
     }
 
-    fprintf(fp, "    call %s\n", instr->call.callee->name);
+    IR_Func_Def *def = ir_get_func_def(ctx, instr->ops[1].func.name);
+    const char *plt = def->storage_class == EXTERN ? "@PLT" : "";
+
+    if (instr->ops[1].kind == IR_FUNCTION) {
+        fprintf(fp, "    call %s%s\n", instr->ops[1].func.name, plt);
+    } else {
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
+        fprintf(fp, "    call *%%rax\n");
+    }
+
     fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);
 
     if (t == type_void) return;
