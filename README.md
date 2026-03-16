@@ -244,6 +244,7 @@ As both platforms use registers for different things and in different orders, th
 * SysV ABI
 
 ## To be Implemented (Ordered from next to never...)
+* Lower function pointers to x86
 * Compiler builtins
     * `__builtin_va_list` etc.
 * Support a standard library 
