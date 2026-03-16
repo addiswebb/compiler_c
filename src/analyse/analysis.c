@@ -376,6 +376,9 @@ void analysis(const IR_Context *ctx) {
         IR_Function *f = get_func(ctx->module, i);
 
         lower_ir_for_asm(f);
+        // printf("vvvvvvvvvvvvvvvvvvvvv\n");
+        // print_ir_function(ctx, f);
+        // printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
 
         // Initialize Control Flow Graph Variables per block
         ir_init_func_cfg(f);

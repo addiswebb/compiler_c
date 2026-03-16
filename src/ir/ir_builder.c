@@ -85,7 +85,7 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     i.op = IR_CALL;
     i.call.callee = ir_get_func_def(ctx, expr->func_call.identifier->identifier.name);
     array_init(&i.call.arg_array, expr->func_call.params_array.count, sizeof(IR_Var));
-    i.call.type = expr->type;
+    i.call.type = expr->type; // TODO change to func def given type maybe? Currently trusting sema
     for (int j = 0; j < i.call.arg_array.capacity; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
         append(&i.call.arg_array, &(IR_Var){.name = NULL, .type = param->type, .reg = ir_gen_rvalue(ctx, param)});

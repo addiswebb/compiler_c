@@ -172,10 +172,7 @@ void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *n
     // TODO track compound literals and name accordingly.
     ident->identifier.name = "__tmp_cl";
     ident->identifier.len = 9;
-    Node *d_type = new_node(nm, N_TYPE);
-    d_type->type = node->type;
     Node *d = new_node(nm, N_VAR_DECL);
-    d->var_decl.type = d_type;
     d->var_decl.identifier = ident;
     d->type = node->type;
 
@@ -207,8 +204,21 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_FUNCTION:
         p_push_scope(p);
         sema_ctx->func = node;
-        for (int i = 0; i < node->func.params_array.count; i++) {
-            p_append_var_decl(p, get_node(&node->func.params_array, i));
+        for (int i = 0; i < node->type->_func.params.count; i++) {
+            ParamDecl *param = (ParamDecl *)get(&node->type->_func.params, i);
+            Node *param_decl = new_node(nm, N_VAR_DECL);
+            param_decl->type = param->type;
+            Node *ident = new_node(nm, N_IDENTIFIER);
+            ASSERT(param->name, "Found unnamed function parameter\n");
+            ident->identifier.name = param->name;
+            param_decl->var_decl.identifier = ident;
+            param_decl->var_decl.expr = NULL;
+            param_decl->var_decl.storage_class = NONE;
+            param_decl->var_decl.is_defined = false;
+            param_decl->var_decl.is_global = false;
+            param_decl->var_decl.symbol = p_append_var_decl_symbol(p, param_decl);
+            // currently hidden nodes, might not need to be visible to AST
+            // TODO: see if i need these inserted into N_FUNCTION array
         }
         semantic_analysis(sema_ctx, p, nm, node->func.body);
         p_pop_scope(p);
@@ -262,7 +272,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 PANIC("Redefinition of global variable %s\n", node->var_decl.identifier->identifier.name);
             }
             node->var_decl.symbol = var_symbol;
-        } else node->var_decl.symbol = p_append_var_decl(p, node);
+        } else node->var_decl.symbol = p_append_var_decl_symbol(p, node);
 
         if (!node->var_decl.expr) break;
         if (node->var_decl.expr->kind == N_INIT_LIST) {
@@ -315,35 +325,35 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         exit(1);
     case N_FUNCTION_CALL:
         const Node *func_def = p_get_func_def(p, node->func_call.identifier->identifier.name);
-        if (!func_def->func.is_variadic && func_def->func.params_array.count != node->func_call.params_array.count) {
-            PANIC("Argument count mismatch: %s expects %d found %d\n", func_def->func.name, func_def->func.params_array.count,
+        if (!func_def->type->_func.is_variadic && func_def->type->_func.params.count != node->func_call.params_array.count) {
+            PANIC("Argument count mismatch: %s expects %d found %d\n", func_def->func.name, func_def->type->_func.params.count,
                   node->func_call.params_array.count);
         }
         // TODO handle variadic with no named paramter here instead of parser.
-        node->type = func_def->type;
+        node->type = func_def->type->_func.return_type;
         for (int i = 0; i < node->func_call.params_array.count; i++) {
-            Node *func_call_ptr = get_node(&node->func_call.params_array, i);
-            semantic_analysis(sema_ctx, p, nm, func_call_ptr);
+            Node *fn_call_param = get_node(&node->func_call.params_array, i);
+            semantic_analysis(sema_ctx, p, nm, fn_call_param);
             // Only type check named params, skip variadic params.
-            if (i < func_def->func.params_array.count) {
-                Node *func_param = get_node(&func_def->func.params_array, i);
-                if (func_param->type != func_call_ptr->type) {
-                    Node *casted_node = cast_node(nm, func_call_ptr, func_param->type);
+            if (i < func_def->type->_func.params.count) {
+                ParamDecl *fn_param = (ParamDecl *)get(&func_def->type->_func.params, i);
+                if (fn_param->type != fn_call_param->type) {
+                    Node *casted_node = cast_node(nm, fn_call_param, fn_param->type);
                     set_node(&node->func_call.params_array, &casted_node, i);
                 }
             } else {
                 // Promote Variadic args [T_INT < int -> int] [T_FLOAT < double -> double]
-                if (func_call_ptr->type->kind == T_INT && func_call_ptr->type->size < type_i32->size) {
-                    Node *casted_node = cast_node(nm, func_call_ptr, func_call_ptr->type->is_signed ? type_i32 : type_u32);
+                if (fn_call_param->type->kind == T_INT && fn_call_param->type->size < type_i32->size) {
+                    Node *casted_node = cast_node(nm, fn_call_param, fn_call_param->type->is_signed ? type_i32 : type_u32);
                     set_node(&node->func_call.params_array, &casted_node, i);
-                } else if (func_call_ptr->type->kind == T_FLOAT && func_call_ptr->type->size < type_f64->size) {
-                    Node *casted_node = cast_node(nm, func_call_ptr, type_f64);
+                } else if (fn_call_param->type->kind == T_FLOAT && fn_call_param->type->size < type_f64->size) {
+                    Node *casted_node = cast_node(nm, fn_call_param, type_f64);
                     set_node(&node->func_call.params_array, &casted_node, i);
                 }
             }
             // Always downcast arrays to pointers for functions
-            if (func_call_ptr->type->kind == T_ARRAY) {
-                Node *casted_node = cast_node(nm, func_call_ptr, get_pointer_type(func_call_ptr->type->base));
+            if (fn_call_param->type->kind == T_ARRAY) {
+                Node *casted_node = cast_node(nm, fn_call_param, get_pointer_type(fn_call_param->type->base));
                 set_node(&node->func_call.params_array, &casted_node, i);
             }
         }
@@ -368,6 +378,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->type = ident_symbol->_typedef.type;
             break;
         case FUNC:
+            
+            node->type = ident_symbol->func_def->type;
+            break;
         case ANY:
             PANIC("Should be unreachable\n");
         }
@@ -408,14 +421,15 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         if (!sema_ctx->func) {
             PANIC("Cannot call return outside of a function\n");
         }
-        Type *return_type = sema_ctx->func->type;
+        Type *expected_type = sema_ctx->func->type->_func.return_type;
         // Early exit if return type is void, and node is `return;`
-        ASSERT(return_type != type_void && node->_return.expr, "Non-void type function \'%s\' should return a value\n");
+        ASSERT(expected_type != type_void && node->_return.expr, "Non-void type function \'%s\' should return a value\n");
 
         if (node->_return.expr) {
             semantic_analysis(sema_ctx, p, nm, node->_return.expr);
-            if (node->_return.expr->type != return_type) {
-                node->_return.expr = cast_node(nm, node->_return.expr, return_type);
+            Type *return_type = node->_return.expr->type;
+            if (node->_return.expr->type != expected_type) {
+                node->_return.expr = cast_node(nm, node->_return.expr, expected_type);
             }
         }
 

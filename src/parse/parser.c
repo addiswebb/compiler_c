@@ -1,5 +1,6 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/analyse/sema.h"
+#include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/core/util.h"
@@ -143,7 +144,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         // Try parse a cast (Type) or compound literal (Type){}
         if (is_start_of_type(p, p_peek(p))) {
             Node *node = new_node(nm, N_TYPE);
-            node->type = p_parse_type(p, nm);
+            node->type = p_parse_abstract_type(p);
             p_consume_a(p, TK_CLOSE_PAREN);
             // Is a compound literal
             if (p_peek(p)->type == TK_OPEN_CURLY) {
@@ -246,7 +247,7 @@ Node *new_init_list_node(NodeManager *nm) {
 
 Node *new_function_node(NodeManager *nm) {
     Node *node = new_node(nm, N_FUNCTION);
-    array_init(&node->func.params_array, 4, sizeof(Node **));
+    array_init(&node->type->_func.params, 4, sizeof(Node **));
     node->func.body = NULL;
     return node;
 }
@@ -319,10 +320,15 @@ Node *p_parse_block_item(Parser *p, NodeManager *nm) {
     if (is_start_of_type(p, p_peek(p))) return p_parse_block_declaration(p, nm);
     else return p_parse_statement(p, nm);
 }
-/*
-    Give the var decl node, if the var name/identifier is needed, otherwise NULL
-*/
-Type *p_parse_type(Parser *p, NodeManager *nm) {
+
+Type *p_parse_abstract_type(Parser *p) {
+    const char *name = NULL;
+    Type *type = p_parse_type(p, &name);
+    ASSERT(name == NULL, "Unexpected identifier in parsing abstract type.\n");
+    return type;
+}
+
+Type *p_parse_type(Parser *p, const char **name) {
     Type *type;
     unsigned int qualifiers = QUAL_NONE;
     bool is_signed = SIGNED;
@@ -334,44 +340,90 @@ Type *p_parse_type(Parser *p, NodeManager *nm) {
         else break;
         p_consume(p);
     }
-    if (p_peek(p)->type == TK_STRUCT) type = p_parse_struct(p, nm);
-    else if (p_peek(p)->type == TK_ENUM) type = p_parse_enum(p, nm);
-    else if (p_peek(p)->type == TK_UNION) type = p_parse_union(p, nm);
+    if (p_peek(p)->type == TK_STRUCT) type = p_parse_struct(p);
+    else if (p_peek(p)->type == TK_ENUM) type = p_parse_enum(p);
+    else if (p_peek(p)->type == TK_UNION) type = p_parse_union(p);
     else type = token_to_type(p, p_consume(p));
 
-    if (type == type_invalid) {
-        PANIC("Tried to parse an unknown type\n");
-    }
+    ASSERT(type != type_invalid, "Got type_invalid in p_parse_base_type\n");
 
     // Find unsigned type if needed for T_INT only
     if (type->kind == T_INT && !is_signed && is_signed != type->is_signed) type = get_unsigned_type(type);
 
-    int ptrs = 0;
-    while (p_peek(p)->type == TK_MULTIPLY) {
-        ptrs++;
-        p_consume(p);
-    }
-
-    for (int i = 0; i < ptrs; i++) type = get_pointer_type(type);
-
-    if (p_peek(p)->type == TK_OPEN_SQUARE) {
-        p_consume(p); // [
-        int len = -1; // -1 for inferred size
-        if (p_peek(p)->type != TK_CLOSE_SQUARE) {
-            // Only works for a[5], not a[b + 1] (can fix later)
-            // Todo; allow for const expressions like [5 + 6] or smt
-            const Token *t = p_consume_a(p, TK_INT_LITERAL);
-            len = (int)parse_int(t->value, t->size);
-        }
-        p_consume_a(p, TK_CLOSE_SQUARE);
-        type = get_array_type(type, len);
-    }
-
+    Declarator decl = p_parse_declarator(p);
+    *name = decl.name;
+    type = get_modified_type(type, &decl);
     if (qualifiers != QUAL_NONE) type = get_qualified_type(type, qualifiers);
+
     return type;
 }
 
-Type *p_parse_enum(Parser *p, NodeManager *nm) {
+Declarator p_parse_declarator(Parser *p) {
+    Declarator d = {.name = NULL};
+    array_init(&d.modifiers, 4, sizeof(Modifier));
+    while (p_peek(p)->type == TK_MULTIPLY) {
+        p_consume(p);
+        append(&d.modifiers, &(Modifier){.kind = MOD_POINTER});
+    }
+    if (p_peek(p)->type == TK_OPEN_PAREN) {
+        p_consume(p);
+        d = p_parse_declarator(p);
+        p_consume_a(p, TK_CLOSE_PAREN);
+    } // else if (p_peek(p)->type == TK_EQ) return d;
+    else if (p_peek(p)->type == TK_IDENTIFIER)
+        d.name = p_consume_a(p, TK_IDENTIFIER)->value;
+
+    for (;;) {
+        if (p_peek(p)->type == TK_OPEN_SQUARE) {
+            p_consume(p); // [
+            int len = -1; // -1 for inferred size
+            if (p_peek(p)->type != TK_CLOSE_SQUARE) {
+                // Only works for a[5], not a[b + 1] (can fix later)
+                // Todo; allow for const expressions like [5 + 6] or smt
+                const Token *t = p_consume_a(p, TK_INT_LITERAL);
+                len = (int)parse_int(t->value, t->size);
+            }
+            p_consume_a(p, TK_CLOSE_SQUARE);
+            append(&d.modifiers, &(Modifier){.kind = MOD_ARRAY, .array_size = len});
+        } else if (p_peek(p)->type == TK_OPEN_PAREN) {
+            Modifier func_modifier = p_parse_parameter_list(p);
+            append(&d.modifiers, &func_modifier);
+        } else break;
+    }
+    return d;
+}
+
+// Type *p_parse_declarator(Parser *p, NodeManager *nm, Type *type) {
+//     int ptrs = 0;
+//     while (p_peek(p)->type == TK_MULTIPLY) {
+//         ptrs++;
+//         p_consume(p);
+//     }
+
+//     for (int i = 0; i < ptrs; i++) type = get_pointer_type(type);
+
+//     for (;;) {
+//         if (p_peek(p)->type == TK_OPEN_SQUARE) {
+//             p_consume(p); // [
+//             int len = -1; // -1 for inferred size
+//             if (p_peek(p)->type != TK_CLOSE_SQUARE) {
+//                 // Only works for a[5], not a[b + 1] (can fix later)
+//                 // Todo; allow for const expressions like [5 + 6] or smt
+//                 const Token *t = p_consume_a(p, TK_INT_LITERAL);
+//                 len = (int)parse_int(t->value, t->size);
+//             }
+//             p_consume_a(p, TK_CLOSE_SQUARE);
+//             type = get_array_type(type, len);
+//         } else if (p_peek(p)->type == TK_OPEN_PAREN) {
+//             p_consume(p);
+//             bool is_variadic = p_parse_parameter_list(p, nm, NULL);
+//         } else break;
+//     }
+
+//     return type_invalid;
+// }
+
+Type *p_parse_enum(Parser *p) {
     Type enum_t = enum_type();
     p_consume_a(p, TK_ENUM);
     if (p_peek(p)->type == TK_IDENTIFIER) {
@@ -419,7 +471,7 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
         return t;
     }
 }
-Type *p_parse_union(Parser *p, NodeManager *nm) {
+Type *p_parse_union(Parser *p) {
     Type union_t = union_type();
     p_consume_a(p, TK_UNION);
     if (p_peek(p)->type == TK_IDENTIFIER) {
@@ -431,8 +483,9 @@ Type *p_parse_union(Parser *p, NodeManager *nm) {
         p_consume(p); // {
         while (p_peek(p)->type != TK_CLOSE_CURLY) {
             UnionMember m;
-            Type *t = p_parse_type(p, nm);
-            m.name = p_consume_a(p, TK_IDENTIFIER)->value;
+            m.name = NULL;
+            Type *t = p_parse_type(p, &m.name);
+            ASSERT(m.name, "Struct member must be named\n");
             m.type = t;
             append_union_member(&union_t, &m);
             p_consume_semi(p);
@@ -456,7 +509,7 @@ Type *p_parse_union(Parser *p, NodeManager *nm) {
         return t;
     }
 }
-Type *p_parse_struct(Parser *p, NodeManager *nm) {
+Type *p_parse_struct(Parser *p) {
     Type struct_t = struct_type();
     p_consume_a(p, TK_STRUCT);
     if (p_peek(p)->type == TK_IDENTIFIER) {
@@ -468,8 +521,9 @@ Type *p_parse_struct(Parser *p, NodeManager *nm) {
         p_consume(p); // {
         while (p_peek(p)->type != TK_CLOSE_CURLY) {
             StructMember f;
-            Type *t = p_parse_type(p, nm);
-            f.name = p_consume_a(p, TK_IDENTIFIER)->value;
+            f.name = NULL;
+            Type *t = p_parse_type(p, &f.name);
+            ASSERT(f.name, "Struct member must be named\n");
             f.type = t;
             append_struct_member(&struct_t, &f);
             p_consume_semi(p);
@@ -505,7 +559,7 @@ void p_append_block_item(Node *root, Node *item) {
 
 void p_append_param(Node *func, Node *param) {
     if (param != NULL) {
-        append(&func->func.params_array, &param);
+        append(&func->type->_func.params, &param);
     } else {
         PANIC("Recieved a NULL param node to append\n");
     }
@@ -562,7 +616,7 @@ Symbol *p_append_func_def(Parser *p, Node *f) {
                                                                   .func_def = f,
                                                                   .scope_depth = p->scopes_array.count - 1});
 }
-Symbol *p_append_var_decl(Parser *p, Node *v) {
+Symbol *p_append_var_decl_symbol(Parser *p, Node *v) {
     Linkage linkage = LINK_NONE;
     Storage storage = STORAGE_NONE;
     if (v->var_decl.is_global) {
@@ -580,6 +634,16 @@ Symbol *p_append_var_decl(Parser *p, Node *v) {
                                                                   .linkage = linkage,
                                                                   .storage = storage,
                                                                   .var_decl = v,
+                                                                  .scope_depth = p->scopes_array.count - 1});
+}
+
+Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param) {
+    ASSERT(param->name, "Function parameter must be named\n");
+    return p_append_symbol(get_current_symbol_table(p), &(Symbol){.name = param->name,
+                                                                  .kind = VAR,
+                                                                  .linkage = LINK_NONE,
+                                                                  .storage = STORAGE_NONE,
+                                                                  .var_decl = NULL,
                                                                   .scope_depth = p->scopes_array.count - 1});
 }
 void p_append_enum_const(Parser *p, const EnumField *e) {
@@ -668,7 +732,7 @@ void p_append_case(Node *s, Node *c) {
     append(&s->_switch.cases_array, &c);
 }
 
-UnionMember *get_union_member_named(Type *union_t, const char *name) {
+UnionMember *get_union_member_named(const Type *union_t, const char *name) {
     bool found_member = false;
     for (int j = 0; j < union_t->_union.members_array.count; j++) {
         UnionMember *member = get_union_member(union_t, j);
@@ -686,7 +750,7 @@ UnionMember *get_union_member_named(Type *union_t, const char *name) {
     }
     return NULL;
 }
-StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index) {
+StructMember *get_struct_member_named(const Type *struct_t, const char *name, int *index) {
     bool found_member = false;
     for (int j = 0; j < struct_t->_struct.members_array.count; j++) {
         StructMember *member = get_struct_member(struct_t, j);
@@ -840,30 +904,25 @@ Node *p_parse_compound(Parser *p, NodeManager *nm) {
     return node;
 }
 
-int p_parse_parameter_list(Parser *p, NodeManager *nm, Node *func) {
+Modifier p_parse_parameter_list(Parser *p) {
+    Modifier mod = {.kind = MOD_FUNCTION, .function = {.is_variadic = false}};
+    array_init(&mod.function.params, 4, sizeof(ParamDecl));
     p_consume_a(p, TK_OPEN_PAREN);
     if (p_peek(p)->type != TK_VOID) {
         while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
             if (p_peek(p)->type == TK_ELLIPSES) {
-                if (func->func.params_array.count >= 1) {
-                    p_consume(p);
-                    p_consume_a(p, TK_CLOSE_PAREN);
-                    return 1;
-                } else {
-                    PANIC("Variadic function declaration must have at least one named parameter.\n");
-                }
+                p_consume(p);
+                mod.function.is_variadic = true;
+                break;
             }
-            Node *param = new_node(nm, N_VAR_DECL);
-            param->type = p_parse_type(p, nm);
-            param->var_decl.identifier = p_parse_decl_identifier(p, nm);
-            param->var_decl.expr = NULL;
-            p_append_param(func, param);
+            const char *name = NULL;
+            append(&mod.function.params, &(ParamDecl){.type = p_parse_type(p, &name), .name = name});
             if (p_peek(p)->type == TK_COMMA) p_consume(p);
             else break;
         }
     } else p_consume(p);
     p_consume_a(p, TK_CLOSE_PAREN);
-    return 0;
+    return mod;
 }
 
 /*
@@ -873,13 +932,13 @@ int p_parse_parameter_list(Parser *p, NodeManager *nm, Node *func) {
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, const StorageClass storage_class, bool is_inline) {
+Node *p_parse_function(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, bool is_inline) {
     Node *node = new_function_node(nm);
-    node->func.name = p_consume_a(p, TK_IDENTIFIER)->value;
-    node->func.is_inline = is_inline;
-    node->type = type->type;
+    ASSERT(name != NULL, "Expected nonnull name of function\n");
 
-    node->func.is_variadic = p_parse_parameter_list(p, nm, node);
+    node->func.name = name;
+    node->func.is_inline = is_inline;
+    node->type = type;
     if (p_peek(p)->type == TK_SEMI) {
         p_consume(p);
         node->func.is_defined = false;
@@ -902,35 +961,24 @@ Node *p_parse_decl_identifier(Parser *p, NodeManager *nm) {
     return node;
 }
 
-Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, const StorageClass storage_class, const bool global) {
-    if (type_decl->type->kind == T_STRUCT || type_decl->type->kind == T_ENUM) {
-        if (p_peek(p)->type != TK_IDENTIFIER) {
-            p_consume_semi(p);
+Node *p_parse_declaration(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, const bool global) {
+    if (type->kind == T_STRUCT || type->kind == T_ENUM || type->kind == T_UNION) {
+        if (name == NULL) {
+            p_consume_semi(p); // trailing semi
+            Node *type_decl = new_node(nm, N_TYPE);
+            type_decl->type = type;
             return type_decl;
         }
-        // TODO: this assumes .complete is at the same offset for _enum
-        if (!type_decl->type->_struct.complete) {
-            PANIC("Cannot instantiate an incomplete type\n");
-        }
+        ASSERT(type->_struct.complete, "Cannot instantiate an incomplete type\n");
     }
+    ASSERT(name != NULL, "Expected non null name of variable\n");
+    Node *ident = new_node(nm, N_IDENTIFIER);
+    ident->identifier.name = name;
     Node *var_decl = new_node(nm, N_VAR_DECL);
-    var_decl->var_decl.identifier = p_parse_decl_identifier(p, nm);
+    var_decl->var_decl.identifier = ident;
     var_decl->var_decl.is_global = global;
 
-    if (p_peek(p)->type == TK_OPEN_SQUARE) {
-        p_consume(p); // [
-        int len = -1; // -1 for inferred size
-        if (p_peek(p)->type != TK_CLOSE_SQUARE) {
-            // Only works for a[5], not a[b + 1] (can fix later)
-            // Todo; allow for const expressions like [5 + 6] or smt
-            const Token *t = p_consume_a(p, TK_INT_LITERAL);
-            len = (int)parse_int(t->value, t->size);
-        }
-        p_consume_a(p, TK_CLOSE_SQUARE);
-        type_decl->type = get_array_type(type_decl->type, len);
-    }
-    var_decl->var_decl.type = type_decl;
-    var_decl->type = type_decl->type;
+    var_decl->type = type;
 
     if (p_peek(p)->type == TK_EQ) {
         p_consume(p);
@@ -961,21 +1009,20 @@ Node *p_parse_external_declaration(Parser *p, NodeManager *nm) {
         p_consume(p);
     }
 
-    Node *type_decl = new_node(nm, N_TYPE);
-    type_decl->type = p_parse_type(p, nm);
-    // If a function is ahead, parse function
-    if (p_peek(p)->type == TK_IDENTIFIER && p_peek_next(p)->type == TK_OPEN_PAREN)
-        return p_parse_function(p, nm, type_decl, storage_class, is_inline);
-    // Otherwise parse variable/type declaration
-    else return p_parse_declaration(p, nm, type_decl, storage_class, true);
+    const char *name = NULL;
+    Type *type = p_parse_type(p, &name);
+
+    if (type->kind == T_FUNCTION) return p_parse_function(p, nm, type, name, storage_class, is_inline);
+    else return p_parse_declaration(p, nm, type, name, storage_class, true);
 }
 Node *p_parse_typedef(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_TYPEDEF);
     Node *node = new_node(nm, N_TYPEDEF);
-    node->type = p_parse_type(p, nm);
-    node->_typedef.symbol = p_parse_decl_identifier(p, nm);
+    node->_typedef.name = NULL;
+    node->type = p_parse_type(p, &node->_typedef.name);
+    ASSERT(node->_typedef.name, "Missing typedef name\n");
     p_consume_semi(p);
-    p_append_typedef(p, &(Typedef){.type = node->type, .new_def = node->_typedef.symbol->identifier.name});
+    p_append_typedef(p, &(Typedef){.type = node->type, .new_def = node->_typedef.name});
     return node;
 }
 
@@ -996,14 +1043,15 @@ Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
     if (p_peek(p)->type == TK_TYPEDEF) return p_parse_typedef(p, nm);
 
     StorageClass storage_class = p_parse_storage_classifier(p, nm);
-    Node *type_decl = new_node(nm, N_TYPE);
-    type_decl->type = p_parse_type(p, nm);
 
-    if (p_peek(p)->type == TK_IDENTIFIER && p_peek_next(p)->type == TK_OPEN_PAREN) {
+    const char *name = NULL;
+    Type *type = p_parse_type(p, &name);
+
+    if (type->kind == T_FUNCTION) {
         // return p_parse_function(p, nm, type_decl);
-        PANIC("Function prototypes within blocks is unsupported\n");
+        PANIC("Function prototypes within block scope is unsupported\n");
     } else {
-        return p_parse_declaration(p, nm, type_decl, storage_class, false);
+        return p_parse_declaration(p, nm, type, name, storage_class, false);
     }
 }
 

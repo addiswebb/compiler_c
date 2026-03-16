@@ -1,5 +1,6 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/core/array.h"
+#include "compiler_c/core/node.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
@@ -91,6 +92,17 @@ Type *infer_array_length(Type *arr_type, int len) {
     arr_type->size = len * arr_type->base->size;
     return arr_type;
 }
+Type *new_function_type(Type *type, Array params, bool is_variadic) {
+    Type *fn_type = new_type();
+    fn_type->kind = T_FUNCTION;
+    fn_type->size = sizeof(void);
+    fn_type->align = sizeof(void);
+    fn_type->base = NULL;
+    fn_type->_func.return_type = type;
+    fn_type->_func.params = params;
+    fn_type->_func.is_variadic = is_variadic;
+    return fn_type;
+}
 Type *new_pointer_type(Type *type) {
     Type *ptr_type = new_type();
     ptr_type->kind = T_POINTER;
@@ -121,15 +133,6 @@ Type *new_unsigned_type(Type *type) {
     unsigned_type->qualifiers = type->qualifiers;
     unsigned_type->base = type;
     return unsigned_type;
-}
-
-Type *get_array_type(Type *type, int len) {
-    for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].base == type && typepool.types[i].kind == T_ARRAY && typepool.types[i]._array.array_len == len) {
-            return &typepool.types[i];
-        }
-    }
-    return new_array_type(type, len);
 }
 
 Type *get_float_type(int size) {
@@ -168,6 +171,42 @@ Type *get_pointer_type(Type *type) {
     return new_pointer_type(type);
 }
 
+Type *get_array_type(Type *type, int len) {
+    for (int i = 0; i < typepool.count; i++) {
+        if (typepool.types[i].base == type && typepool.types[i].kind == T_ARRAY && typepool.types[i]._array.array_len == len) {
+            return &typepool.types[i];
+        }
+    }
+    return new_array_type(type, len);
+}
+
+Type *get_function_type(Type *type, Array params, bool is_variadic) {
+    for (int i = 0; i < typepool.count; i++) {
+        Type *t = &typepool.types[i];
+        if (t->kind == T_FUNCTION && t->_func.return_type == type && t->_func.is_variadic == is_variadic) {
+            if (t->_func.params.data == params.data) { // Parsed params mem ptr should be copied to type
+                return t;
+            }
+        }
+    }
+    return new_function_type(type, params, is_variadic);
+}
+
+Type *get_modified_type(Type *type, Declarator *decl) {
+    if (decl->modifiers.count == 0) return type;
+    for (int i = decl->modifiers.count - 1; i >= 0; i--) {
+        Modifier *mod = (Modifier *)get(&decl->modifiers, i);
+        if (mod->kind == MOD_POINTER) {
+            type = get_pointer_type(type);
+        } else if (mod->kind == MOD_ARRAY) {
+            type = get_array_type(type, mod->array_size);
+        } else if (mod->kind == MOD_FUNCTION) {
+            type = get_function_type(type, mod->function.params, mod->function.is_variadic);
+        }
+    }
+    return type;
+}
+
 Type *get_qualified_type(Type *type, unsigned int qualifiers) {
     for (int i = 0; i < typepool.count; i++) {
         if (typepool.types[i].base == type && typepool.types[i].kind == type->kind && typepool.types[i].size == type->size &&
@@ -177,6 +216,21 @@ Type *get_qualified_type(Type *type, unsigned int qualifiers) {
     }
 
     return new_qualified_type(type, qualifiers);
+}
+bool cmp_func_types(const Type *a, const Type *b) {
+    ASSERT(a->kind == T_FUNCTION, "Can only compare function types\n");
+    ASSERT(b->kind == T_FUNCTION, "Can only compare function types\n");
+    if (a->_func.is_variadic != b->_func.is_variadic) return false;
+    if (a->_func.return_type != b->_func.return_type) return false;
+    if (a->_func.params.data != b->_func.params.data) {
+        if (a->_func.params.count != b->_func.params.count) return false;
+        for (int i = 0; i < a->_func.params.count; i++) {
+            ParamDecl *a_p = get(&a->_func.params, i);
+            ParamDecl *b_p = get(&b->_func.params, i);
+            if (a_p->type != b_p->type) return false;
+        }
+    }
+    return true;
 }
 
 Type *get_unsigned_type(Type *type) {
@@ -296,14 +350,14 @@ StructMember *get_member(Type *struct_t, const char *name) {
     PANIC("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
 }
 
-void print_type(Type *type) {
+void print_type(const Type *type) {
     if (!type) {
         printf("NULL");
         return;
     }
     if (type->qualifiers & QUAL_CONST) printf("%s ", KEYWORDS[TK_CONST]);
     if (type->qualifiers & QUAL_VOLATILE) printf("%s ", KEYWORDS[TK_VOLATILE]);
-    if (!type->is_signed) printf("%s ", KEYWORDS[TK_UNSIGNED]);
+    if (type->kind == T_INT && !type->is_signed) printf("%s ", KEYWORDS[TK_UNSIGNED]);
     switch (type->kind) {
     case T_INVALID:
         printf("[INVALID TYPE]");
@@ -376,13 +430,26 @@ void print_type(Type *type) {
             for (int i = 0; i < type->_union.members_array.count; i++) {
                 UnionMember *member = get_union_member(type, i);
                 print_type(member->type);
-                printf(" %s:[%d], ", member->name, member->type->size);
+                printf(" %s:[%d] ", member->name, member->type->size);
+                if (i < type->_union.members_array.count - 1) printf(", ");
             }
             printf("}");
         }
         break;
     case T_VOID:
         print_token_type(TK_VOID);
+        break;
+    case T_FUNCTION:
+        print_type(type->_func.return_type);
+        if (type->_func.params.count == 0) break;
+        printf("(");
+        for (int i = 0; i < type->_func.params.count; i++) {
+            ParamDecl *param = (ParamDecl *)get(&type->_func.params, i);
+            print_param_decl(param);
+            if (i < type->_func.params.count - 1) printf(", ");
+        }
+        if (type->_func.is_variadic) printf(", ... ");
+        printf(")");
         break;
     }
 }
@@ -402,4 +469,10 @@ void print_struct_type(Type *s) {
         }
         printf("}\n");
     }
+}
+
+void print_param_decl(ParamDecl *decl) {
+    print_type(decl->type);
+    printf(" ");
+    if (decl->name) printf("%s", decl->name);
 }

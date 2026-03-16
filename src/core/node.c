@@ -74,6 +74,7 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
         printf("\n");
         exit(1);
     }
+
     Node *cast = new_node(nm, N_CAST);
     cast->type = type;
     // cast->cast.to = type;
@@ -84,6 +85,9 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
 
 bool is_valid_cast(const Type *from, const Type *to) {
     if (from->kind == T_INVALID || to->kind == T_INVALID) return false;
+    if (from->kind == T_FUNCTION && to->kind == T_POINTER) {
+        return cmp_func_types(from, to->base);
+    }
     if (from->kind == T_ARRAY) {
         // Can only cast array->pointer (pointer decay)
         return to->kind == T_POINTER && from->base == to->base;
@@ -282,26 +286,24 @@ void print_node(const Node *node, const int depth) {
         }
         break;
     case N_FUNCTION:
-        printf(": [name= %s, param_count= %d, return_type= ", node->func.name, node->func.params_array.count);
+        printf(": [name= %s, param_count= %d, return_type= ", node->func.name, node->type->_func.params.count);
         print_type(node->type);
 
         printf(", has_initializer=");
         if (node->func.is_defined) printf("true");
         else printf("false");
 
-        if (node->func.is_variadic) printf(", variadic");
+        if (node->type->_func.is_variadic) printf(", variadic");
 
         if (node->func.storage_class == EXTERN) printf(", extern");
         if (node->func.storage_class == STATIC) printf(", static");
         printf("]");
-        if (node->func.params_array.count > 0) {
+        if (node->type->_func.params.count > 0) {
             printf(" { ");
-            for (int i = 0; i < node->func.params_array.count; i++) {
-                Node *param = get_node(&node->func.params_array, i);
-                print_type(param->type);
-                printf(" %s ", param->var_decl.identifier->identifier.name);
+            for (int i = 0; i < node->type->_func.params.count; i++) {
+                print_param_decl((ParamDecl *)get(&node->type->_func.params, i));
             }
-            if (node->func.is_variadic) printf(", ... ");
+            if (node->type->_func.is_variadic) printf(", ... ");
             printf("}");
         }
         printf("\n");
@@ -414,8 +416,7 @@ void print_node(const Node *node, const int depth) {
     case N_TYPEDEF:
         printf(": [type= ");
         print_type(node->type);
-        printf(", identifier]\n");
-        print_node(node->_typedef.symbol, depth + 1);
+        printf(", name= %s ]\n", node->_typedef.name);
         break;
     case N_GOTO:
         printf(": [ %s ]\n", node->_goto.identifier->identifier.name);

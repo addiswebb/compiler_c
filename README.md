@@ -144,6 +144,7 @@ As both platforms use registers for different things and in different orders, th
     * Explicit values: `enum C { ONE = 1, TWO, }`
 * Typedef
   * Aliases: `typedef type name`
+* Function Pointers
 
 ## 2. Literals
 
@@ -243,7 +244,6 @@ As both platforms use registers for different things and in different orders, th
 * SysV ABI
 
 ## To be Implemented (Ordered from next to never...)
-* Function pointers
 * Compiler builtins
     * `__builtin_va_list` etc.
 * Support a standard library 

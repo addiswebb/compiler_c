@@ -112,7 +112,7 @@ int compile(Compiler *compiler) {
 
     lower_nodes(&compiler->nm);
 
-    if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR || compiler->flags) {
+    if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {
         set_log_stage(STAGE_IR);
         IR_Context ctx = ir_init_ctx();
         IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);

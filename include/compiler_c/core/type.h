@@ -36,9 +36,37 @@ typedef struct{
     Type *types;
 } TypePool;
 
+typedef enum{
+    MOD_POINTER,
+    MOD_ARRAY,
+    MOD_FUNCTION,
+}ModifierKind;
+
+typedef struct {
+    const char *name;
+    Array modifiers;
+}Declarator;
+
+
+typedef struct{
+    Type *type;
+    const char *name;
+}ParamDecl;
+
+typedef struct {
+    ModifierKind kind;
+    union{
+        int array_size;
+        struct{
+            Array params;
+            bool is_variadic;
+        } function;
+    };
+}Modifier;
+
 /* Represents a member within a defined struct */
 typedef struct{
-    char *name;
+    const char *name;
     Type *type;
     int offset;
 }StructMember;
@@ -51,7 +79,7 @@ typedef struct{
 }EnumField;
 
 typedef struct{
-    char *name;
+    const char *name;
     Type *type;
 }UnionMember;
 
@@ -77,19 +105,19 @@ struct Type{
         }_array;
         // T_STRUCT
         struct{
-            char *name;
             bool complete;
+            char *name;
             Array members_array;
         }_struct;
         // T_ENUM
         struct{
-            char *name;
             bool complete;
+            char *name;
             Array fields_array;
         }_enum;
         struct{
-            char *name;
             bool complete;
+            char *name;
             Array members_array;
         }_union;
         struct{
@@ -157,7 +185,12 @@ Type *get_union_type(const char *name);
 Type *get_struct_type(const char *name);
 Type *get_array_type(Type *type, int len);
 Type *get_qualified_type(Type *type, unsigned int qualifiers);
+Type *get_function_type(Type *type, Array params, bool is_variadic);
+Type *get_modified_type(Type *type, Declarator *decl);
 Type *get_unsigned_type(Type *type);
+
+bool cmp_func_types(const Type *a, const Type *b);
+
 /* Expects the signed type to promote to, selects sign from original type. */
 Type *promote_integer(Type *from, Type *to);
 
@@ -187,6 +220,8 @@ Type enum_type();
 StructMember *get_member(Type *struct_t, const char *name);
 
 /* Prints the given type as seen in C */
-void print_type(Type* type);
+void print_type(const Type *type);
+void print_struct_type(Type *s);
+void print_param_decl(ParamDecl *decl);
 
 #endif // COMPILER_C_TYPE_H

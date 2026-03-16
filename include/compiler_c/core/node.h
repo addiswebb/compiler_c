@@ -65,14 +65,12 @@ struct Node {
         struct {
             // Node *type;
             const char *name;
-            Array params_array;
             Node *body;
             StorageClass storage_class;
             Symbol *symbol;
             bool is_global;
             bool is_defined;
             bool is_inline;
-            bool is_variadic;
         } func;
         // { [block_item]+ }
         struct {
@@ -138,7 +136,6 @@ struct Node {
         } identifier;
         // type name = expr;
         struct {
-            Node *type;
             Node *identifier;
             Node *expr;
             StorageClass storage_class;
@@ -194,7 +191,7 @@ struct Node {
         }_case;
         // typedef Type Symbol
         struct{
-            Node *symbol;
+            const char *name;
         }_typedef;
         struct{
             Node *identifier;

@@ -233,8 +233,14 @@ Node *p_parse_compound(Parser *p, NodeManager *nm);
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm, Node *type, const StorageClass storage_class, bool is_inline);
+Node *p_parse_function(Parser *p, NodeManager *nm, Type *type,const char *name, const StorageClass storage_class, bool is_inline);
 
+/*
+    Consums
+    `([var decl]*)`
+    Where var decl cannot have a definition, and identifier is optional.
+*/
+Modifier p_parse_parameter_list(Parser *p);
 /*
     Consumes any valid declaration.
     `Function, Struct, Enum, Global Variable`.
@@ -263,7 +269,7 @@ Node *p_parse_decl_identifier(Parser *p, NodeManager *nm);
 
     A declaration is any variable or type declaration.
 */
-Node *p_parse_declaration(Parser *p, NodeManager *nm, Node *type_decl, StorageClass storage_class, bool global);
+Node *p_parse_declaration(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, const bool global);
 /*
     Consumes
     `typedef [type] [identifier];`
@@ -278,27 +284,29 @@ Node *p_parse_translation_unit(Parser* p, NodeManager *nm);
     Consumes either
     `struct or enum` or a primitive `[type]`.
 */
-Type *p_parse_type(Parser *p, NodeManager *nm);
+Type *p_parse_abstract_type(Parser *p);
+Type *p_parse_type(Parser *p, const char **name);
+Declarator p_parse_declarator(Parser *p);
 /*
     Consumes
     `enum [Tag]? [{[Field Identifier]*}]?`
     Where `Field Identifier` is any `[Identifier]`
 */
-Type *p_parse_enum(Parser *p, NodeManager *nm);
+Type *p_parse_enum(Parser *p);
 
 /*
     Consumes
     `struct [Tag]? [{[Member Declaration]*}]?`
     Where `Member Declaration` is any `[var decl]`
 */
-Type *p_parse_struct(Parser *p, NodeManager *nm);
+Type *p_parse_struct(Parser *p);
 
 /*
     Consumes
     `union [Tag]? [{[Member Declaration]*}]?`
     Where `Member Declaration` is any `[var decl]`
 */
-Type *p_parse_union(Parser *p, NodeManager *nm);
+Type *p_parse_union(Parser *p);
 
 /*
     Consumes either,
@@ -336,7 +344,9 @@ EnumField *p_get_enum_const(const Parser *p, const char* name);
 void p_append_call_param(Node *func_call, Node *param);
 void p_append_param(Node *func, Node *param);
 void p_append_enum_const(Parser *p, const EnumField *e);
-Symbol *p_append_var_decl(Parser *p, Node *v);
+Symbol *p_append_var_decl_symbol(Parser *p, Node *v);
+
+Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param);
 void p_append_element(Node *init_list, Node *element);
 void p_append_symbol_table(Parser *p);
 Symbol *p_append_symbol(Array *st, const Symbol *s);
@@ -348,10 +358,10 @@ void p_append_case(Node *s, Node *c);
 static inline Array * get_symbol_table(const Parser *p, int index){ return (Array*) get(&p->scopes_array, index); }
 static inline Array *get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count-1); }
 static inline Symbol *get_symbol(Array *symbol_table, int index) { return (Symbol *)get(symbol_table, index); }
-static inline EnumField *get_enum_field(Type *enum_t, int index) { return (EnumField*)get(&enum_t->_enum.fields_array, index); }
-static inline StructMember *get_struct_member(Type *struct_t, int index) { return (StructMember *)get(&struct_t->_struct.members_array, index); }
-static inline UnionMember *get_union_member(Type *union_t, int index) { return (UnionMember*)get(&union_t->_union.members_array, index); }
-UnionMember *get_union_member_named(Type *union_t, const char *name);
-StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index);
+static inline EnumField *get_enum_field(const Type *enum_t, int index) { return (EnumField*)get(&enum_t->_enum.fields_array, index); }
+static inline StructMember *get_struct_member(const Type *struct_t, int index) { return (StructMember *)get(&struct_t->_struct.members_array, index); }
+static inline UnionMember *get_union_member(const Type *union_t, int index) { return (UnionMember*)get(&union_t->_union.members_array, index); }
+UnionMember *get_union_member_named(const Type *union_t, const char *name);
+StructMember *get_struct_member_named(const Type *struct_t, const char *name, int *index);
 
 #endif // COMPILER_C_PARSER_H

@@ -514,7 +514,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
         return NULL;
     }
 
-    IR_Function *fn = ir_new_function(ctx, func->func.name, func->type);
+    IR_Function *fn = ir_new_function(ctx, func->func.name, func->type->_func.return_type);
     if (func->func.body->kind != N_COMPOUND) {
         PANIC("Function body is not a compound,\n");
     }
@@ -523,10 +523,10 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
 
     ir_begin_scope(fn);
     // handle (params)
-    for (int i = 0; i < func->func.params_array.count; i++) {
+    for (int i = 0; i < func->type->_func.params.count; i++) {
         // Copy from registers instead
-        Node *param = get_node(&func->func.params_array, i);
-        ir_new_var(ctx->func, param->var_decl.identifier->identifier.name, param->type);
+        ParamDecl *param = (ParamDecl *)get(&func->type->_func.params, i);
+        ir_new_var(ctx->func, param->name, param->type);
         ir_store(ctx, ir_mem_value(i, param->type), ir_vreg_value(-i - 1, param->type), param->type);
         fn->param_count++;
     }
@@ -534,7 +534,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {
         ir_gen_block_item(ctx, get_node(&func->func.body->compound.items_array, i));
     }
-    if (func->type == type_void) ir_return(ctx, ir_no_value);
+    if (func->type->_func.return_type == type_void) ir_return(ctx, ir_no_value);
 
     ir_end_scope(fn);
 
@@ -561,7 +561,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
                     }
                     break;
                 }
-            } else func_def = ir_append_func_def(ctx, n->func.name, n->func.is_variadic, n->func.is_variadic);
+            } else func_def = ir_append_func_def(ctx, n->func.name, n->func.is_defined, n->type->_func.is_variadic);
 
             if (n->func.is_defined) ir_append_function(ctx, func_def, ir_gen_function(ctx, n));
             break;
