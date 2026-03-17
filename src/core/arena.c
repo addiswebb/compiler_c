@@ -4,6 +4,7 @@
 #include <string.h>
 
 void arena_init(Arena *arena, int block_capacity, int element_size) {
+    ASSERT(block_capacity > 0,"Arena Cannot have block_capacity <= 0\n");
     array_init(&arena->blocks, 1, sizeof(Array));
     arena->block_capacity = block_capacity;
     arena->count = 0;
