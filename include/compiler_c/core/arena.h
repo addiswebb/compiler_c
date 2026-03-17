@@ -5,7 +5,8 @@
 
 typedef struct{
     Array blocks;
-    int block_size;
+    int element_size;
+    int block_capacity;
     int count;
 }Arena;
 

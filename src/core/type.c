@@ -1,4 +1,5 @@
 #include "compiler_c/core/type.h"
+#include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/log/logger.h"
@@ -28,15 +29,10 @@ Type *type_void;
 Type *type_void_ptr;
 Type *type_invalid;
 
-TypePool typepool;
+Arena typepool;
 
 void init_types() {
-    typepool.count = 0;
-    typepool.capacity = 64;
-    typepool.types = malloc(sizeof(Type) * typepool.capacity);
-    if (!typepool.types) {
-        printf("Failed to allocate for global type pool\n");
-    }
+    arena_init(&typepool, 2, sizeof(Type));
 
     type_i8 = init_global_type(T_INT, sizeof(char), QUAL_NONE, SIGNED);
     type_i16 = init_global_type(T_INT, sizeof(short), QUAL_NONE, SIGNED);
@@ -58,23 +54,15 @@ void init_types() {
 
 Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is_signed) {
     Type *t = new_type();
-    if (!t) {
-        PANIC("Failed to alloc for new type\n");
-    }
     t->kind = type;
     t->size = size;
     t->align = size;
-    t->base = type_invalid;
+    t->base = NULL;
     t->qualifiers = qualifiers;
     t->is_signed = is_signed;
     return t;
 }
-Type *new_type() {
-    if (typepool.count >= typepool.capacity) {
-        PANIC("Too many types [%d/%d]\n", typepool.count, typepool.capacity);
-    }
-    return &typepool.types[typepool.count++];
-}
+Type *new_type() { return arena_append(&typepool, &(Type){0}); }
 
 Type *new_array_type(Type *type, int len) {
     Type *arr_type = new_type();
@@ -163,9 +151,8 @@ Type *promote_integer(Type *from, Type *to) { return from->is_signed ? to : get_
 
 Type *get_pointer_type(Type *type) {
     for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].base == type && typepool.types[i].kind == T_POINTER) {
-            return &typepool.types[i];
-        }
+        Type *t = arena_get(&typepool, i);
+        if (t->kind == T_POINTER && t->base == type) return t;
     }
 
     return new_pointer_type(type);
@@ -173,9 +160,8 @@ Type *get_pointer_type(Type *type) {
 
 Type *get_array_type(Type *type, int len) {
     for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].base == type && typepool.types[i].kind == T_ARRAY && typepool.types[i]._array.array_len == len) {
-            return &typepool.types[i];
-        }
+        Type *t = arena_get(&typepool, i);
+        if (t->base == type && t->kind == T_ARRAY && t->_array.array_len == len) return t;
     }
     return new_array_type(type, len);
 }
@@ -183,7 +169,7 @@ Type *get_array_type(Type *type, int len) {
 Type *get_function_type(Type *type, Array params, bool is_variadic) {
     ASSERT(type->kind != T_ARRAY, "Functions cannot return arrays\n");
     for (int i = 0; i < typepool.count; i++) {
-        Type *t = &typepool.types[i];
+        Type *t = arena_get(&typepool, i);
         if (t->kind == T_FUNCTION && t->_func.return_type == type && t->_func.is_variadic == is_variadic) {
             if (t->_func.params.count != params.count) continue;
             bool match = true;
@@ -224,8 +210,7 @@ Type *get_modified_type(Type *type, Declarator *decl) {
 
 Type *get_qualified_type(Type *type, unsigned int qualifiers) {
     for (int i = 0; i < typepool.count; i++) {
-        Type *t = &typepool.types[i];
-
+        Type *t = arena_get(&typepool, i);
         if (t->base == type->base && t->kind == type->kind && t->size == type->size && t->qualifiers == qualifiers &&
             t->is_signed == type->is_signed) {
             return t;
@@ -256,7 +241,8 @@ Type *get_unsigned_type(Type *type) {
     }
     if (type->is_signed == UNSIGNED) return type;
     for (int i = 0; i < typepool.count; i++) {
-        Type *t = &typepool.types[i];
+        Type *t = arena_get(&typepool, i);
+
         if (t->kind == type->kind && t->size == type->size && t->is_signed == UNSIGNED && t->qualifiers == type->qualifiers) {
             return t;
         }
@@ -268,9 +254,8 @@ Type *get_unsigned_type(Type *type) {
 Type *get_enum_type(const char *name) {
     if (name == NULL) return NULL;
     for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].kind == T_ENUM && strcmp(name, typepool.types[i]._enum.name) == 0) {
-            return &typepool.types[i];
-        }
+        Type *type = arena_get(&typepool, i);
+        if (type->kind == T_ENUM && strcmp(name, type->_enum.name) == 0) return type;
     }
     return NULL;
 }
@@ -278,18 +263,16 @@ Type *get_enum_type(const char *name) {
 Type *get_union_type(const char *name) {
     if (name == NULL) return NULL;
     for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].kind == T_UNION && strcmp(name, typepool.types[i]._union.name) == 0) {
-            return &typepool.types[i];
-        }
+        Type *type = arena_get(&typepool, i);
+        if (type->kind == T_UNION && strcmp(name, type->_union.name) == 0) return type;
     }
     return NULL;
 }
 Type *get_struct_type(const char *name) {
     if (name == NULL) return NULL;
     for (int i = 0; i < typepool.count; i++) {
-        if (typepool.types[i].kind == T_STRUCT && strcmp(name, typepool.types[i]._struct.name) == 0) {
-            return &typepool.types[i];
-        }
+        Type *type = arena_get(&typepool, i);
+        if (type->kind == T_STRUCT && strcmp(name, type->_struct.name) == 0) return type;
     }
     return NULL;
 }
@@ -492,7 +475,7 @@ void print_struct_type(Type *s) {
 void print_typepool() {
     printf("---- Type Pool -----\n");
     for (int i = 0; i < typepool.count; i++) {
-        print_type(&typepool.types[i]);
+        print_type(arena_get(&typepool, i));
         printf("\n");
     }
 }

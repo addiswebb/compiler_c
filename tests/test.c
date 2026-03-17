@@ -1,21 +1,10 @@
 extern int printf(const char *fmt, ...);
 
-// int square(int x) { return x * x; }
-
-// int main() {
-//     int (*fp)(int) = &square;
-
-//     int (*table[2])(int) = {square, fp};
-
-//     printf("%d\n", table[0](4));
-//     printf("%d\n", table[1](4));
-//     return 0;
-// }
-
-int foo(int x) { return x * 5; }
-
 int main() {
-    int (*f)(int);
-    f = foo;
-    return f(4);
+    int x = 10;
+    int *p = &x;
+    *p += 5; // x = 15
+    int **pp = &p;
+    **pp -= 3; // x = 12
+    return x;  // 12
 }

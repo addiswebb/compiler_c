@@ -2,6 +2,7 @@
 #define COMPILER_C_TYPE_H
 
 /* Include enum fields when printing an enum type */
+#include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #define DEBUG_ENUM_DETAILED 0
 /* Include struct members when printing an enum type */
@@ -27,16 +28,6 @@ typedef enum {
 } TypeKind;
 
 typedef struct Type Type;
-
-/*
-    Stores all cannonical types in a statically sized array.
-    Allowing for easy type comparison
-*/
-typedef struct{
-    int count;
-    int capacity;
-    Type *types;
-} TypePool;
 
 typedef enum{
     MOD_POINTER,
@@ -150,8 +141,11 @@ extern Type *type_void;
 extern Type *type_void_ptr;
 extern Type *type_invalid;
 
-/* Global typepool */
-extern TypePool typepool;
+/*
+    Stores all cannonical types in a statically sized array.
+    Allowing for easy type comparison
+*/
+extern Arena typepool;
 
 /* Aligns the given size to the correct alignment */
 static inline int align(int size, int align) {
