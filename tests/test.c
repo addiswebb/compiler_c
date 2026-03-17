@@ -1,27 +1,21 @@
-extern void qsort(void *Base, long NumOfElements, long SizeOfElements, int (*c)(const int *, const int *));
 extern int printf(const char *fmt, ...);
 
-int cmp_int(const int *a, const int *b) {
-    int x = *a;
-    int y = *b;
+// int square(int x) { return x * x; }
 
-    if (x < y) return -1;
-    if (x > y) return 1;
-    return 0;
-}
+// int main() {
+//     int (*fp)(int) = &square;
+
+//     int (*table[2])(int) = {square, fp};
+
+//     printf("%d\n", table[0](4));
+//     printf("%d\n", table[1](4));
+//     return 0;
+// }
+
+int foo(int x) { return x * 5; }
 
 int main() {
-    int arr[] = {5, 1, 4, 2, 3};
-    int n = 5;
-
-    int (*cmp)(const int *, const int *);
-    qsort(arr, n, 4, cmp_int);
-
-    for (int i = 0; i < n; i++) {
-        printf("%d ", arr[i]);
-    }
-
-    printf("\n");
-
-    return 0;
+    int (*f)(int);
+    f = foo;
+    return f(4);
 }

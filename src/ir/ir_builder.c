@@ -86,7 +86,9 @@ IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg, IR_Value rhs_re
 IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     IR_Instruction i;
     i.op = IR_CALL;
+    ctx->func_not_address = true;
     i.ops[1] = ir_gen_rvalue(ctx, expr->func_call.callee);
+    ctx->func_not_address = false;
     array_init(&i.call.arg_array, expr->func_call.params_array.count, sizeof(IR_Var));
     i.call.type = expr->func_call.callee->type->base; // TODO change to func def given type maybe? Currently trusting sema
     for (int j = 0; j < i.call.arg_array.capacity; j++) {

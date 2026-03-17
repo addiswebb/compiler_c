@@ -181,6 +181,7 @@ Type *get_array_type(Type *type, int len) {
 }
 
 Type *get_function_type(Type *type, Array params, bool is_variadic) {
+    ASSERT(type->kind != T_ARRAY, "Functions cannot return arrays\n");
     for (int i = 0; i < typepool.count; i++) {
         Type *t = &typepool.types[i];
         if (t->kind == T_FUNCTION && t->_func.return_type == type && t->_func.is_variadic == is_variadic) {
@@ -365,6 +366,8 @@ StructMember *get_member(Type *struct_t, const char *name) {
     PANIC("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
 }
 
+bool is_func_ptr(Type *t) { return t->kind == T_POINTER && t->base->kind == T_FUNCTION; }
+
 void print_type(const Type *type) {
     if (!type) {
         printf("NULL");
@@ -483,6 +486,14 @@ void print_struct_type(Type *s) {
             printf("; [%d]\n", member->offset);
         }
         printf("}\n");
+    }
+}
+
+void print_typepool() {
+    printf("---- Type Pool -----\n");
+    for (int i = 0; i < typepool.count; i++) {
+        print_type(&typepool.types[i]);
+        printf("\n");
     }
 }
 

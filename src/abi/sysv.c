@@ -1,9 +1,9 @@
-#include "compiler_c/ir/ir_module.h"
 #ifndef _WIN64
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis.h"
 #include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/core/type.h"
+#include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/x86/x86.h"
@@ -216,8 +216,11 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         else fprintf(fp, "    xor %%eax, %%eax\n");
     }
 
-    IR_Func_Def *def = ir_get_func_def(ctx, instr->ops[1].func.name);
-    const char *plt = def->storage_class == EXTERN ? "@PLT" : "";
+    const char *plt = "";
+    if (instr->ops[1].func.name != NULL) {
+        IR_Func_Def *def = ir_get_func_def(ctx, instr->ops[1].func.name);
+        plt = def->storage_class == EXTERN ? "@PLT" : "";
+    }
 
     if (instr->ops[1].kind == IR_FUNCTION) {
         fprintf(fp, "    call %s%s\n", instr->ops[1].func.name, plt);

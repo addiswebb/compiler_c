@@ -6,6 +6,8 @@
 #define DEBUG_ENUM_DETAILED 0
 /* Include struct members when printing an enum type */
 #define DEBUG_STRUCT_DETAILED 0
+/* Print all types stored in the typepool */
+#define DEBUG_TYPEPOOL 0
 #define SIGNED 1
 #define UNSIGNED 0
 
@@ -219,9 +221,12 @@ Type enum_type();
 /* Gets the struct member by name from a struct type */
 StructMember *get_member(Type *struct_t, const char *name);
 
+bool is_func_ptr(Type *t);
+
 /* Prints the given type as seen in C */
 void print_type(const Type *type);
 void print_struct_type(Type *s);
 void print_param_decl(ParamDecl *decl);
+void print_typepool();
 
 #endif // COMPILER_C_TYPE_H

@@ -83,7 +83,10 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         if (is_assignment_op(expr->binary.op)) {
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
-            if (val.kind == IR_FUNCTION) val = ir_address(ctx, val, 0);
+            if (val.kind == IR_FUNCTION) {
+                DEBUG("NEEDED IR_FUNC CHECK\n");
+                val = ir_address(ctx, val, 0);
+            }
             bool dereference = expr->binary.lhs->kind == N_INDEX || expr->binary.lhs->kind == N_MEMBER_ACCESS || is_deref(expr->binary.lhs);
             // If it is '+=' or some '=' variant
             if (expr->binary.op != TK_EQ) {
@@ -179,9 +182,10 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             const IR_Value binary_dst = ir_binary(ctx, expr->unary.op == TK_INCR ? ADD : SUB, addr_reg, addr_reg, const_dst, expr->type);
             return expr->unary.associativity ? store_dst : binary_dst;
         } else if (expr->unary.op == TK_AND) { // & ref
+            ctx->func_not_address = true;
             const IR_Value addr = ir_gen_lvalue(ctx, expr->unary.expr);
-            if (expr->unary.expr->kind == N_INDEX ||
-                (expr->unary.expr->type->kind == T_POINTER && expr->unary.expr->type->base->kind == T_FUNCTION)) {
+            ctx->func_not_address = false;
+            if (expr->unary.expr->kind == N_INDEX) {
                 return addr;
             }
             return ir_address(ctx, addr, 0);
@@ -434,14 +438,14 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
         return;
     }
 
-    const IR_Value addr = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
-
+    IR_Value rhs = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
+    if (rhs.kind == IR_FUNCTION) rhs = ir_address(ctx, rhs, 0);
     if (var_decl->type->kind == T_ARRAY || var_decl->type->kind == T_STRUCT) {
         ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
         printf("1\n");
         dst = ir_address(ctx, dst, 0);
-        ir_memcpy(ctx, addr, dst, var_decl->type->size);
-    } else ir_store(ctx, dst, addr, var_decl->type);
+        ir_memcpy(ctx, rhs, dst, var_decl->type->size);
+    } else ir_store(ctx, dst, rhs, var_decl->type);
 }
 
 static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {

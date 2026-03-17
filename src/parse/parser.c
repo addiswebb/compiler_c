@@ -116,12 +116,6 @@ Node *p_parse_postfix_expression(Parser *p, NodeManager *nm) {
         switch (p_peek(p)->type) {
         case TK_OPEN_PAREN:
             p_consume(p); // '('
-            if (expr->kind != N_IDENTIFIER && !is_deref(expr)) {
-                log_start(LOG_ERROR);
-                print_node_type(expr->kind);
-                printf(" is not allowed for a function call.\n");
-                exit(1);
-            }
             Node *func_call = new_function_call_node(nm, expr);
 
             while (p_peek(p)->type != TK_CLOSE_PAREN) {
@@ -378,9 +372,10 @@ Type *p_parse_type(Parser *p, const char **name) {
 Declarator p_parse_declarator(Parser *p) {
     Declarator d = {.name = NULL};
     array_init(&d.modifiers, 4, sizeof(Modifier));
+    int ptrs = 0;
     while (p_peek(p)->type == TK_MULTIPLY) {
         p_consume(p);
-        append(&d.modifiers, &(Modifier){.kind = MOD_POINTER});
+        ptrs++;
     }
     if (p_peek(p)->type == TK_OPEN_PAREN) {
         p_consume(p);
@@ -406,6 +401,9 @@ Declarator p_parse_declarator(Parser *p) {
             Modifier func_modifier = p_parse_parameter_list(p);
             append(&d.modifiers, &func_modifier);
         } else break;
+    }
+    for (int i = 0; i < ptrs; i++) {
+        append(&d.modifiers, &(Modifier){.kind = MOD_POINTER});
     }
     return d;
 }

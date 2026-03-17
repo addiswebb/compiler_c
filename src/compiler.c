@@ -103,10 +103,11 @@ int compile(Compiler *compiler) {
     set_log_stage(STAGE_PARSING);
     init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
-    SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL, .expect_value = false};
+    SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL};
     array_init(&sema_ctx.i_array, 4, sizeof(int));
 
     set_log_stage(STAGE_SEMA_ANALYSIS);
+    if (DEBUG_TYPEPOOL) print_typepool();
     semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, &compiler->nm.nodes[0]);
 
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
@@ -129,9 +130,11 @@ int compile(Compiler *compiler) {
             if (DEBUG_LIFETIMES) {
                 for (int i = 0; i < module->functions_array.count; i++) print_cfg(get_func(module, i));
             }
-            printf("---- Lowered IR ----\n");
-            print_ir_module(&ctx, module);
-            printf("\n");
+            if (DEBUG_LOWERED_IR) {
+                printf("---- Lowered IR ----\n");
+                print_ir_module(&ctx, module);
+                printf("\n");
+            }
         }
 
         if (compiler->flags & COMP_FLAG_ASM) {

@@ -1,6 +1,8 @@
 #ifndef COMPILER_C_IR_MODULE_H
 #define COMPILER_C_IR_MODULE_H
 
+#define DEBUG_LOWERED_IR 0
+
 #include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/analyse/analysis_types.h"
@@ -289,6 +291,7 @@ typedef struct{
     Array loop_stack_array;
     IR_Block *true_block;
     IR_Block *false_block;
+    bool func_not_address;
 } IR_Context;
 
 /* The IR_Value used for instructions which do not have a return value / destination register */

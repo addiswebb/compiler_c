@@ -65,7 +65,11 @@ Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type) {
     return cast;
 }
 Node *cast_node(NodeManager *nm, Node *node, Type *type) {
-
+    if (is_func_ptr(node->type) && is_func_ptr(type)) {
+        if (cmp_func_types(node->type->base, type->base)) {
+            return node;
+        }
+    }
     if (node->type->kind == T_FUNCTION && type->kind == T_POINTER && type->base->kind == T_FUNCTION &&
         cmp_func_types(node->type, type->base)) {
 
@@ -217,6 +221,9 @@ void print_node(const Node *node, const int depth) {
         return;
     }
     print_node_type(node->kind);
+    printf(" |");
+    print_type(node->type);
+    printf("| ");
     switch (node->kind) {
     case N_TRANSLATION_UNIT:
         printf("\n");

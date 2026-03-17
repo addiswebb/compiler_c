@@ -10,7 +10,6 @@ typedef struct{
     Node *func;
     Node *compound;
     Array i_array;
-    bool expect_value;
 }SemanticContext;
 
 /* Is a node which is assignable */

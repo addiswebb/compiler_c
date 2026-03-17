@@ -306,9 +306,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_BINARY:
         semantic_analysis(sema_ctx, p, nm, node->binary.lhs);
-        sema_ctx->expect_value = true;
         semantic_analysis(sema_ctx, p, nm, node->binary.rhs);
-        sema_ctx->expect_value = false;
         node->type = check_binary_op(nm, node->binary.op, node);
         break;
     case N_CAST:
@@ -395,8 +393,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             break;
         case FUNC:
             node->type = ident_symbol->func_def->type;
-            if (sema_ctx->expect_value) node->type = get_pointer_type(node->type);
-            sema_ctx->expect_value = false;
             break;
         case ANY:
             PANIC("Should be unreachable\n");
@@ -523,7 +519,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             if (node->init_list.elements_array.count == 0) break;
             if (node->init_list.elements_array.count > 1) {
                 log_start(LOG_ERROR);
-                printf("Excess elements in initializer list for");
+                printf("Excess elements in initializer list for ");
                 print_type(node->type);
                 printf("\n");
                 exit(1);

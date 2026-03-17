@@ -29,6 +29,7 @@ IR_Context ir_init_ctx() {
     ctx.block = NULL;
     ctx.true_block = NULL;
     ctx.false_block = NULL;
+    ctx.func_not_address = false;
     array_init(&ctx.loop_stack_array, 4, sizeof(IR_LoopContext));
     return ctx;
 }
@@ -281,7 +282,6 @@ IR_Value ir_get_symbol_value(IR_Context *ctx, const char *name, bool give_lvalue
             if (strcmp(local->name, name) == 0) {
                 if (give_lvalue) {
                     if (local->type->kind == T_STRUCT || local->type->kind == T_UNION) {
-                        printf("2\n");
                         return ir_address(ctx, local->reg, 0);
                     }
                 }
@@ -297,7 +297,7 @@ IR_Value ir_get_symbol_value(IR_Context *ctx, const char *name, bool give_lvalue
         IR_Func_Def *func_def = get_func_def(ctx, i);
         if (strcmp(func_def->name, name) == 0) {
             IR_Value v = ir_value_from_func_def(func_def);
-            return give_lvalue ? ir_address(ctx, v, 0) : v;
+            return ctx->func_not_address ? v : ir_address(ctx, v, 0);
         }
     }
 
