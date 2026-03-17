@@ -29,6 +29,7 @@ add_executable(compiler_c
     src/core/util.c
     src/core/array.c
     src/core/type.c
+    src/core/arena.c
     src/tokenize/tokenizer.c
     src/parse/parser.c
     src/x86/x86_gen.c

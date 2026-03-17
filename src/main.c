@@ -1,3 +1,4 @@
+#include "compiler_c/core/arena.h"
 #include "compiler_c/log/logger.h"
 #include <compiler_c/compiler.h>
 

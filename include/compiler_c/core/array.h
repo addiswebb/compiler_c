@@ -11,10 +11,6 @@ typedef struct{
 void array_init(Array *arr, int initial_capacity,int element_size);
 void array_free(const Array *arr);
 
-static void ensure_capacity(Array *arr);
-
-static void ensure_index(const Array *arr, int index);
-
 void *append(Array *arr, const void *element);
 void *insert(Array *arr, const void *element, int index);
 void pop(Array *arr);
