@@ -244,6 +244,9 @@ As both platforms use registers for different things and in different orders, th
 * SysV ABI
 
 ## To be Implemented (Ordered from next to never...)
+* Arena Allocator type
+    * Allow for multiple arenas for larger source files
+* Return structs according to ABI
 * Compiler builtins
     * `__builtin_va_list` etc.
 * Support a standard library 
