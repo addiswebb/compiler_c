@@ -221,19 +221,14 @@ struct Node {
     };
 };
 
-typedef struct {
-    int count;
-    int capacity;
-    Node *nodes;
-} NodeManager;
+typedef Arena NodeManager;
 
 #define NODE_ARENA_SIZE 1024
 
 void init_types();
 
-// Type *init_global_type(TypeKind type, int size);
 NodeManager new_node_manager();
-void free_node_manager(const NodeManager *nm);
+void free_node_manager(NodeManager *nm);
 
 /*
     Handles creating a Node, pushing it to the global node array

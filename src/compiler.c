@@ -108,7 +108,7 @@ int compile(Compiler *compiler) {
 
     set_log_stage(STAGE_SEMA_ANALYSIS);
     if (DEBUG_TYPEPOOL) print_typepool();
-    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, &compiler->nm.nodes[0]);
+    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
 
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 
@@ -117,7 +117,7 @@ int compile(Compiler *compiler) {
     if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {
         set_log_stage(STAGE_IR);
         IR_Context ctx = ir_init_ctx();
-        IR_Module *module = ir_gen_translation_unit(&ctx, &compiler->nm.nodes[0]);
+        IR_Module *module = ir_gen_translation_unit(&ctx, arena_get(&compiler->nm, 0));
 
         if (compiler->flags & COMP_FLAG_IR) {
             printf("---- IR ----\n");

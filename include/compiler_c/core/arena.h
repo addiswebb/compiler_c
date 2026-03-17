@@ -17,7 +17,8 @@ void arena_free(Arena *arena);
 
 void *arena_append(Arena *arena, const void *element);
 
-void *arena_get(Arena *arena, int index);
+Array *arena_get_block(const Arena *arena, int index);
+void *arena_get(const Arena *arena, int index);
 void arena_set(Arena *arena, const void *element, int index);
 
 #endif

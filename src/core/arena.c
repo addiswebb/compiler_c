@@ -48,9 +48,9 @@ void *arena_append(Arena *arena, const void *element) {
     return append(block, element);
 }
 
-Array *arena_get_block(Arena *arena, int index) { return get(&arena->blocks, index / arena->block_capacity); }
+Array *arena_get_block(const Arena *arena, int index) { return get(&arena->blocks, index / arena->block_capacity); }
 
-void *arena_get(Arena *arena, int index) {
+void *arena_get(const Arena *arena, int index) {
     ensure_index(arena, index);
     int block_relative_index = index % (arena->block_capacity);
     Array *block = arena_get_block(arena, index);

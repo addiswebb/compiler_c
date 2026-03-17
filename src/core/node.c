@@ -1,3 +1,4 @@
+#include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/log/logger.h"
@@ -10,48 +11,17 @@
 
 NodeManager new_node_manager() {
     NodeManager nm;
-    nm.capacity = NODE_ARENA_SIZE;
-    nm.nodes = malloc(sizeof(Node) * nm.capacity);
-    if (nm.nodes == NULL) {
-        PANIC("Failed to allocate node manager array");
-    }
-    nm.count = 0;
+    arena_init(&nm, NODE_ARENA_SIZE, sizeof(Node));
     return nm;
 }
 
-void free_node_manager(const NodeManager *nm) {
-    for (int i = 0; i < nm->count; i++) {
-        const Node *node = &nm->nodes[i];
-        if (node->kind == N_TRANSLATION_UNIT) {
-            for (int j = 0; j < node->translation_unit.declarations_array.count; j++) {
-                free(get_node(&node->translation_unit.declarations_array, j));
-            }
-            array_free(&node->translation_unit.declarations_array);
-        } else if (node->kind == N_COMPOUND) {
-            for (int j = 0; j < node->compound.items_array.count; j++) {
-                free(get_node(&node->compound.items_array, i));
-            }
-            array_free(&node->compound.items_array);
-        } else if (node->kind == N_FUNCTION && node->func.body->kind == N_COMPOUND) {
-            for (int j = 0; j < node->func.body->compound.items_array.count; j++) {
-                free(get_node(&node->func.body->compound.items_array, i));
-            }
-            array_free(&node->func.body->compound.items_array);
-        }
-    }
-    free(nm->nodes);
-}
+void free_node_manager(NodeManager *nm) { arena_free(nm); }
 
 /*
     Handles creating a Node, pushing it to the global node array
 */
 Node *new_node(NodeManager *nm, const NodeKind kind) {
-    if (nm->count >= nm->capacity) {
-        // In the future, create a new arena for more nodes and link them.
-        PANIC("Node Arena overflow");
-    }
-    Node *node = &nm->nodes[nm->count++];
-    memset(node, 0, sizeof(Node));
+    Node *node = arena_append(nm, &(Node){0});
     node->kind = kind;
     node->type = type_invalid;
     return node;
@@ -463,4 +433,4 @@ void print_node(const Node *node, const int depth) {
 /*
     Recursively prints the parse tree starting with the translation unit
 */
-void print_ast(const NodeManager *nm) { print_node(&nm->nodes[0], 0); }
+void print_ast(const NodeManager *nm) { print_node(arena_get(nm, 0), 0); }

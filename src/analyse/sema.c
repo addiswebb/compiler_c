@@ -674,7 +674,7 @@ void pop_sema_scope(SemanticContext *sema_ctx, Parser *p) {
 
 void lower_nodes(NodeManager *nm) {
     for (int i = 0; i < nm->count; i++) {
-        Node *n = &nm->nodes[i];
+        Node *n = arena_get(nm, i);
         if (n->type->kind == T_ENUM) {
             n->type = type_i32;
         }
