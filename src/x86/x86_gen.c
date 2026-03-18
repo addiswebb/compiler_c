@@ -5,6 +5,7 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/x86/x86.h"
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -153,7 +154,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
             if (c->type == type_f64) {
                 uint64_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
-                fprintf(fp, ".align 8\n.LC%d:\n    .quad 0x%016llx\n", i, bits);
+                fprintf(fp, ".align 8\n.LC%d:\n    .quad 0x%016" PRIx64 "\n", i, bits);
             } else if (c->type == type_f32) {
                 uint32_t bits;
                 float f = (float)c->f;
@@ -177,13 +178,11 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
         if (g->storage == STORAGE_BSS) {
             fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->type->align, g->name, g->type->size);
         } else {
-            if (c->type == type_invalid) {
-                PANIC("Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
-            }
+            ASSERT(c->type != type_invalid, "Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
             if (c->type == type_f64) {
                 uint64_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
-                fprintf(fp, ".align 8\n%s:\n    .quad 0x%016llx\n", g->name, bits);
+                fprintf(fp, ".align 8\n%s:\n    .quad 0x%016" PRIx64 "\n", g->name, bits);
             } else if (c->type == type_f32) {
                 uint32_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
@@ -191,14 +190,14 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
             } else if (c->type->kind == T_ARRAY && c->type->base == type_i8) {
                 fprintf(fp, ".align 8\n%s:\n", g->name);
                 x86_emit_string(fp, c->s.data);
-            } else if (c->type == type_i32) {
+            } else if (c->type == type_i32 || c->type == type_u32) {
                 fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->name, (int)c->i);
-            } else if (c->type == type_i8) {
+            } else if (c->type == type_i8 || c->type == type_u8) {
                 fprintf(fp, "%s:\n    .byte %d\n", g->name, (char)c->i);
-            } else if (c->type == type_i16) {
+            } else if (c->type == type_i16 || c->type == type_u16) {
                 fprintf(fp, ".align 2\n%s:\n    .word %d\n", g->name, (short)c->i);
-            } else if (c->type == type_i64) {
-                fprintf(fp, ".align 8\n%s:\n    .quad %lld\n", g->name, c->i);
+            } else if (c->type == type_i64 || c->type == type_u64) {
+                fprintf(fp, ".align 8\n%s:\n    .quad %" PRId64 "\n", g->name, c->i);
             }
         }
     }

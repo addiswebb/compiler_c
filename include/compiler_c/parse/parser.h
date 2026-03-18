@@ -59,6 +59,7 @@ typedef struct {
 
 Parser new_parser();
 void init_parser(Parser *p, Array* src, int size);
+void free_parser(Parser *p);
 
 /* ===== Parsing Utility Functions ===== */
 /*
@@ -124,29 +125,40 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm);
     Consumes any
     `primary expr[expr]`
     `primary expr(param-list)`
+    `primary [./->] (identifier)`
+    `primary [++/--] `
 */
 Node *p_parse_postfix_expression(Parser *p, NodeManager *nm);
 /*
-    Consumes
-    `unary op`
-    or
-    `postfix`
-    If unary op, parses it and then a postfix, otherwise postfix
+    Tries to consume
+    `prefix (expr)`
+    Falls back to
+    `(expr) postfix`
 */
-Node *p_parse_unary(Parser *p, NodeManager *nm);
+Node *p_parse_prefix(Parser *p, NodeManager *nm);
 /*
     Consumes
     `{ [expr]* }`.
     Where each `expr` is seperated by a `,`.
 */
 Node *p_parse_init_list(Parser *p, NodeManager *nm);
-// TODO: FIX THIS COMMENT
 /*
-    Consumes
-    `[term]`.
-    Where `term` is any `literal`, `identifier` or `[expr]`
+    Tries to consume, in order
+    Cast: `(type)`
+    Prefix: `op [expr]`
+    Primary: `literal`, `identifier`, `(expr)` or `{init list}`
+    Postfix: `[expr] op`
+    Where `op` is any prefixed or postfixed unary op respectively.
 */
 Node *p_parse_expression(Parser *p,NodeManager *nm,int min_prec);
+
+/*
+    Tries to consume
+    `(type)`
+    Otherwise parses `postfix expr`
+*/
+Node *p_parse_cast(Parser *p, NodeManager *nm);
+
 /*
     Consumes
     `goto [label];`
@@ -363,15 +375,15 @@ Symbol *p_append_var_decl_symbol(Parser *p, Node *v);
 Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param);
 void p_append_element(Node *init_list, Node *element);
 void p_append_symbol_table(Parser *p);
-Symbol *p_append_symbol(Array *st, const Symbol *s);
+Symbol *p_append_symbol(Arena *st, const Symbol *s);
 void p_append_typedef(Parser *p, const Typedef *t);
 Symbol * p_append_func_def(Parser *p, Node *f);
 void p_append_block_item(Node *root, Node *item);
 void p_append_case(Node *s, Node *c);
 
-static inline Array * get_symbol_table(const Parser *p, int index){ return (Array*) get(&p->scopes_array, index); }
-static inline Array *get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count-1); }
-static inline Symbol *get_symbol(Array *symbol_table, int index) { return (Symbol *)get(symbol_table, index); }
+static inline Arena* get_symbol_table(const Parser *p, int index){ return (Arena*) get(&p->scopes_array, index); }
+static inline Arena* get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count-1); }
+static inline Symbol *get_symbol(Arena *symbol_table, int index) { return (Symbol *)arena_get(symbol_table, index); }
 static inline EnumField *get_enum_field(const Type *enum_t, int index) { return (EnumField*)get(&enum_t->_enum.fields_array, index); }
 static inline StructMember *get_struct_member(const Type *struct_t, int index) { return (StructMember *)get(&struct_t->_struct.members_array, index); }
 static inline UnionMember *get_union_member(const Type *union_t, int index) { return (UnionMember*)get(&union_t->_union.members_array, index); }

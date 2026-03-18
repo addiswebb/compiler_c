@@ -20,14 +20,21 @@ void init_parser(Parser *p, Array *src, const int size) {
     p->src = src;
     p->index = 0;
     p->expect_semi = true;
-    array_init(&p->scopes_array, 4, sizeof(Array));
+    array_init(&p->scopes_array, 4, sizeof(Arena));
     p_append_symbol_table(p);
 }
 
+void free_parser(Parser *p) {
+    for (int i = 0; i < p->scopes_array.count; i++) {
+        arena_free(get_symbol_table(p, i));
+    }
+    array_free(&p->scopes_array);
+}
+
 void p_append_symbol_table(Parser *p) {
-    Array st;
-    array_init(&st, 4, sizeof(Symbol));
-    append(&p->scopes_array, &st);
+    Arena symbol_table;
+    arena_init(&symbol_table, 4, sizeof(Symbol));
+    append(&p->scopes_array, &symbol_table);
 }
 
 /*
@@ -167,12 +174,12 @@ Node *p_parse_postfix_expression(Parser *p, NodeManager *nm) {
         }
     }
 }
-Node *p_parse_unary(Parser *p, NodeManager *nm) {
+Node *p_parse_prefix(Parser *p, NodeManager *nm) {
     if (is_unary_operator(p_peek(p)->type)) {
         Node *node = new_node(nm, N_UNARY);
         node->unary.op = p_consume(p)->type;
         node->unary.associativity = RIGHT_ASSOCIATIVITY;
-        node->unary.expr = p_parse_unary(p, nm);
+        node->unary.expr = p_parse_prefix(p, nm);
         return node;
     }
     return p_parse_postfix_expression(p, nm);
@@ -256,7 +263,6 @@ Node *new_init_list_node(NodeManager *nm) {
 
 Node *new_function_node(NodeManager *nm) {
     Node *node = new_node(nm, N_FUNCTION);
-    array_init(&node->type->_func.params, 4, sizeof(Node **));
     node->func.body = NULL;
     return node;
 }
@@ -307,7 +313,7 @@ Node *p_parse_cast(Parser *p, NodeManager *nm) {
         cast_node->cast.expr = p_parse_cast(p, nm);
         return cast_node;
     }
-    return p_parse_unary(p, nm);
+    return p_parse_prefix(p, nm);
 }
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     Node *primary = p_parse_cast(p, nm);
@@ -365,7 +371,7 @@ Type *p_parse_type(Parser *p, const char **name) {
     *name = decl.name;
     type = get_modified_type(type, &decl);
     if (qualifiers != QUAL_NONE) type = get_qualified_type(type, qualifiers);
-
+    array_free(&decl.modifiers);
     return type;
 }
 
@@ -379,11 +385,10 @@ Declarator p_parse_declarator(Parser *p) {
     }
     if (p_peek(p)->type == TK_OPEN_PAREN) {
         p_consume(p);
+        array_free(&d.modifiers);
         d = p_parse_declarator(p);
         p_consume_a(p, TK_CLOSE_PAREN);
-    } // else if (p_peek(p)->type == TK_EQ) return d;
-    else if (p_peek(p)->type == TK_IDENTIFIER)
-        d.name = p_consume_a(p, TK_IDENTIFIER)->value;
+    } else if (p_peek(p)->type == TK_IDENTIFIER) d.name = p_consume_a(p, TK_IDENTIFIER)->value;
 
     for (;;) {
         if (p_peek(p)->type == TK_OPEN_SQUARE) {
@@ -552,11 +557,11 @@ void p_append_param(Node *func, Node *param) {
 
 void p_append_call_param(Node *func_call, Node *param) { append(&func_call->func_call.params_array, &param); }
 
-Symbol *p_append_symbol(Array *st, const Symbol *s) { return (Symbol *)append(st, s); }
+Symbol *p_append_symbol(Arena *st, const Symbol *s) { return (Symbol *)arena_append(st, s); }
 
 Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind) {
     for (int i = p->scopes_array.count - 1; i >= 0; i--) {
-        Array *st = get_symbol_table(p, i);
+        Arena *st = get_symbol_table(p, i);
         for (int j = 0; j < st->count; j++) {
             Symbol *symbol = get_symbol(st, j);
             if ((kind == ANY || symbol->kind == kind) && strcmp(symbol->name, name) == 0) {
@@ -797,7 +802,7 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
 
 Node *p_get_current_func_definition(const Parser *p) {
     for (int i = p->scopes_array.count - 1; i >= 0; i--) {
-        Array *st = get_symbol_table(p, i);
+        Arena *st = get_symbol_table(p, i);
         for (int j = 0; j < st->count; j++) {
             Symbol *symbol = get_symbol(st, j);
             if (symbol->kind == FUNC) return symbol->func_def;
@@ -866,7 +871,7 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
 
 void p_push_scope(Parser *p) { p_append_symbol_table(p); }
 void p_pop_scope(Parser *p) {
-    array_free(get_current_symbol_table(p));
+    arena_free(get_current_symbol_table(p));
     pop(&p->scopes_array);
 }
 

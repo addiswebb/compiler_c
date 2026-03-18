@@ -1,7 +1,9 @@
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis.h"
+#include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
+#include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/tokenize/tokenizer.h"
@@ -42,7 +44,7 @@ Compiler init_compiler(const int argc, char *argv[]) {
                     PANIC("Improper Usage,\n  compiler_c [input] -o [output]\n");
                 }
                 free(compiler.output_file);
-                compiler.output_file = argv[++i];
+                compiler.output_file = strdup(argv[++i]);
             } else {
                 PANIC("Improper Usage,\n  compiler_c [input] -o [output]\n");
             }
@@ -86,12 +88,15 @@ Compiler init_compiler(const int argc, char *argv[]) {
 }
 
 void free_compiler(Compiler *compiler) {
+    free_typepool();
+    free_node(arena_get(&compiler->nm, 0));
+    arena_free(&compiler->nm);
+    free_parser(&compiler->p);
     t_free(&compiler->tk);
-    free_node_manager(&compiler->nm);
+
     free(compiler->output_file);
-    free(compiler->src);
-    compiler->src = NULL;
     compiler->output_file = NULL;
+    free(compiler->src);
     compiler->src = NULL;
 }
 
@@ -103,12 +108,14 @@ int compile(Compiler *compiler) {
     set_log_stage(STAGE_PARSING);
     init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
+
+    set_log_stage(STAGE_SEMA_ANALYSIS);
     SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL};
     array_init(&sema_ctx.i_array, 4, sizeof(int));
 
-    set_log_stage(STAGE_SEMA_ANALYSIS);
     if (DEBUG_TYPEPOOL) print_typepool();
     semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
+    array_free(&sema_ctx.i_array);
 
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 
@@ -144,25 +151,33 @@ int compile(Compiler *compiler) {
             fclose(fp);
         }
         ir_free_module(module);
+        free_ir_ctx(&ctx);
     }
+
     set_log_stage(STAGE_COMPILER);
+
     INFO("Done.\n");
     if (compiler->flags & COMP_FLAG_RUN) {
-        char base[256];
-        strncpy(base, compiler->output_file, sizeof(base));
+        // char base[256];
+        int base_len = strlen(compiler->output_file);
+        char *base = malloc(sizeof(char) * base_len);
+        ASSERT(base, "Failed to malloc base\n");
+        strcpy(base, compiler->output_file);
         int len = strlen(base);
         while (base[len--] != '.' && len >= 0) {
         }
 
         if (len >= 0) base[len + 1] = '\0';
-        char cmd[512];
-
+        // char cmd[512];
+        int cmd_len = 15 + base_len * 2;
+        char *cmd = malloc(cmd_len);
+        ASSERT(cmd, "Failed to malloc cmd\n");
         INFO("Compiling %s.s to %s.exe (gcc)\n", base, base);
-        snprintf(cmd, sizeof(cmd), "gcc %s.s -o %s.exe", base, base);
+        snprintf(cmd, cmd_len, "gcc %s.s -o %s.exe", base, base);
         system(cmd);
 
-        if (base[0] == '.') snprintf(cmd, sizeof(cmd), "%s.exe", base);
-        else snprintf(cmd, sizeof(cmd), ".\\%s.exe", base);
+        if (base[0] == '.') snprintf(cmd, cmd_len, "%s.exe", base);
+        else snprintf(cmd, cmd_len, ".\\%s.exe", base);
         INFO("Running %s\n", cmd);
         system(cmd);
     }

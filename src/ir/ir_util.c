@@ -5,6 +5,7 @@
 #include "compiler_c/log/logger.h"
 #include "compiler_c/tokenize/tokenizer.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -198,7 +199,7 @@ static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
     printf(", ");
     switch (instr->_const.type->kind) {
     case T_INT:
-        if (instr->_const.type->size == 8) printf("%lld", c->i);
+        if (instr->_const.type->size == 8) printf("%"PRId64, c->i);
         else if (instr->_const.type->size == 1) printf("%c", (char)c->i);
         else printf("%d", (int)c->i);
         break;

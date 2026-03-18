@@ -35,8 +35,15 @@ Tokenizer t_new_tokenizer(const char *src, const int src_size) {
     array_init(&tokenizer.tokens_array, 16, sizeof(Token));
     return tokenizer;
 }
+void free_token(Token *token) {
+    free(token->value);
+    token->value = NULL;
+}
 
 void t_free(Tokenizer *tokenizer) {
+    for (int i = 0; i < tokenizer->tokens_array.count; i++) {
+        free_token(get_token(&tokenizer->tokens_array, i));
+    }
     tokenizer->src = NULL;
     tokenizer->index = 0;
     tokenizer->size = 0;
@@ -99,23 +106,24 @@ static void t_skip(Tokenizer *tk) { t_skip_n(tk, 1); }
 
 static void t_push_buffer(Tokenizer *tk, const TokenType type) {
     if (tk->buf.size == 0) {
-        printf("Tried to push an empty buffer to TokenArray, skipping.\n");
+        WARN("Tried to push an empty buffer to TokenArray, skipping.\n");
         return;
     }
+    // TODO! tk->buf.size+1 or use strdup
     char *buf_dupe = malloc(sizeof(char) * tk->buf.size);
+    // buf_dupe[tk->buf.size] ='\0';
     if (!buf_dupe) {
         PANIC("Failed to allocate for buffer duplicate\n");
     }
     memcpy(buf_dupe, tk->buf.buf, sizeof(char) * tk->buf.size);
-    append(&tk->tokens_array, &(Token){type, buf_dupe, tk->buf.size});
+    append(&tk->tokens_array, &(Token){.type = type, .value = buf_dupe, .size = tk->buf.size});
     t_buffer_reset(tk);
 }
 
 static void t_parse_and_push_buffer(Tokenizer *tk) {
-    if (tk->buf.size == 0) {
-        return;
-    }
-    Token token = {TK_VOID, NULL};
+    if (tk->buf.size == 0) return;
+
+    Token token = {.type = TK_VOID, .value = NULL, .size = 0};
 
     bool is_keyword = false;
     for (int i = 0; i < KEYWORDS_N; i++) {
@@ -127,6 +135,7 @@ static void t_parse_and_push_buffer(Tokenizer *tk) {
     }
     if (!is_keyword) {
         token.type = TK_IDENTIFIER;
+        // TODO! replace with explicit malloc +memcpy
         token.value = strdup(tk->buf.buf);
     }
     append(&tk->tokens_array, &token);
@@ -843,7 +852,7 @@ void print_token(const Token *token) {
         } else if (token->value[0] == '\n') {
             printf("\\n");
         }
-        // printf("%c ", token->value[0]);
+        // TODO fix this printf("%c ", token->value[0]);
     }
     printf("}\n");
 }

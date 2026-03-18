@@ -15,8 +15,6 @@ NodeManager new_node_manager() {
     return nm;
 }
 
-void free_node_manager(NodeManager *nm) { arena_free(nm); }
-
 /*
     Handles creating a Node, pushing it to the global node array
 */
@@ -434,3 +432,168 @@ void print_node(const Node *node, const int depth) {
     Recursively prints the parse tree starting with the translation unit
 */
 void print_ast(const NodeManager *nm) { print_node(arena_get(nm, 0), 0); }
+
+void free_node(Node *node) {
+    if (!node) {
+        // WARN("Tried to free NULL node\n");
+        return;
+    }
+    switch (node->kind) {
+    case N_TRANSLATION_UNIT:
+        for (int i = 0; i < node->translation_unit.declarations_array.count; i++) {
+            free_node(get_node(&node->translation_unit.declarations_array, i));
+        }
+        array_free(&node->translation_unit.declarations_array);
+        break;
+    case N_FUNCTION:
+        node->func.name = NULL;
+        free_node(node->func.body);
+        node->func.body = NULL;
+        break;
+    case N_COMPOUND:
+        for (int i = 0; i < node->compound.items_array.count; i++) {
+            free_node(get_node(&node->compound.items_array, i));
+        }
+        array_free(&node->compound.items_array);
+        break;
+    case N_VAR_DECL:
+        free_node(node->var_decl.identifier);
+        node->var_decl.identifier = NULL;
+        free_node(node->var_decl.expr);
+        node->var_decl.expr = NULL;
+        break;
+    case N_IF:
+        free_node(node->_if.cond);
+        node->_if.cond = NULL;
+        free_node(node->_if.if_true);
+        node->_if.if_true = NULL;
+        free_node(node->_if.if_false);
+        node->_if.if_false = NULL;
+        break;
+    case N_WHILE:
+        free_node(node->_while.cond);
+        node->_while.cond = NULL;
+        free_node(node->_while.block);
+        node->_while.block = NULL;
+        break;
+    case N_FOR:
+        free_node(node->_for.init);
+        node->_for.init = NULL;
+        free_node(node->_for.cond);
+        node->_for.cond = NULL;
+        free_node(node->_for.iter);
+        node->_for.iter = NULL;
+        free_node(node->_for.block);
+        node->_for.block = NULL;
+        break;
+    case N_SWITCH:
+        for (int i = 0; i < node->_switch.cases_array.count; i++) {
+            free_node(get_node(&node->_switch.cases_array, i));
+        }
+        array_free(&node->_switch.cases_array);
+        free_node(node->_switch.block);
+        node->_switch.block = NULL;
+        free_node(node->_switch.test);
+        node->_switch.test = NULL;
+        break;
+    case N_CASE:
+        free_node(node->_case.test);
+        node->_case.test = NULL;
+        break;
+    case N_RETURN:
+        free_node(node->_return.expr);
+        node->_return.expr = NULL;
+        break;
+    case N_UNARY:
+        free_node(node->unary.expr);
+        node->unary.expr = NULL;
+        break;
+    case N_BINARY:
+        free_node(node->binary.lhs);
+        node->binary.lhs = NULL;
+        free_node(node->binary.rhs);
+        node->binary.rhs = NULL;
+        break;
+    case N_LITERAL:
+        node->literal.raw_rata = NULL;
+        if (node->literal.kind == L_STRING) {
+            free(node->literal.s.data);
+            node->literal.s.data = NULL;
+        }
+        break;
+    case N_IDENTIFIER:
+        node->identifier.name = NULL;
+        break;
+    case N_FUNCTION_CALL:
+        for (int i = 0; i < node->func_call.params_array.count; i++) {
+            free_node(get_node(&node->func_call.params_array, i));
+        }
+        array_free(&node->func_call.params_array);
+        free_node(node->func_call.callee);
+        node->func_call.callee = NULL;
+        break;
+    case N_CAST:
+        free_node(node->cast.expr);
+        node->cast.expr = NULL;
+        break;
+    case N_INDEX:
+        free_node(node->index.identifier);
+        node->index.identifier = NULL;
+        free_node(node->index.index);
+        node->index.index = NULL;
+        break;
+    case N_TYPE:
+        break;
+    case N_TYPEDEF:
+        node->_typedef.name = NULL;
+        break;
+    case N_CONTINUE:
+        node->_continue.loop = NULL;
+        break;
+    case N_BREAK:
+        node->_break.loop = NULL;
+        break;
+    case N_INIT_LIST:
+        for (int i = 0; i < node->init_list.elements_array.count; i++) {
+            free_node(get_node(&node->init_list.elements_array, i));
+        }
+        array_free(&node->init_list.elements_array);
+        break;
+    case N_MEMBER_ACCESS:
+        free_node(node->member_access.identifier);
+        node->member_access.identifier = NULL;
+        free_node(node->member_access.member);
+        node->member_access.member = NULL;
+        break;
+    case N_GOTO:
+        free_node(node->_goto.identifier);
+        node->_goto.identifier = NULL;
+        break;
+    case N_LABEL:
+        free_node(node->label.identifier);
+        node->label.identifier = NULL;
+        break;
+    case N_COMPOUND_LITERAL:
+        free_node(node->compound_literal.value);
+        node->compound_literal.value = NULL;
+        break;
+    case N_DESIGNATED_INITIALIZER:
+        switch (node->designated_init.kind) {
+        case T_ARRAY:
+            break;
+        case T_STRUCT:
+            node->designated_init._struct.name = NULL;
+            node->designated_init._struct.member = NULL;
+            break;
+        case T_UNION:
+            node->designated_init._union.name = NULL;
+            node->designated_init._union.member = NULL;
+            break;
+        default:
+            break;
+        }
+        free_node(node->designated_init.value);
+        node->designated_init.value = NULL;
+        break;
+    }
+}

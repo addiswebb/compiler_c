@@ -34,6 +34,8 @@ IR_Context ir_init_ctx() {
     return ctx;
 }
 
+void free_ir_ctx(IR_Context *ctx) { array_free(&ctx->loop_stack_array); }
+
 void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break_block) {
     IR_Block *new_continue_block = continue_block;
     // Try retrieve current continue block, if provided with NULL (switch statement has no continue block to jump to)
@@ -64,10 +66,6 @@ IR_Value ir_vreg_value(const int reg, const Type *type) {
 }
 
 void ir_begin_scope(IR_Function *func) {
-    int *var_indices = malloc(sizeof(int) * 4);
-    if (!var_indices) {
-        PANIC("Failed to allocate for scope var indices\n");
-    }
     IR_Scope s;
     s.reg_count = 0;
     s.stack_pointer = func->stack_size;
@@ -83,7 +81,9 @@ void ir_end_scope(IR_Function *func) {
         if (func->next_reg >= func->max_reg) {
             func->max_reg = func->next_reg;
         }
-        func->stack_size = get_current_scope(func)->stack_pointer;
+        IR_Scope *current_scope = get_current_scope(func);
+        func->stack_size = current_scope->stack_pointer;
+        array_free(&current_scope->var_array);
         pop(&func->scopes_array);
     }
 }
@@ -178,15 +178,6 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type) {
 
     func->stack_slot_capacity = 4;
     func->stack_slot_count = 0;
-    func->stack_slots = malloc(sizeof(StackSlot) * func->stack_slot_capacity);
-    if (!func->stack_slots) {
-        array_free(&func->blocks_array);
-        array_free(&func->scopes_array);
-        array_free(&func->locals_array);
-        free(func->stack_slots);
-        free(func);
-        PANIC("Failed to allocated IR_Stack_Objects\n");
-    }
 
     ctx->func = func;
     ir_add_block(ctx);
@@ -318,17 +309,36 @@ void ir_append_function(const IR_Context *ctx, IR_Func_Def *func_def, IR_Functio
 
 void ir_free_module(IR_Module *module) {
     for (int i = 0; i < module->functions_array.count; i++) {
-        // IR_Function *func = module->functions[i];
         IR_Function *func = get_func(module, i);
         for (int j = 0; j < func->blocks_array.count; j++) {
-            array_free(&get_block(func, j)->instruction_array);
+            IR_Block *block = get_block(func, j);
+            for (int k = 0; k < block->instruction_array.count; k++) {
+                IR_Instruction *instr = get_instruction(&block->instruction_array, k);
+                if (instr->op == IR_CALL) {
+                    array_free(&instr->call.arg_array);
+                }
+            }
+            free(block->cfg.pred);
+            free(block->cfg.succ);
+            free(block->live.live_in.data);
+            free(block->live.live_out.data);
+            free(block->live.def.data);
+            free(block->live.use.data);
+            array_free(&block->instruction_array);
+            free(block);
         }
         array_free(&func->locals_array);
         array_free(&func->blocks_array);
+        ASSERT(func->scopes_array.count == 0, "Should be empty\n");
         array_free(&func->scopes_array);
+        func->name = NULL;
+        func->return_type = NULL;
         free(func);
     }
     array_free(&module->functions_array);
     array_free(&module->func_defs_array);
+    array_free(&module->const_array);
+    array_free(&module->global_array);
+    array_free(&module->labeled_block_array);
     free(module);
 }

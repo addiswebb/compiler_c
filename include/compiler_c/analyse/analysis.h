@@ -27,7 +27,7 @@ void stack_offset(IR_Value *v, const Lifetime *lts, int lts_count);
 */
 void analysis(const IR_Context *ctx);
 
-// TODO: convert these from "bitset" to "block", so add_defined(IR_BLOCK*b);
+// TODO: convert these from "bitset" to "block", so add_defined(IR_BLOCK*b), adds to b->defined;
 
 /*
     Adds the given virtual register to a block's `defined` bitset.

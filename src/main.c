@@ -6,5 +6,6 @@ int main(const int argc, char *argv[]) {
     Compiler compiler = init_compiler(argc, argv);
 
     compile(&compiler);
+    free_compiler(&compiler);
     return 0;
 }

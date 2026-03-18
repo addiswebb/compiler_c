@@ -47,20 +47,20 @@ void bitset_add(const BitSet *s, const int reg) {
     }
     assert(reg >= 0);
     const int word = reg / 32;
-    const int offset = reg % 32;
-    s->data[word] |= (1 << offset);
+    const unsigned int offset = reg % 32;
+    s->data[word] |= (1u << offset);
 }
 void bitset_remove(const BitSet *s, const int reg) {
     assert(reg >= 0);
     const int word = reg / 32;
-    const int offset = reg % 32;
-    s->data[word] &= ~(1 << offset);
+    const unsigned int offset = reg % 32;
+    s->data[word] &= ~(1u << offset);
 }
 int bitset_has(const BitSet *s, const int reg) {
     assert(reg >= 0);
     const int word = reg / 32;
-    const int offset = reg % 32;
-    return (s->data[word] & (1 << offset)) != 0;
+    const unsigned int offset = reg % 32;
+    return (s->data[word] & (1u << offset)) != 0;
 }
 void bitset_union(const BitSet *dst, const BitSet *src) {
     assert(dst->capacity == src->capacity);
@@ -132,6 +132,8 @@ void compute_reverse_postorder(IR_Function *func, int *rpo) {
     for (int i = 0; i < count; i++) {
         rpo[i] = postorder[count - 1 - i];
     }
+    free(postorder);
+    free(visited);
 }
 
 int bitset_add_defined(const BitSet *defined, const IR_Value *v) {

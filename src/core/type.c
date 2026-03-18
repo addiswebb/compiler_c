@@ -52,6 +52,29 @@ void init_types() {
     type_invalid = init_global_type(T_INVALID, -1, QUAL_NONE, SIGNED);
 }
 
+void free_typepool() {
+    for (int i = 0; i < typepool.count; i++) {
+        Type *t = arena_get(&typepool, i);
+        switch (t->kind) {
+        case T_STRUCT:
+            array_free(&t->_struct.members_array);
+            break;
+        case T_ENUM:
+            array_free(&t->_enum.fields_array);
+            break;
+        case T_UNION:
+            array_free(&t->_union.members_array);
+            break;
+        case T_FUNCTION:
+            array_free(&t->_func.params);
+            break;
+        default:
+            break;
+        }
+    }
+    arena_free(&typepool);
+}
+
 Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is_signed) {
     Type *t = new_type();
     t->kind = type;

@@ -155,6 +155,8 @@ static inline int align(int size, int align) {
 /* Initialises all global types and the typepool */
 void init_types();
 
+void free_typepool();
+
 /* Helper for initialising a global type outside of the typepool */
 Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is_signed);
 
@@ -216,6 +218,7 @@ Type enum_type();
 StructMember *get_member(Type *struct_t, const char *name);
 
 bool is_func_ptr(Type *t);
+
 
 /* Prints the given type as seen in C */
 void print_type(const Type *type);

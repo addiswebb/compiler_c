@@ -62,6 +62,7 @@ void set(const Array *arr, const void *element, int index) {
     memcpy(((char *)arr->data + index * arr->element_size), element, arr->element_size);
 }
 
-void array_free(const Array *arr) {
-    if (arr->data) free(arr->data);
+void array_free(Array *arr) {
+    free(arr->data);
+    arr->data = NULL;
 }

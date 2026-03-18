@@ -121,7 +121,7 @@ struct Node {
                 double f;
                 char c;
                 struct {
-                    const char *data;
+                    char *data;
                     int len;
                 } s;
                 void *ptr;
@@ -257,6 +257,8 @@ void print_node(const Node *node,int depth);
     Recursively prints the parse tree starting with the translation unit
 */
 void print_ast(const NodeManager *nm);
+
+void free_node(Node *node);
 
 static inline Node *get_node(const Array *node_array, int index) { return *(Node **)get(node_array, index); }
 static inline void set_node(Array *node_array, Node** node, int index) {

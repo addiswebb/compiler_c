@@ -180,7 +180,6 @@ void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *n
     d->var_decl.is_defined = true;
     d->var_decl.storage_class = STATIC;
     d->var_decl.is_global = false;
-    // d->var_decl.symbol = p_append_var_decl(p, d);
     d->var_decl.symbol = NULL;
 
     node->kind = N_IDENTIFIER;
@@ -271,7 +270,11 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             } else if (var_symbol->var_decl->var_decl.is_defined && node->var_decl.is_defined) {
                 PANIC("Redefinition of global variable %s\n", node->var_decl.identifier->identifier.name);
             }
-            node->var_decl.symbol = var_symbol;
+            /*
+                If the var decl is not in global scope, this symbol will be freed before it reaches IR,
+                where it might be used (not currently as of writing). If I place a symbols in one 
+            */
+            // node->var_decl.symbol = var_symbol;
         } else node->var_decl.symbol = p_append_var_decl_symbol(p, node);
 
         if (!node->var_decl.expr) break;
@@ -376,7 +379,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         if (!ident_symbol) {
             PANIC("Failed to find symbol %s\n", node->identifier.name);
         }
-        node->identifier.symbol = ident_symbol;
+        // node->identifier.symbol = ident_symbol;
         switch (ident_symbol->kind) {
         case ENUM:
             node->kind = N_LITERAL;

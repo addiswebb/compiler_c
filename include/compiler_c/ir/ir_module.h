@@ -175,7 +175,7 @@ typedef struct{
 
 /* Represents an array registers */
 typedef struct{
-    int *data;
+    unsigned int *data;
     int num_bits;
     int capacity;
 } BitSet;
@@ -235,7 +235,6 @@ typedef struct {
     int stack_size;
     Array locals_array;
     Array scopes_array;
-    StackSlot *stack_slots;
     int stack_slot_count;
     int stack_slot_capacity;
     Linkage linkage;
@@ -299,6 +298,8 @@ extern const IR_Value ir_no_value;
 
 /* Initializes the IR Context and allocates memory for the dynamic loop stack. */
 IR_Context ir_init_ctx();
+
+void free_ir_ctx(IR_Context *ctx);
 
 /* Root call to generate IR for a given source file/translation unit. Expects the root AST node, N_TRANSLATION_UNIT. */
 IR_Module *ir_gen_translation_unit(IR_Context *ctx,const Node *tu);

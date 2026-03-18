@@ -4,6 +4,7 @@
 #include "compiler_c/log/logger.h"
 #include "compiler_c/x86/x86.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -457,7 +458,7 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c,
             fprintf(fp, "    movl $%d, %%eax\n", (int)c->i);
             break;
         case 8:
-            fprintf(fp, "    movl $%lld, %%eax\n", c->i);
+            fprintf(fp, "    movl $%" PRId64 ", %%eax\n", c->i);
             break;
         default:
             PANIC("Tried to emit const int of unsupported size\n");

@@ -287,6 +287,7 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
             ir_gen_block_item(ctx, node);
         }
     }
+    free(cases);
     ir_pop_loop_ctx(ctx);
     ir_end_scope(ctx->func);
 
@@ -442,7 +443,6 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     if (rhs.kind == IR_FUNCTION) rhs = ir_address(ctx, rhs, 0);
     if (var_decl->type->kind == T_ARRAY || var_decl->type->kind == T_STRUCT) {
         ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
-        printf("1\n");
         dst = ir_address(ctx, dst, 0);
         ir_memcpy(ctx, rhs, dst, var_decl->type->size);
     } else ir_store(ctx, dst, rhs, var_decl->type);
@@ -525,6 +525,11 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     if (func->func.body->kind != N_COMPOUND) {
         PANIC("Function body is not a compound,\n");
     }
+
+    /*
+        Technically redundant to store func symbol, linkage can be infered from storage_class
+        and storage is always STORAGE_TEXT
+    */
     fn->linkage = func->func.symbol->linkage;
     fn->storage = func->func.symbol->storage;
 
