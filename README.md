@@ -113,6 +113,18 @@ Any function whose implementation changes by platform is prefixed with `abi_`.  
 
 As both platforms use registers for different things and in different orders, the corresponding static arrays which define this are intialized in their respective implementation source file, so that anywhere else `int_param_reg[0]` gives the correct register.
 
+### Architecure Components
+
+Below is a list of features implemented to enable easier implentation and maintainance of other comiler features, while preventing code duplication and increasing memory safety.
+
+#### Array
+A generic dynamic Array struct which is used throught the code base where variable sized lists of objects must be stored.
+Works by reallocating memory with `capacity * 2` size when full.
+
+#### Arena
+A large scale allocator used in place of an Array for instances where the memory cannot be moved/reallocated, but must also support dynamic sizing. Works by allocating blocks of a set size one by one as needed. Appending elements into each until it is full before appending another block. Insertions are not allowed only append and set operations.
+When a block is full, instead of reallocating the whole block somewhere else at a greater size, another block is created elsewhere so any references to elements in the arena are valid until the arena is freed. This is the major difference compared to an Array.
+
 # Compiler Features Implemented
 
 ## 1. Types
@@ -244,9 +256,8 @@ As both platforms use registers for different things and in different orders, th
 * SysV ABI
 
 ## To be Implemented (Ordered from next to never...)
-* Arena Allocator type
-    * Allow for multiple arenas for larger source files
-* Return structs according to ABI
+* Return structs according to ABI.
+* Write `stdlib` subset for self-compilation.
 * Compiler builtins
     * `__builtin_va_list` etc.
 * Support a standard library 
