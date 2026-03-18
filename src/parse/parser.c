@@ -1092,7 +1092,7 @@ bool is_type_token(const Parser *p, const Token *t) {
     }
 }
 
-Type *token_to_type(const Parser *p, const Token *t) {
+Type *token_to_type(Parser *p, const Token *t) {
     switch (t->type) {
     case TK_CHAR:
         return type_i8;
@@ -1101,7 +1101,14 @@ Type *token_to_type(const Parser *p, const Token *t) {
     case TK_INT:
         return type_i32;
     case TK_LONG:
+#ifdef _WIN64
+        if (p_peek(p)->type == TK_LONG) {
+            p_consume(p);
+            return type_i64;
+        } else return type_i32;
+#else
         return type_i64;
+#endif
     case TK_FLOAT:
         return type_f32;
     case TK_DOUBLE:

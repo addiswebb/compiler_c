@@ -101,7 +101,7 @@ bool is_start_of_type(const Parser *p, const Token *t);
 /*
     Converts token using C standard types, and typedef table.
 */
-Type *token_to_type(const Parser *p, const Token *t);
+Type *token_to_type(Parser *p, const Token *t);
 
 
 /*

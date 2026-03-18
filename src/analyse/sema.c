@@ -201,31 +201,26 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         node->type = type_void;
         break;
     case N_FUNCTION:
+        ASSERT(!(node->func.is_defined && node->func.storage_class == EXTERN), "External Function cannot have a definition\n");
         p_push_scope(p);
         sema_ctx->func = node;
         for (int i = 0; i < node->type->_func.params.count; i++) {
             ParamDecl *param = (ParamDecl *)get(&node->type->_func.params, i);
             Node *param_decl = new_node(nm, N_VAR_DECL);
+            if (node->func.is_defined) {
+                ASSERT(param->name, "All Defined Function Paramaters must be named\n");
+                Node *ident = new_node(nm, N_IDENTIFIER);
+                ident->identifier.name = param->name;
+                param_decl->var_decl.identifier = ident;
+                param_decl->var_decl.symbol = p_append_var_decl_symbol(p, param_decl);
+            }
             param_decl->type = param->type;
-            Node *ident = new_node(nm, N_IDENTIFIER);
-            ASSERT(param->name, "Found unnamed function parameter\n");
-            ident->identifier.name = param->name;
-            param_decl->var_decl.identifier = ident;
-            param_decl->var_decl.expr = NULL;
-            param_decl->var_decl.storage_class = NONE;
-            param_decl->var_decl.is_defined = false;
-            param_decl->var_decl.is_global = false;
-            param_decl->var_decl.symbol = p_append_var_decl_symbol(p, param_decl);
             // currently hidden nodes, might not need to be visible to AST
             // TODO: see if i need these inserted into N_FUNCTION array
         }
         semantic_analysis(sema_ctx, p, nm, node->func.body);
         p_pop_scope(p);
-        if (node->func.storage_class == EXTERN) {
-            if (node->func.is_defined) {
-                PANIC("External Function cannot have a definition\n");
-            }
-        }
+
         Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC);
         if (func_symbol) {
             if (func_symbol->func_def->func.storage_class == STATIC && node->func.storage_class != STATIC) {
@@ -272,7 +267,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
             /*
                 If the var decl is not in global scope, this symbol will be freed before it reaches IR,
-                where it might be used (not currently as of writing). If I place a symbols in one 
+                where it might be used (not currently as of writing). If I place a symbols in one
             */
             // node->var_decl.symbol = var_symbol;
         } else node->var_decl.symbol = p_append_var_decl_symbol(p, node);

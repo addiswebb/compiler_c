@@ -853,6 +853,7 @@ void print_token(const Token *token) {
             printf("\\n");
         }
         // TODO fix this printf("%c ", token->value[0]);
+        printf("%s", token->value);
     }
     printf("}\n");
 }
