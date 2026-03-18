@@ -7,7 +7,6 @@
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -45,42 +44,42 @@ void bitset_add(const BitSet *s, const int reg) {
     if (reg >= s->num_bits) {
         PANIC("%d is too large a register for this bitset\n", reg);
     }
-    assert(reg >= 0);
+    ASSERT(reg >= 0, "Reg must be >= 0\n");
     const int word = reg / 32;
     const unsigned int offset = reg % 32;
     s->data[word] |= (1u << offset);
 }
 void bitset_remove(const BitSet *s, const int reg) {
-    assert(reg >= 0);
+    ASSERT(reg >= 0, "Reg must be >= 0\n");
     const int word = reg / 32;
     const unsigned int offset = reg % 32;
     s->data[word] &= ~(1u << offset);
 }
 int bitset_has(const BitSet *s, const int reg) {
-    assert(reg >= 0);
+    ASSERT(reg >= 0, "Reg must be >= 0\n");
     const int word = reg / 32;
     const unsigned int offset = reg % 32;
     return (s->data[word] & (1u << offset)) != 0;
 }
 void bitset_union(const BitSet *dst, const BitSet *src) {
-    assert(dst->capacity == src->capacity);
+    ASSERT(dst->capacity == src->capacity, "Capacities must be equal\n");
     for (int i = 0; i < dst->capacity; i++) dst->data[i] |= src->data[i];
 }
 void bitset_intersect(const BitSet *dst, const BitSet *src) {
-    assert(dst->capacity == src->capacity);
+    ASSERT(dst->capacity == src->capacity, "Capacities must be equal\n");
     for (int i = 0; i < dst->capacity; i++) dst->data[i] &= src->data[i];
 }
 
 void bitset_difference(const BitSet *dst, const BitSet *src) {
-    assert(dst->capacity == src->capacity);
+    ASSERT(dst->capacity == src->capacity, "Capacities must be equal\n");
     for (int i = 0; i < dst->capacity; i++) dst->data[i] &= ~src->data[i];
 }
 void bitset_copy(const BitSet *dst, const BitSet *src) {
-    assert(dst->capacity == src->capacity);
+    ASSERT(dst->capacity == src->capacity, "Capacities must be equal\n");
     for (int i = 0; i < dst->capacity; i++) dst->data[i] = src->data[i];
 }
 int bitset_equal(const BitSet *a, const BitSet *b) {
-    assert(a->capacity == b->capacity);
+    ASSERT(a->capacity == b->capacity, "Capacities must be equal\n");
     for (int i = 0; i < a->capacity; i++) {
         if (a->data[i] != b->data[i]) return false;
     }

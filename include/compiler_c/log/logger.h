@@ -2,7 +2,6 @@
 #define COMPILER_C_LOGGER_H
 
 #include <stdlib.h>
-#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 
