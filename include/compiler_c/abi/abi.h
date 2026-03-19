@@ -21,6 +21,7 @@ void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
 void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+Type *abi_func_type(Type *type);
 
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
 

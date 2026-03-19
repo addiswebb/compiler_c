@@ -88,7 +88,8 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
                 case IR_PHYS_REG:
                     break;
                 case IR_UNDEFINED:
-                    if (f->return_type == type_void && instr->op == IR_RET) break;
+                    if (instr->op == IR_RET && instr->ret.type == type_void) break;
+                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) break;
                     PANIC("An undefined IR value made it to analysis!!\n");
                 }
             }
@@ -96,68 +97,139 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
     }
 }
 
+Type *abi_func_type(Type *type) {
+    ASSERT(type->kind == T_FUNCTION, "Invalid Func Type\n");
+    if (type->_func.return_type->kind == T_STRUCT) {
+        Type *abi_type = new_type();
+        memcpy(abi_type, type, sizeof(Type));
+        array_init(&abi_type->_func.params, type->_func.params.capacity, type->_func.params.element_size);
+        memcpy(abi_type->_func.params.data, type->_func.params.data, type->_func.params.count * type->_func.params.element_size);
+        abi_type->_func.params.count = type->_func.params.count;
+        ABI_Result res = abi_classify(abi_type->_func.return_type);
+        if (res.memory) {
+            insert(&abi_type->_func.params, &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret"}, 0);
+            abi_type->_func.return_type = type_void;
+        } else {
+            abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
+            if (res.class[1] != ABI_NO_CLASS) {
+                PANIC("Not handling tuple return type\n");
+            }
+        }
+        return abi_type;
+    }
+    return type;
+}
 void lower_ir_for_asm(IR_Function *f) {
     for (int i = 0; i < f->blocks_array.count; i++) {
         IR_Block *b = get_block(f, i);
         for (int j = 0; j < b->instruction_array.count; j++) {
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             if (instr->op == IR_CALL) {
-                // Convert to int chunks or pointer
-                for (int k = 0; k < instr->call.arg_array.count; k++) {
-                    IR_Var *arg = get_arg(instr, k);
-                    if (arg->type->kind == T_STRUCT) {
-                        Type *s_t = arg->type;
-                        ABI_Result res = abi_classify(s_t);
-                        if (res.memory) {
-                            f->max_reg++;
-                            IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
-                            IR_Instruction i = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = arg->reg}};
-                            arg->type = get_pointer_type(arg->type);
-                            arg->name = "_tmp_s_ptr";
-                            arg->reg = i.ops[0];
-                            insert(&b->instruction_array, &i, j++);
-                        } else {
-                            arg->type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
-                            if (res.class[1] != ABI_NO_CLASS) {
-                                IR_Var a = *arg;
-                                a.reg.offset += 8;
-                                a.type = res.class[1] == ABI_INTEGER ? type_u64 : type_f64;
-                                append(&instr->call.arg_array, &a);
-                            }
-                        }
-                    }
-                }
-            } else if (instr->op == IR_STORE && instr->store.type->kind == T_STRUCT) {
-                // Lower to memcpy or reg reading,
-                // Turns out this is for SysV calls not Win64 ABI ;_;
-                Type *s_t = instr->store.type;
-                ABI_Result res = abi_classify(s_t);
-                if (res.memory) {
-                    // Hidden pointer
-                    IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
-                    f->max_reg++;
-                    IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[0]}};
-                    insert(&b->instruction_array, &addr, j++);
-                    instr = get_instruction(&b->instruction_array, j);
+                abi_lower_call(f, b, instr, &j);
+            } else if (instr->op == IR_STORE) //&& instr->store.type->kind == T_STRUCT) {
+                abi_lower_store(f, b, instr, &j);
+            else if (instr->op == IR_RET) abi_lower_ret(f, b, instr, &j);
+        }
+    }
+}
+void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+    // Lower to memcpy or reg reading,
+    // Turns out this is for SysV calls not Win64 ABI ;_;
+    Type *s_t = instr->store.type;
+    ABI_Result res = abi_classify(s_t);
+    if (res.memory) {
+        // Hidden pointer
+        IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
+        f->max_reg++;
+        IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[0]}};
+        insert(&b->instruction_array, &addr, (*i)++);
+        instr = get_instruction(&b->instruction_array, *i);
 
-                    IR_Instruction memcpy = {
-                        .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[1]}, .memcpy = {.size = instr->store.type->size}};
-                    memcpy.ops[1].size = 8;
-                    set(&b->instruction_array, &memcpy, j);
-                } else {
-                    IR_Instruction store = *instr;
-                    store.ops[0].size = 8;
-                    store.ops[1].size = 8;
-                    store.store.type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
-                    set(&b->instruction_array, &store, j);
-                    if (res.class[1] != ABI_NO_CLASS) {
-                        store.ops[0].offset += 8;
-                        store.ops[1].reg -= 1;
-                        store.store.type = res.class[1] == ABI_INTEGER ? type_u64 : type_f64;
-                        insert(&b->instruction_array, &store, ++j);
-                    }
+        IR_Instruction memcpy = {
+            .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[1]}, .memcpy = {.size = instr->store.type->size}};
+        memcpy.ops[1].size = 8;
+        set(&b->instruction_array, &memcpy, *i);
+    } else {
+        IR_Instruction store = *instr;
+        store.ops[0].size = 8;
+        store.ops[1].size = 8;
+        store.store.type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
+        set(&b->instruction_array, &store, *i);
+        if (res.class[1] != ABI_NO_CLASS) {
+            store.ops[0].offset += 8;
+            store.ops[1].reg -= 1;
+            store.store.type = res.class[1] == ABI_INTEGER ? type_u64 : type_f64;
+            insert(&b->instruction_array, &store, ++(*i));
+        }
+    }
+}
+void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+    // Convert to int chunks or pointer
+    for (int k = 0; k < instr->call.arg_array.count; k++) {
+        IR_Var *arg = get_arg(instr, k);
+        if (arg->type->kind == T_STRUCT) {
+            Type *s_t = arg->type;
+            ABI_Result res = abi_classify(s_t);
+            if (res.memory) {
+                f->max_reg++;
+                IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
+                IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = arg->reg}};
+                arg->type = get_pointer_type(arg->type);
+                arg->name = "_tmp_s_ptr";
+                arg->reg = addr.ops[0];
+                insert(&b->instruction_array, &addr, (*i)++);
+            } else {
+                arg->type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
+                if (res.class[1] != ABI_NO_CLASS) {
+                    IR_Var a = *arg;
+                    a.reg.offset += 8;
+                    a.type = res.class[1] == ABI_INTEGER ? type_u64 : type_f64;
+                    append(&instr->call.arg_array, &a);
                 }
             }
+        }
+    }
+
+    Type *s_t = instr->call.type->_func.return_type;
+    if (s_t->kind == T_STRUCT) {
+        IR_Value s_v = {.kind = IR_MEM, .size = s_t->size, .align = s_t->align, .mem = f->locals_array.count, .offset = 0};
+        instr->call.type = abi_func_type(instr->call.type);
+        append(&f->locals_array, &(IR_Var){"_s", s_v, s_t});
+        ABI_Result res = abi_classify(s_t);
+        if (res.memory) {
+            IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
+            IR_Instruction local_addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = instr->ops[0], [1] = s_v}};
+            insert(&instr->call.arg_array, &(IR_Var){.name = "_sret", .reg = instr->ops[0], .type = get_pointer_type(s_t)}, 0);
+            instr->ops[0] = ir_no_value;
+            insert(&b->instruction_array, &alloca, (*i)++);
+            insert(&b->instruction_array, &local_addr, (*i)++);
+        } else {
+            IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = instr->ops[0], [1] = s_v}};
+            instr->ops[0] = s_v;
+            IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
+            insert(&b->instruction_array, &alloca, (*i)++);
+            insert(&b->instruction_array, &addr, ++(*i));
+        }
+    }
+}
+void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+    Type *s_t = instr->ret.type;
+    ABI_Result res = abi_classify(s_t);
+    if (res.memory) {
+        instr->ret.type = get_pointer_type(s_t);
+        IR_Value local_v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
+        f->max_reg++;
+        IR_Instruction local_addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = local_v, [1] = instr->ops[0]}};
+        IR_Instruction memcpy = {
+            .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = ir_mem_value(0, instr->ret.type), [1] = local_v}, .memcpy = {.size = s_t->size}};
+        instr->ops[0] = ir_no_value;
+        instr->ret.type = type_void;
+        insert(&b->instruction_array, &local_addr, (*i)++);
+        insert(&b->instruction_array, &memcpy, (*i)++);
+    } else {
+        instr->ret.type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
+        if (res.class[1] != ABI_NO_CLASS) {
+            PANIC("Tuple return type not supported yet\n");
         }
     }
 }

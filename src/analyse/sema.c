@@ -5,6 +5,7 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -434,7 +435,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
         Type *expected_type = sema_ctx->func->type->_func.return_type;
         // Early exit if return type is void, and node is `return;`
-        ASSERT(expected_type != type_void && node->_return.expr, "Non-void type function '%s' should return a value\n");
+        if (expected_type != type_void)
+            ASSERT(node->_return.expr, "Non-void type function '%s' should return a value\n", sema_ctx->func->func.name);
 
         if (node->_return.expr) {
             semantic_analysis(sema_ctx, p, nm, node->_return.expr);

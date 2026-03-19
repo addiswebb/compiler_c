@@ -257,14 +257,17 @@ static void print_ir_store(const IR_Context *ctx, const IR_Instruction *instr) {
 
 static void print_ir_ret(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    RET:%c%d ", ir_type_suffix(instr->ret.type), instr->ret.type->size * 8);
-    print_ir_value(&instr->ops[0]);
+    if (instr->ret.type != type_void) print_ir_value(&instr->ops[0]);
     printf("\n");
 }
 
 static void print_ir_call(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
-    print_ir_value(&instr->ops[0]);
-    printf(" = CALL:%c%d ", ir_type_suffix(instr->call.type->_func.return_type), instr->call.type->_func.return_type->size * 8);
+    if (instr->call.type->_func.return_type != type_void) {
+        print_ir_value(&instr->ops[0]);
+        printf(" = ");
+    }
+    printf("CALL:%c%d ", ir_type_suffix(instr->call.type->_func.return_type), instr->call.type->_func.return_type->size * 8);
     print_ir_value(&instr->ops[1]);
     printf(", %d:[ ", instr->call.arg_array.count);
     for (int i = 0; i < instr->call.arg_array.count; i++) {

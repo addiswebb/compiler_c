@@ -343,7 +343,8 @@ void verify_completion(const IR_Function *f) {
                 if (a->kind == IR_LITERAL && instr->op != IR_CALL) continue;
                 if (a->kind == IR_GLOBAL || a->kind == IR_PHYS_REG || a->kind == IR_FUNCTION) continue;
                 if (a->kind != IR_STACK) {
-                    if (f->return_type == type_void && instr->op == IR_RET) continue;
+                    if (instr->op == IR_RET && instr->ret.type == type_void) continue;
+                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) continue;
                     log_start(LOG_ERROR);
                     print_ir_value(a);
                     printf(" was not converted to stack offset\n");

@@ -9,6 +9,7 @@
 #include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
+#include <compiler_c/abi/abi.h>
 #include <compiler_c/core/node.h>
 #include <compiler_c/ir/ir_builder.h>
 #include <compiler_c/ir/ir_gen.h>
@@ -532,11 +533,18 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     fn->linkage = func->func.symbol->linkage;
     fn->storage = func->func.symbol->storage;
 
+    /*
+        ABI
+        if return type is ptr
+    */
+
     ir_begin_scope(fn);
+
+    Type *abi_type = abi_func_type(func->type);
     // handle (params)
-    for (int i = 0; i < func->type->_func.params.count; i++) {
+    for (int i = 0; i < abi_type->_func.params.count; i++) {
         // Copy from registers instead
-        ParamDecl *param = (ParamDecl *)get(&func->type->_func.params, i);
+        ParamDecl *param = (ParamDecl *)get(&abi_type->_func.params, i);
         ir_new_var(ctx->func, param->name, param->type);
         ir_store(ctx, ir_mem_value(i, param->type), ir_vreg_value(-i - 1, param->type), param->type);
         fn->param_count++;

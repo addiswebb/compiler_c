@@ -45,7 +45,8 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
                 case IR_FUNCTION:
                     break;
                 case IR_UNDEFINED:
-                    if (f->return_type == type_void && instr->op == IR_RET) break;
+                    if (instr->op == IR_RET && instr->ret.type == type_void) break;
+                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) break;
                     PANIC("An undefined IR value made it to analysis!!\n");
                 }
             }
@@ -96,6 +97,42 @@ void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) 
             }
         }
     }
+    Type *s_t = instr->call.type->_func.return_type;
+    if (s_t->kind == T_STRUCT) {
+
+        IR_Value s_v = {.kind = IR_MEM, .size = s_t->size, .align = s_t->align, .mem = f->locals_array.count, .offset = 0};
+        instr->call.type = abi_func_type(instr->call.type);
+        append(&f->locals_array, &(IR_Var){"_s", s_v, s_t});
+        if (s_t->size > MAX_STRUCT_SIZE) {
+            IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
+            IR_Instruction local_addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = instr->ops[0], [1] = s_v}};
+            insert(&instr->call.arg_array, &(IR_Var){.name = "_sret", .reg = instr->ops[0], .type = get_pointer_type(s_t)}, 0);
+            instr->ops[0] = ir_no_value;
+            insert(&b->instruction_array, &alloca, (*i)++);
+            insert(&b->instruction_array, &local_addr, (*i)++);
+        } else {
+            IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = instr->ops[0], [1] = s_v}};
+            instr->ops[0] = s_v;
+            IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
+            insert(&b->instruction_array, &alloca, (*i)++);
+            insert(&b->instruction_array, &addr, ++(*i));
+        }
+    }
+}
+void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+    Type *s_t = instr->ret.type;
+    if (s_t->size > MAX_STRUCT_SIZE) {
+        instr->ret.type = get_pointer_type(s_t);
+        IR_Value local_v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
+        f->max_reg++;
+        IR_Instruction local_addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = local_v, [1] = instr->ops[0]}};
+        IR_Instruction memcpy = {
+            .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = ir_mem_value(0, instr->ret.type), [1] = local_v}, .memcpy = {.size = s_t->size}};
+        instr->ops[0] = ir_no_value;
+        instr->ret.type = type_void;
+        insert(&b->instruction_array, &local_addr, (*i)++);
+        insert(&b->instruction_array, &memcpy, (*i)++);
+    } else instr->ret.type = get_integer_type(s_t->size);
 }
 
 void lower_ir_for_asm(IR_Function *f) {
@@ -108,7 +145,7 @@ void lower_ir_for_asm(IR_Function *f) {
             } else if (instr->op == IR_STORE && instr->store.type->kind == T_STRUCT) {
                 abi_lower_store(f, b, instr, &j);
             } else if (instr->op == IR_RET) {
-                // abi_lower_ret(f, b, instr, &j);
+                abi_lower_ret(f, b, instr, &j);
             }
         }
     }
@@ -180,6 +217,23 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     if (t == type_void) return;
 
     fprintf(fp, "    mov%s %s, %d(%%rbp)\n", x86_op_suffix(t), x86_rax_reg(t), dst_offset);
+}
+
+Type *abi_func_type(Type *type) {
+    ASSERT(type->kind == T_FUNCTION, "Invalid Func Type\n");
+    if (type->_func.return_type->kind == T_STRUCT) {
+        Type *abi_type = new_type();
+        memcpy(abi_type, type, sizeof(Type));
+        array_init(&abi_type->_func.params, type->_func.params.capacity, type->_func.params.element_size);
+        memcpy(abi_type->_func.params.data, type->_func.params.data, type->_func.params.count * type->_func.params.element_size);
+        abi_type->_func.params.count = type->_func.params.count;
+        if (abi_type->_func.return_type->size > MAX_STRUCT_SIZE) {
+            insert(&abi_type->_func.params, &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret"}, 0);
+            abi_type->_func.return_type = type_void;
+        } else abi_type->_func.return_type = get_integer_type(abi_type->_func.return_type->size);
+        return abi_type;
+    }
+    return type;
 }
 
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
