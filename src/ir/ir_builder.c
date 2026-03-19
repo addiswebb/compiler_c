@@ -104,11 +104,12 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     append(&ctx->block->instruction_array, &i);
     return i.ops[0];
 }
-IR_Value ir_return(IR_Context *ctx, IR_Value reg) {
+IR_Value ir_return(IR_Context *ctx, IR_Value reg, Type *type) {
     IR_Instruction i;
     i.op = IR_RET;
     i.ops[0] = reg;
     i.op_count = 1;
+    i.ret.type = type;
     append(&ctx->block->instruction_array, &i);
     return ir_no_value;
 }

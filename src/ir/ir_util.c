@@ -180,7 +180,8 @@ static char ir_type_suffix(Type *type) {
     case T_VOID:
         return 'v';
     case T_INVALID:
-        PANIC("Tried to print invalid type\n");
+        return '#';
+    // PANIC("Tried to print invalid type\n");
     default:
         log_start(LOG_ERROR);
         printf("Not handling this type ir_type_suffix: ");
@@ -199,7 +200,7 @@ static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
     printf(", ");
     switch (instr->_const.type->kind) {
     case T_INT:
-        if (instr->_const.type->size == 8) printf("%"PRId64, c->i);
+        if (instr->_const.type->size == 8) printf("%" PRId64, c->i);
         else if (instr->_const.type->size == 1) printf("%c", (char)c->i);
         else printf("%d", (int)c->i);
         break;
@@ -255,7 +256,7 @@ static void print_ir_store(const IR_Context *ctx, const IR_Instruction *instr) {
 }
 
 static void print_ir_ret(const IR_Context *ctx, const IR_Instruction *instr) {
-    printf("    RET ");
+    printf("    RET:%c%d ", ir_type_suffix(instr->ret.type), instr->ret.type->size * 8);
     print_ir_value(&instr->ops[0]);
     printf("\n");
 }
@@ -263,7 +264,7 @@ static void print_ir_ret(const IR_Context *ctx, const IR_Instruction *instr) {
 static void print_ir_call(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
-    printf(" = CALL:%c%d ", ir_type_suffix(instr->call.type->_func.return_type), instr->call.type->size * 8);
+    printf(" = CALL:%c%d ", ir_type_suffix(instr->call.type->_func.return_type), instr->call.type->_func.return_type->size * 8);
     print_ir_value(&instr->ops[1]);
     printf(", %d:[ ", instr->call.arg_array.count);
     for (int i = 0; i < instr->call.arg_array.count; i++) {

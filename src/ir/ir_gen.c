@@ -509,7 +509,7 @@ static void ir_gen_label(IR_Context *ctx, const Node *label) {
 
 static void ir_gen_return(IR_Context *ctx, const Node *_return) {
     IR_Value return_value = _return->_return.expr ? ir_gen_rvalue(ctx, _return->_return.expr) : ir_no_value;
-    ir_return(ctx, return_value);
+    ir_return(ctx, return_value, _return->type);
 }
 
 static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
@@ -545,7 +545,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {
         ir_gen_block_item(ctx, get_node(&func->func.body->compound.items_array, i));
     }
-    if (func->type->_func.return_type == type_void) ir_return(ctx, ir_no_value);
+    if (func->type->_func.return_type == type_void) ir_return(ctx, ir_no_value, type_void);
 
     ir_end_scope(fn);
 

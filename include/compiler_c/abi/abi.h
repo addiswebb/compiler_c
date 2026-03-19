@@ -17,7 +17,9 @@ typedef struct{
 
 ABI_Result abi_classify(Type *type);
 
+void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
+void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);

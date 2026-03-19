@@ -5,6 +5,7 @@
 #include "compiler_c/tokenize/tokenizer.h"
 #include <compiler_c/core/node.h>
 
+#include "inttypes.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -236,7 +237,7 @@ void print_node(const Node *node, const int depth) {
                 printf("value= %d]\n", (int)node->literal.i);
                 break;
             case 8:
-                printf("value= %lld]\n", node->literal.i);
+                printf("value= %" PRId64 "]\n", node->literal.i);
                 break;
             default:
                 printf("size: %d\n", node->type->size);

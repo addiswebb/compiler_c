@@ -73,7 +73,9 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         x86_gen_memcpy_instruction(fp, instr);
         break;
     case IR_RET:
-        if (instr->ops[0].kind != IR_UNDEFINED) x86_emit_xr(fp, "mov", "l", "", &instr->ops[0], "%eax");
+
+        if (instr->ops[0].kind != IR_UNDEFINED)
+            x86_emit_xr(fp, "mov", x86_op_suffix(instr->ret.type), "", &instr->ops[0], x86_rax_reg(instr->ret.type));
         fprintf(fp, "    mov %%rbp, %%rsp\n");
         fprintf(fp, "    pop %%rbp\n");
         fprintf(fp, "    ret\n");

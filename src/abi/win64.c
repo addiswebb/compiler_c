@@ -53,26 +53,26 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
     }
 }
 
-void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *j) {
+void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     Type *s_t = instr->store.type;
     if (s_t->size > MAX_STRUCT_SIZE) {
         // Hidden pointer
         IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
         f->max_reg++;
         IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[0]}};
-        insert(&b->instruction_array, &addr, (*j)++);
-        instr = get_instruction(&b->instruction_array, *j);
+        insert(&b->instruction_array, &addr, (*i)++);
+        instr = get_instruction(&b->instruction_array, *i);
 
         IR_Instruction memcpy = {
             .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[1]}, .memcpy = {.size = instr->store.type->size}};
         memcpy.ops[1].size = 8;
-        set(&b->instruction_array, &memcpy, *j);
+        set(&b->instruction_array, &memcpy, *i);
     } else {
         IR_Instruction store = *instr;
         store.store.type = get_integer_type(s_t->size);
         store.ops[0].size = store.store.type->size;
         store.ops[1].size = store.store.type->size;
-        set(&b->instruction_array, &store, *j);
+        set(&b->instruction_array, &store, *i);
     }
 }
 
@@ -82,9 +82,10 @@ void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) 
         IR_Var *arg = get_arg(instr, k);
         if (arg->type->kind == T_STRUCT) {
             Type *s_t = arg->type;
+            if (s_t->kind == T_VOID) continue;
             if (s_t->size > MAX_STRUCT_SIZE) {
-                f->max_reg++;
                 IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
+                f->max_reg++;
                 IR_Instruction addr_instr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = arg->reg}};
                 arg->type = get_pointer_type(arg->type);
                 arg->name = "_tmp_s_ptr";
@@ -106,6 +107,8 @@ void lower_ir_for_asm(IR_Function *f) {
                 abi_lower_call(f, b, instr, &j);
             } else if (instr->op == IR_STORE && instr->store.type->kind == T_STRUCT) {
                 abi_lower_store(f, b, instr, &j);
+            } else if (instr->op == IR_RET) {
+                // abi_lower_ret(f, b, instr, &j);
             }
         }
     }
@@ -114,6 +117,7 @@ void lower_ir_for_asm(IR_Function *f) {
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const int dst_offset = instr->ops[0].stack_offset;
     Type *t = instr->call.type->_func.return_type;
+    if (t->kind == T_STRUCT) t = get_integer_type(t->size);
 
     int gp_index = 0;
 

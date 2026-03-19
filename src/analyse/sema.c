@@ -443,6 +443,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 node->_return.expr = cast_node(nm, node->_return.expr, expected_type);
             }
         }
+        node->type = expected_type;
         break;
     case N_LITERAL:
         char *data = malloc(node->literal.len + 1);

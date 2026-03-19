@@ -149,6 +149,7 @@ typedef struct {
         struct { Type *type; } _const;
         struct { Type *type; } load;
         struct { Type *type; } store;
+        struct { Type *type; } ret;
         struct { IR_UNARY_OP op; Type *type; } unary;
         struct { IR_BINOP_OP op; Type *type; } binop;
         struct { IR_CMP_OP op; Type *type; } cmp;
