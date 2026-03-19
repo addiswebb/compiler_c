@@ -489,13 +489,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
         node->type = node->index.identifier->type->base;
         break;
-    case N_TYPE:
-        if (node->type->kind == T_ENUM) {
-            for (int i = 0; i < node->type->_enum.fields_array.count; i++) {
-                p_append_enum_const(p, get_enum_field(node->type, i));
-            }
-        }
-        break;
     case N_CONTINUE:
         if (!sema_ctx->loop) {
             PANIC("Cannot call continue outside of a loop\n");
@@ -573,8 +566,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                     printf("\n");
                     exit(1);
                 }
-                Node *value = is_designator ? e->designated_init.value : e;
-                semantic_analysis(sema_ctx, p, nm, value);
 
                 StructMember *member = NULL;
                 if (is_array) {
@@ -583,6 +574,12 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                     member = is_designator ? get_struct_member_named(node->type, e->designated_init._struct.name, &index)
                                            : get_struct_member(node->type, index);
 
+                Type *target_type = is_array ? node->type->base : member->type;
+                Node *value = is_designator ? e->designated_init.value : e;
+
+                if (value->kind == N_INIT_LIST) value->type = target_type;
+
+                semantic_analysis(sema_ctx, p, nm, value);
                 if (!is_designator) {
                     Node *de = new_node(nm, N_DESIGNATED_INITIALIZER);
 
@@ -592,9 +589,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                     de->designated_init.value = e;
                     set_node(&node->init_list.elements_array, &de, i);
                     e = de;
-                    de->designated_init.kind = is_array ? T_ARRAY : T_STRUCT;
                 }
-                Type *target_type = is_array ? node->type->base : member->type;
+                e->designated_init.kind = is_array ? T_ARRAY : T_STRUCT;
                 e->type = target_type;
 
                 if (is_array) e->designated_init._array.index = index;
@@ -654,9 +650,16 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         lower_compound_literal(sema_ctx, p, nm, node);
         break;
     case N_TYPEDEF:
+    case N_TYPE:
+        // Add enum consts to symbol table
+        if (node->type->kind == T_ENUM) {
+            for (int i = 0; i < node->type->_enum.fields_array.count; i++) {
+                p_append_enum_const(p, get_enum_field(node->type, i));
+            }
+        }
+        break;
     case N_GOTO:
     case N_LABEL:
-        break;
     case N_DESIGNATED_INITIALIZER:
         PANIC("Unreachable\n");
     }

@@ -1,5 +1,6 @@
 #include "compiler_c/ir/ir_builder.h"
 #include "compiler_c/core/array.h"
+#include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_gen.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
@@ -20,7 +21,7 @@ IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     IR_Instruction i;
     i.op = IR_STORE;
     i.ops[1] = src;
-    i.store.type = type;
+    i.store.type = type->kind == T_ENUM ? type_i32 : type;
     i.ops[0] = dst;
     i.op_count = 2;
     append(&ctx->block->instruction_array, &i);

@@ -181,6 +181,8 @@ static char ir_type_suffix(Type *type) {
         return 'v';
     case T_INVALID:
         return '#';
+    case T_ENUM:
+        return 'e';
     // PANIC("Tried to print invalid type\n");
     default:
         log_start(LOG_ERROR);

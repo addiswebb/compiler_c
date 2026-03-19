@@ -254,11 +254,9 @@ When a block is full, instead of reallocating the whole block somewhere else at 
 * Automatically call `gcc` preprocessor on source file.
 * Win64 ABI
 * SysV ABI
+* `libc` mini subset stdlib headers.
 
 ## To be Implemented (Ordered from next to never...)
-* Return structs according to ABI.
-* Support long long (ABI based).
-* Write `stdlib` subset for self-compilation.
 * Compiler builtins
     * `__builtin_va_list` etc.
 * Support a standard library 

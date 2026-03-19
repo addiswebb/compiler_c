@@ -453,11 +453,13 @@ Type *p_parse_enum(Parser *p) {
     } else {
         // Add it to the type pool, at &t
         Type *t = new_type();
-        *t = enum_t;
-        // Update the fields to have refernce to parent enum type
         for (int i = 0; i < enum_t._enum.fields_array.count; i++) {
-            get_enum_field(&enum_t, i)->_enum_t = t;
+            EnumField *f = get_enum_field(&enum_t, i);
+            // Update the fields to have reference to parent enum type
+            f->_enum_t = t;
         }
+        *t = enum_t;
+
         return t;
     }
 }
