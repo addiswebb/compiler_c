@@ -122,6 +122,16 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
     case IR_JMP:
         fprintf(fp, "    jmp %s\n", instr->jmp.name);
         break;
+    case IR_BUILTIN_VA_START:
+        x86_emit_xr(fp, "lea", "q", "", &instr->ops[1], "%rax");
+        fprintf(fp, "    subq $%d, %%rax\n", instr->ops[1].size);
+        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
+        break;
+    case IR_BUILTIN_VA_ARG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
+        fprintf(fp, "    subq $%d, %%rax\n", instr->builtin_va_arg.type->size);
+        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
+        break;
     }
 }
 static void x86_gen_block(FILE *fp, IR_Context *ctx) {

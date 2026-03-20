@@ -114,6 +114,7 @@ int compile(Compiler *compiler) {
     array_init(&sema_ctx.i_array, 4, sizeof(int));
 
     if (DEBUG_TYPEPOOL) print_typepool();
+
     semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
     array_free(&sema_ctx.i_array);
 

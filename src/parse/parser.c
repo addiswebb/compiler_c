@@ -117,11 +117,57 @@ Node *new_compound_node(NodeManager *nm) {
     return node;
 }
 
+Node *p_parse_builtin(Parser *p, NodeManager *nm, BuiltinKind kind) {
+    Node *b = new_node(nm, N_BUILTIN);
+    b->_builtin.kind = kind;
+    p_consume_a(p, TK_OPEN_PAREN);
+    switch (kind) {
+    case BUILTIN_MEMCPY:
+        array_init(&b->_builtin.params, 3, sizeof(Node *));
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        p_consume_a(p, TK_COMMA);
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        p_consume_a(p, TK_COMMA);
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        break;
+    case BUILTIN_VA_START:
+        array_init(&b->_builtin.params, 2, sizeof(Node *));
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        p_consume_a(p, TK_COMMA);
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        break;
+    case BUILTIN_VA_ARG:
+        array_init(&b->_builtin.params, 2, sizeof(Node *));
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        p_consume_a(p, TK_COMMA);
+        Node *va_arg_type = new_node(nm, N_TYPE);
+        va_arg_type->type = p_parse_abstract_type(p);
+        append(&b->_builtin.params, &va_arg_type);
+        break;
+    case BUILTIN_VA_END:
+        array_init(&b->_builtin.params, 1, sizeof(Node *));
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        break;
+    case BUILTIN_NONE:
+        PANIC("builtin reached but not builtin\n");
+        break;
+    }
+
+    p_consume_a(p, TK_CLOSE_PAREN);
+    return b;
+}
 Node *p_parse_postfix_expression(Parser *p, NodeManager *nm) {
     Node *expr = p_parse_primary_expression(p, nm);
     for (;;) {
         switch (p_peek(p)->type) {
         case TK_OPEN_PAREN:
+            if (expr->kind == N_IDENTIFIER) {
+                BuiltinKind kind = get_builtin_kind(expr->identifier.name);
+                if (kind != BUILTIN_NONE) {
+                    expr = p_parse_builtin(p, nm, kind);
+                    break;
+                }
+            }
             p_consume(p); // '('
             Node *func_call = new_function_call_node(nm, expr);
 
@@ -261,11 +307,8 @@ Node *new_init_list_node(NodeManager *nm) {
     return node;
 }
 
-Node *new_function_node(NodeManager *nm) {
-    Node *node = new_node(nm, N_FUNCTION);
-    node->func.body = NULL;
-    return node;
-}
+Node *new_function_node(NodeManager *nm) { return new_node(nm, N_FUNCTION); }
+
 Node *new_function_call_node(NodeManager *nm, Node *identifier) {
     Node *node = new_node(nm, N_FUNCTION_CALL);
     node->func_call.callee = identifier;
@@ -594,7 +637,6 @@ Symbol *p_append_func_def(Parser *p, Node *f) {
         PANIC("Declaring function inside a function???\n");
     }
     Linkage linkage = f->func.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
-    ;
     // if defined -> text, otherwise none
     Storage storage = STORAGE_TEXT;
     return p_append_symbol(get_current_symbol_table(p), &(Symbol){.name = f->func.name,
@@ -800,17 +842,6 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_CLOSE_PAREN);
     node->_for.block = p_parse_statement(p, nm);
     return node;
-}
-
-Node *p_get_current_func_definition(const Parser *p) {
-    for (int i = p->scopes_array.count - 1; i >= 0; i--) {
-        Arena *st = get_symbol_table(p, i);
-        for (int j = 0; j < st->count; j++) {
-            Symbol *symbol = get_symbol(st, j);
-            if (symbol->kind == FUNC) return symbol->func_def;
-        }
-    }
-    PANIC("Cannot return outside of a function\n");
 }
 
 Node *p_parse_return(Parser *p, NodeManager *nm) {

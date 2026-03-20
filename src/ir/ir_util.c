@@ -352,6 +352,21 @@ static void print_ir_memcpy(const IR_Context *ctx, const IR_Instruction *instr) 
     print_ir_value(&instr->ops[0]);
     printf(", %d\n", instr->memcpy.size);
 }
+
+static void print_ir_builtin_va_start(const IR_Context *ctx, const IR_Instruction *instr) {
+    printf("    ");
+    print_ir_value(&instr->ops[0]);
+    printf(" = BUILTIN_VA_START ");
+    print_ir_value(&instr->ops[1]);
+    printf("\n");
+}
+static void print_ir_builtin_va_arg(const IR_Context *ctx, const IR_Instruction *instr) {
+    printf("    BUILTIN_VA_ARG ");
+    print_ir_value(&instr->ops[0]);
+    printf(", ");
+    print_type(instr->builtin_va_arg.type);
+    printf("\n");
+}
 void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_CONST:
@@ -404,6 +419,12 @@ void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr) {
         break;
     case IR_JMP:
         printf("    JMP %s\n", instr->jmp.name);
+        break;
+    case IR_BUILTIN_VA_START:
+        print_ir_builtin_va_start(ctx, instr);
+        break;
+    case IR_BUILTIN_VA_ARG:
+        print_ir_builtin_va_arg(ctx, instr);
         break;
     }
 }

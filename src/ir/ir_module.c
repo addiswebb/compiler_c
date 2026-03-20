@@ -11,14 +11,23 @@
 #include <string.h>
 
 IR_OpInfo op_info[] = {
-    [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},   [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_STORE] = {.def_mask = 0b001, .use_mask = 0b010},   [IR_STORE_MEM] = {.def_mask = 0b000, .use_mask = 0b011},
-    [IR_RET] = {.def_mask = 0b000, .use_mask = 0b001},     [IR_BR] = {.def_mask = 0b000, .use_mask = 0b000},
-    [IR_BR_COND] = {.def_mask = 0b000, .use_mask = 0b001}, [IR_CMP] = {.def_mask = 0b001, .use_mask = 0b110},
-    [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},    [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},  [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b011},
-    [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},   [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b010} // IR_CALL uses handled separately
+    [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},
+    [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_STORE] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_STORE_MEM] = {.def_mask = 0b000, .use_mask = 0b011},
+    [IR_RET] = {.def_mask = 0b000, .use_mask = 0b001},
+    [IR_BR] = {.def_mask = 0b000, .use_mask = 0b000},
+    [IR_BR_COND] = {.def_mask = 0b000, .use_mask = 0b001},
+    [IR_CMP] = {.def_mask = 0b001, .use_mask = 0b110},
+    [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},
+    [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b011},
+    [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
+    [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b010}, // IR_CALL param uses handled separately
+    [IR_BUILTIN_VA_START] = {.def_mask = 0b000, .use_mask = 0b011},
+    [IR_BUILTIN_VA_ARG] = {.def_mask = 0b001, .use_mask = 0b010},
 };
 const IR_Value ir_no_value = (IR_Value){IR_UNDEFINED, 0, 0, 0};
 
@@ -172,7 +181,6 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type) {
     func->name = name;
     func->next_reg = 0;
     func->max_reg = 0;
-    func->param_count = 0;
     func->stack_size = 0;
     func->return_type = type;
 

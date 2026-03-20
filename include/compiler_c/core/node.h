@@ -35,7 +35,20 @@ typedef enum {
     N_LABEL,
     N_COMPOUND_LITERAL,
     N_DESIGNATED_INITIALIZER,
+    N_BUILTIN,
 } NodeKind;
+
+#define BUILTIN_COUNT 4
+
+typedef enum{
+    BUILTIN_MEMCPY,
+    BUILTIN_VA_START,
+    BUILTIN_VA_ARG,
+    BUILTIN_VA_END,
+    BUILTIN_NONE,
+}BuiltinKind;
+
+extern const char *builtin_names[BUILTIN_COUNT];
 
 typedef enum{
     L_INT,
@@ -218,6 +231,10 @@ struct Node {
             };
             Node *value;
         }designated_init;
+        struct{
+            BuiltinKind kind;
+            Array params;
+        }_builtin;
     };
 };
 
@@ -229,6 +246,8 @@ void init_types();
 
 NodeManager new_node_manager();
 void free_node_manager(NodeManager *nm);
+
+BuiltinKind get_builtin_kind(const char *name);
 
 /*
     Handles creating a Node, pushing it to the global node array

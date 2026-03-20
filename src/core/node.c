@@ -10,6 +10,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+const char *builtin_names[BUILTIN_COUNT] = {[BUILTIN_MEMCPY] = "__builtin_memcpy",
+                                            [BUILTIN_VA_ARG] = "__builtin_va_arg",
+                                            [BUILTIN_VA_START] = "__builtin_va_start",
+                                            [BUILTIN_VA_END] = "__builtin_va_end"};
+
+BuiltinKind get_builtin_kind(const char *name) {
+    if (strcmp(name, "") == 0) return BUILTIN_NONE;
+    for (int i = 1; i <= BUILTIN_COUNT; i++) {
+        if (strcmp(builtin_names[i], name) == 0) return (BuiltinKind)i;
+    }
+    return BUILTIN_NONE;
+}
+
 NodeManager new_node_manager() {
     NodeManager nm;
     arena_init(&nm, NODE_ARENA_SIZE, sizeof(Node));
@@ -174,6 +187,9 @@ void print_node_type(const NodeKind type) {
     case N_DESIGNATED_INITIALIZER:
         printf("Designated Initializer");
         break;
+    case N_BUILTIN:
+        printf("__Builtin");
+        break;
     }
 }
 
@@ -270,10 +286,7 @@ void print_node(const Node *node, const int depth) {
         }
         break;
     case N_FUNCTION:
-        printf(": [name= %s, param_count= %d, type= ", node->func.name, node->type->_func.params.count);
-        print_type(node->type);
-
-        printf(", has_initializer=");
+        printf(": [name= %s, param_count= %d, has_initializer=", node->func.name, node->type->_func.params.count);
         if (node->func.is_defined) printf("true");
         else printf("false");
 
@@ -281,16 +294,7 @@ void print_node(const Node *node, const int depth) {
 
         if (node->func.storage_class == EXTERN) printf(", extern");
         if (node->func.storage_class == STATIC) printf(", static");
-        printf("]");
-        if (node->type->_func.params.count > 0) {
-            printf(" { ");
-            for (int i = 0; i < node->type->_func.params.count; i++) {
-                print_param_decl((ParamDecl *)get(&node->type->_func.params, i));
-            }
-            if (node->type->_func.is_variadic) printf(", ... ");
-            printf("}");
-        }
-        printf("\n");
+        printf("]\n");
         if (node->func.is_defined) print_node(node->func.body, depth + 1);
         break;
     case N_VAR_DECL:
@@ -319,9 +323,7 @@ void print_node(const Node *node, const int depth) {
         printf(": [cond, true, false]\n");
         print_node(node->_if.cond, depth + 1);
         print_node(node->_if.if_true, depth + 1);
-        if (node->_if.if_false != NULL) {
-            print_node(node->_if.if_false, depth + 1);
-        }
+        if (node->_if.if_false != NULL) print_node(node->_if.if_false, depth + 1);
         break;
     case N_WHILE:
         printf(": [cond, true]\n");
@@ -420,11 +422,15 @@ void print_node(const Node *node, const int depth) {
         print_node(node->compound_literal.value, depth + 1);
         break;
     case N_DESIGNATED_INITIALIZER:
-        if (node->designated_init.kind == T_ARRAY) printf(": [index= %d, type= ", node->designated_init._array.index);
-        else printf(": [name= %s, type= ", node->designated_init._struct.name);
-        print_type(node->type);
-        printf("]\n");
+        if (node->designated_init.kind == T_ARRAY) printf(": [index= %d]\n", node->designated_init._array.index);
+        else printf(": [name= %s]\n", node->designated_init._struct.name);
         print_node(node->designated_init.value, depth + 1);
+        break;
+    case N_BUILTIN:
+        printf(": [name= %s, param_count= %d]\n", builtin_names[node->_builtin.kind], node->_builtin.params.count);
+        for (int i = 0; i < node->_builtin.params.count; i++) {
+            print_node(get_node(&node->_builtin.params, i), depth + 1);
+        }
         break;
     }
 }
@@ -595,6 +601,12 @@ void free_node(Node *node) {
         }
         free_node(node->designated_init.value);
         node->designated_init.value = NULL;
+        break;
+    case N_BUILTIN:
+        for (int i = 0; i < node->_builtin.params.count; i++) {
+            free_node(get_node(&node->_builtin.params, i));
+        }
+        array_free(&node->_builtin.params);
         break;
     }
 }

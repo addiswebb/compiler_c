@@ -1,5 +1,6 @@
 #include "compiler_c/ir/ir_builder.h"
 #include "compiler_c/core/array.h"
+#include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_gen.h"
 #include "compiler_c/ir/ir_module.h"
@@ -195,3 +196,26 @@ IR_Value ir_memcpy(IR_Context *ctx, IR_Value from_reg, IR_Value to_reg, int size
     append(&ctx->block->instruction_array, &i);
     return i.ops[0];
 }
+
+IR_Value ir_builtin_va_start(IR_Context *ctx, IR_Value ap, IR_Value last_named_param) {
+    IR_Instruction i;
+    i.op = IR_BUILTIN_VA_START;
+    i.ops[0] = ap;
+    i.ops[1] = last_named_param;
+    i.op_count = 2;
+    append(&ctx->block->instruction_array, &i);
+    return ir_no_value;
+}
+
+IR_Value ir_builtin_va_arg(IR_Context *ctx, IR_Value ap, Type *type) {
+    IR_Instruction i;
+    i.op = IR_BUILTIN_VA_ARG;
+    i.ops[0] = ir_next_virtual_reg(ctx->func);
+    i.ops[1] = ap;
+    i.op_count = 2;
+    i.builtin_va_arg.type = type;
+    append(&ctx->block->instruction_array, &i);
+    return i.ops[0];
+}
+
+void ir_builtin_va_end() { return; }

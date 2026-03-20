@@ -202,6 +202,20 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_CAST:
         const IR_Value src = ir_gen_rvalue(ctx, expr->cast.expr);
         return ir_cast(ctx, src, expr->type, expr->cast.from);
+    case N_BUILTIN:
+        switch (expr->_builtin.kind) {
+        case BUILTIN_VA_START:
+            return ir_builtin_va_start(ctx, ir_gen_lvalue(ctx, get_node(&expr->_builtin.params, 0)),
+                                       ir_gen_lvalue(ctx, get_node(&expr->_builtin.params, 1)));
+        case BUILTIN_VA_ARG:
+            return ir_builtin_va_arg(ctx, ir_gen_lvalue(ctx, get_node(&expr->_builtin.params, 0)),
+                                     get_node(&expr->_builtin.params, 1)->type);
+        case BUILTIN_VA_END:
+            return ir_no_value;
+        case BUILTIN_NONE:
+        case BUILTIN_MEMCPY:
+            PANIC("Builtin none!\n");
+        }
     default:
         break;
     }
@@ -468,6 +482,7 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     case N_FUNCTION_CALL:
     case N_BINARY:
     case N_UNARY:
+    case N_BUILTIN:
         ir_gen_rvalue(ctx, stmt);
         return;
     case N_IDENTIFIER:
@@ -550,7 +565,13 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
         ParamDecl *param = (ParamDecl *)get(&abi_type->_func.params, i);
         ir_new_var(ctx->func, param->name, param->type);
         ir_store(ctx, ir_mem_value(i, param->type), ir_vreg_value(-i - 1, param->type), param->type);
-        fn->param_count++;
+    }
+    // spill extra to shadow space
+    if (func->type->_func.is_variadic) {
+        for (int i = abi_type->_func.params.count; i < PARAM_REGISTERS; i++) {
+            ir_new_var(ctx->func, "", type_i64);
+            ir_store(ctx, ir_mem_value(i, type_i64), ir_vreg_value(-i - 1, type_i64), type_i64);
+        }
     }
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {

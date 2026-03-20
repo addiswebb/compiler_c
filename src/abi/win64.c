@@ -35,7 +35,8 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
                     } else stack_offset(a, lts, lts_count);
                     break;
                 case IR_MEM:
-                    a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
+                    // a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
+                    a->stack_offset = (a->mem + 1) * -8 - a->offset;
                     a->kind = IR_STACK;
                     break;
                 case IR_STACK:

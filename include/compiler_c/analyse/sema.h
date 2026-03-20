@@ -42,6 +42,8 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop);
 */
 void semantic_analysis(SemanticContext *sema_ctx,Parser *p, NodeManager *nm, Node *node);
 
+void handle_builtin_call(BuiltinKind kind, Node *node);
+
 /*
     Lowers enums and compound literals to their literal counterparts.
 */

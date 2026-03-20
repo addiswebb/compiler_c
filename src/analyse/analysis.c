@@ -355,7 +355,7 @@ void verify_completion(const IR_Function *f) {
     }
 }
 
-StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size, const int *slot_count) {
+StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size) {
     StackSlot *mem_slots = malloc(sizeof(StackSlot) * f->locals_array.count);
     if (!mem_slots) {
         PANIC("Failed to allocate memslots\n");
@@ -366,8 +366,7 @@ StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size, const 
         const int k = local->reg.mem;
         mem_slots[k].size = align(t->size, 8);
         mem_slots[k].align = 8;
-        mem_slots[k].id = *slot_count;
-        *frame_size += mem_slots[k].size;
+        mem_slots[k].id = j;
         mem_slots[k].offset = *frame_size;
         mem_slots[k].free_at = -1;
         *frame_size += mem_slots[k].size;
@@ -415,7 +414,7 @@ void analysis(const IR_Context *ctx) {
         int frame_size = 0;
         int mem_slots_count = 0;
         // Allocate local variables
-        StackSlot *mem_slots = locals_stack_allocation(f, &frame_size, &mem_slots_count);
+        StackSlot *mem_slots = locals_stack_allocation(f, &frame_size);
 
         int slot_count = 0;
         // Allocate virtual registers

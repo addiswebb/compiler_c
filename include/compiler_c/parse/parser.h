@@ -35,6 +35,7 @@ typedef enum{
     STORAGE_TEXT,
 }Storage;
 
+
 typedef struct Symbol{
     const char *name;
     SymbolKind kind;
@@ -129,6 +130,11 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm);
     `primary [++/--] `
 */
 Node *p_parse_postfix_expression(Parser *p, NodeManager *nm);
+
+/*
+    Consumes any compiler builtin including appropriate paramters
+*/
+Node *p_parse_builtin(Parser *p, NodeManager *nm, BuiltinKind kind);
 /*
     Tries to consume
     `prefix (expr)`
@@ -358,7 +364,6 @@ double parse_float(const char *raw, int len);
 
 /* ===== Symbol Table Functions ===== */
 
-Node *p_get_current_func_definition(const Parser *p);
 Symbol *p_get_symbol(const Parser *p, const char *name, SymbolKind kind);
 Node *p_get_func_def(const Parser *p, const char* name);
 Typedef *p_get_typedef(const Parser *p, const char *name);

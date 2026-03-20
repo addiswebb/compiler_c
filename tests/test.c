@@ -1,44 +1,25 @@
-// #include <stdio.h>
-// typedef enum {
-//     IR_CONST,
-//     IR_UNOP,
-//     IR_BINOP,
-//     IR_LOAD,
-//     IR_STORE,
-//     IR_STORE_MEM,
-//     IR_RET,
-//     IR_CALL,
-//     IR_BR,
-//     IR_BR_COND,
-//     IR_CMP,
-//     IR_CAST,
-//     IR_ADDR,
-//     IR_ALLOCA,
-//     IR_MEMCPY,
-//     IR_LABEL,
-//     IR_JMP,
-// } IR_OP;
+#include <stdarg.h>
 
-// typedef int IR_Value;
+int getSum(int n, ...) {
+    int sum = 0;
+    // Declaring a va_list pointer to
+    // argument list
+    va_list list;
 
-// typedef struct {
-//     IR_OP op;
-//     IR_Value ops[3];
-//     int op_count;
-// } IR_Instruction;
+    // Initializing argument to the
+    // list pointer
+    va_start(list, n);
 
-// int main() {
-//     IR_Instruction instr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = 5, [1] = 7}};
-//     printf("INSTR %d %d %d %d\n", instr.op, instr.op_count, instr.ops[0], instr.ops[1]);
-//     return 0;
-// }
+    for (int i = 0; i < n; i++) {
+        // Accessing current variable
+        // and pointing to next one
+        sum += va_arg(list, int);
+    }
 
-typedef struct {
-    int b[2];
-} A;
+    // Ending argument list traversal
+    va_end(list);
 
-int main() {
-    A a;
-    a.b[0] = 5;
-    return a.b[0];
+    return sum;
 }
+
+int main() { return getSum(4, 1, 2, 3, 4); }

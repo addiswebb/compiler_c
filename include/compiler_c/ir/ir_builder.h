@@ -21,4 +21,7 @@ IR_Value ir_address(IR_Context *ctx,IR_Value src, int offset);
 IR_Value ir_alloca(IR_Context *ctx, IR_Value dst, int size, int al);
 IR_Value ir_memcpy(IR_Context *ctx, IR_Value from_reg, IR_Value to_reg, int size);
 
+IR_Value ir_builtin_va_start(IR_Context *ctx, IR_Value ap, IR_Value last_named_param);
+IR_Value ir_builtin_va_arg(IR_Context *ctx, IR_Value ap, Type *type);
+
 #endif

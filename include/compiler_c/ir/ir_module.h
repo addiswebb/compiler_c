@@ -1,7 +1,7 @@
 #ifndef COMPILER_C_IR_MODULE_H
 #define COMPILER_C_IR_MODULE_H
 
-#define DEBUG_LOWERED_IR 0
+#define DEBUG_LOWERED_IR 1
 
 #include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"
@@ -53,6 +53,8 @@ typedef enum {
     IR_MEMCPY,
     IR_LABEL,
     IR_JMP,
+    IR_BUILTIN_VA_START,
+    IR_BUILTIN_VA_ARG,
 } IR_OP;
 
 typedef enum{
@@ -162,6 +164,7 @@ typedef struct {
         struct { int size; } memcpy;
         struct { const char *name; } label;
         struct { const char *name; } jmp;
+        struct {  Type *type;} builtin_va_arg;
     };
 } IR_Instruction;
 
@@ -240,7 +243,6 @@ typedef struct {
     int stack_slot_capacity;
     Linkage linkage;
     Storage storage;
-    int param_count;
     Type *return_type;
 } IR_Function;
 

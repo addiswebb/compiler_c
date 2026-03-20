@@ -192,6 +192,14 @@ void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *n
     (*get_i(sema_ctx))++;
 }
 
+void handle_builtin_call(BuiltinKind kind, Node *node) {
+    Node builtin;
+    builtin.kind = N_BUILTIN;
+    builtin._builtin.kind = kind;
+    builtin._builtin.params = node->func_call.params_array;
+    memcpy(node, &builtin, sizeof(Node));
+}
+
 void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
     if (!node) return;
     switch (node->kind) {
@@ -205,6 +213,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         ASSERT(!(node->func.is_defined && node->func.storage_class == EXTERN), "External Function cannot have a definition\n");
         p_push_scope(p);
         sema_ctx->func = node;
+        // Simulate a function params in symbol table
         for (int i = 0; i < node->type->_func.params.count; i++) {
             ParamDecl *param = (ParamDecl *)get(&node->type->_func.params, i);
             Node *param_decl = new_node(nm, N_VAR_DECL);
@@ -323,9 +332,15 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         printf("\n");
         exit(1);
     case N_FUNCTION_CALL:
+        const char *fn_name = node->func_call.callee->kind == TK_IDENTIFIER ? node->func_call.callee->identifier.name : "";
+        BuiltinKind builtin = get_builtin_kind(fn_name);
+        if (builtin != BUILTIN_NONE) {
+            handle_builtin_call(builtin, node);
+            return semantic_analysis(sema_ctx, p, nm, node);
+        }
+
         semantic_analysis(sema_ctx, p, nm, node->func_call.callee);
         Type *callee_type = node->func_call.callee->type;
-        const char *fn_name = TK_IDENTIFIER ? node->func_call.callee->identifier.name : "";
 
         ASSERT(callee_type != type_invalid, "Invalid type of Function %s\n", fn_name);
 
@@ -656,6 +671,52 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             for (int i = 0; i < node->type->_enum.fields_array.count; i++) {
                 p_append_enum_const(p, get_enum_field(node->type, i));
             }
+        }
+        break;
+    case N_BUILTIN:
+        switch (node->_builtin.kind) {
+        case BUILTIN_VA_START:
+            ASSERT(node->_builtin.params.count == 2, "%s expects 2 arguments\n", builtin_names[node->_builtin.kind]);
+            Node *dst_ap = get_node(&node->_builtin.params, 0);
+            Node *last_named_param = get_node(&node->_builtin.params, 1);
+            semantic_analysis(sema_ctx, p, nm, dst_ap);
+            semantic_analysis(sema_ctx, p, nm, last_named_param);
+            ASSERT(dst_ap->type == get_pointer_type(type_i8), "%s expects va_list as first arg.", builtin_names[node->_builtin.kind]);
+            node->type = type_void;
+            break;
+        case BUILTIN_VA_ARG:
+            ASSERT(node->_builtin.params.count == 2, "%s expects 2 arguments\n", builtin_names[node->_builtin.kind]);
+            dst_ap = get_node(&node->_builtin.params, 0);
+            Node *type_info = get_node(&node->_builtin.params, 1);
+            semantic_analysis(sema_ctx, p, nm, dst_ap);
+            semantic_analysis(sema_ctx, p, nm, type_info);
+            ASSERT(dst_ap->type == get_pointer_type(type_i8), "%s expects type va_list as first arg.", builtin_names[node->_builtin.kind]);
+            ASSERT(type_info->kind == N_TYPE && type_info->type != type_invalid, "%s expects type va_list as first arg.",
+                   builtin_names[node->_builtin.kind]);
+            node->type = type_info->type;
+            break;
+        case BUILTIN_VA_END:
+            ASSERT(node->_builtin.params.count == 1, "%s expects 1 arguments\n", builtin_names[node->_builtin.kind]);
+            dst_ap = get_node(&node->_builtin.params, 0);
+            semantic_analysis(sema_ctx, p, nm, dst_ap);
+            ASSERT(dst_ap->type == get_pointer_type(type_i8), "%s expects type va_list as first arg.", builtin_names[node->_builtin.kind]);
+            node->type = type_void;
+            break;
+        case BUILTIN_MEMCPY:
+            ASSERT(node->_builtin.params.count == 3, "%s expects 3 arguments\n", builtin_names[node->_builtin.kind]);
+            Node *memcpy_dst = get_node(&node->_builtin.params, 0);
+            Node *memcpy_src = get_node(&node->_builtin.params, 1);
+            Node *memcpy_size = get_node(&node->_builtin.params, 2);
+            semantic_analysis(sema_ctx, p, nm, memcpy_dst);
+            semantic_analysis(sema_ctx, p, nm, memcpy_src);
+            semantic_analysis(sema_ctx, p, nm, memcpy_size);
+            ASSERT(memcpy_dst->type->kind == T_POINTER && memcpy_src->type->kind, "%s expects both src and dst to be pointers\n",
+                   builtin_names[node->_builtin.kind]);
+            ASSERT(memcpy_size->type->kind == T_INT, "%s expects size to be integer or size_t\n");
+            node->type = type_u64;
+            break;
+        case BUILTIN_NONE:
+            PANIC("given __builtin_none but BUILTIN?\n");
         }
         break;
     case N_GOTO:
