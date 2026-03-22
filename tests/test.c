@@ -1,8 +1,21 @@
+typedef struct {
+    int a;
+    int b;
+    int c;
+    int d;
+    int e;
+} A;
+
+typedef struct {
+    int x;
+    int y;
+} B;
+
+int foo(A a) { return a.a + a.b + a.c + a.d + a.e; }
+int buzz(B b) { return b.x + b.y; }
+
 int main() {
-    int x = 10;
-    int *p = &x;
-    *p += 5; // x = 15
-    int **pp = &p;
-    **pp -= 3; // x = 12
-    return x;  // 12
+    A a = {1, 2, 3, 4, 5};
+    B b = {10, 20};
+    return foo(a) + buzz(b);
 }

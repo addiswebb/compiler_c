@@ -567,12 +567,12 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
         ir_store(ctx, ir_mem_value(i, param->type), ir_vreg_value(-i - 1, param->type), param->type);
     }
     // spill extra to shadow space
-    if (func->type->_func.is_variadic) {
-        for (int i = abi_type->_func.params.count; i < PARAM_REGISTERS; i++) {
-            ir_new_var(ctx->func, "", type_i64);
-            ir_store(ctx, ir_mem_value(i, type_i64), ir_vreg_value(-i - 1, type_i64), type_i64);
-        }
-    }
+    // if (func->type->_func.is_variadic) {
+    //     for (int i = abi_type->_func.params.count; i < PARAM_REGISTERS; i++) {
+    //         ir_new_var(ctx->func, "", type_i64);
+    //         ir_store(ctx, ir_mem_value(i, type_i64), ir_vreg_value(-i - 1, type_i64), type_i64);
+    //     }
+    // }
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {
         ir_gen_block_item(ctx, get_node(&func->func.body->compound.items_array, i));

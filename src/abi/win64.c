@@ -35,8 +35,8 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
                     } else stack_offset(a, lts, lts_count);
                     break;
                 case IR_MEM:
-                    // a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
-                    a->stack_offset = (a->mem + 1) * -8 - a->offset;
+                    a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
+                    // a->stack_offset = (a->mem + 1) * -8 - a->offset;
                     a->kind = IR_STACK;
                     break;
                 case IR_STACK:
@@ -62,12 +62,12 @@ void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
         IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
         f->max_reg++;
         IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[0]}};
-        insert(&b->instruction_array, &addr, (*i)++);
         instr = get_instruction(&b->instruction_array, *i);
 
         IR_Instruction memcpy = {
             .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[1]}, .memcpy = {.size = instr->store.type->size}};
         memcpy.ops[1].size = 8;
+        insert(&b->instruction_array, &addr, (*i)++);
         set(&b->instruction_array, &memcpy, *i);
     } else {
         IR_Instruction store = *instr;
@@ -79,25 +79,6 @@ void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
 }
 
 void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
-    // Convert to int chunks or pointer
-    for (int k = 0; k < instr->call.arg_array.count; k++) {
-        IR_Var *arg = get_arg(instr, k);
-        if (arg->type->kind == T_STRUCT) {
-            Type *s_t = arg->type;
-            if (s_t->kind == T_VOID) continue;
-            if (s_t->size > MAX_STRUCT_SIZE) {
-                IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
-                f->max_reg++;
-                IR_Instruction addr_instr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = arg->reg}};
-                arg->type = get_pointer_type(arg->type);
-                arg->name = "_tmp_s_ptr";
-                arg->reg = addr_instr.ops[0];
-                insert(&b->instruction_array, &addr_instr, (*i)++);
-            } else {
-                arg->type = get_integer_type(s_t->size);
-            }
-        }
-    }
     Type *s_t = instr->call.type->_func.return_type;
     if (s_t->kind == T_STRUCT) {
 
@@ -117,6 +98,23 @@ void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) 
             IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
             insert(&b->instruction_array, &alloca, (*i)++);
             insert(&b->instruction_array, &addr, ++(*i));
+        }
+    }
+    // Convert to int chunks or pointer
+    for (int k = 0; k < instr->call.arg_array.count; k++) {
+        IR_Var *arg = get_arg(instr, k);
+        if (arg->type->kind == T_STRUCT) {
+            Type *s_t = arg->type;
+            if (s_t->kind == T_VOID) continue;
+            if (s_t->size > MAX_STRUCT_SIZE) {
+                IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
+                f->max_reg++;
+                IR_Instruction addr_instr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = arg->reg}};
+                arg->type = get_pointer_type(arg->type);
+                arg->name = "_tmp_s_ptr";
+                arg->reg = addr_instr.ops[0];
+                insert(&b->instruction_array, &addr_instr, (*i)++);
+            } else arg->type = get_integer_type(s_t->size);
         }
     }
 }

@@ -367,9 +367,9 @@ StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size) {
         mem_slots[k].size = align(t->size, 8);
         mem_slots[k].align = 8;
         mem_slots[k].id = j;
+        *frame_size += mem_slots[k].size;
         mem_slots[k].offset = *frame_size;
         mem_slots[k].free_at = -1;
-        *frame_size += mem_slots[k].size;
     }
     return mem_slots;
 }
