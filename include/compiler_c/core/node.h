@@ -139,6 +139,7 @@ struct Node {
                 } s;
                 void *ptr;
             };
+            Symbol *symbol;
         } literal;
         struct{
             Node * value;

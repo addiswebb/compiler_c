@@ -1,25 +1,8 @@
-#include <stdarg.h>
-
-int getSum(int n, ...) {
-    int sum = 0;
-    // Declaring a va_list pointer to
-    // argument list
-    va_list list;
-
-    // Initializing argument to the
-    // list pointer
-    va_start(list, n);
-
-    for (int i = 0; i < n; i++) {
-        // Accessing current variable
-        // and pointing to next one
-        sum += va_arg(list, int);
-    }
-
-    // Ending argument list traversal
-    va_end(list);
-
-    return sum;
+int main() {
+    int x = 10;
+    int *p = &x;
+    *p += 5; // x = 15
+    int **pp = &p;
+    **pp -= 3; // x = 12
+    return x;  // 12
 }
-
-int main() { return getSum(4, 1, 2, 3, 4); }

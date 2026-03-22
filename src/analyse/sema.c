@@ -390,7 +390,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         if (!ident_symbol) {
             PANIC("Failed to find symbol %s\n", node->identifier.name);
         }
-        // node->identifier.symbol = ident_symbol;
+        node->literal.symbol = ident_symbol;
         switch (ident_symbol->kind) {
         case ENUM:
             node->kind = N_LITERAL;
