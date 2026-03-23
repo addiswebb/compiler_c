@@ -2,18 +2,20 @@
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
+#include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 IR_OpInfo op_info[] = {
     [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},
     [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_STORE] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_STORE_MEM] = {.def_mask = 0b000, .use_mask = 0b011},
+    [IR_STORE] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_RET] = {.def_mask = 0b000, .use_mask = 0b001},
     [IR_BR] = {.def_mask = 0b000, .use_mask = 0b000},
     [IR_BR_COND] = {.def_mask = 0b000, .use_mask = 0b001},
@@ -81,6 +83,8 @@ IR_Value ir_next_virtual_reg(IR_Function *func) {
     v.vreg = func->next_reg++;
     return v;
 }
+
+IR_Value ir_integer_literal(int64_t i) { return (IR_Value){.kind = IR_INT_LITERAL, .int_literal = i}; }
 
 /*
     Allocates for a new IR Module,
@@ -193,7 +197,7 @@ int ir_append_literal(IR_Module *module, const IR_Literal *literal) {
 }
 
 IR_Value ir_symbol_value(Symbol *s) {
-    ASSERT(s->name, "Bruh\n");
+    ASSERT(s->name, "IR Symbol Value must be named.\n");
     return (IR_Value){.kind = IR_SYMBOL, .symbol = s};
 }
 
@@ -233,4 +237,10 @@ void ir_free_module(IR_Module *module) {
     array_free(&module->global_array);
     array_free(&module->labeled_block_array);
     free(module);
+}
+
+void ir_append_instruction(IR_Block *b, IR_Instruction *instr) {
+    if (DEBUG_IR_INSTRUCTIONS) print_ir_instruction(NULL, instr);
+
+    append(&b->instruction_array, instr);
 }

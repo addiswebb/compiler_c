@@ -1,5 +1,6 @@
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis.h"
+#include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
@@ -12,36 +13,39 @@ const XMM_Reg float_param_regs[PARAM_REGISTERS] = {XMM0, XMM1, XMM2, XMM3};
 
 ABI_Result classify(Type *type) { return (ABI_Result){.class = {}, .memory = type->size > HIDDEN_PTR_SIZE}; }
 
-void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const StackSlot *mem_slots) {
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const StackSlot *symbol_slots,
+                              const Array *symbol_map) {
     for (int i = 0; i < f->blocks_array.count; i++) {
         const IR_Block *b = get_block(f, i);
         for (int j = 0; j < b->instruction_array.count; j++) {
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                IR_Value *a = k < instr->op_count ? &instr->ops[k] : get_arg(instr, k - instr->op_count);
-                if (a->kind == IR_CONSTANT) continue;
-                // Lower IR_VREG & IR_SYMBOL to IR_PHYS_REG where applicable
+                IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
+
+                if (k >= instr->op_count && (k - instr->op_count) < PARAM_REGISTERS) {
+                    // TODO implement ir_phys_reg(a, function_registers[k-instr->op_count]);
+                    WARN("Cant handle param registers yet\n");
+                }
+                // Lower IR_VREG & IR_SYMBOL to IR_PHYS_REG
                 switch (a->kind) {
                 case IR_VREG:
-                    if (k >= instr->op_count && (k - instr->op_count) < PARAM_REGISTERS) {
-                        // TODO implement ir_phys_reg(a, function_registers[k-instr->op_count]);
-                    } else ir_lower_vreg(a, lts, lts_count);
+                    ir_lower_vreg_value(a, lts, lts_count);
                     break;
                 case IR_SYMBOL:
-                    if (a->symbol->kind != VAR) break;
-                    // TODO implment ir_lower_symbol();
-                    // a->stack_offset = -(mem_slots[a->mem].offset - a->offset);
-                    // a->stack_offset = (a->mem + 1) * -8 - a->offset;
-                    // a->kind = IR_STACK;
+                    ir_lower_symbol_value(a, symbol_slots, symbol_map);
                     break;
                 case IR_CONSTANT:
+                    ir_lower_const_value(a);
+                    break;
                 case IR_PHYS_REG:
+                case IR_INT_LITERAL:
                     break;
                 case IR_UNDEFINED:
                     if (instr->op == IR_RET && instr->ret.type == type_void) break;
                     if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) break;
                     PANIC("An undefined IR value made it to analysis!!\n");
+                    break;
                 }
             }
         }
@@ -72,7 +76,7 @@ void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
 }
 
 void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
-    Type *s_t = instr->call.type->_func.return_type;
+    // Type *s_t = instr->call.type->_func.return_type;
     // if (s_t->kind == T_STRUCT) {
 
     //     IR_Value s_v = {.kind = IR_MEM, .size = s_t->size, .align = s_t->align, .mem = f->locals_array.count, .offset = 0};
@@ -145,71 +149,75 @@ void lower_ir_for_asm(IR_Function *f) {
 }
 
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    // const int dst_offset = instr->ops[0].stack_offset;
-    // Type *t = instr->call.type->_func.return_type;
-    // if (t->kind == T_STRUCT) t = get_integer_type(t->size);
+    Type *t = instr->call.type->_func.return_type;
+    if (t->kind == T_STRUCT) t = get_integer_type(t->size);
 
-    // int gp_index = 0;
+    int gp_index = 0;
 
-    // const int spilled_count = instr->call.arg_array.count > PARAM_REGISTERS ? instr->call.arg_array.count - PARAM_REGISTERS : 0;
-    // // +8 for push rbp (call emits push rbp, mov rsp, rbp)
-    // // 8 * spilled count, for n args after [0-3]
-    // // SHADOW_SPACE = 32, for windows ABI (linux = 0)
-    // // Prop shouldnt use/need align here,
-    // const int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count + 8, 16);
-    // int param_offset = SHADOW_SPACE;
-    // if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
-    // for (int i = 0; i < instr->call.arg_array.count; i++) {
-    //     const IR_Var *v = get_arg(instr, i);
-    //     bool use_register = false;
-    //     use_register = gp_index < PARAM_REGISTERS;
-    //     switch (v->type->kind) {
-    //     case T_INT:
-    //     case T_POINTER:
-    //         if (use_register) {
-    //             fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset,
-    //                     gp_register_str[int_param_regs[gp_index++]][reg_size(v->type->size)]);
-    //         } else {
-    //             const char *v_reg = x86_rax_reg(v->type);
-    //             fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, v_reg);
-    //             fprintf(fp, "    mov%s %s, %d(%%rsp)\n", x86_op_suffix(v->type), v_reg, param_offset);
-    //             param_offset += 8;
-    //         }
-    //         break;
-    //     case T_FLOAT:
-    //         const char *f_suffix = x86_op_suffix(v->type);
-    //         if (use_register) {
-    //             if (instr->call.type->_func.is_variadic) {
-    //                 fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_integer_op_suffix(v->type->size), v->reg.stack_offset,
-    //                         gp_register_str[int_param_regs[gp_index]][reg_size(v->type->size)]);
-    //             }
-    //             fprintf(fp, "    mov%s %d(%%rbp), %s\n", f_suffix, v->reg.stack_offset, sse_register_str[float_param_regs[gp_index++]]);
-    //         } else {
-    //             fprintf(fp, "    mov%s %d(%%rbp), %%xmm0\n", f_suffix, v->reg.stack_offset);
-    //             fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", f_suffix, param_offset);
-    //             param_offset += 8;
-    //         }
-    //         break;
-    //     default:
-    //         log_start(LOG_ERROR);
-    //         printf("Tried to emit call arg for unsupported type ");
-    //         print_type(v->type);
-    //         printf("\n");
-    //         exit(1);
-    //     }
-    // }
+    const int spilled_count = instr->call.arg_array.count > PARAM_REGISTERS ? instr->call.arg_array.count - PARAM_REGISTERS : 0;
+    // +8 for push rbp (call emits push rbp, mov rsp, rbp)
+    // 8 * spilled count, for n args after [0-3]
+    // SHADOW_SPACE = 32, for windows ABI (linux = 0)
+    // Prop shouldnt use/need align here,
+    const int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count + 8, 16);
+    int param_offset = SHADOW_SPACE;
+    if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
+    for (int i = 0; i < instr->call.arg_array.count; i++) {
+        IR_CallArg *v = get_call_arg(instr, i);
+        bool use_register = false;
+        use_register = gp_index < PARAM_REGISTERS;
+        switch (v->type->kind) {
+        case T_INT:
+        case T_POINTER:
+            if (use_register) {
+                x86_emit_xr(fp, "mov", x86_op_suffix(v->type), "", &v->v,
+                            gp_register_str[int_param_regs[gp_index++]][reg_size(v->type->size)]);
+                // fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->v.reg.stack_offset,
+                //         gp_register_str[int_param_regs[gp_index++]][reg_size(v->type->size)]);
+            } else {
+                const char *v_reg = x86_rax_reg(v->type);
 
-    // if (instr->ops[1].kind == IR_FUNCTION) {
-    //     fprintf(fp, "    call %s\n", instr->ops[1].func.name);
-    // } else {
-    //     x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
-    //     fprintf(fp, "    call *%%rax\n");
-    // }
-    // fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);
+                x86_emit_xr(fp, "mov", x86_op_suffix(v->type), "", &v->v, v_reg);
+                // fprintf(fp, "    mov%s %d(%%rbp), %s\n", x86_op_suffix(v->type), v->reg.stack_offset, v_reg);
 
-    // if (t == type_void) return;
+                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", x86_op_suffix(v->type), v_reg, param_offset);
+                param_offset += 8;
+            }
+            break;
+        case T_FLOAT:
+            const char *f_suffix = x86_op_suffix(v->type);
+            if (use_register) {
+                if (instr->call.type->_func.is_variadic) {
+                    x86_emit_xr(fp, "mov", x86_integer_op_suffix(v->type->size), "", &v->v,
+                                gp_register_str[int_param_regs[gp_index]][reg_size(v->type->size)]);
+                }
+                x86_emit_xr(fp, "mov", f_suffix, "", &v->v, sse_register_str[float_param_regs[gp_index++]]);
+            } else {
+                x86_emit_xr(fp, "mov", f_suffix, "", &v->v, sse_register_str[XMM0]);
+                fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", f_suffix, param_offset);
+                param_offset += 8;
+            }
+            break;
+        default:
+            log_start(LOG_ERROR);
+            printf("Tried to emit call arg for unsupported type ");
+            print_type(v->type);
+            printf("\n");
+            exit(1);
+        }
+    }
 
-    // fprintf(fp, "    mov%s %s, %d(%%rbp)\n", x86_op_suffix(t), x86_rax_reg(t), dst_offset);
+    if (instr->ops[1].kind == IR_PHYS_REG && instr->ops[1].phys_reg.data_kind == REG_DATA_LABEL) {
+        fprintf(fp, "    call %s\n", instr->ops[1].phys_reg.label);
+    } else {
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
+        fprintf(fp, "    call *%%rax\n");
+    }
+    fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);
+
+    if (t == type_void) return;
+
+    x86_emit_rx(fp, "mov", x86_op_suffix(t), "", x86_rax_reg(t), &instr->ops[0]);
 }
 
 Type *abi_func_type(Type *type) {

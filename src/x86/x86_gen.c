@@ -18,17 +18,22 @@ static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
     x86_emit_cast(fp, &instr->ops[1], &instr->ops[0], instr->cast.from, instr->cast.to);
 }
 static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
-    IR_Literal *c = get_const(ctx, instr->ops[1].const_index);
-    x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
+    if (instr->ops[1].kind == IR_CONSTANT) {
+        IR_Literal *c = get_const(ctx, instr->ops[1].const_index);
+        x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
+        return;
+    }
+
+    const char *reg = x86_rax_reg(instr->_const.type);
+    const char *op_suffix = x86_op_suffix(instr->_const.type);
+    x86_emit_xr(fp, "mov", op_suffix, "", &instr->ops[1], reg);
+    x86_emit_rx(fp, "mov", op_suffix, "", reg, &instr->ops[0]);
 }
 static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { x86_emit_call(fp, ctx, instr); }
 static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_store(fp, &instr->ops[1], &instr->ops[0], instr->store.type);
 }
 
-static void x86_gen_store_instruction_mem(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_store_mem(fp, &instr->ops[1], &instr->ops[0], instr->store.type);
-}
 static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_load(fp, &instr->ops[1], &instr->ops[0], instr->load.type);
 }
@@ -51,9 +56,6 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         return;
     case IR_STORE:
         x86_gen_store_instruction(fp, ctx, instr);
-        return;
-    case IR_STORE_MEM:
-        x86_gen_store_instruction_mem(fp, ctx, instr);
         return;
     case IR_CALL:
         x86_gen_call_instruction(fp, ctx, instr);

@@ -13,6 +13,7 @@ IR_BINOP_OP ir_binary_op(const TokenType type);
 
 void print_ir_module(const IR_Context *ctx,const IR_Module *module);
 void print_ir_value(const IR_Value *v);
+void print_ir_phys_reg(const PhysReg *r);
 
 static void print_ir_block(const IR_Context *ctx, const IR_Block *block);
 void print_ir_function(const IR_Context *ctx, const IR_Function *func);

@@ -1,9 +1,12 @@
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/abi/abi.h"
+#include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/tokenize/tokenizer.h"
+
+#include <inttypes.h>
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -194,28 +197,35 @@ static char ir_type_suffix(Type *type) {
 }
 
 static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
-    const IR_Literal *c = get_const(ctx, instr->ops[1].const_index);
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = CONST ");
     print_ir_value(&instr->ops[1]);
-    printf(", ");
-    switch (instr->_const.type->kind) {
-    case T_INT:
-        if (instr->_const.type->size == 8) printf("%" PRId64, c->i);
-        else if (instr->_const.type->size == 1) printf("%c", (char)c->i);
-        else printf("%d", (int)c->i);
-        break;
-    case T_FLOAT:
-        printf("%g", c->f);
-        break;
-    case T_ARRAY:
-        if (instr->_const.type->base == type_i8) {
-            printf("\"%s\"", c->s.data);
+    if (ctx) {
+        IR_Literal *c = NULL;
+        if (instr->ops[1].kind == IR_CONSTANT) {
+            c = get_const(ctx, instr->ops[1].const_index);
+        } else if (instr->ops[1].kind == IR_PHYS_REG && instr->ops[1].phys_reg.data_kind == REG_DATA_CONST_INDEX) {
+            c = get_const(ctx, instr->ops[1].phys_reg.const_index);
+        } else PANIC("IR_CONST with non const IRVALUE\n");
+        printf(", ");
+        switch (instr->_const.type->kind) {
+        case T_INT:
+            if (instr->_const.type->size == 8) printf("%" PRId64, c->i);
+            else if (instr->_const.type->size == 1) printf("%c", (char)c->i);
+            else printf("%d", (int)c->i);
             break;
+        case T_FLOAT:
+            printf("%g", c->f);
+            break;
+        case T_ARRAY:
+            if (instr->_const.type->base == type_i8) {
+                printf("\"%s\"", c->s.data);
+                break;
+            }
+        default:
+            PANIC("Tried to print IR_CONST of unknown type\n");
         }
-    default:
-        PANIC("Tried to print IR_CONST of unknown type\n");
     }
     printf("\n");
 }
@@ -232,7 +242,7 @@ static void print_ir_binop(const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_load(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_load(const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = LOAD:%c%d ", ir_type_suffix(instr->load.type), instr->load.type->size * 8);
@@ -240,15 +250,7 @@ static void print_ir_load(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_store_mem(const IR_Context *ctx, const IR_Instruction *instr) {
-    printf("    ");
-    printf("STORE_MEM:%c%d ", ir_type_suffix(instr->store.type), instr->store.type->size * 8);
-    print_ir_value(&instr->ops[1]);
-    printf(" -> ");
-    print_ir_value(&instr->ops[0]);
-    printf("\n");
-}
-static void print_ir_store(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_store(const IR_Instruction *instr) {
     printf("    ");
     printf("STORE:%c%d ", ir_type_suffix(instr->store.type), instr->store.type->size * 8);
     print_ir_value(&instr->ops[1]);
@@ -257,13 +259,13 @@ static void print_ir_store(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_ret(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_ret(const IR_Instruction *instr) {
     printf("    RET:%c%d ", ir_type_suffix(instr->ret.type), instr->ret.type->size * 8);
     if (instr->ret.type != type_void) print_ir_value(&instr->ops[0]);
     printf("\n");
 }
 
-static void print_ir_call(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_call(const IR_Instruction *instr) {
     printf("    ");
     if (instr->call.type->_func.return_type != type_void) {
         print_ir_value(&instr->ops[0]);
@@ -273,8 +275,8 @@ static void print_ir_call(const IR_Context *ctx, const IR_Instruction *instr) {
     print_ir_value(&instr->ops[1]);
     printf(", %d:[ ", instr->call.arg_array.count);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
-        IR_Value *arg = get_arg(instr, i);
-        print_ir_value(arg);
+        IR_CallArg *arg = get_call_arg(instr, i);
+        print_ir_value(&arg->v);
 
         if (i < instr->call.arg_array.count - 1) {
             printf(", ");
@@ -282,7 +284,7 @@ static void print_ir_call(const IR_Context *ctx, const IR_Instruction *instr) {
     }
     printf(" ]\n");
 }
-static void print_ir_br_cond(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_br_cond(const IR_Instruction *instr) {
     printf("    BR_COND ");
     print_ir_value(&instr->ops[0]);
     if (instr->br_cond.t_block) printf(" L%d ", instr->br_cond.t_block->id);
@@ -292,7 +294,7 @@ static void print_ir_br_cond(const IR_Context *ctx, const IR_Instruction *instr)
     printf("\n");
 }
 
-static void print_ir_cmp(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_cmp(const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = CMP:%c%d ", ir_type_suffix(instr->cmp.type), instr->cmp.type->size * 8);
@@ -304,7 +306,7 @@ static void print_ir_cmp(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_unop(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_unop(const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = UNARY ");
@@ -314,7 +316,7 @@ static void print_ir_unop(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_cast(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_cast(const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = CAST ");
@@ -326,7 +328,7 @@ static void print_ir_cast(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_addr(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_addr(const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = ADDR ");
@@ -337,13 +339,13 @@ static void print_ir_addr(const IR_Context *ctx, const IR_Instruction *instr) {
     printf("\n");
 }
 
-static void print_ir_alloca(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_alloca(const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = ALLOCA %d\n", instr->alloca.size);
 }
 
-static void print_ir_memcpy(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_memcpy(const IR_Instruction *instr) {
     printf("    MEMCPY ");
     print_ir_value(&instr->ops[1]);
     printf(" -> ");
@@ -351,14 +353,14 @@ static void print_ir_memcpy(const IR_Context *ctx, const IR_Instruction *instr) 
     printf(", %d\n", instr->memcpy.size);
 }
 
-static void print_ir_builtin_va_start(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_builtin_va_start(const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
     printf(" = BUILTIN_VA_START ");
     print_ir_value(&instr->ops[1]);
     printf("\n");
 }
-static void print_ir_builtin_va_arg(const IR_Context *ctx, const IR_Instruction *instr) {
+static void print_ir_builtin_va_arg(const IR_Instruction *instr) {
     printf("    BUILTIN_VA_ARG ");
     print_ir_value(&instr->ops[0]);
     printf(", ");
@@ -374,43 +376,40 @@ void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr) {
         print_ir_binop(instr);
         break;
     case IR_LOAD:
-        print_ir_load(ctx, instr);
+        print_ir_load(instr);
         break;
     case IR_STORE:
-        print_ir_store(ctx, instr);
+        print_ir_store(instr);
         break;
     case IR_RET:
-        print_ir_ret(ctx, instr);
+        print_ir_ret(instr);
         break;
     case IR_CALL:
-        print_ir_call(ctx, instr);
+        print_ir_call(instr);
         break;
     case IR_BR:
         printf("    BR %d\n", instr->br.block->id);
         break;
     case IR_BR_COND:
-        print_ir_br_cond(ctx, instr);
+        print_ir_br_cond(instr);
         break;
     case IR_CMP:
-        print_ir_cmp(ctx, instr);
+        print_ir_cmp(instr);
         break;
     case IR_UNOP:
-        print_ir_unop(ctx, instr);
+        print_ir_unop(instr);
         break;
     case IR_CAST:
-        print_ir_cast(ctx, instr);
+        print_ir_cast(instr);
         break;
     case IR_ADDR:
-        print_ir_addr(ctx, instr);
+        print_ir_addr(instr);
         break;
     case IR_ALLOCA:
-        print_ir_alloca(ctx, instr);
+        print_ir_alloca(instr);
         break;
     case IR_MEMCPY:
-        print_ir_memcpy(ctx, instr);
-        break;
-    case IR_STORE_MEM:
-        print_ir_store_mem(ctx, instr);
+        print_ir_memcpy(instr);
         break;
     case IR_LABEL:
         printf("%s:\n", instr->label.name);
@@ -419,10 +418,10 @@ void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr) {
         printf("    JMP %s\n", instr->jmp.name);
         break;
     case IR_BUILTIN_VA_START:
-        print_ir_builtin_va_start(ctx, instr);
+        print_ir_builtin_va_start(instr);
         break;
     case IR_BUILTIN_VA_ARG:
-        print_ir_builtin_va_arg(ctx, instr);
+        print_ir_builtin_va_arg(instr);
         break;
     }
 }
@@ -459,14 +458,44 @@ void print_ir_value(const IR_Value *v) {
         printf(".LC%d", v->const_index);
         break;
     case IR_PHYS_REG:
-        if (v->phys_reg.kind == REG_GP) {
-            printf("%s", gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size]);
-        } else {
-            printf("%s", sse_register_str[v->phys_reg.xmm_reg]);
-        }
+        print_ir_phys_reg(&v->phys_reg);
         break;
     case IR_UNDEFINED:
-        printf("[###]");
+        printf("[#]");
+        break;
+    case IR_INT_LITERAL:
+        printf("$%" PRId64, v->int_literal);
         break;
     }
+}
+
+void print_ir_phys_reg(const PhysReg *r) {
+    switch (r->data_kind) {
+    case REG_DATA_LABEL:
+        printf("%s", r->label);
+        break;
+    case REG_DATA_OFFSET:
+        // ASSERT(!r->scale, "Not lowering scale for physical registers yet\n");
+        if (r->offset) printf("%d", r->offset);
+        break;
+    case REG_DATA_CONST_INDEX:
+        printf(".LC%d", r->const_index);
+        break;
+    case REG_DATA_NONE:
+        printf("%s", r->label);
+        break;
+    }
+    if (r->data_kind != REG_DATA_NONE) printf("(");
+    switch (r->kind) {
+    case REG_GP:
+        printf("%s", gp_register_str[r->gp_reg][r->size]);
+        break;
+    case REG_XMM:
+        printf("%s", sse_register_str[r->sse_reg]);
+        break;
+    case REG_IP:
+        printf("%%rip");
+        break;
+    }
+    if (r->data_kind != REG_DATA_NONE) printf(")");
 }

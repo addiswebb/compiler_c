@@ -1,7 +1,8 @@
 #ifndef COMPILER_C_IR_MODULE_H
 #define COMPILER_C_IR_MODULE_H
 
-#define DEBUG_LOWERED_IR 0
+#define DEBUG_LOWERED_IR 1
+#define DEBUG_IR_INSTRUCTIONS 1
 
 #include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"
@@ -44,7 +45,7 @@ typedef enum{
 typedef enum {
     IR_CONST,
     IR_UNOP,IR_BINOP,
-    IR_LOAD, IR_STORE, IR_STORE_MEM, IR_RET, IR_CALL,
+    IR_LOAD, IR_STORE, IR_RET, IR_CALL,
     IR_BR, IR_BR_COND,
     IR_CMP,
     IR_CAST,
@@ -58,8 +59,7 @@ typedef enum {
 } IR_OP;
 
 typedef enum{
-     // IR_UNDEFINED, IR_PHYS_REG, IR_VREG, IR_MEM, IR_STACK, IR_LITERAL, IR_GLOBAL, IR_FUNCTION,
-     IR_UNDEFINED, IR_SYMBOL, IR_VREG, IR_CONSTANT, IR_PHYS_REG,
+     IR_UNDEFINED, IR_SYMBOL, IR_VREG, IR_CONSTANT, IR_PHYS_REG, IR_INT_LITERAL,
 }IR_ValueKind;
 
 /* A IR literal integer, float or string. */
@@ -96,8 +96,14 @@ typedef struct IR_Value{
         int const_index;
         // IR_PHYS_REG
         PhysReg phys_reg;
+        int64_t int_literal;
     };
 }IR_Value;
+
+typedef struct{
+    Type *type;
+    IR_Value v;
+}IR_CallArg;
 
 /* Determines of the 3 possible operands in an instruction, which are considered `used` or `defined` by the instruction. */
 typedef struct{
@@ -145,7 +151,6 @@ typedef struct {
 
 /* A physical, stack allocated slot of statically sized memory. Used for virtual registers and locals/IR_MEMs.*/
 typedef struct{
-    int id;
     int offset;
     int size;
     int align;
@@ -291,6 +296,7 @@ void ir_pop_loop_ctx(IR_Context *ctx);
 /* Returns an IR Const Value using the constant at `const_index`. */
 IR_Value ir_literal_value(int const_index);
 
+void ir_append_instruction(IR_Block *b, IR_Instruction *instr);
 void ir_free_module(IR_Module *module);
 
 /* Begins a new scope to track locals defined. */
@@ -298,10 +304,10 @@ void ir_begin_scope(IR_Function *func);
 /* Ends the scope, popping all locals defined within it. */
 void ir_end_scope(IR_Function *func);
 
-/* Returns an IR Mem Value pointing to a new virtual slot with `size` and `align`. */
-IR_Value ir_next_vreg(const IR_Function *func, int size, int align);
 /* Returns an IR VReg Value pointing to the next virtual register */
 IR_Value ir_next_virtual_reg(IR_Function *func);
+
+IR_Value ir_integer_literal(int64_t i);
 
 /* Initializes IR Module, and functions, func_defs, globals, and consts arrays. */
 IR_Module *ir_new_module();
@@ -385,7 +391,7 @@ static inline IR_Global * get_global(const IR_Context *ctx, int index){
     return (IR_Global*) get(&ctx->module->global_array, index);
 }
 static inline Symbol* get_local(const IR_Function *func, int index){
-    return (Symbol*) get(&func->locals_array, index);
+    return *(Symbol**) get(&func->locals_array, index);
 }
 
 static inline int get_var_index(const IR_Scope *scope, int index){
@@ -404,7 +410,7 @@ static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int in
     return (IR_LabeledBlock*) get(&module->labeled_block_array, index);
 }
 
-static inline IR_Value *get_arg(const IR_Instruction *call, int index){
-    return (IR_Value *) get(&call->call.arg_array, index);
+static inline IR_CallArg *get_call_arg(const IR_Instruction *call, int index){
+    return (IR_CallArg*) get(&call->call.arg_array, index);
 }
 #endif // COMPILER_C_IR_MODULE_H
