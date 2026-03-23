@@ -14,27 +14,28 @@ const char *x86_reg(const IR_Value *v) {
 }
 
 void x86_operand(const IR_Value *v, char *buf, const int n) {
-    switch (v->kind) {
-    case IR_STACK:
-        snprintf(buf, n, "%d(%%rbp)", v->stack_offset);
-        return;
-    case IR_LITERAL:
-        snprintf(buf, n, ".LC%d(%%rip)", v->const_index);
-        return;
-    case IR_GLOBAL:
-        snprintf(buf, n, "%s(%%rip)", v->global->name);
-        return;
-    case IR_PHYS_REG:
-        snprintf(buf, n, "%s", x86_reg(v));
-        return;
-    case IR_FUNCTION:
-        snprintf(buf, n, "%s(%%rip)", v->func.name);
-        return;
-    case IR_VREG:
-    case IR_MEM:
-    case IR_UNDEFINED:
-        PANIC("Tried to gen assembly for undefined IR_Value\n");
-    }
+    // TODO print IR_PHYS_REG properly
+    // switch (v->kind) {
+    // case IR_STACK:
+    //     snprintf(buf, n, "%d(%%rbp)", v->stack_offset);
+    //     return;
+    // case IR_LITERAL:
+    //     snprintf(buf, n, ".LC%d(%%rip)", v->const_index);
+    //     return;
+    // case IR_GLOBAL:
+    //     snprintf(buf, n, "%s(%%rip)", v->global->name);
+    //     return;
+    // case IR_PHYS_REG:
+    //     snprintf(buf, n, "%s", x86_reg(v));
+    //     return;
+    // case IR_FUNCTION:
+    //     snprintf(buf, n, "%s(%%rip)", v->func.name);
+    //     return;
+    // case IR_VREG:
+    // case IR_MEM:
+    // case IR_UNDEFINED:
+    //     PANIC("Tried to gen assembly for undefined IR_Value\n");
+    // }
 }
 
 void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst) {

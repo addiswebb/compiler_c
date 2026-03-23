@@ -1,7 +1,7 @@
 #ifndef COMPILER_C_IR_MODULE_H
 #define COMPILER_C_IR_MODULE_H
 
-#define DEBUG_LOWERED_IR 1
+#define DEBUG_LOWERED_IR 0
 
 #include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"
@@ -58,7 +58,8 @@ typedef enum {
 } IR_OP;
 
 typedef enum{
-     IR_UNDEFINED, IR_PHYS_REG, IR_VREG, IR_MEM, IR_STACK, IR_LITERAL, IR_GLOBAL, IR_FUNCTION,
+     // IR_UNDEFINED, IR_PHYS_REG, IR_VREG, IR_MEM, IR_STACK, IR_LITERAL, IR_GLOBAL, IR_FUNCTION,
+     IR_UNDEFINED, IR_SYMBOL, IR_VREG, IR_CONSTANT, IR_PHYS_REG,
 }IR_ValueKind;
 
 /* A IR literal integer, float or string. */
@@ -75,11 +76,8 @@ typedef struct{
 }IR_Literal;
 
 typedef struct{
-    const char *name;
-    Type *type;
+    Symbol *symbol;
     IR_Literal val;
-    Storage storage;
-    Linkage linkage;
 }IR_Global;
 
 typedef struct PhysReg PhysReg;
@@ -87,42 +85,19 @@ typedef struct PhysReg PhysReg;
 /* Represents every possible way to represent values and memory in IR */
 typedef struct IR_Value{
     IR_ValueKind kind;
-    union{
-        // TODO: seperate IR_REG and IR_STACK data
-        // IR_VREG
-        struct{
-            int reg;
-        // IR_STACK
-            int stack_slot;
-            int stack_offset;
-        };
-        // IR_MEM
-        struct{
-            int mem;
-            int offset;
-        };
-        // IR_LITERAL
-        int const_index;
-        // IR_GLOBAL
-        IR_Global *global;
-        // IR_PHYS_REG
-        PhysReg phys_reg;
-        // IR_FUNCTION
-        struct{
-            const char *name;
-            int index;
-        }func;
-    };
     int size;
     int align;
+    union{
+        // IR_SYMBOL
+        Symbol *symbol;
+        // IR_VREG
+        int vreg;
+        // IR_CONSTANT
+        int const_index;
+        // IR_PHYS_REG
+        PhysReg phys_reg;
+    };
 }IR_Value;
-
-/* Represents a variable in IR */
-typedef struct {
-    const char *name;
-    IR_Value reg;
-    Type *type;
-} IR_Var;
 
 /* Determines of the 3 possible operands in an instruction, which are considered `used` or `defined` by the instruction. */
 typedef struct{
@@ -293,6 +268,7 @@ typedef struct{
     Array loop_stack_array;
     IR_Block *true_block;
     IR_Block *false_block;
+    Arena *symbol_table;
     bool func_not_address;
 } IR_Context;
 
@@ -300,7 +276,7 @@ typedef struct{
 extern const IR_Value ir_no_value;
 
 /* Initializes the IR Context and allocates memory for the dynamic loop stack. */
-IR_Context ir_init_ctx();
+IR_Context ir_init_ctx(Parser *p);
 
 void free_ir_ctx(IR_Context *ctx);
 
@@ -312,10 +288,6 @@ void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block*break_
 /* Pop off the top of the loopstack. */
 void ir_pop_loop_ctx(IR_Context *ctx);
 
-/* Returns an IR Mem Value using the `mem_reg` mem slot. */
-IR_Value ir_mem_value(int mem_reg, const Type *type);
-/* Returns an IR VReg Value using the `reg` register. */
-IR_Value ir_vreg_value(int reg, const Type *type);
 /* Returns an IR Const Value using the constant at `const_index`. */
 IR_Value ir_literal_value(int const_index);
 
@@ -327,7 +299,7 @@ void ir_begin_scope(IR_Function *func);
 void ir_end_scope(IR_Function *func);
 
 /* Returns an IR Mem Value pointing to a new virtual slot with `size` and `align`. */
-IR_Value ir_next_virtual_slot(const IR_Function *func, int size, int align);
+IR_Value ir_next_vreg(const IR_Function *func, int size, int align);
 /* Returns an IR VReg Value pointing to the next virtual register */
 IR_Value ir_next_virtual_reg(IR_Function *func);
 
@@ -350,16 +322,18 @@ IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
 IR_Block *ir_new_block();
 /* Handles creating a new block and appending it to the current function's blocks array. */
 IR_Block *ir_add_block(IR_Context *ctx);
+
+IR_Value ir_symbol_value(Symbol *s);
 /*
     Appends the IR Function to the modules function array.
     Also handles updating the corresponding IR FuncDef with the correct index into the function array,
     FuncDef is also defined at this point.
 */
-void ir_append_function(const IR_Context *ctx,IR_Func_Def *func_def, IR_Function *func);
+void ir_append_function(const IR_Context *ctx, IR_Function *func);
 /* Appends the given global variable to the module's global dynamic variable array. */
-void ir_append_global(IR_Module *module, const char *name, Type *type, const IR_Literal *literal, Linkage linkage, Storage storage);
+void ir_append_global(IR_Module *module, Symbol *symbol, const IR_Literal *literal);
 /* Appends the given Literal to the module's dynamic const array. */
-IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal);
+int ir_append_literal(IR_Module *module, const IR_Literal *literal);
 /* Appends the given IR Block to the context's current function. */
 IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
 /* Appends, uniquely, a new labeled block. */
@@ -410,8 +384,8 @@ static inline IR_Literal * get_const(const IR_Context *ctx, int index){
 static inline IR_Global * get_global(const IR_Context *ctx, int index){
     return (IR_Global*) get(&ctx->module->global_array, index);
 }
-static inline IR_Var * get_local(const IR_Function *func, int index){
-    return (IR_Var*) get(&func->locals_array, index);
+static inline Symbol* get_local(const IR_Function *func, int index){
+    return (Symbol*) get(&func->locals_array, index);
 }
 
 static inline int get_var_index(const IR_Scope *scope, int index){
@@ -430,7 +404,7 @@ static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int in
     return (IR_LabeledBlock*) get(&module->labeled_block_array, index);
 }
 
-static inline IR_Var *get_arg(const IR_Instruction *call, int index){
-    return (IR_Var*) get(&call->call.arg_array, index);
+static inline IR_Value *get_arg(const IR_Instruction *call, int index){
+    return (IR_Value *) get(&call->call.arg_array, index);
 }
 #endif // COMPILER_C_IR_MODULE_H

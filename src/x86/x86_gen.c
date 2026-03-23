@@ -181,35 +181,35 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
     for (int i = 0; i < ctx->module->global_array.count; i++) {
         const IR_Global *g = get_global(ctx, i);
         const IR_Literal *c = &g->val;
-        if (g->storage == STORAGE_NONE) {
-            fprintf(fp, ".extern %s\n", g->name);
+        if (g->symbol->storage == STORAGE_NONE) {
+            fprintf(fp, ".extern %s\n", g->symbol->name);
             continue;
         }
-        if (g->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", g->name);
-        if (g->storage == STORAGE_DATA) fprintf(fp, ".data\n");
-        if (g->storage == STORAGE_BSS) {
-            fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->type->align, g->name, g->type->size);
+        if (g->symbol->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", g->symbol->name);
+        if (g->symbol->storage == STORAGE_DATA) fprintf(fp, ".data\n");
+        if (g->symbol->storage == STORAGE_BSS) {
+            fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->symbol->type->align, g->symbol->name, g->symbol->type->size);
         } else {
             ASSERT(c->type != type_invalid, "Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
             if (c->type == type_f64) {
                 uint64_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
-                fprintf(fp, ".align 8\n%s:\n    .quad 0x%016" PRIx64 "\n", g->name, bits);
+                fprintf(fp, ".align 8\n%s:\n    .quad 0x%016" PRIx64 "\n", g->symbol->name, bits);
             } else if (c->type == type_f32) {
                 uint32_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
-                fprintf(fp, ".align 4\n%s:\n    .long 0x%08x\n", g->name, bits);
+                fprintf(fp, ".align 4\n%s:\n    .long 0x%08x\n", g->symbol->name, bits);
             } else if (c->type->kind == T_ARRAY && c->type->base == type_i8) {
-                fprintf(fp, ".align 8\n%s:\n", g->name);
+                fprintf(fp, ".align 8\n%s:\n", g->symbol->name);
                 x86_emit_string(fp, c->s.data);
             } else if (c->type == type_i32 || c->type == type_u32) {
-                fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->name, (int)c->i);
+                fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->symbol->name, (int)c->i);
             } else if (c->type == type_i8 || c->type == type_u8) {
-                fprintf(fp, "%s:\n    .byte %d\n", g->name, (char)c->i);
+                fprintf(fp, "%s:\n    .byte %d\n", g->symbol->name, (char)c->i);
             } else if (c->type == type_i16 || c->type == type_u16) {
-                fprintf(fp, ".align 2\n%s:\n    .word %d\n", g->name, (short)c->i);
+                fprintf(fp, ".align 2\n%s:\n    .word %d\n", g->symbol->name, (short)c->i);
             } else if (c->type == type_i64 || c->type == type_u64) {
-                fprintf(fp, ".align 8\n%s:\n    .quad %" PRId64 "\n", g->name, c->i);
+                fprintf(fp, ".align 8\n%s:\n    .quad %" PRId64 "\n", g->symbol->name, c->i);
             }
         }
     }

@@ -137,8 +137,8 @@ void compute_reverse_postorder(IR_Function *func, int *rpo) {
 
 int bitset_add_defined(const BitSet *defined, const IR_Value *v) {
     if (v->kind == IR_VREG) {
-        if (!bitset_has(defined, v->reg)) {
-            bitset_add(defined, v->reg);
+        if (!bitset_has(defined, v->vreg)) {
+            bitset_add(defined, v->vreg);
             return 1;
         }
     }
@@ -146,8 +146,8 @@ int bitset_add_defined(const BitSet *defined, const IR_Value *v) {
 }
 void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v) {
     if (v->kind == IR_VREG) {
-        if (!bitset_has(defined, v->reg)) {
-            bitset_add(used, v->reg);
+        if (!bitset_has(defined, v->vreg)) {
+            bitset_add(used, v->vreg);
         }
     }
 }
@@ -204,8 +204,7 @@ int reg_bitset(const IR_Function *f) {
             // const IR_Instruction *instr = &b->instructions[k];
             const IR_Instruction *instr = get_instruction(&b->instruction_array, k);
             for (int i = 0; i < instr->op_count; i++) {
-                if (instr->ops[i].reg < 0) continue;
-                if (instr->ops[i].kind == IR_LITERAL || instr->ops[i].kind == IR_MEM) continue;
+                if (instr->ops[i].kind == IR_CONSTANT || instr->ops[i].kind == IR_SYMBOL) continue;
                 if (op_info[instr->op].def_mask & (1 << i)) {
                     // TODO: consider side effects of defined not overwriting. (should be alr...)
                     if (bitset_add_defined(&b->live.def, &instr->ops[i])) defined++;
@@ -303,16 +302,50 @@ RegSize reg_size(const int size) {
 }
 
 void physical_register(IR_Value *v) {
-    int reg_index = v->reg;
-    if (v->reg < 0) reg_index = -v->reg - 1;
+    int reg_index = v->vreg;
+    if (v->vreg < 0) reg_index = -v->vreg - 1;
     v->kind = IR_PHYS_REG;
     v->phys_reg.kind = REG_GP;
     v->phys_reg.gp_reg = int_param_regs[reg_index];
     v->phys_reg.size = reg_size(v->size);
 }
-void param_offset(IR_Value *v) {
-    v->kind = IR_STACK;
-    v->stack_offset = (-v->reg - 1) * 8 + 16;
+void to_phys_reg(IR_Value *v) {
+    IR_Value old = *v;
+    switch (old.kind) {
+    case IR_SYMBOL:
+        switch (old.symbol->kind) {
+        case VAR:
+            PANIC("Not handling yet\n");
+            // just give next offset
+            break;
+        case FUNC:
+            v->kind = IR_PHYS_REG;
+            v->phys_reg.kind = REG_IP;
+            v->phys_reg.label = old.symbol->name;
+            break;
+        case TYPEDEF:
+        case ANY:
+        case ENUM:
+            PANIC("to_phys_reg dont knwo how to handle\n");
+            break;
+        }
+        break;
+    case IR_VREG:
+        v->kind = IR_PHYS_REG;
+        v->phys_reg.kind = REG_GP;
+        v->phys_reg.gp_reg = RBP;
+        v->phys_reg.offset = -(old.vreg * 8) - 8;
+        break;
+    case IR_CONSTANT:
+        v->kind = IR_PHYS_REG;
+        v->phys_reg.kind = REG_IP;
+        v->phys_reg.const_index = old.const_index;
+        break;
+    case IR_PHYS_REG:
+        WARN("Already a physical register\n");
+    case IR_UNDEFINED:
+        PANIC("Given undefined register to convert to phys reg\n");
+    }
 }
 
 const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) {
@@ -323,13 +356,15 @@ const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) 
     }
     PANIC("Failed to find lifetime of r%d\n", reg);
 }
-void stack_offset(IR_Value *v, const Lifetime *lts, int lts_count) {
-    if (!lts) {
-        PANIC("Lts is null\n");
-    }
-    v->kind = IR_STACK;
-    const Lifetime *l = get_lifetime(lts, lts_count, v->reg);
-    v->stack_offset = -(l->stack_offset + 8);
+void ir_lower_vreg(IR_Value *v, const Lifetime *lts, int lts_count) {
+    ASSERT(lts, "LTS is null\n");
+    ASSERT(v->kind == IR_VREG, "Expected VREG IR Value\n");
+
+    const Lifetime *l = get_lifetime(lts, lts_count, v->vreg);
+    v->kind = IR_PHYS_REG;
+    v->phys_reg.kind = REG_GP;
+    v->phys_reg.gp_reg = RBP;
+    v->phys_reg.offset = -(l->stack_offset + 8);
 }
 
 void verify_completion(const IR_Function *f) {
@@ -339,17 +374,17 @@ void verify_completion(const IR_Function *f) {
             const IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_arg(instr, k - instr->op_count)->reg;
-                if (a->kind == IR_LITERAL && instr->op != IR_CALL) continue;
-                if (a->kind == IR_GLOBAL || a->kind == IR_PHYS_REG || a->kind == IR_FUNCTION) continue;
-                if (a->kind != IR_STACK) {
-                    if (instr->op == IR_RET && instr->ret.type == type_void) continue;
-                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) continue;
-                    log_start(LOG_ERROR);
-                    print_ir_value(a);
-                    printf(" was not converted to stack offset\n");
-                    exit(1);
-                }
+                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : get_arg(instr, k - instr->op_count);
+                if (a->kind == IR_CONSTANT && instr->op != IR_CALL) continue;
+                if (a->kind == IR_SYMBOL || a->kind == IR_PHYS_REG || a->kind == IR_VREG) continue;
+                // Allow undefined IR Values for the following:
+                if (instr->op == IR_RET && instr->ret.type == type_void) continue;
+                if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) continue;
+                // Otherwise throw error
+                log_start(LOG_ERROR);
+                print_ir_value(a);
+                printf(" was not converted to stack offset\n");
+                exit(1);
             }
         }
     }
@@ -360,16 +395,14 @@ StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size) {
     if (!mem_slots) {
         PANIC("Failed to allocate memslots\n");
     }
-    for (int j = 0; j < f->locals_array.count; j++) {
-        IR_Var *local = get_local(f, j);
-        const Type *t = local->type;
-        const int k = local->reg.mem;
-        mem_slots[k].size = align(t->size, 8);
-        mem_slots[k].align = 8;
-        mem_slots[k].id = j;
-        *frame_size += mem_slots[k].size;
-        mem_slots[k].offset = *frame_size;
-        mem_slots[k].free_at = -1;
+    for (int i = 0; i < f->locals_array.count; i++) {
+        Symbol *local_symbol = get_local(f, i);
+        mem_slots[i].size = align(local_symbol->type->size, 8);
+        mem_slots[i].align = 8;
+        mem_slots[i].id = i;
+        *frame_size += mem_slots[i].size;
+        mem_slots[i].offset = *frame_size;
+        mem_slots[i].free_at = -1;
     }
     return mem_slots;
 }
@@ -443,16 +476,16 @@ Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_arg(instr, k - instr->op_count)->reg;
+                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : get_arg(instr, k - instr->op_count);
                 const bool is_call_arg = k >= instr->op_count;
                 if (a->kind == IR_VREG) {
-                    if (a->reg < 0) continue;
+                    if (a->vreg < 0) continue;
                     if (op_info[instr->op].def_mask & (1 << k)) {
-                        lts[instr->ops[k].reg] = (Lifetime){instr->ops[k].reg, pc, -1, 0, 0, .v = &instr->ops[k]};
+                        lts[instr->ops[k].vreg] = (Lifetime){instr->ops[k].vreg, pc, -1, 0, 0, .v = &instr->ops[k]};
                     }
                     if (is_call_arg || op_info[instr->op].use_mask & (1 << k)) {
-                        if (lts[a->reg].end < pc) {
-                            lts[a->reg].end = pc;
+                        if (lts[a->vreg].end < pc) {
+                            lts[a->vreg].end = pc;
                         }
                     }
                 }

@@ -17,7 +17,7 @@ void param_offset(IR_Value *v);
 /*
     Converts the given IR_Value to an IR_STACK value with a stack offset. Uses the precomputed stack slot and offset from Lifetimes.
 */
-void stack_offset(IR_Value *v, const Lifetime *lts, int lts_count);
+void ir_lower_vreg(IR_Value *v, const Lifetime *lts, int lts_count);
 
 /*
     Constructs a control flow graph.

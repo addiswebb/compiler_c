@@ -124,7 +124,7 @@ int compile(Compiler *compiler) {
 
     if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {
         set_log_stage(STAGE_IR);
-        IR_Context ctx = ir_init_ctx();
+        IR_Context ctx = ir_init_ctx(&compiler->p);
         IR_Module *module = ir_gen_translation_unit(&ctx, arena_get(&compiler->nm, 0));
 
         if (compiler->flags & COMP_FLAG_IR) {

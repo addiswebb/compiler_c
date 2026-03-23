@@ -273,10 +273,8 @@ static void print_ir_call(const IR_Context *ctx, const IR_Instruction *instr) {
     print_ir_value(&instr->ops[1]);
     printf(", %d:[ ", instr->call.arg_array.count);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
-        IR_Var *arg = get_arg(instr, i);
-        print_type(arg->type);
-        printf("=");
-        print_ir_value(&arg->reg);
+        IR_Value *arg = get_arg(instr, i);
+        print_ir_value(arg);
 
         if (i < instr->call.arg_array.count - 1) {
             printf(", ");
@@ -451,35 +449,24 @@ void print_ir_module(const IR_Context *ctx, const IR_Module *module) {
 
 void print_ir_value(const IR_Value *v) {
     switch (v->kind) {
+    case IR_SYMBOL:
+        printf("%%%s", v->symbol->name);
+        break;
     case IR_VREG:
-        if (v->reg >= 0) printf("r%d", v->reg);
-        else printf("p%d", -v->reg);
+        printf("r%d", v->vreg);
         break;
-    case IR_MEM:
-        printf("v%d", v->mem);
-        if (v->offset > 0) printf(":%d", v->offset);
-        break;
-    case IR_STACK:
-        printf("[%d]", v->stack_offset);
-        break;
-    case IR_LITERAL:
+    case IR_CONSTANT:
         printf(".LC%d", v->const_index);
-        break;
-    case IR_UNDEFINED:
-        printf("[###]");
-        break;
-    case IR_GLOBAL:
-        printf("g[%s]", v->global->name);
         break;
     case IR_PHYS_REG:
         if (v->phys_reg.kind == REG_GP) {
             printf("%s", gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size]);
         } else {
-            printf("%s", sse_register_str[v->phys_reg.gp_reg]);
+            printf("%s", sse_register_str[v->phys_reg.xmm_reg]);
         }
         break;
-    case IR_FUNCTION:
-        printf("%s", v->func.name);
+    case IR_UNDEFINED:
+        printf("[###]");
         break;
     }
 }

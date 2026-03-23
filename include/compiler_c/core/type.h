@@ -40,10 +40,12 @@ typedef struct {
     Array modifiers;
 }Declarator;
 
+typedef struct Symbol Symbol;
 
 typedef struct{
     Type *type;
     const char *name;
+    Symbol *symbol;
 }ParamDecl;
 
 typedef struct {

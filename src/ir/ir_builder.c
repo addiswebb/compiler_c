@@ -4,9 +4,6 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_gen.h"
 #include "compiler_c/ir/ir_module.h"
-#include "compiler_c/log/logger.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
     IR_Instruction i;
@@ -39,13 +36,13 @@ IR_Value ir_store_mem(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     return i.ops[0];
 }
 // TODO: Always use the .LCx label, and replace it in analysis with the int literal (if type is compatible integer)
-IR_Value ir_const(IR_Context *ctx, IR_Value c, Type *type) {
+IR_Value ir_const(IR_Context *ctx, int const_index, Type *type) {
     IR_Instruction i;
     i.op = IR_CONST;
-    i.ops[1] = c;
+    i.ops[1] = (IR_Value){.kind = IR_CONSTANT, .const_index = const_index, .size = type->size, .align = type->align};
     i._const.type = type;
     // Use the .LCx literal for strings, otherwise it was lowered to an asm literal and stored in a register.
-    i.ops[0] = type->kind == T_ARRAY && type->base == type_i8 ? c : ir_next_virtual_reg(ctx->func);
+    i.ops[0] = type->kind == T_ARRAY && type->base == type_i8 ? i.ops[1] : ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
     append(&ctx->block->instruction_array, &i);
     return i.ops[0];
@@ -91,15 +88,15 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     ctx->func_not_address = true;
     i.ops[1] = ir_gen_rvalue(ctx, expr->func_call.callee);
     ctx->func_not_address = false;
-    array_init(&i.call.arg_array, expr->func_call.params_array.count, sizeof(IR_Var));
+    array_init(&i.call.arg_array, expr->func_call.params_array.count, sizeof(IR_Value));
     i.call.type = expr->func_call.callee->type->base; // TODO change to func def given type maybe? Currently trusting sema
     for (int j = 0; j < i.call.arg_array.capacity; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
 
         IR_Value val = ir_gen_rvalue(ctx, param);
-        if (val.kind == IR_FUNCTION) val = ir_address(ctx, val, 0);
+        if (val.kind == IR_SYMBOL && val.symbol->kind == FUNC) val = ir_address(ctx, val, 0);
 
-        append(&i.call.arg_array, &(IR_Var){.name = NULL, .type = param->type, .reg = val});
+        append(&i.call.arg_array, &val);
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
@@ -167,10 +164,6 @@ IR_Value ir_address(IR_Context *ctx, IR_Value src, int offset) {
     i.op = IR_ADDR;
     i.ops[1] = src;
     i.addr.offset = offset;
-    if (offset != 0) {
-        ASSERT(src.kind == IR_MEM, "Only IR_MEM values can be offset\n");
-        i.ops[1].offset = offset;
-    }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
     append(&ctx->block->instruction_array, &i);

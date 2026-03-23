@@ -38,6 +38,7 @@ typedef enum{
 
 typedef struct Symbol{
     const char *name;
+    Type *type;
     SymbolKind kind;
     Linkage linkage;
     Storage storage;
@@ -373,6 +374,7 @@ EnumField *p_get_enum_const(const Parser *p, const char* name);
 
 /* ===== Array Helper Functions ===== */
 
+Symbol *p_new_symbol(Parser *p, const Symbol *s);
 void p_append_call_param(Node *func_call, Node *param);
 void p_append_param(Node *func, Node *param);
 void p_append_enum_const(Parser *p, const EnumField *e);
