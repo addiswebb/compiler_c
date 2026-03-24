@@ -5,12 +5,14 @@
 
 #define DEBUG_LIFETIMES 0
 
+IR_Value ir_stack_value(int size, int align, int offset);
+
 /*
     Converts the given IR_Value to an IR_STACK value with a stack offset. Uses the precomputed stack slot and offset from Lifetimes.
 */
 void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count);
 
-void ir_lower_symbol_value(IR_Value *v, const StackSlot *symbol_slots, const Array *symbol_map);
+void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map);
 
 void ir_lower_const_value(IR_Value *v);
 
@@ -22,7 +24,7 @@ void ir_lower_const_value(IR_Value *v);
 */
 void analysis(const IR_Context *ctx);
 
-StackSlot *symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol_map);
+void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map);
 int get_symbol_index(const Array *symbol_map, Symbol *symbol);
 
 // TODO: convert these from "bitset" to "block", so add_defined(IR_BLOCK*b), adds to b->defined;
@@ -54,7 +56,7 @@ void lower_ir_for_asm(IR_Function *f);
     Converts virtual mem slots to physical stack slots.
     Converts ir_store for structs types to memcpy
 */
-void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const StackSlot *symbol_slots, const Array *symbol_map);
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots, const Array *symbol_map);
 /*
     Add a successor block to the given `from` block.
 */

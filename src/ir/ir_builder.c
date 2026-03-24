@@ -1,4 +1,5 @@
 #include "compiler_c/ir/ir_builder.h"
+#include "compiler_c/abi/abi.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
@@ -7,7 +8,7 @@
 #include "compiler_c/log/logger.h"
 
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
-    if(addr.kind == IR_PHYS_REG) printf("here");
+    if (addr.kind == IR_PHYS_REG) printf("here");
     IR_Instruction i;
     i.op = IR_LOAD;
     i.ops[1] = addr;
@@ -28,6 +29,10 @@ IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     return i.ops[0];
 }
 IR_Value ir_smart_const(IR_Context *ctx, IR_Literal *literal, Type *type) {
+    // TODO places where ir_integer_literal are used must ensure that $x is allowed in context
+    // E.g movss $x, %xmm0 is invalid
+    // Also note that if %xmm0 holds p0, and %xmm0 is later used to store p5 later, it gets clobbered.
+    // Use a safe xmm0 for general operations or place reg params last.
     if (literal->type->kind == T_INT) return ir_integer_literal(literal->i);
     return ir_const(ctx, ir_append_literal(ctx->module, literal), type);
 }
@@ -88,11 +93,14 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     i.call.type = expr->func_call.callee->type->base; // TODO change to func def given type maybe? Currently trusting sema
     for (int j = 0; j < i.call.arg_array.capacity; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
+        ParamDecl *arg = get(&i.call.type->abi_func_type->_func.params, j);
 
-        IR_Value val = ir_gen_rvalue(ctx, param);
-        if (val.kind == IR_SYMBOL && val.symbol->kind == FUNC) val = ir_address(ctx, val, 0);
+        IR_Value val;
+        if (param->type->kind == T_STRUCT && param->type->size > MAX_STRUCT_SIZE) val = ir_gen_lvalue(ctx, param);
+        else if (param->type->kind == T_FUNCTION) val = ir_gen_lvalue(ctx, param);
+        else val = ir_gen_rvalue(ctx, param);
 
-        append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = param->type});
+        append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg->type});
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;

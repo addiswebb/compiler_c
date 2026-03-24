@@ -204,7 +204,7 @@ int reg_bitset(const IR_Function *f) {
             // const IR_Instruction *instr = &b->instructions[k];
             const IR_Instruction *instr = get_instruction(&b->instruction_array, k);
             for (int i = 0; i < instr->op_count; i++) {
-                if (instr->ops[i].kind == IR_CONSTANT || instr->ops[i].kind == IR_SYMBOL) continue;
+                if (instr->ops[i].kind != IR_VREG) continue;
                 if (op_info[instr->op].def_mask & (1 << i)) {
                     // TODO: consider side effects of defined not overwriting. (should be alr...)
                     if (bitset_add_defined(&b->live.def, &instr->ops[i])) defined++;
@@ -253,35 +253,34 @@ void compute_bitset(const IR_Function *f, const int *rpo) {
 int cmp_lifetime(const void *a, const void *b) { return ((Lifetime *)a)->start - ((Lifetime *)b)->start; }
 
 void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size) {
-    StackSlot *slots = NULL;
+    RegisterSlot *slots = NULL;
     int slot_count = 0;
 
     for (int i = 0; i < count; i++) {
         Lifetime *l = &lts[i];
         int found_slot = 0;
         for (int j = 0; j < slot_count; j++) {
-            StackSlot *s = &slots[j];
+            RegisterSlot *s = &slots[j];
             if (s->free_at <= l->start) {
                 s->free_at = l->end;
                 l->stack_slot = j;
-                l->stack_offset = s->offset;
+                l->stack_offset = s->v.phys_reg.offset;
                 found_slot = 1;
                 break;
             }
         }
         if (!found_slot) {
-            StackSlot *new_slots = realloc(slots, sizeof(StackSlot) * (slot_count + 1));
+            RegisterSlot *new_slots = realloc(slots, sizeof(RegisterSlot) * (slot_count + 1));
             if (!new_slots) {
                 PANIC("Failed to realloc new_slots\n");
             }
             slots = new_slots;
-            slots[slot_count].size = l->v->size;
-            slots[slot_count].align = l->v->align;
+            slots[slot_count].v = ir_stack_value(l->v->size, l->v->align, *stack_size);
             slots[slot_count].free_at = l->end;
-            slots[slot_count].offset = *stack_size;
             l->stack_offset = *stack_size;
-            *stack_size += l->v->size;
             l->stack_slot = slot_count++;
+            DEBUG("slot %d -> %d\n", i, -(l->stack_offset + 8));
+            *stack_size += l->v->size;
         }
     }
     if (slots) free(slots);
@@ -310,18 +309,14 @@ const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) 
     }
     PANIC("Failed to find lifetime of r%d\n", reg);
 }
-void ir_lower_symbol_value(IR_Value *v, const StackSlot *symbol_slots, const Array *symbol_map) {
+void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map) {
     IR_Value old = *v;
     switch (old.symbol->kind) {
     case VAR:
         int index = get_symbol_index(symbol_map, v->symbol);
         ASSERT(index != -1, "Tried to find symbol index of %s\n", v->symbol->name);
         v->kind = IR_PHYS_REG;
-        v->phys_reg.kind = REG_GP;
-        v->phys_reg.gp_reg = RBP;
-        v->phys_reg.size = REG_64;
-        v->phys_reg.data_kind = REG_DATA_OFFSET;
-        v->phys_reg.offset = -(symbol_slots[index].offset) - 8;
+        *v = ((RegisterSlot *)get(symbol_slots, index))->v;
         break;
     case FUNC:
         v->kind = IR_PHYS_REG;
@@ -338,23 +333,33 @@ void ir_lower_symbol_value(IR_Value *v, const StackSlot *symbol_slots, const Arr
     }
 }
 
-IR_Value ir_ph(PhysReg phys) {
-    IR_Value v;
-    v.kind = IR_PHYS_REG;
-    v.phys_reg = phys;
-    return v;
+IR_Value ir_gp_register(GP_Reg reg) {
+    return (IR_Value){.kind = IR_PHYS_REG,
+                      .size = 8,
+                      .align = 8,
+                      .phys_reg = (PhysReg){
+                          .kind = REG_GP,
+                          .gp_reg = reg,
+                          .data_kind = REG_DATA_NONE,
+                          .size = REG_64,
+                      }};
+}
+IR_Value ir_stack_value(int size, int align, int offset) {
+    return (IR_Value){.kind = IR_PHYS_REG,
+                      .size = size,
+                      .align = align,
+                      .phys_reg = (PhysReg){
+                          .kind = REG_GP,
+                          .gp_reg = RBP,
+                          .data_kind = REG_DATA_OFFSET,
+                          .size = REG_64,
+                          .offset = offset,
+                      }};
 }
 void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count) {
     ASSERT(lts, "LTS is null\n");
     ASSERT(v->kind == IR_VREG, "Expected VREG IR Value\n");
-
-    const Lifetime *l = get_lifetime(lts, lts_count, v->vreg);
-    v->kind = IR_PHYS_REG;
-    v->phys_reg.kind = REG_GP;
-    v->phys_reg.gp_reg = RBP;
-    v->phys_reg.size = reg_size(v->size);
-    v->phys_reg.data_kind = REG_DATA_OFFSET;
-    v->phys_reg.offset = -(l->stack_offset + 8);
+    *v = ir_stack_value(v->size, v->align, -(get_lifetime(lts, lts_count, v->vreg)->stack_offset + 8));
 }
 
 void ir_lower_const_value(IR_Value *v) {
@@ -396,24 +401,25 @@ int get_symbol_index(const Array *symbol_map, Symbol *symbol) {
     }
     return -1;
 }
-StackSlot *symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol_map) {
-    if (f->locals_array.count == 0) return NULL;
-    array_init(symbol_map, f->locals_array.count, sizeof(Symbol *));
+void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map) {
+    int slot_count = f->locals_array.count;
+    if (slot_count == 0) return;
+    // TODO account parameters,
 
-    StackSlot *mem_slots = malloc(sizeof(StackSlot) * f->locals_array.count);
-    ASSERT(mem_slots, "Failed to allocate memslots\n");
+    array_init(symbol_map, slot_count, sizeof(Symbol *));
+    array_init(symbol_slots, slot_count, sizeof(RegisterSlot));
 
-    // Todo track scopes on symbol, so that we can reuse slots
-    for (int i = 0; i < f->locals_array.count; i++) {
-        Symbol *local_symbol = get_local(f, i);
-        mem_slots[i].size = align(local_symbol->type->size, 8);
-        mem_slots[i].align = 8;
-        mem_slots[i].offset = *frame_size;
-        *frame_size += mem_slots[i].size;
-        mem_slots[i].free_at = -1;
+    // TODO place in win64.c
+
+    for (int i = 0; i < slot_count; i++) {
+        Symbol *local_symbol = get_local_symbol(f, i);
+        int size = align(local_symbol->type->size, 8);
+        // Todo track scopes on symbol, so that we can reuse slots instead of '-1'
+        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, -(*frame_size + 8)), .free_at = -1});
+        DEBUG("local %d -> %d\n", i, -(*frame_size + 8));
         append(symbol_map, &local_symbol);
+        *frame_size += size;
     }
-    return mem_slots;
 }
 
 void analysis(const IR_Context *ctx) {
@@ -421,9 +427,10 @@ void analysis(const IR_Context *ctx) {
         IR_Function *f = get_func(ctx->module, i);
 
         lower_ir_for_asm(f);
-        // printf("vvvvvvvvvvvvvvvvvvvvv\n");
-        // print_ir_function(ctx, f);
-        // printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
+
+        printf("vvvvvvvvvvvvvvvvvvvvv\n");
+        print_ir_function(ctx, f);
+        printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
 
         // Initialize Control Flow Graph Variables per block
         ir_init_func_cfg(f);
@@ -453,16 +460,18 @@ void analysis(const IR_Context *ctx) {
             }
         }
 
-        int frame_size = 0;
         Array symbol_map;
-        // Allocate local variables
-        StackSlot *symbol_slots = symbol_slot_allocation(f, &frame_size, &symbol_map);
+        Array symbol_slots;
 
+        int frame_size = 8;
+
+        // Allocate local variables
+        symbol_slot_allocation(f, &frame_size, &symbol_slots, &symbol_map);
         // Allocate virtual registers
         linear_stack_slot_allocation(lifetimes, reg_count, &frame_size);
 
         // Update all instances of IR_Value with the correct stack offsets
-        lower_ir_values_to_stack(f, lifetimes, reg_count, symbol_slots, &symbol_map);
+        lower_ir_values_to_stack(f, lifetimes, reg_count, &symbol_slots, &symbol_map);
 
         // Verify all IR_Values are now of IR_STACK kind,
         verify_completion(f);
@@ -470,7 +479,8 @@ void analysis(const IR_Context *ctx) {
 
         free(rpo);
         free(lifetimes);
-        free(symbol_slots);
+        array_free(&symbol_map);
+        array_free(&symbol_slots);
     }
 }
 

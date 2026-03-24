@@ -372,7 +372,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 set_node(&node->func_call.params_array, &casted_node, i);
             }
             if (i < fn_type->_func.params.count) {
-                ParamDecl *fn_param = (ParamDecl *)get(&fn_type->_func.params, i);
+                ParamDecl *fn_param = get(&fn_type->_func.params, i);
                 if (fn_param->type != fn_call_param->type) {
                     Node *casted_node = cast_node(nm, fn_call_param, fn_param->type);
                     set_node(&node->func_call.params_array, &casted_node, i);

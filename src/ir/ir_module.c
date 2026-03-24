@@ -26,7 +26,10 @@ IR_OpInfo op_info[] = {
     [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
     [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b010}, // IR_CALL param uses handled separately
+    [IR_PARAM] = {.def_mask = 0b001, .use_mask = 0b000},
+    // IR_CALL all given params are 'used'
+    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b010},
+    // ---- Builtins ----
     [IR_BUILTIN_VA_START] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_BUILTIN_VA_ARG] = {.def_mask = 0b001, .use_mask = 0b010},
 };
@@ -97,7 +100,6 @@ IR_Module *ir_new_module() {
     }
     array_init(&module->const_array, 4, sizeof(IR_Literal));
     array_init(&module->global_array, 4, sizeof(IR_Global));
-    array_init(&module->func_defs_array, 4, sizeof(IR_Func_Def));
     array_init(&module->functions_array, 4, sizeof(IR_Function *));
     array_init(&module->labeled_block_array, 4, sizeof(IR_LabeledBlock));
 
@@ -144,7 +146,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type) {
     }
     array_init(&func->scopes_array, 4, sizeof(IR_Scope));
     array_init(&func->blocks_array, 4, sizeof(IR_Block *));
-    array_init(&func->locals_array, 4, sizeof(IR_Value));
+    array_init(&func->locals_array, 4, sizeof(Symbol *));
 
     func->name = name;
     func->next_reg = 0;
@@ -232,7 +234,6 @@ void ir_free_module(IR_Module *module) {
         free(func);
     }
     array_free(&module->functions_array);
-    array_free(&module->func_defs_array);
     array_free(&module->const_array);
     array_free(&module->global_array);
     array_free(&module->labeled_block_array);

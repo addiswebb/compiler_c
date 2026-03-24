@@ -54,6 +54,7 @@ typedef enum {
     IR_MEMCPY,
     IR_LABEL,
     IR_JMP,
+    IR_PARAM,
     IR_BUILTIN_VA_START,
     IR_BUILTIN_VA_ARG,
 } IR_OP;
@@ -145,17 +146,20 @@ typedef struct {
         struct { int size; } memcpy;
         struct { const char *name; } label;
         struct { const char *name; } jmp;
-        struct {  Type *type;} builtin_va_arg;
+        struct { Type *type; } builtin_va_arg;
+        struct { Type *type; int param_index; } param;
     };
 } IR_Instruction;
 
+typedef enum{
+    SLOT_REGISTER,
+    SLOT_STACK,
+}RegisterSlotKind;
 /* A physical, stack allocated slot of statically sized memory. Used for virtual registers and locals/IR_MEMs.*/
 typedef struct{
-    int offset;
-    int size;
-    int align;
+    IR_Value v;
     int free_at;
-}StackSlot;
+}RegisterSlot;
 
 /* Represents an array registers */
 typedef struct{
@@ -243,7 +247,6 @@ typedef struct{
 /* Root of the intermediate representation of a source file. */
 typedef struct {
     Array functions_array;
-    Array func_defs_array;
     Array const_array;
     Array global_array;
     Array labeled_block_array;
@@ -345,7 +348,6 @@ IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
 /* Appends, uniquely, a new labeled block. */
 IR_LabeledBlock *ir_append_labeled_block(IR_Context *ctx, const char*label);
 
-IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name);
 /*
     Retrieves the IR Value corresponding to the given variable name.
     First checks the scope stack, top down. Then checks module globals array.
@@ -390,7 +392,7 @@ static inline IR_Literal * get_const(const IR_Context *ctx, int index){
 static inline IR_Global * get_global(const IR_Context *ctx, int index){
     return (IR_Global*) get(&ctx->module->global_array, index);
 }
-static inline Symbol* get_local(const IR_Function *func, int index){
+static inline Symbol* get_local_symbol(const IR_Function *func, int index){
     return *(Symbol**) get(&func->locals_array, index);
 }
 
@@ -398,9 +400,7 @@ static inline int get_var_index(const IR_Scope *scope, int index){
     return *(int*) get(&scope->var_array, index);
 }
 
-static inline IR_Func_Def * get_func_def(const IR_Context *ctx, int index){
-    return (IR_Func_Def*) get(&ctx->module->func_defs_array, index);
-}
+
 
 static inline IR_Function * get_func(const IR_Module *module, int index){
     return *(IR_Function**) get(&module->functions_array, index);

@@ -91,7 +91,10 @@ struct Type{
     int align;
     bool is_signed;
     unsigned int qualifiers;
-    Type *base;
+    union{
+        Type *base;
+        Type *abi_func_type;
+    };
     // Data for special types
     union{
         // T_ARRAY

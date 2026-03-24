@@ -134,6 +134,16 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         fprintf(fp, "    subq $%d, %%rax\n", instr->builtin_va_arg.type->size);
         x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
         break;
+    case IR_PARAM:
+        ASSERT(instr->op_count == 2, "Param instruction not correctly lowered\n");
+        const char *param_op_suffix = x86_op_suffix(instr->param.type);
+        if (instr->param.param_index < PARAM_REGISTERS) {
+            x86_emit_xx(fp, "mov", param_op_suffix, "", &instr->ops[1], &instr->ops[0]);
+        } else {
+            const char *rax_reg = x86_rax_reg(instr->param.type);
+            x86_emit_xr(fp, "mov", param_op_suffix, "", &instr->ops[1], rax_reg);
+            x86_emit_rx(fp, "mov", param_op_suffix, "", rax_reg, &instr->ops[0]);
+        }
     }
 }
 static void x86_gen_block(FILE *fp, IR_Context *ctx) {

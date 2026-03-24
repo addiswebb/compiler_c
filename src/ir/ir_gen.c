@@ -544,21 +544,22 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     fn->linkage = func->func.symbol->linkage;
     fn->storage = func->func.symbol->storage;
 
-    /*
-        ABI
-        if return type is ptr
-    */
-
     ir_begin_scope(fn);
-    // TODO Consider leaving this for now, create slots of %rax etc for function args or smt.
-    // To map symbol 'x' %x -> %rax, instead of -~(%rbp)
-    for (int i = 0; i < func->type->_func.params.count; i++) {
-        ParamDecl *p = get(&func->type->_func.params, i);
-        append(&fn->locals_array, &p->symbol);
-    }
 
     Type *abi_type = abi_func_type(func->type);
-    // TODO: Win64 spill if variadic
+    func->type->abi_func_type = abi_type;
+    // Add ABI specific param symbols to the function
+    for (int i = 0; i < abi_type->_func.params.count; i++) {
+        ParamDecl *abi_d = get(&abi_type->_func.params, i);
+        ParamDecl *d = get(&func->type->_func.params, i);
+        abi_d->symbol->type = abi_d->type;
+        d->symbol->type = d->type;
+        append(&fn->locals_array, &d->symbol);
+        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+                                                            .op_count = 1,
+                                                            .ops = {[0] = ir_symbol_value(d->symbol)},
+                                                            .param = {.param_index = i, .type = d->type}});
+    }
 
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {

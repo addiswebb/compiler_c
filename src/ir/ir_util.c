@@ -353,6 +353,13 @@ static void print_ir_memcpy(const IR_Instruction *instr) {
     printf(", %d\n", instr->memcpy.size);
 }
 
+static void print_ir_param(const IR_Instruction *instr) {
+    printf("    ");
+    print_ir_value(&instr->ops[0]);
+    printf(" = PARAM:%c%d ", ir_type_suffix(instr->param.type), instr->param.type->size * 8);
+    if (instr->op_count == 2) print_ir_value(&instr->ops[1]);
+    printf(" p%d\n", instr->param.param_index);
+}
 static void print_ir_builtin_va_start(const IR_Instruction *instr) {
     printf("    ");
     print_ir_value(&instr->ops[0]);
@@ -422,6 +429,9 @@ void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr) {
         break;
     case IR_BUILTIN_VA_ARG:
         print_ir_builtin_va_arg(instr);
+        break;
+    case IR_PARAM:
+        print_ir_param(instr);
         break;
     }
 }

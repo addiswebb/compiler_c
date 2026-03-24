@@ -87,6 +87,13 @@ void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, co
     fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src, dst_buf);
 }
 
+void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst) {
+    char src_buf[MAX_OPERAND_BUFFER_SIZE];
+    char dst_buf[MAX_OPERAND_BUFFER_SIZE];
+    x86_operand(src, src_buf, sizeof(src_buf));
+    x86_operand(dst, dst_buf, sizeof(dst_buf));
+    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src_buf, dst_buf);
+}
 void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst) {
     char src_buf[MAX_OPERAND_BUFFER_SIZE];
     x86_operand(src, src_buf, sizeof(src_buf));
