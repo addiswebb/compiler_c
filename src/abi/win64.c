@@ -11,8 +11,22 @@ const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS] = {RBX, RBP, RDI, RSI, R1
 const GP_Reg int_param_regs[PARAM_REGISTERS] = {RCX, RDX, R8, R9};
 const XMM_Reg float_param_regs[PARAM_REGISTERS] = {XMM0, XMM1, XMM2, XMM3};
 
-ABI_Result classify(Type *type) { return (ABI_Result){.class = {}, .memory = type->size > HIDDEN_PTR_SIZE}; }
+ABI_Result abi_classify(Type *type) { return (ABI_Result){.class = {}, .memory = type->size > HIDDEN_PTR_SIZE}; }
 
+IR_Value abi_lower_param_register(Type *type, int i) {
+    ASSERT(i >= 0 && i < PARAM_REGISTERS, "Win64 ABI Invalid param arg index %d\n", i);
+    IR_Value v = (IR_Value){.kind = IR_PHYS_REG,
+                            .phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0}};
+    v.kind = IR_PHYS_REG;
+    if (type->kind == T_FLOAT) {
+        v.phys_reg.kind = REG_XMM;
+        v.phys_reg.sse_reg = float_param_regs[i];
+    } else {
+        v.phys_reg.kind = REG_GP;
+        v.phys_reg.gp_reg = int_param_regs[i];
+    }
+    return v;
+}
 void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const StackSlot *symbol_slots,
                               const Array *symbol_map) {
     for (int i = 0; i < f->blocks_array.count; i++) {
@@ -21,11 +35,16 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
+                bool is_arg_param = k >= instr->op_count;
+                int instr_index = is_arg_param ? k - instr->op_count : k;
+                IR_CallArg *arg = is_arg_param ? get_call_arg(instr, instr_index) : NULL;
+                IR_Value *a = is_arg_param ? &arg->v : &instr->ops[instr_index];
 
-                if (k >= instr->op_count && (k - instr->op_count) < PARAM_REGISTERS) {
+                if (is_arg_param && instr_index < PARAM_REGISTERS) {
                     // TODO implement ir_phys_reg(a, function_registers[k-instr->op_count]);
-                    WARN("Cant handle param registers yet\n");
+                    WARN("ABI dependent code undergoing rewrite\n");
+                    *a = abi_lower_param_register(arg->type, instr_index);
+                    continue;
                 }
                 // Lower IR_VREG & IR_SYMBOL to IR_PHYS_REG
                 switch (a->kind) {
@@ -51,7 +70,6 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
         }
     }
 }
-
 void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     Type *s_t = instr->store.type;
     if (s_t->size > MAX_STRUCT_SIZE) {
@@ -239,39 +257,38 @@ Type *abi_func_type(Type *type) {
 
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
-    // switch (instr->ops[1].kind) {
-    // case IR_LITERAL:
-    // case IR_GLOBAL:
-    //     x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rdx");
-    //     break;
-    // case IR_STACK:
-    // case IR_PHYS_REG:
-    //     x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rdx");
-    //     break;
-    // case IR_VREG:
-    // case IR_MEM:
-    // case IR_FUNCTION:
-    // case IR_UNDEFINED:
-    //     PANIC("Sanity check failed\n");
-    // }
+    switch (instr->ops[1].kind) {
+    case IR_CONSTANT:
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rdx");
+        break;
+    case IR_PHYS_REG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rdx");
+        break;
+    case IR_SYMBOL:
+    case IR_INT_LITERAL:
+    case IR_VREG:
+    case IR_UNDEFINED:
+        PANIC("Sanity check failed\n");
+        break;
+    }
 
-    // switch (instr->ops[0].kind) {
-    // case IR_LITERAL:
-    // case IR_GLOBAL:
-    //     x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rcx");
-    //     break;
-    // case IR_STACK:
-    // case IR_PHYS_REG:
-    //     x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rcx");
-    //     break;
-    // case IR_VREG:
-    // case IR_MEM:
-    // case IR_FUNCTION:
-    // case IR_UNDEFINED:
-    //     PANIC("Sanity check failed\n");
-    // }
-    // fprintf(fp, "    mov $%d, %%r8\n", instr->memcpy.size);
-    // fprintf(fp, "    sub $40, %%rsp\n");
-    // fprintf(fp, "    call memcpy\n");
-    // fprintf(fp, "    add $40, %%rsp\n");
+    switch (instr->ops[1].kind) {
+    case IR_CONSTANT:
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rcx");
+        break;
+    case IR_PHYS_REG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rcx");
+        break;
+    case IR_SYMBOL:
+    case IR_INT_LITERAL:
+    case IR_VREG:
+    case IR_UNDEFINED:
+        PANIC("Sanity check failed\n");
+        break;
+    }
+
+    fprintf(fp, "    mov $%d, %%r8\n", instr->memcpy.size);
+    fprintf(fp, "    sub $40, %%rsp\n");
+    fprintf(fp, "    call memcpy\n");
+    fprintf(fp, "    add $40, %%rsp\n");
 }

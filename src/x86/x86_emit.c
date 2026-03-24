@@ -27,14 +27,12 @@ void x86_operand(const IR_Value *v, char *buf, const int n) {
             len += snprintf(buf, n, "%s", r->label);
             break;
         case REG_DATA_OFFSET:
-            // ASSERT(!r->scale, "Not lowering scale for physical registers yet\n");
             len += snprintf(buf, n, "%d", r->offset);
             break;
         case REG_DATA_CONST_INDEX:
             len += snprintf(buf, n, ".LC%d", r->const_index);
             break;
         case REG_DATA_NONE:
-            len += snprintf(buf, n, "%s", r->label);
             break;
         }
         if (r->data_kind != REG_DATA_NONE) len += snprintf(buf + len, n - len, "(");
@@ -286,30 +284,41 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
             return;
         case MOD:
             x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            char *mod_suffix;
+            char *reg;
             switch (t->size) {
             case 1:
                 fprintf(fp, "    cbw\n");
-                x86_emit_x(fp, sign_prefix, "div", "b", rhs);
-                x86_emit_rx(fp, "mov", "b", "", "%ah", dst);
-                return;
+                mod_suffix = "b";
+                reg = "%ah";
+                break;
             case 2:
                 fprintf(fp, "    cwde\n");
-                x86_emit_x(fp, sign_prefix, "div", "w", rhs);
-                x86_emit_rx(fp, "mov", "w", "", "%dx", dst);
-                return;
+                mod_suffix = "w";
+                reg = "%dx";
+                break;
             case 4:
                 fprintf(fp, "    cltd\n");
-                x86_emit_x(fp, sign_prefix, "div", "l", rhs);
-                x86_emit_rx(fp, "mov", "l", "", "%edx", dst);
-                return;
+                mod_suffix = "l";
+                reg = "%edx";
+                break;
             case 8:
                 fprintf(fp, "    cqo\n");
-                x86_emit_x(fp, sign_prefix, "div", "q", rhs);
-                x86_emit_rx(fp, "mov", "q", "", "%rdx", dst);
-                return;
+                mod_suffix = "q";
+                reg = "%rdx";
+                break;
             default:
                 PANIC("Tried to modulo int with unsupported size\n");
             }
+
+            if (rhs->kind == IR_INT_LITERAL) {
+                const char *rcx_reg = x86_rcx_reg(t);
+                x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg);
+                x86_emit_r(fp, sign_prefix, "div", mod_suffix, rcx_reg);
+            } else x86_emit_x(fp, sign_prefix, "div", mod_suffix, rhs);
+
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
+            return;
         case BW_AND:
             x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
             x86_emit_xr(fp, "and", op_suffix, "", rhs, rax_reg);

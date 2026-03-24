@@ -26,7 +26,7 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         return ir_address(ctx, v, 0);
     case N_UNARY:
         ASSERT(expr->unary.op == TK_MULTIPLY, "Can only generate *expr lvalue\n");
-        return ir_gen_lvalue(ctx, expr->unary.expr);
+        return ir_address(ctx, ir_gen_rvalue(ctx, expr->unary.expr), 0);
     case N_INDEX:
         // Uses more complex lowering for ptr -integer arithmetic in ir_gen_rvalue,
         //  By spoofing as binary `a-b` node instead of a[x]
@@ -40,12 +40,13 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     case N_MEMBER_ACCESS:
         IR_Value addr = ir_gen_lvalue(ctx, expr->member_access.identifier);
         if (!expr->member_access.offset) return addr;
-        return ir_binary(ctx, SUB, ir_next_virtual_reg(ctx->func), addr, ir_integer_literal(expr->member_access.offset), type_void_ptr);
+        return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), addr, ir_integer_literal(expr->member_access.offset), type_u64);
     case N_CAST:
-        // if (expr->cast.expr->type->kind == T_ARRAY || expr->cast.expr->type->kind == T_STRUCT) {
-        //     return ir_cast(ctx, ir_gen_lvalue(ctx, expr->cast.expr), expr->type, expr->cast.from);
-        // }
-        PANIC("Lvalue of N_CAST\n");
+        // Decay/implicit casting
+        if (expr->cast.expr->type->kind == T_ARRAY || expr->cast.expr->type->kind == T_STRUCT) {
+            return ir_gen_lvalue(ctx, expr->cast.expr);
+        }
+        PANIC("bad Lvalue of N_CAST\n");
     default:
         break;
     }
@@ -84,13 +85,18 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_INDEX:
     case N_IDENTIFIER:
         //   Change semantic analysis to leave printf as func, and (currently all are func ptr)
-        if (is_func_ptr(expr->type)) return ir_symbol_value(expr->identifier.symbol);
+        if (is_func_ptr(expr->type) || expr->type->kind == T_ARRAY) return ir_symbol_value(expr->identifier.symbol);
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_LITERAL:
         IR_Literal c = ir_literal(expr);
         return ir_smart_const(ctx, &c, expr->type);
     case N_BINARY:
         if (is_assignment_op(expr->binary.op)) {
+            if (expr->type->kind == T_STRUCT) {
+                ASSERT(expr->binary.op == TK_EQ, "Only direct assignment '=' is allowed between structs\n");
+                return ir_memcpy(ctx, ir_gen_lvalue(ctx, expr->binary.rhs), ir_gen_lvalue(ctx, expr->binary.lhs), expr->type->size);
+            }
+
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
             if (val.kind == IR_SYMBOL && val.symbol->kind == FUNC) {
@@ -98,20 +104,14 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                 val = ir_address(ctx, val, 0);
             }
             bool dereference = expr->binary.lhs->kind == N_INDEX || expr->binary.lhs->kind == N_MEMBER_ACCESS || is_deref(expr->binary.lhs);
-            // If it is '+=' or some '=' variant
+            // If it is assignment & binary op
             if (expr->binary.op != TK_EQ) {
-                IR_Value binop_val = dereference ? ir_load(ctx, addr, expr->binary.lhs->unary.expr->type) : addr;
+                IR_Value binop_val = ir_load(ctx, addr, dereference ? expr->binary.lhs->unary.expr->type : expr->binary.lhs->type);
                 if (expr->type->kind == T_POINTER) {
                     PANIC("Cannot x= pointers rn\n");
                 }
                 val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
                                 expr->type);
-            } else if (expr->type->kind == T_STRUCT) {
-                // memcpy for `struct = struct;`
-                // addr is already an address, val is not
-                IR_Value val_addr = ir_address(ctx, val, 0);
-                ir_memcpy(ctx, val_addr, addr, expr->type->size);
-                return val;
             }
             ir_store(ctx, addr, val, expr->type);
 
@@ -187,15 +187,15 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
                                                   ir_smart_const(ctx, &c, expr->type), expr->type);
             const IR_Value store_dst = ir_store(ctx, val_addr, binary_dst, expr->type);
             return expr->unary.associativity ? val : store_dst;
-        } else if (expr->unary.op == TK_AND) return ir_gen_lvalue(ctx, expr->unary.expr);    // & ref
-        else if (expr->unary.op == TK_MULTIPLY) return ir_gen_rvalue(ctx, expr->unary.expr); // * deref
+        } else if (expr->unary.op == TK_AND) return ir_gen_lvalue(ctx, expr->unary.expr);                              // & ref
+        else if (expr->unary.op == TK_MULTIPLY) return ir_load(ctx, ir_gen_rvalue(ctx, expr->unary.expr), expr->type); // * deref
         else if (expr->unary.op == TK_SIZEOF) return ir_integer_literal(expr->unary.expr->type->size);
         else return ir_unary(ctx, ir_unary_op(expr->unary.op), ir_gen_rvalue(ctx, expr->unary.expr), expr->type); // +/-/!/~(expr)
     case N_FUNCTION_CALL:
         return ir_call(ctx, expr);
     case N_CAST:
-        if (expr->cast.expr->type->kind == T_ARRAY) {
-            return ir_cast(ctx, ir_gen_lvalue(ctx, expr->cast.expr), expr->type, expr->cast.from);
+        if (expr->cast.from->kind == T_ARRAY && expr->type->kind == T_POINTER && expr->cast.from->base->kind == expr->type->base->kind) {
+            return ir_gen_rvalue(ctx, expr->cast.expr);
         }
         return ir_cast(ctx, ir_gen_rvalue(ctx, expr->cast.expr), expr->type, expr->cast.from);
     case N_BUILTIN:
@@ -420,7 +420,7 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
 
             IR_Value final_dst = dst;
             if (member_offset)
-                final_dst = ir_binary(ctx, SUB, ir_next_virtual_reg(ctx->func), dst, ir_integer_literal(member_offset), type_u64);
+                final_dst = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), dst, ir_integer_literal(member_offset), type_u64);
             ir_store(ctx, final_dst, ir_v, type);
         }
         break;
@@ -441,11 +441,11 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
         } else l = NULL;
         return ir_append_global(ctx->module, var_decl->var_decl.symbol, l);
     }
-    if (!var_decl->var_decl.is_defined) return;
 
+    append(&ctx->func->locals_array, &var_decl->var_decl.symbol);
+    if (!var_decl->var_decl.is_defined) return;
     // Handle locals
     IR_Value dst = ir_gen_lvalue(ctx, var_decl->var_decl.identifier);
-    append(&ctx->func->locals_array, &var_decl->var_decl.symbol);
 
     if (var_decl->var_decl.expr->kind == N_INIT_LIST) return ir_gen_init_list(ctx, dst, 0, var_decl->type, var_decl->var_decl.expr);
 
@@ -550,6 +550,12 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     */
 
     ir_begin_scope(fn);
+    // TODO Consider leaving this for now, create slots of %rax etc for function args or smt.
+    // To map symbol 'x' %x -> %rax, instead of -~(%rbp)
+    for (int i = 0; i < func->type->_func.params.count; i++) {
+        ParamDecl *p = get(&func->type->_func.params, i);
+        append(&fn->locals_array, &p->symbol);
+    }
 
     Type *abi_type = abi_func_type(func->type);
     // TODO: Win64 spill if variadic

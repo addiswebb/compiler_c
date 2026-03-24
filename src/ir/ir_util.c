@@ -476,13 +476,12 @@ void print_ir_phys_reg(const PhysReg *r) {
         break;
     case REG_DATA_OFFSET:
         // ASSERT(!r->scale, "Not lowering scale for physical registers yet\n");
-        if (r->offset) printf("%d", r->offset);
+        printf("%d", r->offset);
         break;
     case REG_DATA_CONST_INDEX:
         printf(".LC%d", r->const_index);
         break;
     case REG_DATA_NONE:
-        printf("%s", r->label);
         break;
     }
     if (r->data_kind != REG_DATA_NONE) printf("(");

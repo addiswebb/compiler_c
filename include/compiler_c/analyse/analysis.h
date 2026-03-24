@@ -3,7 +3,7 @@
 
 #include "compiler_c/ir/ir_module.h"
 
-#define DEBUG_LIFETIMES 1
+#define DEBUG_LIFETIMES 0
 
 /*
     Converts the given IR_Value to an IR_STACK value with a stack offset. Uses the precomputed stack slot and offset from Lifetimes.

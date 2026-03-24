@@ -46,7 +46,7 @@ struct PhysReg{
     RegDataKind data_kind;
     union{
         const char* label;
-        union{
+        struct{
             int offset;
             int scale;
         };

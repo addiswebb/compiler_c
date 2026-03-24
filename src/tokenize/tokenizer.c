@@ -739,7 +739,7 @@ const char *token_type_str(const TokenType type) {
     case TK_IDENTIFIER:
         return "Identifier";
     case TK_MOD:
-        return "\'%%\'";
+        return "\'%\'";
     case TK_EQ_EQ:
         return "\'==\'";
     case TK_PLUS_EQ:
@@ -751,7 +751,7 @@ const char *token_type_str(const TokenType type) {
     case TK_DIVIDE_EQ:
         return "\'/=\'";
     case TK_MOD_EQ:
-        return "\'%%=\'";
+        return "\'%=\'";
     case TK_NEQ:
         return "\'!=\'";
     case TK_LT:

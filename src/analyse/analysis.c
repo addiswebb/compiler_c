@@ -337,6 +337,13 @@ void ir_lower_symbol_value(IR_Value *v, const StackSlot *symbol_slots, const Arr
         break;
     }
 }
+
+IR_Value ir_ph(PhysReg phys) {
+    IR_Value v;
+    v.kind = IR_PHYS_REG;
+    v.phys_reg = phys;
+    return v;
+}
 void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count) {
     ASSERT(lts, "LTS is null\n");
     ASSERT(v->kind == IR_VREG, "Expected VREG IR Value\n");

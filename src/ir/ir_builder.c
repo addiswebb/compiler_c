@@ -4,12 +4,10 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_gen.h"
 #include "compiler_c/ir/ir_module.h"
-#include <stdio.h>
+#include "compiler_c/log/logger.h"
 
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
-    if (type->kind == T_ARRAY) {
-        printf("Hmm");
-    }
+    if(addr.kind == IR_PHYS_REG) printf("here");
     IR_Instruction i;
     i.op = IR_LOAD;
     i.ops[1] = addr;
@@ -148,7 +146,7 @@ IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, I
 }
 IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
     if (src.kind == IR_INT_LITERAL) return src;
-    if (from->kind == T_ARRAY && to->kind == T_POINTER && from->base->kind == to->base->kind) return src;
+    if (from->kind == T_ARRAY && to->kind == T_POINTER && from->base->kind == to->base->kind) PANIC("HOW");
     IR_Instruction i;
     i.op = IR_CAST;
     i.cast.from = from;
