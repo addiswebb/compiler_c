@@ -1,0 +1,55 @@
+name: CMake Build
+
+on:
+    push:
+        branches: ["master"]
+    pull_request:
+        branches: ["master"]
+
+jobs:
+    build-test:
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - name: win64
+                      os: windows-latest
+                      build_type: Release
+                    - name: sysv
+                      os: ubuntu-latest
+                      build_type: Release
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install Dependencies (Linux)
+              if: runner.os == 'Linux'
+              run: sudo apt-get update && sudo apt-get install -y cmake ninja-build python3-pip && pip3 install lit
+
+            - name: Install Dependencies Cmake (Windows)
+              if: runner.os == 'Windows'
+              uses: lukka/get-cmake@latest
+
+            - name: Install Dependencies Lit (Windows)
+              if: runner.os == 'Windows'
+              run: |
+                  python -m pip install --upgrade pip
+                  python -m pip install lit
+
+            - name: Configure CMake
+              run: cmake
+                  -B ${{ github.workspace }}/build
+                  -S ${{ github.workspace }}
+                  -G Ninja
+
+            - name: Build
+              run: cmake --build ${{ github.workspace }}/build
+
+            - name: Run Tests
+              run: lit -D compiler_exe=${{ github.workspace }}/build/compiler_c -vv ${{ github.workspace }}/tests
+
+            - name: Upload Build Artifact
+              uses: actions/upload-artifact@v5
+              with:
+                  name: build-${{ matrix.name }}
+                  path: ${{ github.workspace }}/build
