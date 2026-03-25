@@ -34,7 +34,9 @@ IR_Value ir_smart_const(IR_Context *ctx, IR_Literal *literal, Type *type) {
     // Also note that if %xmm0 holds p0, and %xmm0 is later used to store p5 later, it gets clobbered.
     // Use a safe xmm0 for general operations or place reg params last.
     if (literal->type->kind == T_INT) return ir_integer_literal(literal->i);
-    return ir_const(ctx, ir_append_literal(ctx->module, literal), type);
+    IR_Value l = ir_const(ctx, ir_append_literal(ctx->module, literal), type);
+    if (literal->type->kind == T_ARRAY && literal->type->base == type_i8) return ir_address(ctx, l, 0);
+    else return l;
 }
 // TODO: Always use the .LCx label, and replace it in analysis with the int literal (if type is compatible integer)
 IR_Value ir_const(IR_Context *ctx, int const_index, Type *type) {
@@ -93,14 +95,16 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     i.call.type = expr->func_call.callee->type->base; // TODO change to func def given type maybe? Currently trusting sema
     for (int j = 0; j < i.call.arg_array.capacity; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
-        ParamDecl *arg = get(&i.call.type->abi_func_type->_func.params, j);
+        Type *arg_type = param->type;
+        if (j < i.call.type->abi_func_type->_func.params.count)
+            arg_type = ((ParamDecl *)get(&i.call.type->abi_func_type->_func.params, j))->type;
 
         IR_Value val;
         if (param->type->kind == T_STRUCT && param->type->size > MAX_STRUCT_SIZE) val = ir_gen_lvalue(ctx, param);
         else if (param->type->kind == T_FUNCTION) val = ir_gen_lvalue(ctx, param);
         else val = ir_gen_rvalue(ctx, param);
 
-        append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg->type});
+        append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg_type});
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;

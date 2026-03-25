@@ -86,7 +86,7 @@ bool is_valid_cast(const Type *from, const Type *to) {
         // Can only cast array->pointer (pointer decay)
         return to->kind == T_POINTER && (from->base == to->base || to->base == type_void);
     }
-    if (to->kind == T_POINTER) return to->base == from;
+    if (to->kind == T_POINTER && from->kind != T_POINTER) return to->base == from;
     return true;
 }
 

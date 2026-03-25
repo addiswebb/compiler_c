@@ -204,9 +204,9 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     // +8 for push rbp (call emits push rbp, mov rsp, rbp)
     // 8 * spilled count, for n args after [0-3]
     // SHADOW_SPACE = 32, for windows ABI (linux = 0)
-    const int param_frame_size = SHADOW_SPACE + 8 * spilled_count + 8;
+    const int param_frame_size = align(SHADOW_SPACE + 8 * spilled_count, 16);
     // Place first stack param after rbp and Shadow space
-    int param_offset = 8 + SHADOW_SPACE;
+    int param_offset = SHADOW_SPACE;
     if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
         IR_CallArg *v = get_call_arg(instr, i);
@@ -276,13 +276,16 @@ Type *abi_func_type(Type *type) {
     abi_type->_func.params.count = type->_func.params.count;
     if (type->_func.return_type->kind == T_STRUCT) {
         if (abi_type->_func.return_type->size > MAX_STRUCT_SIZE) {
-            insert(&abi_type->_func.params, &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret"}, 0);
+            // Below needs a symbol
+            insert(&abi_type->_func.params,
+                   &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret", .symbol = NULL}, 0);
             abi_type->_func.return_type = type_void;
         } else abi_type->_func.return_type = get_integer_type(abi_type->_func.return_type->size);
         changed = true;
     }
     for (int i = 0; i < abi_type->_func.params.count; i++) {
         ParamDecl *d = get(&abi_type->_func.params, i);
+        ParamDecl *x = get(&type->_func.params, i);
         if (d->type->size > MAX_STRUCT_SIZE) {
             d->type = get_pointer_type(d->type);
             changed = true;

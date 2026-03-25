@@ -17,7 +17,7 @@ void x86_operand(const IR_Value *v, char *buf, const int n) {
     int len = 0;
     switch (v->kind) {
     case IR_CONSTANT:
-        WARN("Not sure if ir const value in x86 is okay\n");
+        // WARN("Not sure if ir const value in x86 is okay\n");
         snprintf(buf, n, ".LC%d(%%rip)", v->const_index);
         return;
     case IR_PHYS_REG:

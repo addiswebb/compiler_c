@@ -27,13 +27,15 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     case N_UNARY:
         ASSERT(expr->unary.op == TK_MULTIPLY, "Can only generate *expr lvalue\n");
         return ir_address(ctx, ir_gen_rvalue(ctx, expr->unary.expr), 0);
+    case N_BINARY:
+        return ir_gen_rvalue(ctx, expr);
     case N_INDEX:
         // Uses more complex lowering for ptr -integer arithmetic in ir_gen_rvalue,
         //  By spoofing as binary `a-b` node instead of a[x]
         Node bin;
         bin.kind = N_BINARY;
         bin.binary.lhs = expr->index.identifier;
-        bin.binary.op = TK_MINUS;
+        bin.binary.op = TK_PLUS;
         bin.binary.rhs = expr->index.index;
         bin.type = expr->index.index->type;
         return ir_gen_rvalue(ctx, &bin);
@@ -100,7 +102,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
             if (val.kind == IR_SYMBOL && val.symbol->kind == FUNC) {
-                DEBUG("NEEDED IR_FUNC CHECK\n");
+                // DEBUG("NEEDED IR_FUNC CHECK\n");
                 val = ir_address(ctx, val, 0);
             }
             bool dereference = expr->binary.lhs->kind == N_INDEX || expr->binary.lhs->kind == N_MEMBER_ACCESS || is_deref(expr->binary.lhs);
@@ -188,14 +190,16 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             const IR_Value store_dst = ir_store(ctx, val_addr, binary_dst, expr->type);
             return expr->unary.associativity ? val : store_dst;
         } else if (expr->unary.op == TK_AND) return ir_gen_lvalue(ctx, expr->unary.expr);                              // & ref
-        else if (expr->unary.op == TK_MULTIPLY) return ir_load(ctx, ir_gen_rvalue(ctx, expr->unary.expr), expr->type); // * deref
+        else if (expr->unary.op == TK_MULTIPLY) return ir_load(ctx, ir_gen_lvalue(ctx, expr->unary.expr), expr->type); // * deref
         else if (expr->unary.op == TK_SIZEOF) return ir_integer_literal(expr->unary.expr->type->size);
         else return ir_unary(ctx, ir_unary_op(expr->unary.op), ir_gen_rvalue(ctx, expr->unary.expr), expr->type); // +/-/!/~(expr)
     case N_FUNCTION_CALL:
         return ir_call(ctx, expr);
     case N_CAST:
         if (expr->cast.from->kind == T_ARRAY && expr->type->kind == T_POINTER && expr->cast.from->base->kind == expr->type->base->kind) {
-            return ir_gen_rvalue(ctx, expr->cast.expr);
+            // WARN("cast skipped HERE\n");
+            return ir_gen_lvalue(ctx, expr->cast.expr);
+            // return ir_gen_rvalue(ctx, expr->cast.expr);
         }
         return ir_cast(ctx, ir_gen_rvalue(ctx, expr->cast.expr), expr->type, expr->cast.from);
     case N_BUILTIN:
@@ -546,13 +550,12 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
 
     ir_begin_scope(fn);
 
-    Type *abi_type = abi_func_type(func->type);
-    func->type->abi_func_type = abi_type;
+    Type *abi_type = func->type->abi_func_type;
+    ASSERT(abi_type, "Function did not recieve ABI type\n");
     // Add ABI specific param symbols to the function
     for (int i = 0; i < abi_type->_func.params.count; i++) {
         ParamDecl *abi_d = get(&abi_type->_func.params, i);
         ParamDecl *d = get(&func->type->_func.params, i);
-        abi_d->symbol->type = abi_d->type;
         d->symbol->type = d->type;
         append(&fn->locals_array, &d->symbol);
         ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
