@@ -1,19 +1,5 @@
-typedef struct {
-    int a;
-    int b;
-    int c;
-} A;
-
-int foo(A a) {
-    // return a.a + a.b;
-    return a.a + a.b + a.c;
-}
+enum E { A = 5, B, C };
 
 int main() {
-    A a = {
-        1,
-        7,
-        3,
-    };
-    return foo(a);
+    return A + B + C; // 5 + 6 + 7 = 18
 }

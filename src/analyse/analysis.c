@@ -275,11 +275,10 @@ void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_siz
                 PANIC("Failed to realloc new_slots\n");
             }
             slots = new_slots;
-            slots[slot_count].v = ir_stack_value(l->v->size, l->v->align, *stack_size);
+            l->stack_offset = -(*stack_size) - l->v->size;
+            slots[slot_count].v = ir_stack_value(l->v->size, l->v->align, l->stack_offset);
             slots[slot_count].free_at = l->end;
-            l->stack_offset = *stack_size;
             l->stack_slot = slot_count++;
-            DEBUG("slot %d -> %d\n", i, -(l->stack_offset + 8));
             *stack_size += l->v->size;
         }
     }
@@ -345,6 +344,9 @@ IR_Value ir_gp_register(GP_Reg reg) {
                       }};
 }
 IR_Value ir_stack_value(int size, int align, int offset) {
+    if (offset > 0) {
+        printf("HoW");
+    }
     return (IR_Value){.kind = IR_PHYS_REG,
                       .size = size,
                       .align = align,
@@ -359,7 +361,7 @@ IR_Value ir_stack_value(int size, int align, int offset) {
 void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count) {
     ASSERT(lts, "LTS is null\n");
     ASSERT(v->kind == IR_VREG, "Expected VREG IR Value\n");
-    *v = ir_stack_value(v->size, v->align, -(get_lifetime(lts, lts_count, v->vreg)->stack_offset + 8));
+    *v = ir_stack_value(v->size, v->align, get_lifetime(lts, lts_count, v->vreg)->stack_offset);
 }
 
 void ir_lower_const_value(IR_Value *v) {
@@ -415,8 +417,7 @@ void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol
         Symbol *local_symbol = get_local_symbol(f, i);
         int size = align(local_symbol->type->size, 8);
         // Todo track scopes on symbol, so that we can reuse slots instead of '-1'
-        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, -(*frame_size + 8)), .free_at = -1});
-        DEBUG("local %d -> %d\n", i, -(*frame_size + 8));
+        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, -(*frame_size) - size), .free_at = -1});
         append(symbol_map, &local_symbol);
         *frame_size += size;
     }
@@ -428,9 +429,11 @@ void analysis(const IR_Context *ctx) {
 
         lower_ir_for_asm(f);
 
-        printf("vvvvvvvvvvvvvvvvvvvvv\n");
-        print_ir_function(ctx, f);
-        printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
+        if (DEBUG_LOWERED_IR) {
+            printf("vvvvvvvvvvvvvvvvvvvvv\n");
+            print_ir_function(ctx, f);
+            printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
+        }
 
         // Initialize Control Flow Graph Variables per block
         ir_init_func_cfg(f);
@@ -460,10 +463,10 @@ void analysis(const IR_Context *ctx) {
             }
         }
 
-        Array symbol_map;
-        Array symbol_slots;
+        Array symbol_map = {};
+        Array symbol_slots = {};
 
-        int frame_size = 8;
+        int frame_size = 0;
 
         // Allocate local variables
         symbol_slot_allocation(f, &frame_size, &symbol_slots, &symbol_map);
@@ -473,7 +476,7 @@ void analysis(const IR_Context *ctx) {
         // Update all instances of IR_Value with the correct stack offsets
         lower_ir_values_to_stack(f, lifetimes, reg_count, &symbol_slots, &symbol_map);
 
-        // Verify all IR_Values are now of IR_STACK kind,
+        // Verify all IR_Values are now x86 compatible (IR_PHYS_REG, IR_CONSTANT, IR_INT_LITERAL, or void return types),
         verify_completion(f);
         f->stack_size = frame_size;
 

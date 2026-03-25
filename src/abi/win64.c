@@ -39,13 +39,6 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
                 int instr_index = is_arg_param ? k - instr->op_count : k;
                 IR_CallArg *arg = is_arg_param ? get_call_arg(instr, instr_index) : NULL;
                 IR_Value *a = is_arg_param ? &arg->v : &instr->ops[instr_index];
-
-                // if (is_arg_param && instr_index < PARAM_REGISTERS) {
-                //     // TODO implement ir_phys_reg(a, function_registers[k-instr->op_count]);
-                //     WARN("ABI dependent code undergoing rewrite\n");
-                //     *a = abi_lower_param_register(arg->type, instr_index);
-                //     continue;
-                // }
                 // Lower IR_VREG & IR_SYMBOL to IR_PHYS_REG
                 switch (a->kind) {
                 case IR_VREG:
@@ -73,7 +66,7 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
 void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     Type *s_t = instr->store.type;
     if (s_t->size > MAX_STRUCT_SIZE) {
-        WARN("ABI lower store\n");
+        PANIC("ABI lower store\n");
         // Hidden pointer
         IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
         f->max_reg++;
@@ -86,6 +79,7 @@ void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
         insert(&b->instruction_array, &addr, (*i)++);
         set(&b->instruction_array, &memcpy, *i);
     } else {
+        WARN("Fr?");
         IR_Instruction store = *instr;
         store.store.type = get_integer_type(s_t->size);
         store.ops[0].size = store.store.type->size;
@@ -95,27 +89,27 @@ void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
 }
 
 void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
-    WARN("ABI lower ret\n");
-    Type *s_t = instr->call.type->_func.return_type;
-    if (s_t->kind == T_STRUCT) {
-        //     IR_Value s_v = {.kind = IR_MEM, .size = s_t->size, .align = s_t->align, .mem = f->locals_array.count, .offset = 0};
-        instr->call.type = abi_func_type(instr->call.type);
-        //     append(&f->locals_array, &(IR_Var){"_s", s_v, s_t});
-        //     if (s_t->size > MAX_STRUCT_SIZE) {
-        //         IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
-        //         IR_Instruction local_addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = instr->ops[0], [1] = s_v}};
-        //         insert(&instr->call.arg_array, &(IR_Var){.name = "_sret", .reg = instr->ops[0], .type = get_pointer_type(s_t)}, 0);
-        //         instr->ops[0] = ir_no_value;
-        //         insert(&b->instruction_array, &alloca, (*i)++);
-        //         insert(&b->instruction_array, &local_addr, (*i)++);
-        //     } else {
-        //         IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = instr->ops[0], [1] = s_v}};
-        //         instr->ops[0] = s_v;
-        //         IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
-        //         insert(&b->instruction_array, &alloca, (*i)++);
-        //         insert(&b->instruction_array, &addr, ++(*i));
-        //     }
-    }
+    // WARN("ABI lower call\n");
+    // Type *s_t = instr->call.type->_func.return_type;
+    // if (s_t->kind == T_STRUCT) {
+    //     IR_Value s_v = {.kind = IR_MEM, .size = s_t->size, .align = s_t->align, .mem = f->locals_array.count, .offset = 0};
+    // instr->call.type = abi_func_type(instr->call.type);
+    //     append(&f->locals_array, &(IR_Var){"_s", s_v, s_t});
+    //     if (s_t->size > MAX_STRUCT_SIZE) {
+    //         IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
+    //         IR_Instruction local_addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = instr->ops[0], [1] = s_v}};
+    //         insert(&instr->call.arg_array, &(IR_Var){.name = "_sret", .reg = instr->ops[0], .type = get_pointer_type(s_t)}, 0);
+    //         instr->ops[0] = ir_no_value;
+    //         insert(&b->instruction_array, &alloca, (*i)++);
+    //         insert(&b->instruction_array, &local_addr, (*i)++);
+    //     } else {
+    //         IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = instr->ops[0], [1] = s_v}};
+    //         instr->ops[0] = s_v;
+    //         IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
+    //         insert(&b->instruction_array, &alloca, (*i)++);
+    //         insert(&b->instruction_array, &addr, ++(*i));
+    //     }
+    // }
     // Convert to int chunks or pointer
     // for (int k = 0; k < instr->call.arg_array.count; k++) {
     //     IR_Var *arg = get_arg(instr, k);
@@ -163,7 +157,7 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
     } else instr->param.type = get_integer_type(instr->param.type->size);
 }
 void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
-    WARN("ABI lower ret\n");
+    // WARN("ABI lower ret\n");
     // Type *s_t = instr->ret.type;
     // if (s_t->size > MAX_STRUCT_SIZE) {
     //     instr->ret.type = get_pointer_type(s_t);
