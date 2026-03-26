@@ -8,7 +8,7 @@
 #include "compiler_c/log/logger.h"
 
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
-    if (addr.kind == IR_PHYS_REG) printf("here");
+    if (type->kind == T_STRUCT) printf("here");
     IR_Instruction i;
     i.op = IR_LOAD;
     i.ops[1] = addr;
@@ -92,7 +92,9 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     i.ops[1] = ir_gen_rvalue(ctx, expr->func_call.callee);
     ctx->func_not_address = false;
     array_init(&i.call.arg_array, expr->func_call.params_array.count, sizeof(IR_CallArg));
-    i.call.type = expr->func_call.callee->type->base; // TODO change to func def given type maybe? Currently trusting sema
+    i.call.type = expr->func_call.callee->type;
+    if (i.call.type->kind == T_POINTER) i.call.type = i.call.type->base;
+    ASSERT(i.call.type->abi_func_type, "Function Type did not recieve ABI type\n");
     for (int j = 0; j < i.call.arg_array.capacity; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
         Type *arg_type = param->type;
@@ -101,7 +103,8 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
 
         IR_Value val;
         if (param->type->kind == T_STRUCT && param->type->size > MAX_STRUCT_SIZE) val = ir_gen_lvalue(ctx, param);
-        else if (param->type->kind == T_FUNCTION) val = ir_gen_lvalue(ctx, param);
+        else if (param->type->kind == T_FUNCTION || is_func_ptr(param->type)) val = ir_gen_lvalue(ctx, param);
+        // else if (is_func_ptr(param->type)) val = ir_gen_rvalue(ctx, param);
         else val = ir_gen_rvalue(ctx, param);
 
         append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg_type});

@@ -27,6 +27,7 @@ Type *abi_func_type(Type *type);
 
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
 
+void abi_generate_types();
 #ifdef _WIN64
 
 #define MAX_STRUCT_SIZE 8

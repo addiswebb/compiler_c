@@ -109,11 +109,10 @@ Type *new_function_type(Type *type, Array params, bool is_variadic) {
     fn_type->kind = T_FUNCTION;
     fn_type->size = sizeof(void);
     fn_type->align = sizeof(void);
-    fn_type->base = NULL;
+    fn_type->abi_func_type = NULL;
     fn_type->_func.return_type = type;
     fn_type->_func.params = params;
     fn_type->_func.is_variadic = is_variadic;
-    fn_type->abi_func_type = abi_func_type(fn_type);
     return fn_type;
 }
 Type *new_pointer_type(Type *type) {

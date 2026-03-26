@@ -346,15 +346,14 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         semantic_analysis(sema_ctx, p, nm, node->func_call.callee);
         Type *callee_type = node->func_call.callee->type;
 
-        ASSERT(callee_type != type_invalid, "Invalid type of Function %s\n", fn_name);
+        // if (callee_type->kind == T_FUNCTION) {
+        //     callee_type = get_pointer_type(callee_type);
+        //     node->func_call.callee->type = callee_type;
+        // }
+        ASSERT(callee_type->kind == T_FUNCTION || (callee_type->kind == T_POINTER && callee_type->base->kind == T_FUNCTION),
+               "Cannot call non function type\n");
 
-        if (callee_type->kind == T_FUNCTION) {
-            callee_type = get_pointer_type(callee_type);
-            node->func_call.callee->type = callee_type;
-        }
-        ASSERT(callee_type->kind == T_POINTER && callee_type->base->kind == T_FUNCTION, "Cannot call non function type\n");
-
-        Type *fn_type = callee_type->base;
+        Type *fn_type = callee_type->kind == T_FUNCTION ? callee_type : callee_type->base;
         if (!fn_type->_func.is_variadic && fn_type->_func.params.count != node->func_call.params_array.count) {
             PANIC("Argument count mismatch: Function %s expects %d found %d\n", fn_name, fn_type->_func.params.count,
                   node->func_call.params_array.count);

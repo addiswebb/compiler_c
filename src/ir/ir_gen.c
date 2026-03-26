@@ -87,7 +87,8 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_INDEX:
     case N_IDENTIFIER:
         //   Change semantic analysis to leave printf as func, and (currently all are func ptr)
-        if (is_func_ptr(expr->type) || expr->type->kind == T_ARRAY) return ir_symbol_value(expr->identifier.symbol);
+        if (is_func_ptr(expr->type) || expr->type->kind == T_FUNCTION || expr->type->kind == T_ARRAY)
+            return ir_symbol_value(expr->identifier.symbol);
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_LITERAL:
         IR_Literal c = ir_literal(expr);
@@ -190,7 +191,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             const IR_Value store_dst = ir_store(ctx, val_addr, binary_dst, expr->type);
             return expr->unary.associativity ? val : store_dst;
         } else if (expr->unary.op == TK_AND) return ir_gen_lvalue(ctx, expr->unary.expr);                              // & ref
-        else if (expr->unary.op == TK_MULTIPLY) return ir_load(ctx, ir_gen_lvalue(ctx, expr->unary.expr), expr->type); // * deref
+        else if (expr->unary.op == TK_MULTIPLY) return ir_load(ctx, ir_gen_rvalue(ctx, expr->unary.expr), expr->type); // * deref
         else if (expr->unary.op == TK_SIZEOF) return ir_integer_literal(expr->unary.expr->type->size);
         else return ir_unary(ctx, ir_unary_op(expr->unary.op), ir_gen_rvalue(ctx, expr->unary.expr), expr->type); // +/-/!/~(expr)
     case N_FUNCTION_CALL:

@@ -1,21 +1,26 @@
-typedef struct {
-    int a;
-    int b;
-    int c;
-    int d;
-    int e;
-} A;
+extern void qsort(int *Base, long NumOfElements, long SizeOfElements, int (*cmp)(const int *, const int *));
+extern int printf(const char *fmt, ...);
 
-typedef struct {
-    int x;
-    int y;
-} B;
+int cmp_int(const int *a, const int *b) {
+    int x = *a;
+    int y = *b;
 
-int foo(A a) { return a.a + a.b + a.c + a.d + a.e; }
-int buzz(B b) { return b.x + b.y; }
+    if (x < y) return -1;
+    if (x > y) return 1;
+    return 0;
+}
 
 int main() {
-    A a = {1, 2, 3, 4, 5};
-    B b = {10, 20};
-    return foo(a) + buzz(b);
+    int arr[] = {5, 1, 4, 2, 3};
+    int n = 5;
+
+    qsort(arr, n, 4, cmp_int);
+
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+
+    printf("\n");
+
+    return 0;
 }

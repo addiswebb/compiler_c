@@ -120,6 +120,7 @@ int compile(Compiler *compiler) {
 
     if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
 
+    abi_generate_types();
     lower_nodes(&compiler->nm);
 
     if (compiler->flags & COMP_FLAG_ASM || compiler->flags & COMP_FLAG_IR) {
