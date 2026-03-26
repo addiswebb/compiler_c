@@ -8,7 +8,7 @@
 #include "compiler_c/log/logger.h"
 
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
-    if (type->kind == T_STRUCT) printf("here");
+    if (type->kind == T_STRUCT) printf("here\n");
     IR_Instruction i;
     i.op = IR_LOAD;
     i.ops[1] = addr;

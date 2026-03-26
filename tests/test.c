@@ -1,26 +1,14 @@
-extern void qsort(int *Base, long NumOfElements, long SizeOfElements, int (*cmp)(const int *, const int *));
-extern int printf(const char *fmt, ...);
+typedef struct {
+    int a;
+    int b;
+} A;
 
-int cmp_int(const int *a, const int *b) {
-    int x = *a;
-    int y = *b;
-
-    if (x < y) return -1;
-    if (x > y) return 1;
-    return 0;
+A foo(int x, int y) {
+    A s = {.a = x, .b = y};
+    return s;
 }
 
 int main() {
-    int arr[] = {5, 1, 4, 2, 3};
-    int n = 5;
-
-    qsort(arr, n, 4, cmp_int);
-
-    for (int i = 0; i < n; i++) {
-        printf("%d ", arr[i]);
-    }
-
-    printf("\n");
-
-    return 0;
+    A z = foo(1, 5);
+    return z.a;
 }

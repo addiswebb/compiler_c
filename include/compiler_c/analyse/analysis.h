@@ -24,6 +24,7 @@ void ir_lower_const_value(IR_Value *v);
 */
 void analysis(const IR_Context *ctx);
 
+void generate_types();
 void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map);
 int get_symbol_index(const Array *symbol_map, Symbol *symbol);
 

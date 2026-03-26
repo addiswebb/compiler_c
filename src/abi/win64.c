@@ -17,7 +17,6 @@ IR_Value abi_lower_param_register(Type *type, int i) {
     ASSERT(i >= 0 && i < PARAM_REGISTERS, "Win64 ABI Invalid param arg index %d\n", i);
     IR_Value v = (IR_Value){.kind = IR_PHYS_REG,
                             .phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0}};
-    v.kind = IR_PHYS_REG;
     if (type->kind == T_FLOAT) {
         v.phys_reg.kind = REG_XMM;
         v.phys_reg.sse_reg = float_param_regs[i];
@@ -27,44 +26,9 @@ IR_Value abi_lower_param_register(Type *type, int i) {
     }
     return v;
 }
-void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
-                              const Array *symbol_map) {
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        const IR_Block *b = get_block(f, i);
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
-            for (int k = 0; k < value_count; k++) {
-                bool is_arg_param = k >= instr->op_count;
-                int instr_index = is_arg_param ? k - instr->op_count : k;
-                IR_CallArg *arg = is_arg_param ? get_call_arg(instr, instr_index) : NULL;
-                IR_Value *a = is_arg_param ? &arg->v : &instr->ops[instr_index];
-                // Lower IR_VREG & IR_SYMBOL to IR_PHYS_REG
-                switch (a->kind) {
-                case IR_VREG:
-                    ir_lower_vreg_value(a, lts, lts_count);
-                    break;
-                case IR_SYMBOL:
-                    ir_lower_symbol_value(a, symbol_slots, symbol_map);
-                    break;
-                case IR_CONSTANT:
-                    ir_lower_const_value(a);
-                    break;
-                case IR_PHYS_REG:
-                case IR_INT_LITERAL:
-                    break;
-                case IR_UNDEFINED:
-                    if (instr->op == IR_RET && instr->ret.type == type_void) break;
-                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) break;
-                    PANIC("An undefined IR value made it to analysis!!\n");
-                    break;
-                }
-            }
-        }
-    }
-}
 void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     Type *s_t = instr->store.type;
+    if (s_t->kind != T_STRUCT) return;
     if (s_t->size > MAX_STRUCT_SIZE) {
         PANIC("ABI lower store\n");
         // Hidden pointer
@@ -79,7 +43,7 @@ void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
         insert(&b->instruction_array, &addr, (*i)++);
         set(&b->instruction_array, &memcpy, *i);
     } else {
-        WARN("Fr?");
+        WARN("Should be unreachable\n");
         IR_Instruction store = *instr;
         store.store.type = get_integer_type(s_t->size);
         store.ops[0].size = store.store.type->size;
@@ -88,46 +52,6 @@ void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
     }
 }
 
-void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
-    // WARN("ABI lower call\n");
-    // Type *s_t = instr->call.type->_func.return_type;
-    // if (s_t->kind == T_STRUCT) {
-    //     IR_Value s_v = {.kind = IR_MEM, .size = s_t->size, .align = s_t->align, .mem = f->locals_array.count, .offset = 0};
-    // instr->call.type = abi_func_type(instr->call.type);
-    //     append(&f->locals_array, &(IR_Var){"_s", s_v, s_t});
-    //     if (s_t->size > MAX_STRUCT_SIZE) {
-    //         IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
-    //         IR_Instruction local_addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = instr->ops[0], [1] = s_v}};
-    //         insert(&instr->call.arg_array, &(IR_Var){.name = "_sret", .reg = instr->ops[0], .type = get_pointer_type(s_t)}, 0);
-    //         instr->ops[0] = ir_no_value;
-    //         insert(&b->instruction_array, &alloca, (*i)++);
-    //         insert(&b->instruction_array, &local_addr, (*i)++);
-    //     } else {
-    //         IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = instr->ops[0], [1] = s_v}};
-    //         instr->ops[0] = s_v;
-    //         IR_Instruction alloca = {.op = IR_ALLOCA, .op_count = 1, .ops = {[0] = s_v}, .alloca = {.size = s_t->size}};
-    //         insert(&b->instruction_array, &alloca, (*i)++);
-    //         insert(&b->instruction_array, &addr, ++(*i));
-    //     }
-    // }
-    // Convert to int chunks or pointer
-    // for (int k = 0; k < instr->call.arg_array.count; k++) {
-    //     IR_Var *arg = get_arg(instr, k);
-    //     if (arg->type->kind == T_STRUCT) {
-    //         Type *s_t = arg->type;
-    //         if (s_t->kind == T_VOID) continue;
-    //         if (s_t->size > MAX_STRUCT_SIZE) {
-    //             IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .reg = f->next_reg++};
-    //             f->max_reg++;
-    //             IR_Instruction addr_instr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = arg->reg}};
-    //             arg->type = get_pointer_type(arg->type);
-    //             arg->name = "_tmp_s_ptr";
-    //             arg->reg = addr_instr.ops[0];
-    //             insert(&b->instruction_array, &addr_instr, (*i)++);
-    //         } else arg->type = get_integer_type(s_t->size);
-    //     }
-    // }
-}
 void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     Type *type = instr->param.type;
     if (type->size > MAX_STRUCT_SIZE) type = type_u64;
@@ -159,41 +83,24 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
     }
 }
 void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
-    // WARN("ABI lower ret\n");
-    // Type *s_t = instr->ret.type;
-    // if (s_t->size > MAX_STRUCT_SIZE) {
-    //     instr->ret.type = get_pointer_type(s_t);
-    //     IR_Value local_v = {.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
-    //     f->max_reg++;
-    //     IR_Instruction local_addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = local_v, [1] = instr->ops[0]}};
-    //     IR_Instruction memcpy = {
-    //         .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = ir_mem_value(0, instr->ret.type), [1] = local_v}, .memcpy = {.size =
-    //         s_t->size}};
-    //     instr->ops[0] = ir_no_value;
-    //     instr->ret.type = type_void;
-    //     insert(&b->instruction_array, &local_addr, (*i)++);
-    //     insert(&b->instruction_array, &memcpy, (*i)++);
-    // } else instr->ret.type = get_integer_type(s_t->size);
-}
-
-void lower_ir_for_asm(IR_Function *f) {
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        IR_Block *b = get_block(f, i);
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            if (instr->op == IR_CALL) {
-                abi_lower_call(f, b, instr, &j);
-            } else if (instr->op == IR_STORE && instr->store.type->kind == T_STRUCT) {
-                abi_lower_store(f, b, instr, &j);
-            } else if (instr->op == IR_RET) {
-                abi_lower_ret(f, b, instr, &j);
-            } else if (instr->op == IR_PARAM) {
-                abi_lower_param(f, b, instr, &j);
-            } else if (instr->op == IR_LOAD) {
-                if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
-            }
-        }
-    }
+    Type *s_t = instr->ret.type;
+    ASSERT(s_t->kind != T_STRUCT, "Win64 ABI Struct returns are unimplemented\n");
+    // if (s_t->kind == T_STRUCT) {
+    //     if (s_t->size > MAX_STRUCT_SIZE) {
+    //         instr->ret.type = get_pointer_type(s_t);
+    //         IR_Value local_v = {.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
+    //         f->max_reg++;
+    //         IR_Instruction local_addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = local_v, [1] = instr->ops[0]}};
+    //         IR_Instruction memcpy = {.op = IR_MEMCPY,
+    //                                  .op_count = 2,
+    //                                  .ops = {[0] = ir_mem_value(0, instr->ret.type), [1] = local_v},
+    //                                  .memcpy = {.size = s_t->size}};
+    //         instr->ops[0] = ir_no_value;
+    //         instr->ret.type = type_void;
+    //         insert(&b->instruction_array, &local_addr, (*i)++);
+    //         insert(&b->instruction_array, &memcpy, (*i)++);
+    //     } else instr->ret.type = get_integer_type(s_t->size);
+    // }
 }
 
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
@@ -219,30 +126,29 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         }
         bool use_register = false;
         use_register = gp_index < PARAM_REGISTERS;
+        const char *suffix = x86_op_suffix(arg_type);
         switch (arg_type->kind) {
         case T_INT:
         case T_POINTER:
             if (use_register) {
-                x86_emit_xr(fp, "mov", x86_op_suffix(arg_type), "", &v->v,
-                            gp_register_str[int_param_regs[gp_index++]][reg_size(arg_type->size)]);
+                x86_emit_xr(fp, "mov", suffix, "", &v->v, gp_register_str[int_param_regs[gp_index++]][reg_size(arg_type->size)]);
             } else {
                 const char *v_reg = x86_rax_reg(arg_type);
-                x86_emit_xr(fp, "mov", x86_op_suffix(arg_type), "", &v->v, v_reg);
-                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", x86_op_suffix(arg_type), v_reg, param_offset);
+                x86_emit_xr(fp, "mov", suffix, "", &v->v, v_reg);
+                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", suffix, v_reg, param_offset);
                 param_offset += 8;
             }
             break;
         case T_FLOAT:
-            const char *f_suffix = x86_op_suffix(arg_type);
             if (use_register) {
                 if (instr->call.type->_func.is_variadic) {
                     x86_emit_xr(fp, "mov", x86_integer_op_suffix(arg_type->size), "", &v->v,
                                 gp_register_str[int_param_regs[gp_index]][reg_size(arg_type->size)]);
                 }
-                x86_emit_xr(fp, "mov", f_suffix, "", &v->v, sse_register_str[float_param_regs[gp_index++]]);
+                x86_emit_xr(fp, "mov", suffix, "", &v->v, sse_register_str[float_param_regs[gp_index++]]);
             } else {
-                x86_emit_xr(fp, "mov", f_suffix, "", &v->v, sse_register_str[XMM0]);
-                fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", f_suffix, param_offset);
+                x86_emit_xr(fp, "mov", suffix, "", &v->v, sse_register_str[XMM0]);
+                fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", suffix, param_offset);
                 param_offset += 8;
             }
             break;
@@ -282,26 +188,19 @@ Type *abi_func_type(Type *type) {
             insert(&abi_type->_func.params,
                    &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret", .symbol = NULL}, 0);
             abi_type->_func.return_type = type_void;
-        } else abi_type->_func.return_type = get_integer_type(abi_type->_func.return_type->size);
+        } else
+            abi_type->_func.return_type = abi_type->_func.return_type->kind == T_FLOAT ? get_integer_type(abi_type->_func.return_type->size)
+                                                                                       : get_float_type(abi_type->_func.return_type->size);
         changed = true;
     }
     for (int i = 0; i < abi_type->_func.params.count; i++) {
         ParamDecl *d = get(&abi_type->_func.params, i);
-        ParamDecl *x = get(&type->_func.params, i);
         if (d->type->size > MAX_STRUCT_SIZE) {
             d->type = get_pointer_type(d->type);
             changed = true;
         }
     }
     return changed ? abi_type : type;
-}
-
-void abi_generate_types() {
-    int n = typepool.count;
-    for (int i = 0; i < n; i++) {
-        Type *t = (Type *)arena_get(&typepool, i);
-        if (t->kind == T_FUNCTION) t->abi_func_type = abi_func_type(t);
-    }
 }
 
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
@@ -337,7 +236,7 @@ void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     }
 
     fprintf(fp, "    mov $%d, %%r8\n", instr->memcpy.size);
-    fprintf(fp, "    sub $40, %%rsp\n");
+    fprintf(fp, "    sub $32, %%rsp\n");
     fprintf(fp, "    call memcpy\n");
-    fprintf(fp, "    add $40, %%rsp\n");
+    fprintf(fp, "    add $32, %%rsp\n");
 }

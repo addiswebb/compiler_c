@@ -425,6 +425,67 @@ void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol
     }
 }
 
+void generate_types() {
+    int n = typepool.count;
+    for (int i = 0; i < n; i++) {
+        Type *t = (Type *)arena_get(&typepool, i);
+        if (t->kind == T_FUNCTION) t->abi_func_type = abi_func_type(t);
+    }
+}
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
+                              const Array *symbol_map) {
+    for (int i = 0; i < f->blocks_array.count; i++) {
+        const IR_Block *b = get_block(f, i);
+        for (int j = 0; j < b->instruction_array.count; j++) {
+            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
+            for (int k = 0; k < value_count; k++) {
+                bool is_arg_param = k >= instr->op_count;
+                int instr_index = is_arg_param ? k - instr->op_count : k;
+                IR_CallArg *arg = is_arg_param ? get_call_arg(instr, instr_index) : NULL;
+                IR_Value *a = is_arg_param ? &arg->v : &instr->ops[instr_index];
+                // Lower IR_VREG & IR_SYMBOL to IR_PHYS_REG
+                switch (a->kind) {
+                case IR_VREG:
+                    ir_lower_vreg_value(a, lts, lts_count);
+                    break;
+                case IR_SYMBOL:
+                    ir_lower_symbol_value(a, symbol_slots, symbol_map);
+                    break;
+                case IR_CONSTANT:
+                    ir_lower_const_value(a);
+                    break;
+                case IR_PHYS_REG:
+                case IR_INT_LITERAL:
+                    break;
+                case IR_UNDEFINED:
+                    if (instr->op == IR_RET && instr->ret.type == type_void) break;
+                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) break;
+                    PANIC("An undefined IR value made it to analysis!!\n");
+                    break;
+                }
+            }
+        }
+    }
+}
+void lower_ir_for_asm(IR_Function *f) {
+    for (int i = 0; i < f->blocks_array.count; i++) {
+        IR_Block *b = get_block(f, i);
+        for (int j = 0; j < b->instruction_array.count; j++) {
+            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            if (instr->op == IR_STORE && instr->store.type->kind == T_STRUCT) {
+                abi_lower_store(f, b, instr, &j);
+            } else if (instr->op == IR_RET) {
+                abi_lower_ret(f, b, instr, &j);
+            } else if (instr->op == IR_PARAM) {
+                abi_lower_param(f, b, instr, &j);
+            } else if (instr->op == IR_LOAD) {
+                // Will fail if size > 8 bytes
+                if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
+            }
+        }
+    }
+}
 void analysis(const IR_Context *ctx) {
     for (int i = 0; i < ctx->module->functions_array.count; i++) {
         IR_Function *f = get_func(ctx->module, i);
