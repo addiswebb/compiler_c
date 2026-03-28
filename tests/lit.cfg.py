@@ -4,8 +4,6 @@
 import os
 import sys
 
-import lit.formats
-
 config.name = "compiler_c"
 
 config.test_format = lit.formats.ShTest()
@@ -22,11 +20,15 @@ is_windows = sys.platform.startswith("win")
 # Adjust if your structure differs
 project_root = os.path.abspath(os.path.join(config.test_source_root, ".."))
 
+compiler_exe = lit_config.params.get("compiler_exe")
+
 if is_windows:
-    compiler_exe = os.path.join(project_root, "build", "compiler_c.exe")
+    if not compiler_exe:
+        compiler_exe = os.path.join(project_root, "build", "compiler_c.exe")
     python_cmd = "python"
 else:
-    compiler_exe = os.path.join(project_root, "build_sysv", "compiler_c")
+    if not compiler_exe:
+        compiler_exe = os.path.join(project_root, "build", "compiler_c")
     python_cmd = "python3"
 
 # Substitutions
