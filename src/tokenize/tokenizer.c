@@ -1,5 +1,4 @@
 #include "compiler_c/tokenize/tokenizer.h"
-#include "compiler_c/abi/abi.h"
 #include "compiler_c/core/util.h"
 #include "compiler_c/log/logger.h"
 

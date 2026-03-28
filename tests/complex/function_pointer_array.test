@@ -10,5 +10,5 @@ int main() {
     f[0] = add1;
     f[1] = add2;
 
-    return f + f; // 4 + 5
+    return f[0](3) + f[1](3); // 4 + 5
 }

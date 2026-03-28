@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,7 +44,8 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), addr, ir_integer_literal(expr->member_access.offset), type_u64);
     case N_CAST:
         // Decay/implicit casting
-        if (expr->cast.expr->type->kind == T_ARRAY || expr->cast.expr->type->kind == T_STRUCT) {
+        if (expr->cast.expr->type->kind == T_ARRAY || expr->cast.expr->type->kind == T_STRUCT ||
+            expr->cast.expr->type->kind == T_FUNCTION) {
             return ir_gen_lvalue(ctx, expr->cast.expr);
         }
         PANIC("bad Lvalue of N_CAST\n");
@@ -86,9 +86,9 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_MEMBER_ACCESS:
     case N_INDEX:
     case N_IDENTIFIER:
-        //   Change semantic analysis to leave printf as func, and (currently all are func ptr)
-        if (is_func_ptr(expr->type) || expr->type->kind == T_FUNCTION || expr->type->kind == T_ARRAY)
-            return ir_symbol_value(expr->identifier.symbol);
+        // TODO check if array also needs to be included here (passes tests without)
+        // if (expr->type->kind == T_FUNCTION || expr->type->kind == T_ARRAY)
+        if (expr->type->kind == T_FUNCTION) return ir_symbol_value(expr->identifier.symbol);
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_LITERAL:
         IR_Literal c = ir_literal(expr);
