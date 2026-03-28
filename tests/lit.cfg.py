@@ -4,8 +4,6 @@
 import os
 import sys
 
-import lit.formats
-
 config.name = "compiler_c"
 
 config.test_format = lit.formats.ShTest()
