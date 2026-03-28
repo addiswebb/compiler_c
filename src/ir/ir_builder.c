@@ -91,23 +91,26 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     ctx->func_not_address = true;
     i.ops[1] = ir_gen_rvalue(ctx, expr->func_call.callee);
     ctx->func_not_address = false;
-    array_init(&i.call.arg_array, expr->func_call.params_array.count, sizeof(IR_CallArg));
+
     i.call.type = expr->func_call.callee->type;
     if (i.call.type->kind == T_POINTER) i.call.type = i.call.type->base;
     ASSERT(i.call.type->abi_func_type, "Function Type did not recieve ABI type\n");
-    for (int j = 0; j < i.call.arg_array.capacity; j++) {
-        Node *param = get_node(&expr->func_call.params_array, j);
-        Type *arg_type = param->type;
-        if (j < i.call.type->abi_func_type->_func.params.count)
-            arg_type = ((ParamDecl *)get(&i.call.type->abi_func_type->_func.params, j))->type;
+    if (expr->func_call.params_array.count > 0) {
+        array_init(&i.call.arg_array, expr->func_call.params_array.count, sizeof(IR_CallArg));
+        for (int j = 0; j < i.call.arg_array.capacity; j++) {
+            Node *param = get_node(&expr->func_call.params_array, j);
+            Type *arg_type = param->type;
+            if (j < i.call.type->abi_func_type->_func.params.count)
+                arg_type = ((ParamDecl *)get(&i.call.type->abi_func_type->_func.params, j))->type;
 
-        IR_Value val;
-        if (param->type->kind == T_STRUCT && param->type->size > MAX_STRUCT_SIZE) val = ir_gen_lvalue(ctx, param);
-        else if (param->type->kind == T_FUNCTION || is_func_ptr(param->type)) val = ir_gen_lvalue(ctx, param);
-        // else if (is_func_ptr(param->type)) val = ir_gen_rvalue(ctx, param);
-        else val = ir_gen_rvalue(ctx, param);
+            IR_Value val;
+            if (param->type->kind == T_STRUCT && param->type->size > MAX_STRUCT_SIZE) val = ir_gen_lvalue(ctx, param);
+            else if (param->type->kind == T_FUNCTION || is_func_ptr(param->type)) val = ir_gen_lvalue(ctx, param);
+            // else if (is_func_ptr(param->type)) val = ir_gen_rvalue(ctx, param);
+            else val = ir_gen_rvalue(ctx, param);
 
-        append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg_type});
+            append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg_type});
+        }
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
