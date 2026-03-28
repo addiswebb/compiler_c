@@ -5,19 +5,16 @@
 
 #define DEBUG_LIFETIMES 0
 
-/*
-    Gets the correct register for a function parameter only currently.
-*/
-void physical_register(IR_Value *v);
-/*
-    Converts the given IR_Value to a IR_STACK value with a stack offset for a spilled function parameter.
-*/
-void param_offset(IR_Value *v);
+IR_Value ir_stack_value(int size, int align, int offset);
 
 /*
     Converts the given IR_Value to an IR_STACK value with a stack offset. Uses the precomputed stack slot and offset from Lifetimes.
 */
-void stack_offset(IR_Value *v, const Lifetime *lts, int lts_count);
+void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count);
+
+void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map);
+
+void ir_lower_const_value(IR_Value *v);
 
 /*
     Constructs a control flow graph.
@@ -26,6 +23,10 @@ void stack_offset(IR_Value *v, const Lifetime *lts, int lts_count);
     Lowers IR_Values to assembly compatible identifiers, stack offset or label.
 */
 void analysis(const IR_Context *ctx);
+
+void generate_types();
+void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map);
+int get_symbol_index(const Array *symbol_map, Symbol *symbol);
 
 // TODO: convert these from "bitset" to "block", so add_defined(IR_BLOCK*b), adds to b->defined;
 
@@ -56,7 +57,7 @@ void lower_ir_for_asm(IR_Function *f);
     Converts virtual mem slots to physical stack slots.
     Converts ir_store for structs types to memcpy
 */
-void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const StackSlot *mem_slots);
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots, const Array *symbol_map);
 /*
     Add a successor block to the given `from` block.
 */
@@ -82,7 +83,7 @@ int cmp_lifetime(const void *a, const void *b);
     Allocates availiable stack slots to virtual registers.
     In the case where no stack slots are availible, or are unsuitable/too small, a new stack slot is added.
 */
-void linear_stack_slot_allocation(Lifetime *lts, int count, int *stack_size, int *slot_count);
+void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size);
 
 
 void bitset_init(BitSet *s, int reg_count);

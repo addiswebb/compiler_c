@@ -4,7 +4,7 @@
 #include <string.h>
 
 void array_init(Array *arr, int initial_capacity, int element_size) {
-    ASSERT(element_size > 0, "Array cannot have element capacity <= 0\n");
+    ASSERT(element_size > 0, "Array cannot have element size <= 0\n");
     ASSERT(initial_capacity > 0, "Array cannot have element capacity <= 0\n");
     arr->element_size = element_size;
     arr->capacity = initial_capacity;

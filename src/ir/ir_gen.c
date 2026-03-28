@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,11 +18,20 @@
 IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
     case N_IDENTIFIER:
-        return ir_get_symbol_value(ctx, expr->identifier.name, true);
+        return ir_address(ctx, ir_symbol_value(expr->identifier.symbol), 0);
+    case N_LITERAL:
+        ASSERT(expr->literal.kind == L_STRING, "Only string literal can be lvalue\n");
+        const IR_Literal l = ir_literal(expr);
+        IR_Value v = ir_const(ctx, ir_append_literal(ctx->module, &l), expr->type);
+        return ir_address(ctx, v, 0);
     case N_UNARY:
-        if (expr->unary.op != TK_MULTIPLY) break;
-        return ir_gen_rvalue(ctx, expr->unary.expr);
+        ASSERT(expr->unary.op == TK_MULTIPLY, "Can only generate *expr lvalue\n");
+        return ir_address(ctx, ir_gen_rvalue(ctx, expr->unary.expr), 0);
+    case N_BINARY:
+        return ir_gen_rvalue(ctx, expr);
     case N_INDEX:
+        // Uses more complex lowering for ptr -integer arithmetic in ir_gen_rvalue,
+        //  By spoofing as binary `a-b` node instead of a[x]
         Node bin;
         bin.kind = N_BINARY;
         bin.binary.lhs = expr->index.identifier;
@@ -32,11 +42,13 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     case N_MEMBER_ACCESS:
         IR_Value addr = ir_gen_lvalue(ctx, expr->member_access.identifier);
         if (!expr->member_access.offset) return addr;
-        IR_Value c =
-            ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){.type = type_i64, .i = expr->member_access.offset}), type_i64);
-        return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), addr, c, type_void_ptr);
+        return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), addr, ir_integer_literal(expr->member_access.offset), type_u64);
     case N_CAST:
-        return ir_gen_rvalue(ctx, expr);
+        // Decay/implicit casting
+        if (expr->cast.expr->type->kind == T_ARRAY || expr->cast.expr->type->kind == T_STRUCT) {
+            return ir_gen_lvalue(ctx, expr->cast.expr);
+        }
+        PANIC("bad Lvalue of N_CAST\n");
     default:
         break;
     }
@@ -45,6 +57,7 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
 }
 
 IR_Literal ir_literal(const Node *node) {
+    ASSERT(node->kind == N_LITERAL, "ir_literal expects a N_LITERAL node\n");
     IR_Literal c;
     c.type = node->type;
     switch (c.type->kind) {
@@ -72,47 +85,46 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
     case N_MEMBER_ACCESS:
     case N_INDEX:
-        return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_IDENTIFIER:
-        IR_Value v = ir_get_symbol_value(ctx, expr->identifier.name, false);
-        return v;
+        //   Change semantic analysis to leave printf as func, and (currently all are func ptr)
+        if (is_func_ptr(expr->type) || expr->type->kind == T_FUNCTION || expr->type->kind == T_ARRAY)
+            return ir_symbol_value(expr->identifier.symbol);
+        return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_LITERAL:
         IR_Literal c = ir_literal(expr);
-        return ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
+        return ir_smart_const(ctx, &c, expr->type);
     case N_BINARY:
         if (is_assignment_op(expr->binary.op)) {
+            if (expr->type->kind == T_STRUCT) {
+                ASSERT(expr->binary.op == TK_EQ, "Only direct assignment '=' is allowed between structs\n");
+                return ir_memcpy(ctx, ir_gen_lvalue(ctx, expr->binary.rhs), ir_gen_lvalue(ctx, expr->binary.lhs), expr->type->size);
+            }
+
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
-            if (val.kind == IR_FUNCTION) {
-                DEBUG("NEEDED IR_FUNC CHECK\n");
+            if (val.kind == IR_SYMBOL && val.symbol->kind == FUNC) {
+                // DEBUG("NEEDED IR_FUNC CHECK\n");
                 val = ir_address(ctx, val, 0);
             }
             bool dereference = expr->binary.lhs->kind == N_INDEX || expr->binary.lhs->kind == N_MEMBER_ACCESS || is_deref(expr->binary.lhs);
-            // If it is '+=' or some '=' variant
+            // If it is assignment & binary op
             if (expr->binary.op != TK_EQ) {
-                IR_Value binop_val = dereference ? ir_load(ctx, addr, expr->binary.lhs->unary.expr->type) : addr;
+                IR_Value binop_val = ir_load(ctx, addr, dereference ? expr->binary.lhs->unary.expr->type : expr->binary.lhs->type);
                 if (expr->type->kind == T_POINTER) {
                     PANIC("Cannot x= pointers rn\n");
                 }
                 val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
                                 expr->type);
-            } else if (expr->type->kind == T_STRUCT) {
-                // memcpy for `struct = struct;`
-                // addr is already an address, val is not
-                IR_Value val_addr = ir_address(ctx, val, 0);
-                ir_memcpy(ctx, val_addr, addr, expr->type->size);
-                return val;
             }
-            if (dereference) ir_store_mem(ctx, addr, val, expr->type);
-            else ir_store(ctx, addr, val, expr->type);
+            ir_store(ctx, addr, val, expr->type);
 
             return val;
         }
         IR_Value lhs = ir_gen_rvalue(ctx, expr->binary.lhs);
 
+        // Handle early branching for '&&' and '||' binary operations
         if (expr->binary.op == TK_OR_OR || expr->binary.op == TK_AND_AND) {
-            IR_Value zero = ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){expr->type, 0}), expr->type);
-            IR_Value lhs_cmp = ir_cmp(ctx, NEQ, lhs, zero, expr->type);
+            IR_Value lhs_cmp = ir_cmp(ctx, NEQ, lhs, ir_integer_literal(0), expr->type);
 
             if (ir_is_within_cond(ctx)) {
                 if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, lhs_cmp, NULL, ctx->false_block);
@@ -120,7 +132,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             }
 
             IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
-            IR_Value rhs_cmp = ir_cmp(ctx, NEQ, rhs, zero, expr->type);
+            IR_Value rhs_cmp = ir_cmp(ctx, NEQ, rhs, ir_integer_literal(0), expr->type);
             // No need to cmp both results, if we reach here it means lhs is 1 or rhs represents (lhs op rhs)
             // Early out
             if (ir_is_within_cond(ctx)) return rhs_cmp;
@@ -132,32 +144,28 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
         if (is_comparison_op(expr->binary.op)) {
             return ir_cmp(ctx, ir_cmp_op(expr->binary.op), lhs, rhs, expr->type);
-        } else {
-            // Scale integer by ptr base size
-            if (expr->binary.lhs->type->kind == T_POINTER && expr->binary.rhs->type->kind == T_INT) {
-                IR_Value c =
-                    ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){type_i64, expr->binary.lhs->type->base->size}), type_i64);
-                rhs = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), rhs, c, type_i64);
-            } else if (expr->binary.lhs->type->kind == T_INT && expr->binary.rhs->type->kind == T_POINTER) {
-                IR_Value c =
-                    ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){type_i64, expr->binary.rhs->type->base->size}), type_i64);
-                lhs = ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), lhs, c, type_i64);
-            }
-            lhs = ir_binary(ctx, ir_binary_op(expr->binary.op), ir_next_virtual_reg(ctx->func), lhs, rhs, expr->type);
-            // Divide (ptr - ptr) difference by base type
-
-            if (expr->binary.lhs->type->kind == T_POINTER && expr->binary.rhs->type->kind == T_POINTER) {
-                Type *base = expr->binary.lhs->type->base;
-                if (base->size == 1) return lhs;
-                if (expr->type != type_i64) {
-                    PANIC("Recieved non ptrdiff type in (ptr-ptr) binary op\n");
-                }
-                IR_Value size = ir_append_const(ctx->module, &(IR_Literal){.type = expr->type, .i = base->size});
-                size = ir_const(ctx, size, expr->type);
-                return ir_binary(ctx, DIV, ir_next_virtual_reg(ctx->func), lhs, size, expr->type);
-            }
-            return lhs;
         }
+
+        // Otherwise it is a arithmetic binary operation
+
+        // Scale integer by ptr base size if pointer arithmetic
+        if (expr->binary.lhs->type->kind == T_POINTER && expr->binary.rhs->type->kind == T_INT) {
+            rhs =
+                ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), rhs, ir_integer_literal(expr->binary.lhs->type->base->size), type_i64);
+        } else if (expr->binary.lhs->type->kind == T_INT && expr->binary.rhs->type->kind == T_POINTER) {
+            lhs =
+                ir_binary(ctx, MUL, ir_next_virtual_reg(ctx->func), lhs, ir_integer_literal(expr->binary.rhs->type->base->size), type_i64);
+        }
+        lhs = ir_binary(ctx, ir_binary_op(expr->binary.op), ir_next_virtual_reg(ctx->func), lhs, rhs, expr->type);
+
+        // Divide (ptr - ptr) difference by base type to get correct result
+        if (expr->binary.lhs->type->kind == T_POINTER && expr->binary.rhs->type->kind == T_POINTER) {
+            Type *base = expr->binary.lhs->type->base;
+            if (base->size == 1) return lhs;
+            ASSERT(expr->type == type_i64, "Recieved non ptrdiff type in (ptr-ptr) binary op\n");
+            return ir_binary(ctx, DIV, ir_next_virtual_reg(ctx->func), lhs, ir_integer_literal(base->size), expr->type);
+        }
+        return lhs;
     case N_UNARY:
         if (expr->unary.op == TK_INCR || expr->unary.op == TK_DECR) {
             if (expr->unary.expr->kind != N_IDENTIFIER) {
@@ -175,33 +183,26 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             default:
                 PANIC("Tried to increment a value which is neither float or int\n");
             }
-            IR_Value addr_reg = ir_gen_lvalue(ctx, expr->unary.expr);
+            IR_Value val_addr = ir_gen_lvalue(ctx, expr->unary.expr);
+            IR_Value val = ir_load(ctx, val_addr, expr->unary.expr->type);
 
-            const IR_Value const_dst = ir_const(ctx, ir_append_const(ctx->module, &c), expr->type);
-            const IR_Value store_dst = ir_store(ctx, ir_next_virtual_reg(ctx->func), addr_reg, expr->type);
-            const IR_Value binary_dst = ir_binary(ctx, expr->unary.op == TK_INCR ? ADD : SUB, addr_reg, addr_reg, const_dst, expr->type);
-            return expr->unary.associativity ? store_dst : binary_dst;
-        } else if (expr->unary.op == TK_AND) { // & ref
-            ctx->func_not_address = true;
-            const IR_Value addr = ir_gen_lvalue(ctx, expr->unary.expr);
-            ctx->func_not_address = false;
-            if (expr->unary.expr->kind == N_INDEX) {
-                return addr;
-            }
-            return ir_address(ctx, addr, 0);
-        } else if (expr->unary.op == TK_MULTIPLY) { // * deref
-            const IR_Value addr = ir_gen_rvalue(ctx, expr->unary.expr);
-            return ir_load(ctx, addr, expr->type);
-        } else if (expr->unary.op == TK_SIZEOF) {
-            return ir_const(ctx, ir_append_const(ctx->module, &(IR_Literal){type_i32, expr->unary.expr->type->size}), type_i32);
-        }
-        const IR_Value expr_reg = ir_gen_rvalue(ctx, expr->unary.expr);
-        return ir_unary(ctx, ir_unary_op(expr->unary.op), expr_reg, expr->type);
+            const IR_Value binary_dst = ir_binary(ctx, expr->unary.op == TK_INCR ? ADD : SUB, ir_next_virtual_reg(ctx->func), val,
+                                                  ir_smart_const(ctx, &c, expr->type), expr->type);
+            const IR_Value store_dst = ir_store(ctx, val_addr, binary_dst, expr->type);
+            return expr->unary.associativity ? val : store_dst;
+        } else if (expr->unary.op == TK_AND) return ir_gen_lvalue(ctx, expr->unary.expr);                              // & ref
+        else if (expr->unary.op == TK_MULTIPLY) return ir_load(ctx, ir_gen_rvalue(ctx, expr->unary.expr), expr->type); // * deref
+        else if (expr->unary.op == TK_SIZEOF) return ir_integer_literal(expr->unary.expr->type->size);
+        else return ir_unary(ctx, ir_unary_op(expr->unary.op), ir_gen_rvalue(ctx, expr->unary.expr), expr->type); // +/-/!/~(expr)
     case N_FUNCTION_CALL:
         return ir_call(ctx, expr);
     case N_CAST:
-        const IR_Value src = ir_gen_rvalue(ctx, expr->cast.expr);
-        return ir_cast(ctx, src, expr->type, expr->cast.from);
+        if (expr->cast.from->kind == T_ARRAY && expr->type->kind == T_POINTER && expr->cast.from->base->kind == expr->type->base->kind) {
+            // WARN("cast skipped HERE\n");
+            return ir_gen_lvalue(ctx, expr->cast.expr);
+            // return ir_gen_rvalue(ctx, expr->cast.expr);
+        }
+        return ir_cast(ctx, ir_gen_rvalue(ctx, expr->cast.expr), expr->type, expr->cast.from);
     case N_BUILTIN:
         switch (expr->_builtin.kind) {
         case BUILTIN_VA_START:
@@ -371,19 +372,19 @@ static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
 }
 
 static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *node_type, Node *l) {
-    IR_Value zero;
+    IR_Value zero = ir_integer_literal(0);
+    int member_offset = 0;
     Type *type;
+    IR_Value ir_v;
 
     switch (node_type->kind) {
     case T_INT:
     case T_FLOAT:
     case T_POINTER:
     case T_UNION:
-        IR_Value ir_v;
         if (l->init_list.elements_array.count == 0) {
             type = node_type;
-            zero = ir_append_const(ctx->module, &(IR_Literal){type, 0});
-            ir_v = ir_const(ctx, zero, type);
+            ir_v = zero;
         } else {
             Node *e = get_node(&l->init_list.elements_array, 0);
             type = e->type;
@@ -398,7 +399,6 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
 
         if (is_array) {
             type = node_type->base;
-            zero = ir_append_const(ctx->module, &(IR_Literal){type, 0});
         }
 
         for (int i = 0; i < len; i++) {
@@ -411,21 +411,22 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
                     break;
                 }
             }
-            if (is_array) dst.offset = type->align * i + offset;
+            if (is_array) member_offset = type->align * i + offset;
             else {
                 type = member->type;
-                dst.offset = member->offset + offset;
+                member_offset = member->offset + offset;
             }
 
             // If the corresponding value was found in the init list, use that, otherwise use a zero,
             if (value) {
-                if (value->kind == N_INIT_LIST) ir_gen_init_list(ctx, dst, dst.offset, type, value);
-                else ir_store(ctx, dst, ir_gen_rvalue(ctx, value), type);
-            } else {
-                // If it is a struct, generate a zero in the correct member's type.
-                if (!is_array) zero = ir_append_const(ctx->module, &(IR_Literal){type, 0});
-                ir_store(ctx, dst, ir_const(ctx, zero, type), type);
-            }
+                if (value->kind == N_INIT_LIST) ir_gen_init_list(ctx, dst, member_offset, type, value);
+                else ir_v = ir_gen_rvalue(ctx, value);
+            } else ir_v = zero;
+
+            IR_Value final_dst = dst;
+            if (member_offset)
+                final_dst = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), dst, ir_integer_literal(member_offset), type_u64);
+            ir_store(ctx, final_dst, ir_v, type);
         }
         break;
     default:
@@ -437,27 +438,24 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     // Handle globals seperately to locals
     if (var_decl->var_decl.is_global) {
-        if (var_decl->var_decl.storage_class == EXTERN) return;
         IR_Literal x;
         IR_Literal *l = &x;
         if (var_decl->var_decl.is_defined) {
             Node *x = var_decl->var_decl.expr;
             *l = ir_literal(var_decl->var_decl.expr);
         } else l = NULL;
-        return ir_append_global(ctx->module, var_decl->var_decl.identifier->identifier.name, var_decl->type, l,
-                                var_decl->var_decl.symbol->linkage, var_decl->var_decl.symbol->storage);
+        return ir_append_global(ctx->module, var_decl->var_decl.symbol, l);
     }
 
-    // Handle locals
-    IR_Value dst = ir_new_var(ctx->func, var_decl->var_decl.identifier->identifier.name, var_decl->type);
+    append(&ctx->func->locals_array, &var_decl->var_decl.symbol);
     if (!var_decl->var_decl.is_defined) return;
+    // Handle locals
+    IR_Value dst = ir_gen_lvalue(ctx, var_decl->var_decl.identifier);
 
-    if (var_decl->var_decl.expr->kind == N_INIT_LIST) {
-        return ir_gen_init_list(ctx, dst, 0, var_decl->type, var_decl->var_decl.expr);
-    }
+    if (var_decl->var_decl.expr->kind == N_INIT_LIST) return ir_gen_init_list(ctx, dst, 0, var_decl->type, var_decl->var_decl.expr);
 
     IR_Value rhs = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
-    if (rhs.kind == IR_FUNCTION) rhs = ir_address(ctx, rhs, 0);
+    if (rhs.kind == IR_SYMBOL && rhs.symbol->kind == FUNC) rhs = ir_address(ctx, rhs, 0);
     if (var_decl->type->kind == T_ARRAY || var_decl->type->kind == T_STRUCT) {
         ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
         dst = ir_address(ctx, dst, 0);
@@ -551,28 +549,22 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     fn->linkage = func->func.symbol->linkage;
     fn->storage = func->func.symbol->storage;
 
-    /*
-        ABI
-        if return type is ptr
-    */
-
     ir_begin_scope(fn);
 
-    Type *abi_type = abi_func_type(func->type);
-    // handle (params)
+    Type *abi_type = func->type->abi_func_type;
+    ASSERT(abi_type, "Function did not recieve ABI type\n");
+    // Add ABI specific param symbols to the function
     for (int i = 0; i < abi_type->_func.params.count; i++) {
-        // Copy from registers instead
-        ParamDecl *param = (ParamDecl *)get(&abi_type->_func.params, i);
-        ir_new_var(ctx->func, param->name, param->type);
-        ir_store(ctx, ir_mem_value(i, param->type), ir_vreg_value(-i - 1, param->type), param->type);
+        ParamDecl *abi_d = get(&abi_type->_func.params, i);
+        ParamDecl *d = get(&func->type->_func.params, i);
+        d->symbol->type = d->type;
+        append(&fn->locals_array, &d->symbol);
+        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+                                                            .op_count = 1,
+                                                            .ops = {[0] = ir_symbol_value(d->symbol)},
+                                                            .param = {.param_index = i, .type = d->type}});
     }
-    // spill extra to shadow space
-    if (func->type->_func.is_variadic) {
-        for (int i = abi_type->_func.params.count; i < PARAM_REGISTERS; i++) {
-            ir_new_var(ctx->func, "", type_i64);
-            ir_store(ctx, ir_mem_value(i, type_i64), ir_vreg_value(-i - 1, type_i64), type_i64);
-        }
-    }
+
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {
         ir_gen_block_item(ctx, get_node(&func->func.body->compound.items_array, i));
@@ -596,22 +588,13 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
         Node *n = get_node(&tu->translation_unit.declarations_array, i);
         switch (n->kind) {
         case N_FUNCTION:
-            IR_Func_Def *func_def = ir_get_func_def(ctx, n->func.name);
-            if (func_def) {
-                if (func_def->is_defined) {
-                    if (n->func.is_defined) {
-                        PANIC("Redefinition of %s\n", n->func.name);
-                    }
-                    break;
-                }
-            } else func_def = ir_append_func_def(ctx, n->func.name, n->func.is_defined, n->type->_func.is_variadic, n->func.storage_class);
-
-            if (n->func.is_defined) ir_append_function(ctx, func_def, ir_gen_function(ctx, n));
+            if (n->func.is_defined) ir_append_function(ctx, ir_gen_function(ctx, n));
             break;
         case N_TYPEDEF:
         case N_TYPE:
             break;
         case N_VAR_DECL:
+            if (n->var_decl.is_global && n->var_decl.storage_class == EXTERN) break;
             ir_gen_var_decl(ctx, n);
             // Handled by parser or smt
             break;

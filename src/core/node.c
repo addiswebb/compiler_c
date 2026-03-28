@@ -17,7 +17,7 @@ const char *builtin_names[BUILTIN_COUNT] = {[BUILTIN_MEMCPY] = "__builtin_memcpy
 
 BuiltinKind get_builtin_kind(const char *name) {
     if (strcmp(name, "") == 0) return BUILTIN_NONE;
-    for (int i = 1; i <= BUILTIN_COUNT; i++) {
+    for (int i = 0; i < BUILTIN_COUNT; i++) {
         if (strcmp(builtin_names[i], name) == 0) return (BuiltinKind)i;
     }
     return BUILTIN_NONE;
@@ -86,7 +86,7 @@ bool is_valid_cast(const Type *from, const Type *to) {
         // Can only cast array->pointer (pointer decay)
         return to->kind == T_POINTER && (from->base == to->base || to->base == type_void);
     }
-    if (to->kind == T_POINTER) return to->base == from;
+    if (to->kind == T_POINTER && from->kind != T_POINTER) return to->base == from;
     return true;
 }
 

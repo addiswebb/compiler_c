@@ -604,7 +604,6 @@ void p_append_param(Node *func, Node *param) {
 
 void p_append_call_param(Node *func_call, Node *param) { append(&func_call->func_call.params_array, &param); }
 
-Symbol *p_new_symbol(Parser *p, const Symbol *s);
 Symbol *p_append_symbol(Array *st, const Symbol *s) { return *(Symbol **)append(st, &s); }
 
 Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind) {
@@ -632,6 +631,7 @@ void p_append_typedef(Parser *p, const Typedef *t) {
                                                                            .linkage = LINK_NONE,
                                                                            .storage = STORAGE_NONE,
                                                                            ._typedef = *t,
+                                                                           .type = t->type,
                                                                            .scope_depth = p->scopes_array.count - 1}));
 }
 Symbol *p_append_func_def(Parser *p, Node *f) {
@@ -646,6 +646,7 @@ Symbol *p_append_func_def(Parser *p, Node *f) {
                                                                                   .linkage = linkage,
                                                                                   .storage = storage,
                                                                                   .func_def = f,
+                                                                                  .type = f->type,
                                                                                   .scope_depth = p->scopes_array.count - 1}));
 }
 Symbol *p_append_var_decl_symbol(Parser *p, Node *v) {
@@ -666,6 +667,7 @@ Symbol *p_append_var_decl_symbol(Parser *p, Node *v) {
                                                                                   .linkage = linkage,
                                                                                   .storage = storage,
                                                                                   .var_decl = v,
+                                                                                  .type = v->type,
                                                                                   .scope_depth = p->scopes_array.count - 1}));
 }
 
@@ -676,6 +678,7 @@ Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param) {
                                                                                   .linkage = LINK_NONE,
                                                                                   .storage = STORAGE_NONE,
                                                                                   .var_decl = NULL,
+                                                                                  .type = param->type,
                                                                                   .scope_depth = p->scopes_array.count - 1}));
 }
 void p_append_enum_const(Parser *p, const EnumField *e) {
@@ -684,6 +687,7 @@ void p_append_enum_const(Parser *p, const EnumField *e) {
                                                                            .linkage = LINK_NONE,
                                                                            .storage = STORAGE_NONE,
                                                                            .enum_field = *e,
+                                                                           .type = type_i32,
                                                                            .scope_depth = p->scopes_array.count - 1}));
 }
 

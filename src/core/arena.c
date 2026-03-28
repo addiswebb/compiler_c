@@ -4,7 +4,7 @@
 #include <string.h>
 
 void arena_init(Arena *arena, int block_capacity, int element_size) {
-    ASSERT(block_capacity > 0,"Arena Cannot have block_capacity <= 0\n");
+    ASSERT(block_capacity > 0, "Arena Cannot have block_capacity <= 0\n");
     array_init(&arena->blocks, 1, sizeof(Array));
     arena->block_capacity = block_capacity;
     arena->count = 0;
@@ -28,7 +28,7 @@ void arena_free(Arena *arena) {
 
 static void ensure_index(const Arena *arena, int index) {
     if (__builtin_expect(index >= arena->count || index < 0, 0)) {
-        PANIC("Index of %d is out of Array bounds of %d\n", index, arena->count);
+        PANIC("Index of %d is out of Arena bounds of %d\n", index, arena->count);
     }
 }
 

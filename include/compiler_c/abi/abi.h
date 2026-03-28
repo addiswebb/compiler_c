@@ -1,3 +1,6 @@
+#ifndef COMPILER_C_ABI_H
+#define COMPILER_C_ABI_H
+
 #include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
@@ -17,9 +20,11 @@ typedef struct{
 
 ABI_Result abi_classify(Type *type);
 
+IR_Value abi_lower_param_register(Type *type, int i);
+
 void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
-void abi_lower_call(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
+void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 Type *abi_func_type(Type *type);
 
@@ -62,3 +67,5 @@ extern const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS];
 extern const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS];
 extern const char * gp_register_str[16][4];
 extern const char * sse_register_str[16];
+
+#endif

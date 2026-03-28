@@ -40,10 +40,12 @@ typedef struct {
     Array modifiers;
 }Declarator;
 
+typedef struct Symbol Symbol;
 
 typedef struct{
     Type *type;
     const char *name;
+    Symbol *symbol;
 }ParamDecl;
 
 typedef struct {
@@ -89,7 +91,10 @@ struct Type{
     int align;
     bool is_signed;
     unsigned int qualifiers;
-    Type *base;
+    union{
+        Type *base;
+        Type *abi_func_type;
+    };
     // Data for special types
     union{
         // T_ARRAY

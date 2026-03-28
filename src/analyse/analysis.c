@@ -137,8 +137,8 @@ void compute_reverse_postorder(IR_Function *func, int *rpo) {
 
 int bitset_add_defined(const BitSet *defined, const IR_Value *v) {
     if (v->kind == IR_VREG) {
-        if (!bitset_has(defined, v->reg)) {
-            bitset_add(defined, v->reg);
+        if (!bitset_has(defined, v->vreg)) {
+            bitset_add(defined, v->vreg);
             return 1;
         }
     }
@@ -146,8 +146,8 @@ int bitset_add_defined(const BitSet *defined, const IR_Value *v) {
 }
 void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v) {
     if (v->kind == IR_VREG) {
-        if (!bitset_has(defined, v->reg)) {
-            bitset_add(used, v->reg);
+        if (!bitset_has(defined, v->vreg)) {
+            bitset_add(used, v->vreg);
         }
     }
 }
@@ -204,8 +204,7 @@ int reg_bitset(const IR_Function *f) {
             // const IR_Instruction *instr = &b->instructions[k];
             const IR_Instruction *instr = get_instruction(&b->instruction_array, k);
             for (int i = 0; i < instr->op_count; i++) {
-                if (instr->ops[i].reg < 0) continue;
-                if (instr->ops[i].kind == IR_LITERAL || instr->ops[i].kind == IR_MEM) continue;
+                if (instr->ops[i].kind != IR_VREG) continue;
                 if (op_info[instr->op].def_mask & (1 << i)) {
                     // TODO: consider side effects of defined not overwriting. (should be alr...)
                     if (bitset_add_defined(&b->live.def, &instr->ops[i])) defined++;
@@ -253,35 +252,34 @@ void compute_bitset(const IR_Function *f, const int *rpo) {
 }
 int cmp_lifetime(const void *a, const void *b) { return ((Lifetime *)a)->start - ((Lifetime *)b)->start; }
 
-void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size, int *slot_count) {
-    StackSlot *slots = NULL;
+void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size) {
+    RegisterSlot *slots = NULL;
+    int slot_count = 0;
+
     for (int i = 0; i < count; i++) {
         Lifetime *l = &lts[i];
         int found_slot = 0;
-        for (int j = 0; j < *slot_count; j++) {
-            StackSlot *s = &slots[j];
+        for (int j = 0; j < slot_count; j++) {
+            RegisterSlot *s = &slots[j];
             if (s->free_at <= l->start) {
                 s->free_at = l->end;
                 l->stack_slot = j;
-                l->stack_offset = s->offset;
+                l->stack_offset = s->v.phys_reg.offset;
                 found_slot = 1;
                 break;
             }
         }
         if (!found_slot) {
-            StackSlot *new_slots = realloc(slots, sizeof(StackSlot) * (*slot_count + 1));
+            RegisterSlot *new_slots = realloc(slots, sizeof(RegisterSlot) * (slot_count + 1));
             if (!new_slots) {
                 PANIC("Failed to realloc new_slots\n");
             }
             slots = new_slots;
-            slots[*slot_count].size = l->v->size;
-            slots[*slot_count].align = l->v->align;
-            slots[*slot_count].free_at = l->end;
-            slots[*slot_count].id = *slot_count;
-            slots[*slot_count].offset = *stack_size;
-            l->stack_offset = *stack_size;
+            l->stack_offset = -(*stack_size) - l->v->size;
+            slots[slot_count].v = ir_stack_value(l->v->size, l->v->align, l->stack_offset);
+            slots[slot_count].free_at = l->end;
+            l->stack_slot = slot_count++;
             *stack_size += l->v->size;
-            l->stack_slot = (*slot_count)++;
         }
     }
     if (slots) free(slots);
@@ -302,19 +300,6 @@ RegSize reg_size(const int size) {
     }
 }
 
-void physical_register(IR_Value *v) {
-    int reg_index = v->reg;
-    if (v->reg < 0) reg_index = -v->reg - 1;
-    v->kind = IR_PHYS_REG;
-    v->phys_reg.kind = REG_GP;
-    v->phys_reg.gp_reg = int_param_regs[reg_index];
-    v->phys_reg.size = reg_size(v->size);
-}
-void param_offset(IR_Value *v) {
-    v->kind = IR_STACK;
-    v->stack_offset = (-v->reg - 1) * 8 + 16;
-}
-
 const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) {
     for (int i = 0; i < lts_count; i++) {
         if (lts[i].reg == reg) {
@@ -323,13 +308,70 @@ const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) 
     }
     PANIC("Failed to find lifetime of r%d\n", reg);
 }
-void stack_offset(IR_Value *v, const Lifetime *lts, int lts_count) {
-    if (!lts) {
-        PANIC("Lts is null\n");
+void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map) {
+    IR_Value old = *v;
+    switch (old.symbol->kind) {
+    case VAR:
+        int index = get_symbol_index(symbol_map, v->symbol);
+        ASSERT(index != -1, "Tried to find symbol index of %s\n", v->symbol->name);
+        v->kind = IR_PHYS_REG;
+        *v = ((RegisterSlot *)get(symbol_slots, index))->v;
+        break;
+    case FUNC:
+        v->kind = IR_PHYS_REG;
+        v->phys_reg.kind = REG_IP;
+        v->phys_reg.size = REG_64;
+        v->phys_reg.data_kind = REG_DATA_LABEL;
+        v->phys_reg.label = old.symbol->name;
+        break;
+    case TYPEDEF:
+    case ANY:
+    case ENUM:
+        PANIC("ir_lower_symbol_value dont know how to handle\n");
+        break;
     }
-    v->kind = IR_STACK;
-    const Lifetime *l = get_lifetime(lts, lts_count, v->reg);
-    v->stack_offset = -(l->stack_offset + 8);
+}
+
+IR_Value ir_gp_register(GP_Reg reg) {
+    return (IR_Value){.kind = IR_PHYS_REG,
+                      .size = 8,
+                      .align = 8,
+                      .phys_reg = (PhysReg){
+                          .kind = REG_GP,
+                          .gp_reg = reg,
+                          .data_kind = REG_DATA_NONE,
+                          .size = REG_64,
+                      }};
+}
+IR_Value ir_stack_value(int size, int align, int offset) {
+    if (offset > 0) {
+        printf("HoW");
+    }
+    return (IR_Value){.kind = IR_PHYS_REG,
+                      .size = size,
+                      .align = align,
+                      .phys_reg = (PhysReg){
+                          .kind = REG_GP,
+                          .gp_reg = RBP,
+                          .data_kind = REG_DATA_OFFSET,
+                          .size = REG_64,
+                          .offset = offset,
+                      }};
+}
+void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count) {
+    ASSERT(lts, "LTS is null\n");
+    ASSERT(v->kind == IR_VREG, "Expected VREG IR Value\n");
+    *v = ir_stack_value(v->size, v->align, get_lifetime(lts, lts_count, v->vreg)->stack_offset);
+}
+
+void ir_lower_const_value(IR_Value *v) {
+    return;
+    IR_Value old = *v;
+    v->kind = IR_PHYS_REG;
+    v->phys_reg.kind = REG_IP;
+    v->phys_reg.size = REG_64;
+    v->phys_reg.data_kind = REG_DATA_CONST_INDEX;
+    v->phys_reg.const_index = old.const_index;
 }
 
 void verify_completion(const IR_Function *f) {
@@ -339,49 +381,122 @@ void verify_completion(const IR_Function *f) {
             const IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_arg(instr, k - instr->op_count)->reg;
-                if (a->kind == IR_LITERAL && instr->op != IR_CALL) continue;
-                if (a->kind == IR_GLOBAL || a->kind == IR_PHYS_REG || a->kind == IR_FUNCTION) continue;
-                if (a->kind != IR_STACK) {
-                    if (instr->op == IR_RET && instr->ret.type == type_void) continue;
-                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) continue;
-                    log_start(LOG_ERROR);
-                    print_ir_value(a);
-                    printf(" was not converted to stack offset\n");
-                    exit(1);
-                }
+                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
+                if (a->kind == IR_CONSTANT) continue; // TMP
+                if (a->kind == IR_CONSTANT && instr->op != IR_CALL) continue;
+                if (a->kind == IR_PHYS_REG || a->kind == IR_INT_LITERAL) continue;
+                // Allow undefined IR Values for the following:
+                if (instr->op == IR_RET && instr->ret.type == type_void) continue;
+                if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) continue;
+                // Otherwise throw error
+                log_start(LOG_ERROR);
+                print_ir_value(a);
+                printf(" was not converted to stack offset\n");
+                exit(1);
             }
         }
     }
 }
 
-StackSlot *locals_stack_allocation(const IR_Function *f, int *frame_size) {
-    StackSlot *mem_slots = malloc(sizeof(StackSlot) * f->locals_array.count);
-    if (!mem_slots) {
-        PANIC("Failed to allocate memslots\n");
+int get_symbol_index(const Array *symbol_map, Symbol *symbol) {
+    for (int i = 0; i < symbol_map->count; i++) {
+        Symbol *s = *(Symbol **)get(symbol_map, i);
+        if (s == symbol) return i;
     }
-    for (int j = 0; j < f->locals_array.count; j++) {
-        IR_Var *local = get_local(f, j);
-        const Type *t = local->type;
-        const int k = local->reg.mem;
-        mem_slots[k].size = align(t->size, 8);
-        mem_slots[k].align = 8;
-        mem_slots[k].id = j;
-        mem_slots[k].offset = *frame_size;
-        mem_slots[k].free_at = -1;
-        *frame_size += mem_slots[k].size;
+    return -1;
+}
+void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map) {
+    int slot_count = f->locals_array.count;
+    if (slot_count == 0) return;
+    // TODO account parameters,
+
+    array_init(symbol_map, slot_count, sizeof(Symbol *));
+    array_init(symbol_slots, slot_count, sizeof(RegisterSlot));
+
+    // TODO place in win64.c
+
+    for (int i = 0; i < slot_count; i++) {
+        Symbol *local_symbol = get_local_symbol(f, i);
+        int size = align(local_symbol->type->size, 8);
+        // Todo track scopes on symbol, so that we can reuse slots instead of '-1'
+        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, -(*frame_size) - size), .free_at = -1});
+        append(symbol_map, &local_symbol);
+        *frame_size += size;
     }
-    return mem_slots;
 }
 
+void generate_types() {
+    int n = typepool.count;
+    for (int i = 0; i < n; i++) {
+        Type *t = (Type *)arena_get(&typepool, i);
+        if (t->kind == T_FUNCTION) t->abi_func_type = abi_func_type(t);
+    }
+}
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
+                              const Array *symbol_map) {
+    for (int i = 0; i < f->blocks_array.count; i++) {
+        const IR_Block *b = get_block(f, i);
+        for (int j = 0; j < b->instruction_array.count; j++) {
+            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
+            for (int k = 0; k < value_count; k++) {
+                bool is_arg_param = k >= instr->op_count;
+                int instr_index = is_arg_param ? k - instr->op_count : k;
+                IR_CallArg *arg = is_arg_param ? get_call_arg(instr, instr_index) : NULL;
+                IR_Value *a = is_arg_param ? &arg->v : &instr->ops[instr_index];
+                // Lower IR_VREG & IR_SYMBOL to IR_PHYS_REG
+                switch (a->kind) {
+                case IR_VREG:
+                    ir_lower_vreg_value(a, lts, lts_count);
+                    break;
+                case IR_SYMBOL:
+                    ir_lower_symbol_value(a, symbol_slots, symbol_map);
+                    break;
+                case IR_CONSTANT:
+                    ir_lower_const_value(a);
+                    break;
+                case IR_PHYS_REG:
+                case IR_INT_LITERAL:
+                    break;
+                case IR_UNDEFINED:
+                    if (instr->op == IR_RET && instr->ret.type == type_void) break;
+                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) break;
+                    PANIC("An undefined IR value made it to analysis!!\n");
+                    break;
+                }
+            }
+        }
+    }
+}
+void lower_ir_for_asm(IR_Function *f) {
+    for (int i = 0; i < f->blocks_array.count; i++) {
+        IR_Block *b = get_block(f, i);
+        for (int j = 0; j < b->instruction_array.count; j++) {
+            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            if (instr->op == IR_STORE && instr->store.type->kind == T_STRUCT) {
+                abi_lower_store(f, b, instr, &j);
+            } else if (instr->op == IR_RET) {
+                abi_lower_ret(f, b, instr, &j);
+            } else if (instr->op == IR_PARAM) {
+                abi_lower_param(f, b, instr, &j);
+            } else if (instr->op == IR_LOAD) {
+                // Will fail if size > 8 bytes
+                if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
+            }
+        }
+    }
+}
 void analysis(const IR_Context *ctx) {
     for (int i = 0; i < ctx->module->functions_array.count; i++) {
         IR_Function *f = get_func(ctx->module, i);
 
         lower_ir_for_asm(f);
-        // printf("vvvvvvvvvvvvvvvvvvvvv\n");
-        // print_ir_function(ctx, f);
-        // printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
+
+        if (DEBUG_LOWERED_IR) {
+            printf("vvvvvvvvvvvvvvvvvvvvv\n");
+            print_ir_function(ctx, f);
+            printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
+        }
 
         // Initialize Control Flow Graph Variables per block
         ir_init_func_cfg(f);
@@ -411,25 +526,27 @@ void analysis(const IR_Context *ctx) {
             }
         }
 
-        int frame_size = 0;
-        int mem_slots_count = 0;
-        // Allocate local variables
-        StackSlot *mem_slots = locals_stack_allocation(f, &frame_size);
+        Array symbol_map = {};
+        Array symbol_slots = {};
 
-        int slot_count = 0;
+        int frame_size = 0;
+
+        // Allocate local variables
+        symbol_slot_allocation(f, &frame_size, &symbol_slots, &symbol_map);
         // Allocate virtual registers
-        linear_stack_slot_allocation(lifetimes, reg_count, &frame_size, &slot_count);
+        linear_stack_slot_allocation(lifetimes, reg_count, &frame_size);
 
         // Update all instances of IR_Value with the correct stack offsets
-        lower_ir_values_to_stack(f, lifetimes, reg_count, mem_slots);
+        lower_ir_values_to_stack(f, lifetimes, reg_count, &symbol_slots, &symbol_map);
 
-        // Verify all IR_Values are now of IR_STACK kind,
+        // Verify all IR_Values are now x86 compatible (IR_PHYS_REG, IR_CONSTANT, IR_INT_LITERAL, or void return types),
         verify_completion(f);
         f->stack_size = frame_size;
 
         free(rpo);
         free(lifetimes);
-        free(mem_slots);
+        array_free(&symbol_map);
+        array_free(&symbol_slots);
     }
 }
 
@@ -443,16 +560,16 @@ Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_arg(instr, k - instr->op_count)->reg;
+                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
                 const bool is_call_arg = k >= instr->op_count;
                 if (a->kind == IR_VREG) {
-                    if (a->reg < 0) continue;
+                    if (a->vreg < 0) continue;
                     if (op_info[instr->op].def_mask & (1 << k)) {
-                        lts[instr->ops[k].reg] = (Lifetime){instr->ops[k].reg, pc, -1, 0, 0, .v = &instr->ops[k]};
+                        lts[instr->ops[k].vreg] = (Lifetime){instr->ops[k].vreg, pc, -1, 0, 0, .v = &instr->ops[k]};
                     }
                     if (is_call_arg || op_info[instr->op].use_mask & (1 << k)) {
-                        if (lts[a->reg].end < pc) {
-                            lts[a->reg].end = pc;
+                        if (lts[a->vreg].end < pc) {
+                            lts[a->vreg].end = pc;
                         }
                     }
                 }

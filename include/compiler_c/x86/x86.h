@@ -11,6 +11,7 @@
 void x86_gen_module(FILE *fp, IR_Context *ctx);
 
 void x86_operand(const IR_Value *v, char *buf, int n);
+void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst);
 void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst);
 void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst);
 void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst);
@@ -32,7 +33,6 @@ void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst);
 void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to);
 void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c, int pool_index);
 void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
-void x86_emit_store_mem(FILE *fp,const  IR_Value *src, const IR_Value *dst, const Type *t);
 void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
 void x86_emit_string(FILE *fp, const char *str);
 

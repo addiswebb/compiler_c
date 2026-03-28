@@ -2,19 +2,20 @@
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
-#include "compiler_c/ir/ir_builder.h"
+#include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 IR_OpInfo op_info[] = {
     [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},
     [IR_LOAD] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_STORE] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_STORE_MEM] = {.def_mask = 0b000, .use_mask = 0b011},
+    [IR_STORE] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_RET] = {.def_mask = 0b000, .use_mask = 0b001},
     [IR_BR] = {.def_mask = 0b000, .use_mask = 0b000},
     [IR_BR_COND] = {.def_mask = 0b000, .use_mask = 0b001},
@@ -25,20 +26,18 @@ IR_OpInfo op_info[] = {
     [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
     [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b010}, // IR_CALL param uses handled separately
+    [IR_PARAM] = {.def_mask = 0b001, .use_mask = 0b000},
+    // IR_CALL all given params are 'used'
+    [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b010},
+    // ---- Builtins ----
     [IR_BUILTIN_VA_START] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_BUILTIN_VA_ARG] = {.def_mask = 0b001, .use_mask = 0b010},
 };
 const IR_Value ir_no_value = (IR_Value){IR_UNDEFINED, 0, 0, 0};
 
-IR_Context ir_init_ctx() {
-    IR_Context ctx;
-    ctx.module = NULL;
-    ctx.func = NULL;
-    ctx.block = NULL;
-    ctx.true_block = NULL;
-    ctx.false_block = NULL;
-    ctx.func_not_address = false;
+IR_Context ir_init_ctx(Parser *p) {
+    IR_Context ctx = {0};
+    ctx.symbol_table = &p->symbols_arena;
     array_init(&ctx.loop_stack_array, 4, sizeof(IR_LoopContext));
     return ctx;
 }
@@ -53,26 +52,6 @@ void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break
 }
 
 void ir_pop_loop_ctx(IR_Context *ctx) { pop(&ctx->loop_stack_array); }
-
-IR_Value ir_mem_value(const int mem_reg, const Type *type) {
-    IR_Value v;
-    v.kind = IR_MEM;
-    v.mem = mem_reg;
-    v.offset = 0;
-    v.size = type->size;
-    v.align = type->align;
-    return v;
-}
-IR_Value ir_vreg_value(const int reg, const Type *type) {
-    IR_Value v;
-    v.kind = IR_VREG;
-    v.reg = reg;
-    v.stack_offset = 0;
-    v.stack_slot = 0;
-    v.size = type->size;
-    v.align = type->align;
-    return v;
-}
 
 void ir_begin_scope(IR_Function *func) {
     IR_Scope s;
@@ -97,16 +76,6 @@ void ir_end_scope(IR_Function *func) {
     }
 }
 
-IR_Value ir_next_virtual_slot(const IR_Function *func, const int size, const int align) {
-    get_current_scope(func)->reg_count++;
-    IR_Value v;
-    v.kind = IR_MEM;
-    v.size = size;
-    v.align = align;
-    v.mem = func->locals_array.count;
-    v.offset = 0;
-    return v;
-}
 // Returns the IR_Value of the next virtual register (8,8 stack slot);
 IR_Value ir_next_virtual_reg(IR_Function *func) {
     get_current_scope(func)->reg_count++;
@@ -114,9 +83,11 @@ IR_Value ir_next_virtual_reg(IR_Function *func) {
     v.kind = IR_VREG;
     v.size = 8;
     v.align = 8;
-    v.reg = func->next_reg++;
+    v.vreg = func->next_reg++;
     return v;
 }
+
+IR_Value ir_integer_literal(int64_t i) { return (IR_Value){.kind = IR_INT_LITERAL, .int_literal = i}; }
 
 /*
     Allocates for a new IR Module,
@@ -129,7 +100,6 @@ IR_Module *ir_new_module() {
     }
     array_init(&module->const_array, 4, sizeof(IR_Literal));
     array_init(&module->global_array, 4, sizeof(IR_Global));
-    array_init(&module->func_defs_array, 4, sizeof(IR_Func_Def));
     array_init(&module->functions_array, 4, sizeof(IR_Function *));
     array_init(&module->labeled_block_array, 4, sizeof(IR_LabeledBlock));
 
@@ -176,7 +146,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type) {
     }
     array_init(&func->scopes_array, 4, sizeof(IR_Scope));
     array_init(&func->blocks_array, 4, sizeof(IR_Block *));
-    array_init(&func->locals_array, 4, sizeof(IR_Var));
+    array_init(&func->locals_array, 4, sizeof(Symbol *));
 
     func->name = name;
     func->next_reg = 0;
@@ -217,103 +187,23 @@ IR_LabeledBlock *ir_get_labeled_block(IR_Context *ctx, const char *label) {
     return NULL;
 }
 
-void ir_append_global(IR_Module *module, const char *name, Type *type, const IR_Literal *literal, const Linkage linkage,
-                      const Storage storage) {
+void ir_append_global(IR_Module *module, Symbol *symbol, const IR_Literal *literal) {
     append(&module->global_array, &(IR_Global){
-                                      .name = name,
-                                      .type = type,
+                                      .symbol = symbol,
                                       .val = literal ? *literal : (IR_Literal){.type = type_invalid, .i = 0},
-                                      .linkage = linkage,
-                                      .storage = storage,
                                   });
 }
-IR_Value ir_append_const(IR_Module *module, const IR_Literal *literal) {
+int ir_append_literal(IR_Module *module, const IR_Literal *literal) {
     append(&module->const_array, literal);
-    IR_Value v;
-    v.kind = IR_LITERAL;
-    v.const_index = module->const_array.count - 1;
-    v.size = literal->type->size;
-    v.align = literal->type->align;
-    return v;
+    return module->const_array.count - 1;
 }
 
-IR_Value ir_new_var(IR_Function *func, const char *name, Type *type) {
-    const IR_Value next_var = ir_next_virtual_slot(func, align(type->size, 8), 8);
-    append(&func->locals_array, &(IR_Var){name, next_var, type});
-    append(&get_current_scope(func)->var_array, &(int){func->locals_array.count - 1});
-    return next_var;
+IR_Value ir_symbol_value(Symbol *s) {
+    ASSERT(s->name, "IR Symbol Value must be named.\n");
+    return (IR_Value){.kind = IR_SYMBOL, .symbol = s};
 }
 
-IR_Func_Def *ir_get_func_def(const IR_Context *ctx, const char *name) {
-    for (int i = 0; i < ctx->module->func_defs_array.count; i++) {
-        IR_Func_Def *func_def = get_func_def(ctx, i);
-        if (strcmp(func_def->name, name) == 0) {
-            return func_def;
-        }
-    }
-    return NULL;
-}
-IR_Value ir_value_from_func_def(IR_Func_Def *f) {
-    IR_Value v;
-    v.kind = IR_FUNCTION;
-    v.size = 0;
-    v.align = 0;
-    v.func.name = f->name;
-    v.func.index = 69;
-    return v;
-}
-
-IR_Value ir_value_from_global(IR_Global *g) {
-    IR_Value v;
-    v.kind = IR_GLOBAL;
-    v.size = g->type->size;
-    v.align = g->type->align;
-    v.global = g;
-    return v;
-}
-IR_Value ir_get_symbol_value(IR_Context *ctx, const char *name, bool give_lvalue) {
-    const IR_Function *func = ctx->func;
-    for (int i = func->scopes_array.count - 1; i >= 0; i--) {
-        IR_Scope *scope = get_scope(func, i);
-        for (int j = scope->var_array.count - 1; j >= 0; j--) {
-            const int k = get_var_index(scope, j);
-            IR_Var *local = get_local(func, k);
-            if (strcmp(local->name, name) == 0) {
-                if (give_lvalue) {
-                    if (local->type->kind == T_STRUCT || local->type->kind == T_UNION) {
-                        return ir_address(ctx, local->reg, 0);
-                    }
-                }
-                return local->reg;
-            }
-        }
-    }
-    for (int i = 0; i < ctx->module->global_array.count; i++) {
-        IR_Global *global = get_global(ctx, i);
-        if (strcmp(global->name, name) == 0) return ir_value_from_global(global);
-    }
-    for (int i = 0; i < ctx->module->func_defs_array.count; i++) {
-        IR_Func_Def *func_def = get_func_def(ctx, i);
-        if (strcmp(func_def->name, name) == 0) {
-            IR_Value v = ir_value_from_func_def(func_def);
-            return ctx->func_not_address ? v : ir_address(ctx, v, 0);
-        }
-    }
-
-    PANIC("Undefined local or global variable '%s' \n", name);
-}
-
-IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined, const bool is_variadic,
-                                const StorageClass storage_class) {
-    return (IR_Func_Def *)append(
-        &ctx->module->func_defs_array,
-        &(IR_Func_Def){.name = name, .index = -1, .is_defined = is_defined, .is_variadic = is_variadic, .storage_class = storage_class});
-}
-void ir_append_function(const IR_Context *ctx, IR_Func_Def *func_def, IR_Function *func) {
-    func_def->index = ctx->module->functions_array.count;
-    func_def->is_defined = true;
-    append(&ctx->module->functions_array, &func);
-}
+void ir_append_function(const IR_Context *ctx, IR_Function *func) { append(&ctx->module->functions_array, &func); }
 
 void ir_free_module(IR_Module *module) {
     for (int i = 0; i < module->functions_array.count; i++) {
@@ -344,9 +234,14 @@ void ir_free_module(IR_Module *module) {
         free(func);
     }
     array_free(&module->functions_array);
-    array_free(&module->func_defs_array);
     array_free(&module->const_array);
     array_free(&module->global_array);
     array_free(&module->labeled_block_array);
     free(module);
+}
+
+void ir_append_instruction(IR_Block *b, IR_Instruction *instr) {
+    if (DEBUG_IR_INSTRUCTIONS) print_ir_instruction(NULL, instr);
+
+    append(&b->instruction_array, instr);
 }

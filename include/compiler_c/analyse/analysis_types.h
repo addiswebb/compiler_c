@@ -26,17 +26,35 @@ typedef enum{
 typedef enum{
     REG_GP,
     REG_XMM,
+    REG_IP
 }RegKind;
+
+typedef enum {
+    REG_DATA_LABEL,
+    REG_DATA_OFFSET,
+    REG_DATA_CONST_INDEX,
+    REG_DATA_NONE,
+}RegDataKind;
 
 struct PhysReg{
     RegKind kind;
     union{
         GP_Reg gp_reg;
-        XMM_Reg xmm_reg;
+        XMM_Reg sse_reg;
     };
     RegSize size;
+    RegDataKind data_kind;
+    union{
+        const char* label;
+        struct{
+            int offset;
+            int scale;
+        };
+        int const_index;
+    };
 };
 
 
 RegSize reg_size(int size);
+
 #endif // COMPILER_C_ANALYSIS_TYPES_H

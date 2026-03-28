@@ -1,4 +1,5 @@
 #include "compiler_c/core/type.h"
+#include "compiler_c/abi/abi.h"
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
@@ -108,7 +109,7 @@ Type *new_function_type(Type *type, Array params, bool is_variadic) {
     fn_type->kind = T_FUNCTION;
     fn_type->size = sizeof(void);
     fn_type->align = sizeof(void);
-    fn_type->base = NULL;
+    fn_type->abi_func_type = NULL;
     fn_type->_func.return_type = type;
     fn_type->_func.params = params;
     fn_type->_func.is_variadic = is_variadic;

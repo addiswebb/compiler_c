@@ -211,25 +211,27 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_FUNCTION:
         ASSERT(!(node->func.is_defined && node->func.storage_class == EXTERN), "External Function cannot have a definition\n");
-        p_push_scope(p);
-        sema_ctx->func = node;
         // Simulate a function params in symbol table
-        for (int i = 0; i < node->type->_func.params.count; i++) {
-            ParamDecl *param = (ParamDecl *)get(&node->type->_func.params, i);
-            Node *param_decl = new_node(nm, N_VAR_DECL);
-            if (node->func.is_defined) {
-                ASSERT(param->name, "All Defined Function Paramaters must be named\n");
-                Node *ident = new_node(nm, N_IDENTIFIER);
-                ident->identifier.name = param->name;
-                param_decl->var_decl.identifier = ident;
-                param_decl->var_decl.symbol = p_append_var_decl_symbol(p, param_decl);
+        if (node->func.is_defined) {
+            p_push_scope(p);
+            sema_ctx->func = node;
+            for (int i = 0; i < node->type->_func.params.count; i++) {
+                ParamDecl *param = (ParamDecl *)get(&node->type->_func.params, i);
+                if (node->func.is_defined) {
+                    ASSERT(param->name, "All Defined Function Paramaters must be named\n");
+                    Node *param_decl = new_node(nm, N_VAR_DECL);
+                    Node *ident = new_node(nm, N_IDENTIFIER);
+                    ident->identifier.name = param->name;
+                    param_decl->var_decl.identifier = ident;
+                    param->symbol = p_append_var_decl_symbol(p, param_decl);
+                    param_decl->var_decl.symbol = param->symbol;
+                    param_decl->type = param->type;
+                }
             }
-            param_decl->type = param->type;
-            // currently hidden nodes, might not need to be visible to AST
-            // TODO: see if i need these inserted into N_FUNCTION array
+
+            semantic_analysis(sema_ctx, p, nm, node->func.body);
+            p_pop_scope(p);
         }
-        semantic_analysis(sema_ctx, p, nm, node->func.body);
-        p_pop_scope(p);
 
         Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC);
         if (func_symbol) {
@@ -279,8 +281,10 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 If the var decl is not in global scope, this symbol will be freed before it reaches IR,
                 where it might be used (not currently as of writing). If I place a symbols in one
             */
-            // node->var_decl.symbol = var_symbol;
-        } else node->var_decl.symbol = p_append_var_decl_symbol(p, node);
+        } else var_symbol = p_append_var_decl_symbol(p, node);
+
+        node->var_decl.symbol = var_symbol;
+        node->var_decl.identifier->identifier.symbol = var_symbol;
 
         if (!node->var_decl.expr) break;
         if (node->var_decl.expr->kind == N_INIT_LIST) {
@@ -342,15 +346,14 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         semantic_analysis(sema_ctx, p, nm, node->func_call.callee);
         Type *callee_type = node->func_call.callee->type;
 
-        ASSERT(callee_type != type_invalid, "Invalid type of Function %s\n", fn_name);
+        // if (callee_type->kind == T_FUNCTION) {
+        //     callee_type = get_pointer_type(callee_type);
+        //     node->func_call.callee->type = callee_type;
+        // }
+        ASSERT(callee_type->kind == T_FUNCTION || (callee_type->kind == T_POINTER && callee_type->base->kind == T_FUNCTION),
+               "Cannot call non function type\n");
 
-        if (callee_type->kind == T_FUNCTION) {
-            callee_type = get_pointer_type(callee_type);
-            node->func_call.callee->type = callee_type;
-        }
-        ASSERT(callee_type->kind == T_POINTER && callee_type->base->kind == T_FUNCTION, "Cannot call non function type\n");
-
-        Type *fn_type = callee_type->base;
+        Type *fn_type = callee_type->kind == T_FUNCTION ? callee_type : callee_type->base;
         if (!fn_type->_func.is_variadic && fn_type->_func.params.count != node->func_call.params_array.count) {
             PANIC("Argument count mismatch: Function %s expects %d found %d\n", fn_name, fn_type->_func.params.count,
                   node->func_call.params_array.count);
@@ -368,7 +371,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 set_node(&node->func_call.params_array, &casted_node, i);
             }
             if (i < fn_type->_func.params.count) {
-                ParamDecl *fn_param = (ParamDecl *)get(&fn_type->_func.params, i);
+                ParamDecl *fn_param = get(&fn_type->_func.params, i);
                 if (fn_param->type != fn_call_param->type) {
                     Node *casted_node = cast_node(nm, fn_call_param, fn_param->type);
                     set_node(&node->func_call.params_array, &casted_node, i);
@@ -390,7 +393,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         if (!ident_symbol) {
             PANIC("Failed to find symbol %s\n", node->identifier.name);
         }
-        node->literal.symbol = ident_symbol;
+        node->identifier.symbol = ident_symbol;
         switch (ident_symbol->kind) {
         case ENUM:
             node->kind = N_LITERAL;

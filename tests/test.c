@@ -1,8 +1,7 @@
+// #include <stdio.h>
+int foo(int a, int b, int c, int d, int e, int f, int g, int h, int i) { return a + b + c + d + e + f + g + h + i; }
+
 int main() {
-    int x = 10;
-    int *p = &x;
-    *p += 5; // x = 15
-    int **pp = &p;
-    **pp -= 3; // x = 12
-    return x;  // 12
+    // printf("%d %d %d %d %d %d %d %d %d\n", 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    return foo(1, 2, 3, 4, 5, 6, 7, 8, 9);
 }
