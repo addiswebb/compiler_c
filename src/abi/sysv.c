@@ -1,11 +1,7 @@
 #ifndef _WIN64
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis.h"
-#include "compiler_c/analyse/analysis_types.h"
-#include "compiler_c/core/type.h"
-#include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
-#include "compiler_c/parse/parser.h"
 #include "compiler_c/x86/x86.h"
 
 const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS] = {RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11};
@@ -111,7 +107,7 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
     if (res.memory) type = type_u64;
     instr->op_count = 2;
     if (instr->param.param_index < INTEGER_PARAM_REGISTERS) instr->ops[1] = abi_lower_param_register(type, instr->param.param_index);
-    else instr->ops[1] = ir_stack_value(8, 8, SHADOW_SPACE + 8 + 16 + 8 * (instr->param.param_index - 4));
+    else instr->ops[1] = ir_stack_value(8, 8, 8 * (instr->param.param_index - 4));
 
     if (instr->param.type->kind == T_STRUCT) {
         if (res.memory) {
@@ -232,7 +228,7 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         fprintf(fp, "    call *%%rax\n");
     }
 
-    fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);
+    if (param_frame_size > 0) fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);
 
     if (t == type_void) return;
 

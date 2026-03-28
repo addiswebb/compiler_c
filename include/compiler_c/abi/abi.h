@@ -1,3 +1,6 @@
+#ifndef COMPILER_C_ABI_H
+#define COMPILER_C_ABI_H
+
 #include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
@@ -64,3 +67,5 @@ extern const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS];
 extern const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS];
 extern const char * gp_register_str[16][4];
 extern const char * sse_register_str[16];
+
+#endif

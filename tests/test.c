@@ -1,14 +1,7 @@
-typedef struct {
-    int a;
-    int b;
-} A;
-
-A foo(int x, int y) {
-    A s = {.a = x, .b = y};
-    return s;
-}
+// #include <stdio.h>
+int foo(int a, int b, int c, int d, int e, int f, int g, int h, int i) { return a + b + c + d + e + f + g + h + i; }
 
 int main() {
-    A z = foo(1, 5);
-    return z.a;
+    // printf("%d %d %d %d %d %d %d %d %d\n", 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    return foo(1, 2, 3, 4, 5, 6, 7, 8, 9);
 }

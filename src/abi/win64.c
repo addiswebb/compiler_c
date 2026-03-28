@@ -1,8 +1,6 @@
+#ifdef _WIN64
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis.h"
-#include "compiler_c/analyse/analysis_types.h"
-#include "compiler_c/core/type.h"
-#include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/x86/x86.h"
 
@@ -240,3 +238,4 @@ void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     fprintf(fp, "    call memcpy\n");
     fprintf(fp, "    add $32, %%rsp\n");
 }
+#endif
