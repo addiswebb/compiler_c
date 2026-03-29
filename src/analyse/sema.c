@@ -335,7 +335,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         printf("\n");
         exit(1);
     case N_FUNCTION_CALL:
-        const char *fn_name = node->func_call.callee->kind == TK_IDENTIFIER ? node->func_call.callee->identifier.name : "";
+        const char *fn_name = node->func_call.callee->kind == N_IDENTIFIER ? node->func_call.callee->identifier.name : "";
         BuiltinKind builtin = get_builtin_kind(fn_name);
         if (builtin != BUILTIN_NONE) {
             handle_builtin_call(builtin, node);

@@ -1,16 +1,5 @@
-// RUN: %check_exit 42 %t
+int add(int a, int b) { return a + b; }
 
-struct S {
-    int x;
-};
+int (*get_op())(int, int) { return add; }
 
-struct S make() {
-    struct S s;
-    s.x = 42;
-    return s;
-}
-
-int main() {
-    struct S s = make();
-    return s.x;
-}
+int main() { return get_op()(2, 4); }

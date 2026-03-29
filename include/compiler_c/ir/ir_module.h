@@ -2,7 +2,7 @@
 #define COMPILER_C_IR_MODULE_H
 
 #define DEBUG_LOWERED_IR 0
-#define DEBUG_IR_INSTRUCTIONS 1
+#define DEBUG_IR_INSTRUCTIONS 0
 
 #include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"

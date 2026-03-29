@@ -89,6 +89,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         // TODO check if array also needs to be included here (passes tests without)
         // if (expr->type->kind == T_FUNCTION || expr->type->kind == T_ARRAY)
         if (expr->type->kind == T_FUNCTION) return ir_symbol_value(expr->identifier.symbol);
+        else if (expr->type->kind == T_STRUCT) return ir_gen_lvalue(ctx, expr);
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_LITERAL:
         IR_Literal c = ir_literal(expr);
@@ -458,7 +459,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     if (rhs.kind == IR_SYMBOL && rhs.symbol->kind == FUNC) rhs = ir_address(ctx, rhs, 0);
     if (var_decl->type->kind == T_ARRAY || var_decl->type->kind == T_STRUCT) {
         ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
-        dst = ir_address(ctx, dst, 0);
+        // dst = ir_address(ctx, dst, 0);
         ir_memcpy(ctx, rhs, dst, var_decl->type->size);
     } else ir_store(ctx, dst, rhs, var_decl->type);
 }
@@ -555,7 +556,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     ASSERT(abi_type, "Function did not recieve ABI type\n");
     // Add ABI specific param symbols to the function
     for (int i = 0; i < abi_type->_func.params.count; i++) {
-        ParamDecl *abi_d = get(&abi_type->_func.params, i);
+        // ParamDecl *d = get(&abi_type->_func.params, i);
         ParamDecl *d = get(&func->type->_func.params, i);
         d->symbol->type = d->type;
         append(&fn->locals_array, &d->symbol);

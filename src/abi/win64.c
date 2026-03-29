@@ -102,8 +102,9 @@ void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
 }
 
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    Type *t = instr->call.type->_func.return_type;
-    if (t->kind == T_STRUCT) t = get_integer_type(t->size);
+    // Type *t = instr->call.type->_func.return_type;
+    // if (t->kind == T_STRUCT) t = get_integer_type(t->size);
+    Type *t = instr->call.type->abi_func_type->_func.return_type;
 
     int gp_index = 0;
 
@@ -187,8 +188,9 @@ Type *abi_func_type(Type *type) {
                    &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret", .symbol = NULL}, 0);
             abi_type->_func.return_type = type_void;
         } else
-            abi_type->_func.return_type = abi_type->_func.return_type->kind == T_FLOAT ? get_integer_type(abi_type->_func.return_type->size)
-                                                                                       : get_float_type(abi_type->_func.return_type->size);
+            abi_type->_func.return_type = abi_type->_func.return_type->kind == T_FLOAT
+                                              ? get_float_type(abi_type->_func.return_type->size)
+                                              : get_integer_type(abi_type->_func.return_type->size);
         changed = true;
     }
     for (int i = 0; i < abi_type->_func.params.count; i++) {

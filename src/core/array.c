@@ -39,7 +39,8 @@ void *append(Array *arr, const void *element) {
 
 void *insert(Array *arr, const void *element, int index) {
     ensure_capacity(arr);
-    ensure_index(arr, index);
+    ASSERT(index <= arr->capacity && index >= 0, "Index must be within capacity to insert in array\n");
+    // ensure_index(arr, index);
 
     char *src = (char *)arr->data + index * arr->element_size;
     char *dst = src + arr->element_size;
