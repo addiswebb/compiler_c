@@ -3,8 +3,13 @@ name: Build & Test
 on:
     push:
         branches: ["master"]
+        tags:
+            - 'v*.*.*'
     pull_request:
         branches: ["master"]
+
+permissions:
+    contents: write
 
 jobs:
     build-test:
@@ -18,15 +23,20 @@ jobs:
                     - name: sysv
                       os: ubuntu-latest
                       build_type: Release
+
         runs-on: ${{ matrix.os }}
+
         steps:
             - uses: actions/checkout@v4
 
             - name: Install Dependencies (Linux)
               if: runner.os == 'Linux'
-              run: sudo apt-get update && sudo apt-get install -y cmake ninja-build python3-pip && pip3 install lit
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y cmake ninja-build python3-pip
+                  pip3 install lit
 
-            - name: Install Dependencies Cmake (Windows)
+            - name: Install Dependencies CMake (Windows)
               if: runner.os == 'Windows'
               uses: lukka/get-cmake@latest
 
@@ -37,7 +47,8 @@ jobs:
                   python -m pip install lit
 
             - name: Configure CMake
-              run: cmake
+              run: >
+                  cmake
                   -B ${{ github.workspace }}/build
                   -S ${{ github.workspace }}
                   -G Ninja
@@ -46,10 +57,56 @@ jobs:
               run: cmake --build ${{ github.workspace }}/build
 
             - name: Run Tests
-              run: lit -D compiler_exe=${{ github.workspace }}/build/compiler_c -vv ${{ github.workspace }}/tests
+              run: >
+                  lit
+                  -D compiler_exe=${{ github.workspace }}/build/compiler_c
+                  -vv ${{ github.workspace }}/tests
+
+            - name: Package (Linux)
+              if: runner.os == 'Linux'
+              run: |
+                  tar -czf build-${{ matrix.name }}.tar.gz -C build .
+
+            - name: Package (Windows)
+              if: runner.os == 'Windows'
+              run: |
+                  Compress-Archive -Path build\* -DestinationPath build-${{ matrix.name }}.zip
 
             - name: Upload Build Artifact
-              uses: actions/upload-artifact@v5
+              uses: actions/upload-artifact@v4
               with:
                   name: build-${{ matrix.name }}
-                  path: ${{ github.workspace }}/build
+                  path: |
+                      build-${{ matrix.name }}.tar.gz
+                      build-${{ matrix.name }}.zip
+              if: always()
+
+    release:
+        name: Create Release
+        needs: build-test
+        runs-on: ubuntu-latest
+
+        # Only run for version tags
+        if: startsWith(github.ref, 'refs/tags/v')
+
+        steps:
+            - name: Download all artifacts
+              uses: actions/download-artifact@v4
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ github.ref_name }}
+                  name: Release ${{ github.ref_name }}
+
+                  # v1.2.3-beta → prerelease
+                  prerelease: ${{ contains(github.ref_name, '-') }}
+
+                  generate_release_notes: true
+
+                  files: |
+                      **/*.zip
+                      **/*.tar.gz
+
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
