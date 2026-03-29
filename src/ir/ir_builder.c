@@ -95,6 +95,14 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     if (i.call.type->kind == T_POINTER) i.call.type = i.call.type->base;
     ASSERT(i.call.type->abi_func_type, "Function Type did not recieve ABI type\n");
     array_init(&i.call.arg_array, expr->func_call.params_array.count ? expr->func_call.params_array.count : 1, sizeof(IR_CallArg));
+    Type *return_type = i.call.type->_func.return_type;
+    // TODO Abstract the condition to ABI, so it works for both SysV and Win64
+    if (return_type->kind == T_STRUCT && return_type->size > MAX_STRUCT_SIZE) {
+        // Pass hidden pointer as first arg
+        set_sret(return_type);
+        append(&ctx->func->locals_array, &_sret);
+        append(&i.call.arg_array, &(IR_CallArg){.v = ir_address(ctx, ir_symbol_value(_sret), 0), .type = get_pointer_type(return_type)});
+    }
     for (int j = 0; j < expr->func_call.params_array.count; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
         Type *arg_type = param->type;

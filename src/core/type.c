@@ -1,5 +1,4 @@
 #include "compiler_c/core/type.h"
-#include "compiler_c/abi/abi.h"
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
@@ -9,7 +8,6 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 Type *type_i8;

@@ -30,6 +30,12 @@ Type *abi_func_type(Type *type);
 
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
 
+extern Symbol *_sret;
+extern Symbol *_hidden_sret_ptr;
+
+void set_sret(Type *return_type);
+void set_hidden_sret_ptr(Type *return_type);
+
 #ifdef _WIN64
 
 #define MAX_STRUCT_SIZE 8

@@ -1,5 +1,27 @@
-int add(int a, int b) { return a + b; }
+struct L {
+    int x;
+    char y;
+    char z;
+};
 
-int (*get_op())(int, int) { return add; }
+struct S {
+    char x;
+    char y;
+    int a;
+};
 
-int main() { return get_op()(2, 4); }
+struct L make_large() {
+    struct L l = {1, 2, 3};
+    return l;
+}
+
+struct S make_small() {
+    struct S s = {4, 5, 6};
+    return s;
+}
+
+int main() {
+    struct L l = make_large();
+    struct S s = make_small();
+    return l.x + l.y + l.z + s.a + s.x + s.y;
+}
