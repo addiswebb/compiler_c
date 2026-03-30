@@ -160,6 +160,8 @@ void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     return;
 }
 
+IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) { PANIC("[SysV] Builtins not implemented yet\n"); }
+
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     Type *t = instr->call.type->abi_func_type->_func.return_type;
 

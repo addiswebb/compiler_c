@@ -206,32 +206,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         }
         return ir_cast(ctx, ir_gen_rvalue(ctx, expr->cast.expr), expr->type, expr->cast.from);
     case N_BUILTIN:
-        switch (expr->_builtin.kind) {
-        case BUILTIN_VA_START:
-            Node *n = get_node(&expr->_builtin.params, 1);
-            int param_index = -1;
-            for (int z = 0; z < ctx->func->locals_array.count; z++) {
-                Symbol *v = get_local_symbol(ctx->func, z);
-                if (n->identifier.symbol == v) param_index = z;
-            }
-            ASSERT(param_index != -1, "Expected named param, got bs.\n");
-            Node *ap_node = get_node(&expr->_builtin.params, 0);
-            IR_Value ap_addr = ir_gen_lvalue(ctx, ap_node);
-            IR_Value addr = ir_address(ctx, ir_stack_value(8, 8, param_index * 8 + 16), 0);
-            return ir_store(ctx, ap_addr, addr, ap_node->type);
-        case BUILTIN_VA_ARG:
-            ap_node = get_node(&expr->_builtin.params, 0);
-            ap_addr = ir_gen_lvalue(ctx, ap_node);
-            IR_Value new_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ir_load(ctx, ap_addr, ap_node->type),
-                                          ir_integer_literal(8), ap_node->type);
-            ir_store(ctx, ap_addr, new_addr, ap_node->type);
-            return ir_load(ctx, new_addr, get_node(&expr->_builtin.params, 1)->type);
-        case BUILTIN_VA_END:
-            return ir_no_value;
-        case BUILTIN_NONE:
-        case BUILTIN_MEMCPY:
-            PANIC("Builtin none!\n");
-        }
+        return abi_gen_builtin(ctx, expr);
     default:
         break;
     }
@@ -579,10 +554,9 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
                                                             .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
     }
 
-    int params_emitted = 0;
-    // Add ABI specific param symbols to the function
+    int params_emitted = hidde_ptr_offset;
     // Just make everything ABI at this point 😔
-    for (int i = 0 + hidde_ptr_offset; i < func->type->_func.params.count + hidde_ptr_offset; i++) {
+    for (int i = hidde_ptr_offset; i < func->type->_func.params.count + hidde_ptr_offset; i++) {
         // ParamDecl *d = get(&abi_type->_func.params, i);
         ParamDecl *d = get(&func->type->_func.params, i);
         d->symbol->type = d->type;
@@ -593,15 +567,29 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
                                                             .ops = {[0] = ir_symbol_value(d->symbol)},
                                                             .param = {.param_index = i, .type = d->type}});
     }
-    // Spill
+// Win64 Spill
+// TODO put in abi.h
+#ifdef _WIN64
     if (func->type->_func.is_variadic) {
-        for (int i = 0; i < PARAM_REGISTERS; i++) {
+        for (int i = params_emitted; i < PARAM_REGISTERS; i++) {
             ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
                                                                 .op_count = 1,
                                                                 .ops = {[0] = ir_stack_value(8, 8, 16 + i * 8)},
                                                                 .param = {.param_index = i, .type = type_u64}});
         }
     }
+#else
+// subq 176 bytes,
+// for every gp register, overflow to stack starting from end at -168(%rbp) for %rsi
+// for every sse register, overflow to stack starting from -128(%rbp) for %xmm0
+// skip already stored named registers if possible
+
+// assume va_list is allocated to store gp_offset, fp_offset, overflow_arg_area, reg_save_area
+// gp_offset = offset in bytes from reg_save_area to the next gp variable (+8 each va_arg call with type != T_FLOAT)
+// sse_offset = offset in bytes from reg_save_area to the next sse variable (+8 each va_arg call with type == T_FLOAT)
+// reg_save_area = leaq -176(%rbp)
+// overflow_arg_area = lea 16(%rbp)
+#endif
 
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {

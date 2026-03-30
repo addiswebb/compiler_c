@@ -1,3 +1,5 @@
+#include "compiler_c/ir/ir_builder.h"
+#include "compiler_c/ir/ir_gen.h"
 #ifdef _WIN64
 
 #include "compiler_c/abi/abi.h"
@@ -103,6 +105,35 @@ void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
                 .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = ir_symbol_value(_hidden_sret_ptr), [1] = dst}, .memcpy = {.size = s_t->size}};
             insert(&b->instruction_array, &memcpy, (*i)++);
         } else instr->ret.type = get_integer_type(s_t->size);
+    }
+}
+IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
+    switch (expr->_builtin.kind) {
+    case BUILTIN_VA_START:
+        Node *n = get_node(&expr->_builtin.params, 1);
+        int param_index = -1;
+        // Todo make more robust, have symbol store is_param_symbol and check it
+        for (int z = 0; z < ctx->func->locals_array.count; z++) {
+            Symbol *v = get_local_symbol(ctx->func, z);
+            if (n->identifier.symbol == v) param_index = z;
+        }
+        ASSERT(param_index != -1, "Expected named param, got bs.\n");
+        Node *ap_node = get_node(&expr->_builtin.params, 0);
+        IR_Value ap_addr = ir_gen_lvalue(ctx, ap_node);
+        IR_Value addr = ir_address(ctx, ir_stack_value(8, 8, param_index * 8 + 16), 0);
+        return ir_store(ctx, ap_addr, addr, ap_node->type);
+    case BUILTIN_VA_ARG:
+        ap_node = get_node(&expr->_builtin.params, 0);
+        ap_addr = ir_gen_lvalue(ctx, ap_node);
+        IR_Value new_addr =
+            ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ir_load(ctx, ap_addr, ap_node->type), ir_integer_literal(8), ap_node->type);
+        ir_store(ctx, ap_addr, new_addr, ap_node->type);
+        return ir_load(ctx, new_addr, get_node(&expr->_builtin.params, 1)->type);
+    case BUILTIN_VA_END:
+        return ir_no_value;
+    case BUILTIN_NONE:
+    case BUILTIN_MEMCPY:
+        PANIC("Builtin none!\n");
     }
 }
 

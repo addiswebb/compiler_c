@@ -27,6 +27,8 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 Type *abi_func_type(Type *type);
 
+IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr);
+
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
 
 extern Symbol *_sret;
