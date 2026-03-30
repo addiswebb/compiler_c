@@ -67,9 +67,8 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
     if (type->size > MAX_STRUCT_SIZE) type = type_u64;
     instr->op_count = 2;
     if (instr->param.param_index < PARAM_REGISTERS) instr->ops[1] = abi_lower_param_register(type, instr->param.param_index);
-    else {
-        instr->ops[1] = ir_stack_value(8, 8, SHADOW_SPACE + 8 + 16 + 8 * (instr->param.param_index - 4));
-    }
+    else instr->ops[1] = ir_stack_value(8, 8, SHADOW_SPACE + 8 + 16 + 8 * (instr->param.param_index - 4));
+
     if (instr->param.type->kind == T_STRUCT) {
         if (instr->param.type->size > MAX_STRUCT_SIZE) {
             IR_Value hidden_ptr = (IR_Value){.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};

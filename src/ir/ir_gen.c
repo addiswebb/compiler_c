@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "compiler_c/analyse/analysis.h"
 #include "compiler_c/analyse/sema.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
@@ -207,11 +208,24 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_BUILTIN:
         switch (expr->_builtin.kind) {
         case BUILTIN_VA_START:
-            return ir_builtin_va_start(ctx, ir_gen_lvalue(ctx, get_node(&expr->_builtin.params, 0)),
-                                       ir_gen_lvalue(ctx, get_node(&expr->_builtin.params, 1)));
+            Node *n = get_node(&expr->_builtin.params, 1);
+            int param_index = -1;
+            for (int z = 0; z < ctx->func->locals_array.count; z++) {
+                Symbol *v = get_local_symbol(ctx->func, z);
+                if (n->identifier.symbol == v) param_index = z;
+            }
+            ASSERT(param_index != -1, "Expected named param, got bs.\n");
+            Node *ap_node = get_node(&expr->_builtin.params, 0);
+            IR_Value ap_addr = ir_gen_lvalue(ctx, ap_node);
+            IR_Value addr = ir_address(ctx, ir_stack_value(8, 8, param_index * 8 + 16), 0);
+            return ir_store(ctx, ap_addr, addr, ap_node->type);
         case BUILTIN_VA_ARG:
-            return ir_builtin_va_arg(ctx, ir_gen_lvalue(ctx, get_node(&expr->_builtin.params, 0)),
-                                     get_node(&expr->_builtin.params, 1)->type);
+            ap_node = get_node(&expr->_builtin.params, 0);
+            ap_addr = ir_gen_lvalue(ctx, ap_node);
+            IR_Value new_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ir_load(ctx, ap_addr, ap_node->type),
+                                          ir_integer_literal(8), ap_node->type);
+            ir_store(ctx, ap_addr, new_addr, ap_node->type);
+            return ir_load(ctx, new_addr, get_node(&expr->_builtin.params, 1)->type);
         case BUILTIN_VA_END:
             return ir_no_value;
         case BUILTIN_NONE:
@@ -565,6 +579,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
                                                             .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
     }
 
+    int params_emitted = 0;
     // Add ABI specific param symbols to the function
     // Just make everything ABI at this point 😔
     for (int i = 0 + hidde_ptr_offset; i < func->type->_func.params.count + hidde_ptr_offset; i++) {
@@ -572,10 +587,20 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
         ParamDecl *d = get(&func->type->_func.params, i);
         d->symbol->type = d->type;
         append(&fn->locals_array, &d->symbol);
+        params_emitted++;
         ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
                                                             .op_count = 1,
                                                             .ops = {[0] = ir_symbol_value(d->symbol)},
                                                             .param = {.param_index = i, .type = d->type}});
+    }
+    // Spill
+    if (func->type->_func.is_variadic) {
+        for (int i = 0; i < PARAM_REGISTERS; i++) {
+            ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+                                                                .op_count = 1,
+                                                                .ops = {[0] = ir_stack_value(8, 8, 16 + i * 8)},
+                                                                .param = {.param_index = i, .type = type_u64}});
+        }
     }
 
     // handle {[statement]*}

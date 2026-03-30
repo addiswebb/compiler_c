@@ -683,7 +683,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             Node *last_named_param = get_node(&node->_builtin.params, 1);
             semantic_analysis(sema_ctx, p, nm, dst_ap);
             semantic_analysis(sema_ctx, p, nm, last_named_param);
-            ASSERT(dst_ap->type == get_pointer_type(type_i8), "%s expects va_list as first arg.", builtin_names[node->_builtin.kind]);
+            ASSERT(last_named_param->kind == N_IDENTIFIER, "Last named param must be an identifier.\n");
+            ASSERT(dst_ap->type == get_pointer_type(type_i8), "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]);
             node->type = type_void;
             break;
         case BUILTIN_VA_ARG:

@@ -1,26 +1,18 @@
-extern void qsort(int *Base, long NumOfElements, long SizeOfElements, int (*cmp)(const int *, const int *));
-extern int printf(const char *fmt, ...);
+#include <stdarg.h>
 
-int cmp_int(const int *a, const int *b) {
-    int x = *a;
-    int y = *b;
-
-    if (x < y) return -1;
-    if (x > y) return 1;
-    return 0;
-}
-
-int main() {
-    int arr[] = {5, 1, 4, 2, 3};
-    int n = 5;
-
-    qsort(arr, n, 4, cmp_int);
-
+double sum_mix(int n, ...) {
+    va_list args;
+    va_start(args, n);
+    double s = 0;
     for (int i = 0; i < n; i++) {
-        printf("%d ", arr[i]);
+        if (i % 2 == 0) {
+            s += va_arg(args, int);
+        } else {
+            s += va_arg(args, double);
+        }
     }
-
-    printf("\n");
-
-    return 0;
+    va_end(args);
+    return s;
 }
+
+int main() { return (int)sum_mix(4, 1, 2.5, 3, 4.5); }

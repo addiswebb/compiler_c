@@ -125,14 +125,14 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         fprintf(fp, "    jmp %s\n", instr->jmp.name);
         break;
     case IR_BUILTIN_VA_START:
-        x86_emit_xr(fp, "lea", "q", "", &instr->ops[1], "%rax");
-        fprintf(fp, "    subq $%d, %%rax\n", instr->ops[1].size);
-        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rax");
+        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[1]);
         break;
     case IR_BUILTIN_VA_ARG:
         x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
-        fprintf(fp, "    subq $%d, %%rax\n", instr->builtin_va_arg.type->size);
-        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
+        fprintf(fp, "    addq $%d, %%rax\n", instr->builtin_va_arg.type->size);
+        x86_emit_rr(fp, "mov", "q", "", "(%rax)", "%rcx");
+        x86_emit_rx(fp, "mov", "q", "", "%rcx", &instr->ops[0]);
         break;
     case IR_PARAM:
         ASSERT(instr->op_count == 2, "Param instruction not correctly lowered\n");

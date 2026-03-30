@@ -18,6 +18,9 @@ IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
     return i.ops[0];
 }
 IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
+    if (src.kind == IR_INT_LITERAL && type->kind != T_INT) {
+        DEBUG("here\n");
+    }
     IR_Instruction i;
     i.op = IR_STORE;
     i.ops[1] = src;
@@ -174,7 +177,7 @@ IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, I
     return ir_no_value;
 }
 IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
-    if (src.kind == IR_INT_LITERAL) return src;
+    if (src.kind == IR_INT_LITERAL && to->kind == T_INT) return src;
     if (from->kind == T_ARRAY && to->kind == T_POINTER && from->base->kind == to->base->kind) PANIC("HOW");
     IR_Instruction i;
     i.op = IR_CAST;
@@ -217,11 +220,11 @@ IR_Value ir_memcpy(IR_Context *ctx, IR_Value from_reg, IR_Value to_reg, int size
     return i.ops[0];
 }
 
-IR_Value ir_builtin_va_start(IR_Context *ctx, IR_Value ap, IR_Value last_named_param) {
+IR_Value ir_builtin_va_start(IR_Context *ctx, IR_Value ap, IR_Value first_arg) {
     IR_Instruction i;
     i.op = IR_BUILTIN_VA_START;
     i.ops[0] = ap;
-    i.ops[1] = last_named_param;
+    i.ops[1] = first_arg;
     i.op_count = 2;
     ir_append_instruction(ctx->block, &i);
     return ir_no_value;

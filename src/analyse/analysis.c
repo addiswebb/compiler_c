@@ -344,9 +344,6 @@ IR_Value ir_gp_register(GP_Reg reg) {
                       }};
 }
 IR_Value ir_stack_value(int size, int align, int offset) {
-    if (offset > 0) {
-        printf("HoW");
-    }
     return (IR_Value){.kind = IR_PHYS_REG,
                       .size = size,
                       .align = align,
@@ -419,7 +416,9 @@ void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol
         Symbol *local_symbol = get_local_symbol(f, i);
         int size = align(local_symbol->type->size, 8);
         // Todo track scopes on symbol, so that we can reuse slots instead of '-1'
-        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, -(*frame_size) - size), .free_at = -1});
+        int offset = -(*frame_size) - size;
+
+        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
         append(symbol_map, &local_symbol);
         *frame_size += size;
     }

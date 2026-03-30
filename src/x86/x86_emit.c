@@ -480,7 +480,6 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
     // char/short/int/long/ -> char/short/int/long
     // pointer <-> char/short/int/long
     if ((from->kind == T_INT || from->kind == T_POINTER) && (to->kind == T_INT || to->kind == T_POINTER)) {
-        // if (from->kind == T_INT && to->kind == T_INT) {
         if (from->size < to->size) {
             x86_emit_xr(fp, "movs", from_op_suffix, to_op_suffix, src, to_reg);
         } else {
@@ -492,9 +491,14 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
 
     // char/short/int/long -> float/double
     if (from->kind == T_INT && to->kind == T_FLOAT) {
-        x86_emit_xr(fp, "movs", from_op_suffix, "q", src, "%rax");
-        x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
-        x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
+        if (src->kind == IR_INT_LITERAL) {
+            x86_emit_xr(fp, "mov", "", "", src, from_reg);
+            x86_emit_rx(fp, "mov", from_op_suffix, "", from_reg, dst);
+        } else {
+            x86_emit_xr(fp, "movs", from_op_suffix, "q", src, "%rax");
+            x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
+            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
+        }
         return;
     }
     // float/double -> char/short/int/long

@@ -1,0 +1,30 @@
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t
+// RUN: %check_exit 11 %t
+
+// Todo replace with #include <stdarg.h>
+typedef char * va_list;
+
+#define va_start(v,l)   __builtin_va_start(v,l)
+#define va_end(v)       __builtin_va_end(v)
+#define va_arg(v,l)     __builtin_va_arg(v,l)
+#define va_copy(d,s)    __builtin_va_copy(d,s)
+
+double sum_mix(int n, ...) {
+    va_list args;
+    va_start(args, n);
+    double s = 0;
+    for (int i = 0; i < n; i++) {
+        if (i % 2 == 0) {
+            s += (double) va_arg(args, int);
+        } else {
+            s += va_arg(args, double);
+        }
+    }
+    va_end(args);
+    return s;
+}
+
+int main() {
+    return (int)sum_mix(4, 1, 2.5, 3, 4.5);
+}
