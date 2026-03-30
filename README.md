@@ -232,7 +232,7 @@ When a block is full, instead of reallocating the whole block somewhere else at 
     * `SysV`
       * First `6` integer args to registers, then stack spilled
       * First `8` floating point args to registers, then stack spilled
-  * Structs as function arguments and **return values**
+  * Structs as function arguments and return values
     * `Win64`
       * `sizeof(struct A) <= 8b` => integer/SSE chunk
       * `         ...          ` => hidden pointer & memcpy

@@ -7,5 +7,5 @@
 - [x] Stack args passed from right to left
 - [x] Struct Register returns/128bit integer returns
 - [x] Structs as args.
+- [x] Structs return values.
 - [] <= 16b aggregate by double register `%rax:%rdx` / `%xmm0:%xmm1`
-- [] Structs return values.
