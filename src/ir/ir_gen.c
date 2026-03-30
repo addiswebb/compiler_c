@@ -555,7 +555,8 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
     Type *abi_type = func->type->abi_func_type;
     ASSERT(abi_type, "Function did not recieve ABI type\n");
     int hidde_ptr_offset = 0;
-    if (func->type->_func.return_type->kind == T_STRUCT && func->type->_func.return_type->size > MAX_STRUCT_SIZE) {
+    ABI_Result res = abi_classify(func->type->_func.return_type);
+    if (res.memory) {
         set_hidden_sret_ptr(func->type->_func.return_type);
         append(&fn->locals_array, &_hidden_sret_ptr);
         ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,

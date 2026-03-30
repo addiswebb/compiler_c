@@ -1,27 +1,26 @@
-struct L {
-    int x;
-    char y;
-    char z;
-};
+extern void qsort(int *Base, long NumOfElements, long SizeOfElements, int (*cmp)(const int *, const int *));
+extern int printf(const char *fmt, ...);
 
-struct S {
-    char x;
-    char y;
-    int a;
-};
+int cmp_int(const int *a, const int *b) {
+    int x = *a;
+    int y = *b;
 
-struct L make_large() {
-    struct L l = {1, 2, 3};
-    return l;
-}
-
-struct S make_small() {
-    struct S s = {4, 5, 6};
-    return s;
+    if (x < y) return -1;
+    if (x > y) return 1;
+    return 0;
 }
 
 int main() {
-    struct L l = make_large();
-    struct S s = make_small();
-    return l.x + l.y + l.z + s.a + s.x + s.y;
+    int arr[] = {5, 1, 4, 2, 3};
+    int n = 5;
+
+    qsort(arr, n, 4, cmp_int);
+
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+
+    printf("\n");
+
+    return 0;
 }
