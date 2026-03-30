@@ -473,14 +473,13 @@ void lower_ir_for_asm(IR_Function *f) {
         IR_Block *b = get_block(f, i);
         for (int j = 0; j < b->instruction_array.count; j++) {
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            if (instr->op == IR_STORE && instr->store.type->kind == T_STRUCT) {
-                abi_lower_store(f, b, instr, &j);
-            } else if (instr->op == IR_RET) {
+            if (instr->op == IR_RET) {
                 abi_lower_ret(f, b, instr, &j);
             } else if (instr->op == IR_PARAM) {
                 abi_lower_param(f, b, instr, &j);
             } else if (instr->op == IR_LOAD) {
                 // Will fail if size > 8 bytes
+                ASSERT(instr->load.type->size <= 8, "ir_load of type sized larger than 8 bytes\n");
                 if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
             }
         }

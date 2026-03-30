@@ -1,5 +1,4 @@
 #include "compiler_c/tokenize/tokenizer.h"
-#include "compiler_c/abi/abi.h"
 #include "compiler_c/core/util.h"
 #include "compiler_c/log/logger.h"
 
@@ -844,6 +843,9 @@ void print_token_type(const TokenType type) { printf("%s", token_type_str(type))
 
 void print_token(const Token *token) {
     printf("Token { Type: ");
+    if (token->type == TK_SIZEOF) {
+        printf("heere");
+    }
     print_token_type(token->type);
     if (token->value != NULL) {
         printf(", value: ");
@@ -853,7 +855,7 @@ void print_token(const Token *token) {
             printf("\\n");
         }
         // TODO fix this printf("%c ", token->value[0]);
-        printf("%s", token->value);
+        printf("%c", token->value[0]);
     }
     printf("}\n");
 }

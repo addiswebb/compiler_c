@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,7 +44,8 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), addr, ir_integer_literal(expr->member_access.offset), type_u64);
     case N_CAST:
         // Decay/implicit casting
-        if (expr->cast.expr->type->kind == T_ARRAY || expr->cast.expr->type->kind == T_STRUCT) {
+        if (expr->cast.expr->type->kind == T_ARRAY || expr->cast.expr->type->kind == T_STRUCT ||
+            expr->cast.expr->type->kind == T_FUNCTION) {
             return ir_gen_lvalue(ctx, expr->cast.expr);
         }
         PANIC("bad Lvalue of N_CAST\n");
@@ -86,9 +86,10 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_MEMBER_ACCESS:
     case N_INDEX:
     case N_IDENTIFIER:
-        //   Change semantic analysis to leave printf as func, and (currently all are func ptr)
-        if (is_func_ptr(expr->type) || expr->type->kind == T_FUNCTION || expr->type->kind == T_ARRAY)
-            return ir_symbol_value(expr->identifier.symbol);
+        // TODO check if array also needs to be included here (passes tests without)
+        // if (expr->type->kind == T_FUNCTION || expr->type->kind == T_ARRAY)
+        if (expr->type->kind == T_FUNCTION) return ir_symbol_value(expr->identifier.symbol);
+        else if (expr->type->kind == T_STRUCT) return ir_gen_lvalue(ctx, expr);
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_LITERAL:
         IR_Literal c = ir_literal(expr);
@@ -457,8 +458,8 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     IR_Value rhs = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
     if (rhs.kind == IR_SYMBOL && rhs.symbol->kind == FUNC) rhs = ir_address(ctx, rhs, 0);
     if (var_decl->type->kind == T_ARRAY || var_decl->type->kind == T_STRUCT) {
-        ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
-        dst = ir_address(ctx, dst, 0);
+        // ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
+        // dst = ir_address(ctx, dst, 0);
         ir_memcpy(ctx, rhs, dst, var_decl->type->size);
     } else ir_store(ctx, dst, rhs, var_decl->type);
 }
@@ -553,9 +554,21 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
 
     Type *abi_type = func->type->abi_func_type;
     ASSERT(abi_type, "Function did not recieve ABI type\n");
+    int hidde_ptr_offset = 0;
+    ABI_Result res = abi_classify(func->type->_func.return_type);
+    if (res.memory) {
+        set_hidden_sret_ptr(func->type->_func.return_type);
+        append(&fn->locals_array, &_hidden_sret_ptr);
+        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+                                                            .op_count = 1,
+                                                            .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
+                                                            .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
+    }
+
     // Add ABI specific param symbols to the function
-    for (int i = 0; i < abi_type->_func.params.count; i++) {
-        ParamDecl *abi_d = get(&abi_type->_func.params, i);
+    // Just make everything ABI at this point 😔
+    for (int i = 0 + hidde_ptr_offset; i < func->type->_func.params.count + hidde_ptr_offset; i++) {
+        // ParamDecl *d = get(&abi_type->_func.params, i);
         ParamDecl *d = get(&func->type->_func.params, i);
         d->symbol->type = d->type;
         append(&fn->locals_array, &d->symbol);

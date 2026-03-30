@@ -1,7 +1,26 @@
-// #include <stdio.h>
-int foo(int a, int b, int c, int d, int e, int f, int g, int h, int i) { return a + b + c + d + e + f + g + h + i; }
+extern void qsort(int *Base, long NumOfElements, long SizeOfElements, int (*cmp)(const int *, const int *));
+extern int printf(const char *fmt, ...);
+
+int cmp_int(const int *a, const int *b) {
+    int x = *a;
+    int y = *b;
+
+    if (x < y) return -1;
+    if (x > y) return 1;
+    return 0;
+}
 
 int main() {
-    // printf("%d %d %d %d %d %d %d %d %d\n", 1, 2, 3, 4, 5, 6, 7, 8, 9);
-    return foo(1, 2, 3, 4, 5, 6, 7, 8, 9);
+    int arr[] = {5, 1, 4, 2, 3};
+    int n = 5;
+
+    qsort(arr, n, 4, cmp_int);
+
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+
+    printf("\n");
+
+    return 0;
 }

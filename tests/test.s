@@ -1,94 +1,71 @@
 .section .note.GNU-stack,"",@progbits
 
 .text
-.global foo
-foo:
+.global make_small
+make_small:
     push %rbp
     mov %rsp, %rbp
-    subq $96, %rsp
-foo_0:
-    movl %edi, -8(%rbp)
-    movl %esi, -16(%rbp)
-    movl %edx, -24(%rbp)
-    movl %ecx, -32(%rbp)
-    movl %r8d, -40(%rbp)
-    movl %r9d, -48(%rbp)
-    movl 16(%rbp), %eax
-    movl %eax, -56(%rbp)
-    movl 24(%rbp), %eax
-    movl %eax, -64(%rbp)
-    movl 32(%rbp), %eax
-    movl %eax, -72(%rbp)
+    subq $16, %rsp
+make_small_0:
     leaq -8(%rbp), %rax
-    movq %rax, -80(%rbp)
-    movq -80(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -80(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -88(%rbp)
-    movl -80(%rbp), %eax
-    addl -88(%rbp), %eax
-    movl %eax, -80(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -88(%rbp)
-    movl -80(%rbp), %eax
-    addl -88(%rbp), %eax
-    movl %eax, -80(%rbp)
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movl $1, %ecx
+    movl %ecx, (%rax)
+    movq -16(%rbp), %rax
+    addq $4, %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movl $2, %ecx
+    movl %ecx, (%rax)
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global make_large
+make_large:
+    push %rbp
+    mov %rsp, %rbp
+    subq $48, %rsp
+make_large_0:
+    movq %rdi, -8(%rbp)
     leaq -32(%rbp), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -88(%rbp)
-    movl -80(%rbp), %eax
-    addl -88(%rbp), %eax
-    movl %eax, -80(%rbp)
-    leaq -40(%rbp), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -88(%rbp)
-    movl -80(%rbp), %eax
-    addl -88(%rbp), %eax
-    movl %eax, -80(%rbp)
-    leaq -48(%rbp), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -88(%rbp)
-    movl -80(%rbp), %eax
-    addl -88(%rbp), %eax
-    movl %eax, -80(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -88(%rbp)
-    movl -80(%rbp), %eax
-    addl -88(%rbp), %eax
-    movl %eax, -80(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -88(%rbp)
-    movl -80(%rbp), %eax
-    addl -88(%rbp), %eax
-    movl %eax, -80(%rbp)
-    leaq -72(%rbp), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -88(%rbp)
-    movl -80(%rbp), %eax
-    addl -88(%rbp), %eax
-    movl %eax, -80(%rbp)
-    movl -80(%rbp), %eax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    movl $1, %ecx
+    movl %ecx, (%rax)
+    movq -40(%rbp), %rax
+    addq $4, %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
+    movl $2, %ecx
+    movl %ecx, (%rax)
+    movq -40(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
+    movl $3, %ecx
+    movl %ecx, (%rax)
+    movq -40(%rbp), %rax
+    addq $12, %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
+    movl $4, %ecx
+    movl %ecx, (%rax)
+    movq -40(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    movl $5, %ecx
+    movl %ecx, (%rax)
+    leaq -32(%rbp), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rsi
+    movq -8(%rbp), %rdi
+    mov $20, %rdx
+    call memcpy
     mov %rbp, %rsp
     pop %rbp
     ret
@@ -96,25 +73,95 @@ foo_0:
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $16, %rsp
+    subq $80, %rsp
 main_0:
-    subq $24, %rsp
-    movl $1, %edi
-    movl $2, %esi
-    movl $3, %edx
-    movl $4, %ecx
-    movl $5, %r8d
-    movl $6, %r9d
-    movl $7, %eax
-    movl %eax, 0(%rsp)
-    movl $8, %eax
-    movl %eax, 8(%rsp)
-    movl $9, %eax
-    movl %eax, 16(%rsp)
-    call foo
-    addq $24, %rsp
-    movl %eax, -8(%rbp)
-    movl -8(%rbp), %eax
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    call make_small
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rsi
+    movq -64(%rbp), %rdi
+    mov $8, %rdx
+    call memcpy
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    leaq -56(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rdi
+    call make_large
+    movq -72(%rbp), %rsi
+    movq -64(%rbp), %rdi
+    mov $20, %rdx
+    call memcpy
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -64(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $4, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -64(%rbp), %eax
+    addl -72(%rbp), %eax
+    movl %eax, -64(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -64(%rbp), %eax
+    addl -72(%rbp), %eax
+    movl %eax, -64(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $12, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -64(%rbp), %eax
+    addl -72(%rbp), %eax
+    movl %eax, -64(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -64(%rbp), %eax
+    addl -72(%rbp), %eax
+    movl %eax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -64(%rbp), %eax
+    addl -72(%rbp), %eax
+    movl %eax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $4, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -64(%rbp), %eax
+    addl -72(%rbp), %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp
     ret

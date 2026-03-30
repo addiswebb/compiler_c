@@ -227,7 +227,12 @@ Node *p_parse_prefix(Parser *p, NodeManager *nm) {
         Node *node = new_node(nm, N_UNARY);
         node->unary.op = p_consume(p)->type;
         node->unary.associativity = RIGHT_ASSOCIATIVITY;
-        node->unary.expr = p_parse_prefix(p, nm);
+        if (node->unary.op == TK_SIZEOF && p_peek(p)->type == TK_OPEN_PAREN && is_start_of_type(p, p_peek_next(p))) {
+            node->unary.expr = new_node(nm, N_TYPE);
+            p_consume(p); // '('
+            node->unary.expr->type = p_parse_abstract_type(p);
+            p_consume_a(p, TK_CLOSE_PAREN); // ')'
+        } else node->unary.expr = p_parse_prefix(p, nm);
         return node;
     }
     return p_parse_postfix_expression(p, nm);

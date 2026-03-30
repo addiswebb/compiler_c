@@ -52,12 +52,12 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
             return node;
         }
     }
-    if (node->type->kind == T_FUNCTION && type->kind == T_POINTER && type->base->kind == T_FUNCTION &&
-        cmp_func_types(node->type, type->base)) {
+    // if (node->type->kind == T_FUNCTION && type->kind == T_POINTER && type->base->kind == T_FUNCTION &&
+    //     cmp_func_types(node->type, type->base)) {
 
-        node->type = get_pointer_type(node->type);
-        return node;
-    }
+    //     node->type = get_pointer_type(node->type);
+    //     return node;
+    // }
 
     if (!is_valid_cast(node->type, type)) {
         log_start(LOG_ERROR);

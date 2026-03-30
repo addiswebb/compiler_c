@@ -1,15 +1,52 @@
 #ifdef _WIN64
+
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis.h"
+#include "compiler_c/core/type.h"
+#include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/x86/x86.h"
+
+Symbol *_sret = NULL;
+Symbol *_hidden_sret_ptr = NULL;
+
+void set_hidden_sret_ptr(Type *return_type) {
+    if (_hidden_sret_ptr && _hidden_sret_ptr->type->base == return_type) return;
+    if (!_hidden_sret_ptr) {
+        _hidden_sret_ptr = malloc(sizeof(Symbol));
+        ASSERT(_hidden_sret_ptr, "Failed to allocate _sret symbol\n");
+    }
+    *_hidden_sret_ptr = (Symbol){.name = "_hidden_sret_ptr",
+                                 .kind = VAR,
+                                 .linkage = LINK_NONE,
+                                 .storage = STORAGE_NONE,
+                                 .var_decl = NULL,
+                                 .type = get_pointer_type(return_type),
+                                 .scope_depth = 0};
+}
+void set_sret(Type *return_type) {
+    if (_sret && _sret->type == return_type) return;
+    if (!_sret) {
+        _sret = malloc(sizeof(Symbol));
+        ASSERT(_sret, "Failed to allocate _sret symbol\n");
+    }
+    *_sret = (Symbol){.name = "_sret",
+                      .kind = VAR,
+                      .linkage = LINK_NONE,
+                      .storage = STORAGE_NONE,
+                      .var_decl = NULL,
+                      .type = return_type,
+                      .scope_depth = 0};
+}
 
 const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS] = {RAX, RCX, RDX, R8, R9, R10, R11};
 const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS] = {RBX, RBP, RDI, RSI, R12, R13, R14, R15};
 const GP_Reg int_param_regs[PARAM_REGISTERS] = {RCX, RDX, R8, R9};
 const XMM_Reg float_param_regs[PARAM_REGISTERS] = {XMM0, XMM1, XMM2, XMM3};
 
-ABI_Result abi_classify(Type *type) { return (ABI_Result){.class = {}, .memory = type->size > HIDDEN_PTR_SIZE}; }
+ABI_Result abi_classify(Type *type) {
+    return (ABI_Result){.class = {[0] = ABI_INTEGER, [1] = ABI_NO_CLASS}, .memory = type->size > HIDDEN_PTR_SIZE};
+}
 
 IR_Value abi_lower_param_register(Type *type, int i) {
     ASSERT(i >= 0 && i < PARAM_REGISTERS, "Win64 ABI Invalid param arg index %d\n", i);
@@ -23,31 +60,6 @@ IR_Value abi_lower_param_register(Type *type, int i) {
         v.phys_reg.gp_reg = int_param_regs[i];
     }
     return v;
-}
-void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
-    Type *s_t = instr->store.type;
-    if (s_t->kind != T_STRUCT) return;
-    if (s_t->size > MAX_STRUCT_SIZE) {
-        PANIC("ABI lower store\n");
-        // Hidden pointer
-        IR_Value v = {.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
-        f->max_reg++;
-        IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[0]}};
-        instr = get_instruction(&b->instruction_array, *i);
-
-        IR_Instruction memcpy = {
-            .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = v, [1] = instr->ops[1]}, .memcpy = {.size = instr->store.type->size}};
-        memcpy.ops[1].size = 8;
-        insert(&b->instruction_array, &addr, (*i)++);
-        set(&b->instruction_array, &memcpy, *i);
-    } else {
-        WARN("Should be unreachable\n");
-        IR_Instruction store = *instr;
-        store.store.type = get_integer_type(s_t->size);
-        store.ops[0].size = store.store.type->size;
-        store.ops[1].size = store.store.type->size;
-        set(&b->instruction_array, &store, *i);
-    }
 }
 
 void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
@@ -67,7 +79,7 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
             IR_Instruction param_instr = {.op = IR_PARAM,
                                           .op_count = 2,
                                           .ops = {[0] = hidden_ptr, [1] = instr->ops[1]},
-                                          .param = {.param_index = -1, .type = get_pointer_type(type)}};
+                                          .param = {.param_index = -1, .type = get_pointer_type(instr->param.type)}};
             IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = s_addr, [1] = instr->ops[0]}};
             IR_Instruction memcpy = {
                 .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = s_addr, [1] = hidden_ptr}, .memcpy = {.size = instr->param.type->size}};
@@ -82,28 +94,21 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
 }
 void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     Type *s_t = instr->ret.type;
-    ASSERT(s_t->kind != T_STRUCT, "Win64 ABI Struct returns are unimplemented\n");
-    // if (s_t->kind == T_STRUCT) {
-    //     if (s_t->size > MAX_STRUCT_SIZE) {
-    //         instr->ret.type = get_pointer_type(s_t);
-    //         IR_Value local_v = {.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
-    //         f->max_reg++;
-    //         IR_Instruction local_addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = local_v, [1] = instr->ops[0]}};
-    //         IR_Instruction memcpy = {.op = IR_MEMCPY,
-    //                                  .op_count = 2,
-    //                                  .ops = {[0] = ir_mem_value(0, instr->ret.type), [1] = local_v},
-    //                                  .memcpy = {.size = s_t->size}};
-    //         instr->ops[0] = ir_no_value;
-    //         instr->ret.type = type_void;
-    //         insert(&b->instruction_array, &local_addr, (*i)++);
-    //         insert(&b->instruction_array, &memcpy, (*i)++);
-    //     } else instr->ret.type = get_integer_type(s_t->size);
-    // }
+    if (s_t->kind == T_STRUCT) {
+        if (s_t->size > MAX_STRUCT_SIZE) {
+            IR_Value dst = instr->ops[0];
+            instr->ops[0] = ir_no_value;
+            set_hidden_sret_ptr(s_t);
+            instr->ret.type = type_void;
+            IR_Instruction memcpy = {
+                .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = ir_symbol_value(_hidden_sret_ptr), [1] = dst}, .memcpy = {.size = s_t->size}};
+            insert(&b->instruction_array, &memcpy, (*i)++);
+        } else instr->ret.type = get_integer_type(s_t->size);
+    }
 }
 
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    Type *t = instr->call.type->_func.return_type;
-    if (t->kind == T_STRUCT) t = get_integer_type(t->size);
+    Type *t = instr->call.type->abi_func_type->_func.return_type;
 
     int gp_index = 0;
 
@@ -183,12 +188,14 @@ Type *abi_func_type(Type *type) {
     if (type->_func.return_type->kind == T_STRUCT) {
         if (abi_type->_func.return_type->size > MAX_STRUCT_SIZE) {
             // Below needs a symbol
+            set_sret(type->_func.return_type);
             insert(&abi_type->_func.params,
-                   &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret", .symbol = NULL}, 0);
+                   &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret", .symbol = _sret}, 0);
             abi_type->_func.return_type = type_void;
         } else
-            abi_type->_func.return_type = abi_type->_func.return_type->kind == T_FLOAT ? get_integer_type(abi_type->_func.return_type->size)
-                                                                                       : get_float_type(abi_type->_func.return_type->size);
+            abi_type->_func.return_type = abi_type->_func.return_type->kind == T_FLOAT
+                                              ? get_float_type(abi_type->_func.return_type->size)
+                                              : get_integer_type(abi_type->_func.return_type->size);
         changed = true;
     }
     for (int i = 0; i < abi_type->_func.params.count; i++) {

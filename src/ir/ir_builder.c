@@ -8,7 +8,6 @@
 #include "compiler_c/log/logger.h"
 
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
-    if (type->kind == T_STRUCT) printf("here\n");
     IR_Instruction i;
     i.op = IR_LOAD;
     i.ops[1] = addr;
@@ -91,18 +90,33 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     ctx->func_not_address = true;
     i.ops[1] = ir_gen_rvalue(ctx, expr->func_call.callee);
     ctx->func_not_address = false;
-    array_init(&i.call.arg_array, expr->func_call.params_array.count, sizeof(IR_CallArg));
+
     i.call.type = expr->func_call.callee->type;
     if (i.call.type->kind == T_POINTER) i.call.type = i.call.type->base;
     ASSERT(i.call.type->abi_func_type, "Function Type did not recieve ABI type\n");
-    for (int j = 0; j < i.call.arg_array.capacity; j++) {
+    array_init(&i.call.arg_array, expr->func_call.params_array.count ? expr->func_call.params_array.count : 1, sizeof(IR_CallArg));
+    Type *return_type = i.call.type->_func.return_type;
+    // TODO Abstract the condition to ABI, so it works for both SysV and Win64
+    if (return_type != type_void) {
+
+        ABI_Result res = abi_classify(return_type);
+        if (res.memory) {
+            // Pass hidden pointer as first arg
+            set_sret(return_type);
+            append(&ctx->func->locals_array, &_sret);
+            append(&i.call.arg_array,
+                   &(IR_CallArg){.v = ir_address(ctx, ir_symbol_value(_sret), 0), .type = get_pointer_type(return_type)});
+        }
+    }
+    for (int j = 0; j < expr->func_call.params_array.count; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
         Type *arg_type = param->type;
         if (j < i.call.type->abi_func_type->_func.params.count)
             arg_type = ((ParamDecl *)get(&i.call.type->abi_func_type->_func.params, j))->type;
 
         IR_Value val;
-        if (param->type->kind == T_STRUCT && param->type->size > MAX_STRUCT_SIZE) val = ir_gen_lvalue(ctx, param);
+        ABI_Result res = abi_classify(param->type);
+        if (res.memory) val = ir_gen_lvalue(ctx, param);
         else if (param->type->kind == T_FUNCTION || is_func_ptr(param->type)) val = ir_gen_lvalue(ctx, param);
         // else if (is_func_ptr(param->type)) val = ir_gen_rvalue(ctx, param);
         else val = ir_gen_rvalue(ctx, param);

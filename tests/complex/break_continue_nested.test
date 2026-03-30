@@ -1,0 +1,19 @@
+// RUN: %cc %s -a -o %t.s
+// RUN: gcc %t.s -o %t
+// RUN: %check_exit 4 %t
+
+int main() {
+    int i = 0;
+    int sum = 0;
+    while (i < 5) {
+        i++;
+        if (i == 2) {
+            continue;
+        }
+        if (i == 4) {
+            break;
+        }
+        sum += i;
+    }
+    return sum; // 1 + 3
+}

@@ -130,8 +130,7 @@ const char *x86_rax_reg(Type *t) {
             PANIC("Tried to get int register of unsupported size %d\n", t->size);
         }
     }
-    if (t->kind == T_POINTER) return "%rax";
-    if (t->kind == T_ARRAY) return "%rax";
+    if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "%rax";
     log_start(LOG_ERROR);
     printf("Tried to get %%rax register of unsupported type ");
     print_type(t);
@@ -231,7 +230,7 @@ const char *x86_integer_op_suffix(int size) {
 const char *x86_op_suffix(const Type *t) {
     if (t->kind == T_FLOAT) return x86_float_op_suffix(t->size);
     if (t->kind == T_INT) return x86_integer_op_suffix(t->size);
-    if (t->kind == T_POINTER || t->kind == T_ARRAY) return "q";
+    if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "q";
     PANIC("Tried to op of unsupported type\n");
 }
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { abi_emit_call(fp, ctx, instr); }
@@ -471,8 +470,9 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
         x86_emit_rx(fp, "mov", "", from_op_suffix, from_reg, dst);
         return;
     }
-    if (from->kind == T_ARRAY && to->kind == T_POINTER) {
-        return;
+    if (from->kind == T_ARRAY && to->kind == T_POINTER) return;
+
+    if (from->kind == T_FUNCTION && to->kind == T_POINTER) {
         x86_emit_xr(fp, "lea", "", "", src, from_reg);
         x86_emit_rx(fp, "mov", "q", "", from_reg, dst);
         return;

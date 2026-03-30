@@ -7,10 +7,8 @@
 #include "compiler_c/parse/parser.h"
 
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 IR_OpInfo op_info[] = {
     [IR_CONST] = {.def_mask = 0b001, .use_mask = 0b000},
@@ -212,9 +210,7 @@ void ir_free_module(IR_Module *module) {
             IR_Block *block = get_block(func, j);
             for (int k = 0; k < block->instruction_array.count; k++) {
                 IR_Instruction *instr = get_instruction(&block->instruction_array, k);
-                if (instr->op == IR_CALL) {
-                    array_free(&instr->call.arg_array);
-                }
+                if (instr->op == IR_CALL) array_free(&instr->call.arg_array);
             }
             free(block->cfg.pred);
             free(block->cfg.succ);

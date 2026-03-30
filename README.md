@@ -160,6 +160,7 @@ When a block is full, instead of reallocating the whole block somewhere else at 
 * Typedef
   * Aliases: `typedef type name`
 * Function Pointers
+  * Function Pointer Arrays `int (*f[])(int);`
 
 ## 2. Literals
 
@@ -234,9 +235,9 @@ When a block is full, instead of reallocating the whole block somewhere else at 
     * `SysV`
       * First `6` integer args to registers, then stack spilled
       * First `8` floating point args to registers, then stack spilled
-  * Structs as function arguments and **return values**
+  * Structs as function arguments and return values
     * `Win64`
-      * `sizeof(struct A) <= 8b` => 1-2 integer chunks
+      * `sizeof(struct A) <= 8b` => integer/SSE chunk
       * `         ...          ` => hidden pointer & memcpy
     * `SysV`
       * `sizeof(struct A) <= 16b` => 1-2 integer/SSE chunks

@@ -22,13 +22,18 @@ ABI_Result abi_classify(Type *type);
 
 IR_Value abi_lower_param_register(Type *type, int i);
 
-void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 Type *abi_func_type(Type *type);
 
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
+
+extern Symbol *_sret;
+extern Symbol *_hidden_sret_ptr;
+
+void set_sret(Type *return_type);
+void set_hidden_sret_ptr(Type *return_type);
 
 #ifdef _WIN64
 
