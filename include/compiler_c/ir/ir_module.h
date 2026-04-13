@@ -44,16 +44,32 @@ typedef enum{
 
 typedef enum {
     IR_CONST,
-    IR_UNOP,IR_BINOP,
-    IR_LOAD, IR_STORE, IR_RET, IR_CALL,
-    IR_BR, IR_BR_COND,
+    /* Unary Operation */
+    IR_UNOP,
+    /* Binary Operation */
+    IR_BINOP,
+    /* Load from <addr> into <register> */
+    IR_LOAD,
+    /* Store <register> into <addr> */
+    IR_STORE,
+    /* Move <a> into <b> */
+    IR_MOVE,
+    IR_RET,
+    IR_CALL,
+    /* Branch to <block> */
+    IR_BR,
+    /* Branch to respective <t>/<f> block on <condition> */
+    IR_BR_COND,
     IR_CMP,
     IR_CAST,
+    /* Retrieve the address of <ir_value> */
     IR_ADDR,
+    /* No-op */
     IR_ALLOCA,
     IR_MEMCPY,
     IR_LABEL,
     IR_JMP,
+    /* Store a gp/fp parameter by <index> into <register> */
     IR_PARAM,
     IR_BUILTIN_VA_START,
     IR_BUILTIN_VA_ARG,
