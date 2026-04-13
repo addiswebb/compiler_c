@@ -36,4 +36,13 @@
             "args": ["--build", "build"],
         },
     },
+    {
+        "adapter": "CodeLLDB",
+        "label": "Debug Test",
+        "request": "launch",
+        "program": "./tests/test",
+        "build": {
+            "command": "gcc -g ./tests/test.s -o ./tests/test",
+        },
+    },
 ]

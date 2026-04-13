@@ -1,94 +1,103 @@
 	.file	"test.c"
 	.text
-	.globl	sum_mix
-	.def	sum_mix;	.scl	2;	.type	32;	.endef
-	.seh_proc	sum_mix
-sum_mix:
+	.globl	sum
+	.type	sum, @function
+sum:
+.LFB0:
+	.cfi_startproc
 	pushq	%rbp
-	.seh_pushreg	%rbp
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
 	movq	%rsp, %rbp
-	.seh_setframe	%rbp, 0
-	subq	$32, %rsp
-	.seh_stackalloc	32
-	.seh_endprologue
-	movl	%ecx, 16(%rbp)
-	movq	%rdx, 24(%rbp)
-	movq	%r8, 32(%rbp)
-	movq	%r9, 40(%rbp)
-	leaq	24(%rbp), %rax
-	movq	%rax, -24(%rbp)
-	pxor	%xmm0, %xmm0
-	movsd	%xmm0, -8(%rbp)
-	movl	$0, -12(%rbp)
-	jmp	.L2
-.L5:
-	movl	-12(%rbp), %eax
-	andl	$1, %eax
-	testl	%eax, %eax
-	jne	.L3
-	movq	-24(%rbp), %rax
-	leaq	8(%rax), %rdx
-	movq	%rdx, -24(%rbp)
-	movl	(%rax), %eax
-	pxor	%xmm0, %xmm0
-	cvtsi2sdl	%eax, %xmm0
-	movsd	-8(%rbp), %xmm1
-	addsd	%xmm1, %xmm0
-	movsd	%xmm0, -8(%rbp)
-	jmp	.L4
-.L3:
-	movq	-24(%rbp), %rax
-	leaq	8(%rax), %rdx
-	movq	%rdx, -24(%rbp)
-	movsd	(%rax), %xmm0
-	movsd	-8(%rbp), %xmm1
-	addsd	%xmm1, %xmm0
-	movsd	%xmm0, -8(%rbp)
-.L4:
-	addl	$1, -12(%rbp)
+	.cfi_def_cfa_register 6
+	subq	$240, %rsp
+	movl	%edi, -228(%rbp)
+	movq	%rsi, -168(%rbp)
+	movq	%rdx, -160(%rbp)
+	movq	%rcx, -152(%rbp)
+	movq	%r8, -144(%rbp)
+	movq	%r9, -136(%rbp)
+	testb	%al, %al
+	je	.L2
+	movaps	%xmm0, -128(%rbp)
+	movaps	%xmm1, -112(%rbp)
+	movaps	%xmm2, -96(%rbp)
+	movaps	%xmm3, -80(%rbp)
+	movaps	%xmm4, -64(%rbp)
+	movaps	%xmm5, -48(%rbp)
+	movaps	%xmm6, -32(%rbp)
+	movaps	%xmm7, -16(%rbp)
 .L2:
-	movl	-12(%rbp), %eax
-	cmpl	16(%rbp), %eax
-	jl	.L5
-	movsd	-8(%rbp), %xmm0
-	movq	%xmm0, %rax
-	movq	%rax, %xmm0
-	addq	$32, %rsp
-	popq	%rbp
+	movq	%fs:40, %rax
+	movq	%rax, -184(%rbp)
+	xorl	%eax, %eax
+	movl	$8, -208(%rbp)
+	movl	$48, -204(%rbp)
+	leaq	16(%rbp), %rax
+	movq	%rax, -200(%rbp)
+	leaq	-176(%rbp), %rax
+	movq	%rax, -192(%rbp)
+	movl	$0, -216(%rbp)
+	movl	$0, -212(%rbp)
+	jmp	.L3
+.L6:
+	movl	-208(%rbp), %eax
+	cmpl	$47, %eax
+	ja	.L4
+	movq	-192(%rbp), %rax
+	movl	-208(%rbp), %edx
+	movl	%edx, %edx
+	addq	%rdx, %rax
+	movl	-208(%rbp), %edx
+	addl	$8, %edx
+	movl	%edx, -208(%rbp)
+	jmp	.L5
+.L4:
+	movq	-200(%rbp), %rax
+	leaq	8(%rax), %rdx
+	movq	%rdx, -200(%rbp)
+.L5:
+	movl	(%rax), %eax
+	addl	%eax, -216(%rbp)
+	addl	$1, -212(%rbp)
+.L3:
+	movl	-212(%rbp), %eax
+	cmpl	-228(%rbp), %eax
+	jl	.L6
+	movl	-216(%rbp), %eax
+	movq	-184(%rbp), %rdx
+	subq	%fs:40, %rdx
+	je	.L8
+	call	__stack_chk_fail@PLT
+.L8:
+	leave
+	.cfi_def_cfa 7, 8
 	ret
-	.seh_endproc
-	.def	__main;	.scl	2;	.type	32;	.endef
+	.cfi_endproc
+.LFE0:
+	.size	sum, .-sum
 	.globl	main
-	.def	main;	.scl	2;	.type	32;	.endef
-	.seh_proc	main
+	.type	main, @function
 main:
+.LFB1:
+	.cfi_startproc
 	pushq	%rbp
-	.seh_pushreg	%rbp
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
 	movq	%rsp, %rbp
-	.seh_setframe	%rbp, 0
-	subq	$48, %rsp
-	.seh_stackalloc	48
-	.seh_endprologue
-	call	__main
-	movabsq	$4612811918334230528, %rax
-	movq	%rax, %rdx
-	movq	%rdx, %xmm1
-	movsd	.LC1(%rip), %xmm0
-	movsd	%xmm0, 32(%rsp)
-	movl	$3, %r9d
-	movapd	%xmm1, %xmm2
-	movq	%rax, %r8
-	movl	$1, %edx
-	movl	$4, %ecx
-	call	sum_mix
-	cvttsd2sil	%xmm0, %eax
-	addq	$48, %rsp
+	.cfi_def_cfa_register 6
+	movl	$4, %r8d
+	movl	$3, %ecx
+	movl	$2, %edx
+	movl	$1, %esi
+	movl	$4, %edi
+	movl	$0, %eax
+	call	sum
 	popq	%rbp
+	.cfi_def_cfa 7, 8
 	ret
-	.seh_endproc
-	.section .rdata,"dr"
-	.align 8
-.LC1:
-	.long	0
-	.long	1074921472
-	.ident	"GCC: (x86_64-posix-seh-rev0, Built by MinGW-Builds project) 13.2.0"
+	.cfi_endproc
+.LFE1:
+	.size	main, .-main
+	.ident	"GCC: (GNU) 15.2.1 20260209"
+	.section	.note.GNU-stack,"",@progbits

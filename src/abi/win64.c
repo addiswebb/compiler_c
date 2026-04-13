@@ -1,10 +1,10 @@
-#include "compiler_c/ir/ir_builder.h"
-#include "compiler_c/ir/ir_gen.h"
 #ifdef _WIN64
 
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis.h"
 #include "compiler_c/core/type.h"
+#include "compiler_c/ir/ir_builder.h"
+#include "compiler_c/ir/ir_gen.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/x86/x86.h"
@@ -134,6 +134,40 @@ IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
     case BUILTIN_NONE:
     case BUILTIN_MEMCPY:
         PANIC("Builtin none!\n");
+    }
+}
+
+void abi_gen_params(IR_Context *ctx, IR_Function *f) {
+    int hidde_ptr_offset = 0;
+    ABI_Result res = abi_classify(f->type->_func.return_type);
+    if (res.memory) {
+        set_hidden_sret_ptr(f->type->_func.return_type);
+        append(&f->locals_array, &_hidden_sret_ptr);
+        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+                                                            .op_count = 1,
+                                                            .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
+                                                            .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
+    }
+
+    int params_emitted = hidden_ptr_offset;
+    for (int i = hidde_ptr_offset; i < f->type->_func.params.count + hidde_ptr_offset; i++) {
+        // ParamDecl *d = get(&abi_type->_func.params, i);
+        ParamDecl *d = get(&f->type->_func.params, i);
+        d->symbol->type = d->type;
+        append(&f->locals_array, &d->symbol);
+        params_emitted++;
+        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+                                                            .op_count = 1,
+                                                            .ops = {[0] = ir_symbol_value(d->symbol)},
+                                                            .param = {.param_index = i, .type = d->type}});
+    }
+    if (f->type->_func.is_variadic) {
+        for (int i = params_emitted; i < PARAM_REGISTERS; i++) {
+            ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+                                                                .op_count = 1,
+                                                                .ops = {[0] = ir_stack_value(8, 8, 16 + i * 8)},
+                                                                .param = {.param_index = i, .type = type_u64}});
+        }
     }
 }
 

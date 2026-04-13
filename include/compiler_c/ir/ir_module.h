@@ -1,7 +1,7 @@
 #ifndef COMPILER_C_IR_MODULE_H
 #define COMPILER_C_IR_MODULE_H
 
-#define DEBUG_LOWERED_IR 0
+#define DEBUG_LOWERED_IR 1
 #define DEBUG_IR_INSTRUCTIONS 0
 
 #include "compiler_c/core/node.h"
@@ -227,7 +227,7 @@ typedef struct {
     int stack_slot_capacity;
     Linkage linkage;
     Storage storage;
-    Type *return_type;
+    Type *type;
 } IR_Function;
 
 

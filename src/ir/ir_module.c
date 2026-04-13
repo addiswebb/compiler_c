@@ -24,7 +24,7 @@ IR_OpInfo op_info[] = {
     [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
     [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
-    [IR_PARAM] = {.def_mask = 0b001, .use_mask = 0b000},
+    [IR_PARAM] = {.def_mask = 0b001, .use_mask = 0b010},
     // IR_CALL all given params are 'used'
     [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b010},
     // ---- Builtins ----
@@ -109,6 +109,7 @@ IR_Module *ir_new_module() {
 */
 IR_Block *ir_new_block() {
     IR_Block *block = malloc(sizeof(IR_Block));
+    ASSERT(block, "Failed to allocate for block");
     array_init(&block->instruction_array, 4, sizeof(IR_Instruction));
 
     block->id = -1;
@@ -137,7 +138,7 @@ IR_Block *ir_new_block() {
     return block;
 }
 
-IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type) {
+IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *func_type) {
     IR_Function *func = malloc(sizeof(*func));
     if (!func) {
         PANIC("Failed to allocate IR_Function\n");
@@ -150,7 +151,7 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type) {
     func->next_reg = 0;
     func->max_reg = 0;
     func->stack_size = 0;
-    func->return_type = type;
+    func->type = func_type;
 
     func->stack_slot_capacity = 4;
     func->stack_slot_count = 0;
@@ -226,7 +227,7 @@ void ir_free_module(IR_Module *module) {
         ASSERT(func->scopes_array.count == 0, "Should be empty\n");
         array_free(&func->scopes_array);
         func->name = NULL;
-        func->return_type = NULL;
+        func->type = NULL;
         free(func);
     }
     array_free(&module->functions_array);

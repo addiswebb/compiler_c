@@ -1,4 +1,5 @@
 #include "compiler_c/analyse/sema.h"
+#include "compiler_c/abi/abi.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/log/logger.h"
@@ -684,7 +685,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             semantic_analysis(sema_ctx, p, nm, dst_ap);
             semantic_analysis(sema_ctx, p, nm, last_named_param);
             ASSERT(last_named_param->kind == N_IDENTIFIER, "Last named param must be an identifier.\n");
-            ASSERT(dst_ap->type == get_pointer_type(type_i8), "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]);
+            ASSERT(is_va_list_type(dst_ap->type), "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]);
             node->type = type_void;
             break;
         case BUILTIN_VA_ARG:
@@ -693,8 +694,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             Node *type_info = get_node(&node->_builtin.params, 1);
             semantic_analysis(sema_ctx, p, nm, dst_ap);
             semantic_analysis(sema_ctx, p, nm, type_info);
-            ASSERT(dst_ap->type == get_pointer_type(type_i8), "%s expects type va_list as first arg.", builtin_names[node->_builtin.kind]);
-            ASSERT(type_info->kind == N_TYPE && type_info->type != type_invalid, "%s expects type va_list as first arg.",
+            ASSERT(is_va_list_type(dst_ap->type), "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]);
+            ASSERT(type_info->kind == N_TYPE && type_info->type != type_invalid, "%s expects a type as second arg.",
                    builtin_names[node->_builtin.kind]);
             node->type = type_info->type;
             break;
@@ -702,7 +703,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             ASSERT(node->_builtin.params.count == 1, "%s expects 1 arguments\n", builtin_names[node->_builtin.kind]);
             dst_ap = get_node(&node->_builtin.params, 0);
             semantic_analysis(sema_ctx, p, nm, dst_ap);
-            ASSERT(dst_ap->type == get_pointer_type(type_i8), "%s expects type va_list as first arg.", builtin_names[node->_builtin.kind]);
+            ASSERT(is_va_list_type(dst_ap->type), "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]);
             node->type = type_void;
             break;
         case BUILTIN_MEMCPY:

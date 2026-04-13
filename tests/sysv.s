@@ -18,8 +18,7 @@ sum_mix:
 	movq	%rcx, -152(%rbp)
 	movq	%r8, -144(%rbp)
 	movq	%r9, -136(%rbp)
-	;; skip if %al is zero as no floating registers were used
-	testb	%al, %al
+	test	%al, %al
 	je	.L2
 	movaps	%xmm0, -128(%rbp)
 	movaps	%xmm1, -112(%rbp)

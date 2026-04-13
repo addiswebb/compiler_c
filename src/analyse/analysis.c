@@ -428,7 +428,7 @@ void generate_types() {
     int n = typepool.count;
     for (int i = 0; i < n; i++) {
         Type *t = (Type *)arena_get(&typepool, i);
-        if (t->kind == T_FUNCTION) t->abi_func_type = abi_func_type(t);
+        if (t->kind == T_FUNCTION) abi_func_type_gen(t);
     }
 }
 void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
@@ -527,7 +527,8 @@ void analysis(const IR_Context *ctx) {
         Array symbol_map = {};
         Array symbol_slots = {};
 
-        int frame_size = 0;
+        const int variadic_space = f->type->_func.is_variadic ? 176 : 0;
+        int frame_size = variadic_space;
 
         // Allocate local variables
         symbol_slot_allocation(f, &frame_size, &symbol_slots, &symbol_map);

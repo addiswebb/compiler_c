@@ -1,159 +1,151 @@
-.section .rodata
-.align 8
-.LC0:
-    .quad 0x4004000000000000
-.align 8
-.LC1:
-    .quad 0x4012000000000000
+.section .note.GNU-stack,"",@progbits
 
 .text
-.global sum_mix
-sum_mix:
+.global sum
+sum:
     push %rbp
     mov %rsp, %rbp
-    subq $64, %rsp
-sum_mix_0:
-    movl %ecx, -8(%rbp)
-    movq %rcx, 16(%rbp)
-    movq %rdx, 24(%rbp)
-    movq %r8, 32(%rbp)
-    movq %r9, 40(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -40(%rbp)
+    subq $256, %rsp
+sum_0:
+    movl %edi, -184(%rbp)
+    movq %rsi, -168(%rbp)
+    movq %rdx, -160(%rbp)
+    movq %rcx, -152(%rbp)
+    movq %r8, -144(%rbp)
+    movq %r9, -136(%rbp)
+    movsd %xmm0, -128(%rbp)
+    movsd %xmm1, -112(%rbp)
+    movsd %xmm2, -96(%rbp)
+    movsd %xmm3, -80(%rbp)
+    movsd %xmm4, -64(%rbp)
+    movsd %xmm5, -48(%rbp)
+    movsd %xmm6, %xmm0
+    movsd %xmm0, -32(%rbp)
+    movsd %xmm7, %xmm0
+    movsd %xmm0, -16(%rbp)
+    leaq -208(%rbp), %rax
+    movq %rax, -232(%rbp)
+    movq -232(%rbp), %rax
+    movl $8, %ecx
+    movl %ecx, (%rax)
+    movq -232(%rbp), %rax
+    addq $4, %rax
+    movq %rax, -232(%rbp)
+    movq -232(%rbp), %rax
+    movl $48, %ecx
+    movl %ecx, (%rax)
+    movq -232(%rbp), %rax
+    addq $4, %rax
+    movq %rax, -232(%rbp)
     leaq 16(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movq -40(%rbp), %rax
-    movq -48(%rbp), %rcx
+    movq %rax, -240(%rbp)
+    movq -232(%rbp), %rax
+    movq -240(%rbp), %rcx
     movq %rcx, (%rax)
-    leaq -24(%rbp), %rax
-    movq %rax, -40(%rbp)
-    mov $0, %eax
-    movl %eax, -48(%rbp)
-    movq -40(%rbp), %rax
-    movsd -48(%rbp), %xmm2
-    movsd %xmm2, (%rax)
-    leaq -32(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
+    movq -232(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -232(%rbp)
+    leaq -176(%rbp), %rax
+    movq %rax, -240(%rbp)
+    movq -232(%rbp), %rax
+    movq -240(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -216(%rbp), %rax
+    movq %rax, -232(%rbp)
+    movq -232(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
-sum_mix_1:
-    leaq -32(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
+    leaq -224(%rbp), %rax
+    movq %rax, -232(%rbp)
+    movq -232(%rbp), %rax
+    movl $0, %ecx
+    movl %ecx, (%rax)
+sum_1:
+    leaq -224(%rbp), %rax
+    movq %rax, -232(%rbp)
+    movq -232(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -40(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
+    movl %eax, -232(%rbp)
+    leaq -184(%rbp), %rax
+    movq %rax, -240(%rbp)
+    movq -240(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -48(%rbp)
-    movl -40(%rbp), %eax
-    cmpl -48(%rbp), %eax
+    movl %eax, -240(%rbp)
+    movl -232(%rbp), %eax
+    cmpl -240(%rbp), %eax
     setl %al
     movzbl %al, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
+    movl %eax, -232(%rbp)
+    movl -232(%rbp), %eax
     testl %eax, %eax
-    jz sum_mix_7
-sum_mix_2:
-    leaq -32(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
+    jz sum_6
+sum_2:
+    leaq -216(%rbp), %rax
+    movq %rax, -232(%rbp)
+    leaq -208(%rbp), %rax
+    movq %rax, -240(%rbp)
+    movq -240(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    cltd
-    movl $2, %ecx
-    idivl %ecx
-    movl %edx, -40(%rbp)
-    movl -40(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
+    movl %eax, -248(%rbp)
+    movl -248(%rbp), %eax
+    cmpl $48, %eax
+    setl %al
     movzbl %al, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
+    movl %eax, -256(%rbp)
+    movl -256(%rbp), %eax
     testl %eax, %eax
-    jz sum_mix_4
-sum_mix_3:
-    leaq -24(%rbp), %rax
-    movq %rax, -40(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
+    jz sum_3
+    movq -240(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -256(%rbp)
+    movq -256(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq -48(%rbp), %rax
-    movq -56(%rbp), %rcx
-    movq %rcx, (%rax)
-    movq -56(%rbp), %rax
+    movq %rax, -256(%rbp)
+    movl -256(%rbp), %eax
+    addl -248(%rbp), %eax
+    movl %eax, -256(%rbp)
+    movq -256(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -48(%rbp)
-    movslq -48(%rbp), %rax
-    cvtsi2sd %rax, %xmm0
-    movsd %xmm0, -48(%rbp)
-    movq -40(%rbp), %rax
-    movsd (%rax), %xmm0
-    movsd %xmm0, -56(%rbp)
-    movsd -56(%rbp), %xmm0
-    addsd -48(%rbp), %xmm0
-    movsd %xmm0, -48(%rbp)
-    movq -40(%rbp), %rax
-    movsd -48(%rbp), %xmm2
-    movsd %xmm2, (%rax)
-    jmp sum_mix_5
-sum_mix_4:
-    leaq -24(%rbp), %rax
-    movq %rax, -40(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq -48(%rbp), %rax
-    movq -56(%rbp), %rcx
-    movq %rcx, (%rax)
-    movq -56(%rbp), %rax
-    movsd (%rax), %xmm0
-    movsd %xmm0, -48(%rbp)
-    movq -40(%rbp), %rax
-    movsd (%rax), %xmm0
-    movsd %xmm0, -56(%rbp)
-    movsd -56(%rbp), %xmm0
-    addsd -48(%rbp), %xmm0
-    movsd %xmm0, -48(%rbp)
-    movq -40(%rbp), %rax
-    movsd -48(%rbp), %xmm2
-    movsd %xmm2, (%rax)
-    jmp sum_mix_5
-sum_mix_5:
-    jmp sum_mix_6
-sum_mix_6:
-    leaq -32(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -48(%rbp)
-    movl -48(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -48(%rbp)
-    movq -40(%rbp), %rax
-    movl -48(%rbp), %ecx
+    movl %eax, -256(%rbp)
+    movl -248(%rbp), %eax
+    addl $8, %eax
+    movl %eax, -248(%rbp)
+    movq -240(%rbp), %rax
+    movl -248(%rbp), %ecx
     movl %ecx, (%rax)
-    jmp sum_mix_1
-sum_mix_7:
-    leaq -24(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movsd (%rax), %xmm0
-    movsd %xmm0, -40(%rbp)
-    movsd -40(%rbp), %xmm0
+    jmp sum_4
+sum_3:
+sum_4:
+    movq -232(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -240(%rbp)
+    movl -240(%rbp), %eax
+    addl -256(%rbp), %eax
+    movl %eax, -240(%rbp)
+    movq -232(%rbp), %rax
+    movl -240(%rbp), %ecx
+    movl %ecx, (%rax)
+    jmp sum_5
+sum_5:
+    leaq -224(%rbp), %rax
+    movq %rax, -232(%rbp)
+    movq -232(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -240(%rbp)
+    movl -240(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -240(%rbp)
+    movq -232(%rbp), %rax
+    movl -240(%rbp), %ecx
+    movl %ecx, (%rax)
+    jmp sum_1
+sum_6:
+    leaq -216(%rbp), %rax
+    movq %rax, -232(%rbp)
+    movq -232(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -232(%rbp)
+    movl -232(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp
     ret
@@ -163,22 +155,18 @@ main:
     mov %rsp, %rbp
     subq $16, %rsp
 main_0:
-    movsd .LC0(%rip), %xmm0
-    movsd %xmm0, -8(%rbp)
-    movsd .LC1(%rip), %xmm0
-    movsd %xmm0, -16(%rbp)
-    subq $48, %rsp
-    movl $4, %ecx
-    movl $1, %edx
-    movq -8(%rbp), %r8
-    movsd -8(%rbp), %xmm2
-    movl $3, %r9d
-    movsd -16(%rbp), %xmm0
-    movsd %xmm0, 32(%rsp)
-    call sum_mix
-    addq $48, %rsp
-    movsd %xmm0, -8(%rbp)
-    cvttsd2si -8(%rbp), %eax
+    subq $184, %rsp
+    movl $4, %edi
+    movl $1, %esi
+    movl $2, %edx
+    movl $3, %ecx
+    movl $4, %r8d
+    movl $5, %r9d
+    movl $6, %eax
+    movl %eax, 0(%rsp)
+    xor %eax, %eax
+    call sum
+    addq $184, %rsp
     movl %eax, -8(%rbp)
     movl -8(%rbp), %eax
     mov %rbp, %rsp

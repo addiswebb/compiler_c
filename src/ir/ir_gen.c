@@ -527,7 +527,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
         return NULL;
     }
 
-    IR_Function *fn = ir_new_function(ctx, func->func.name, func->type->_func.return_type);
+    IR_Function *fn = ir_new_function(ctx, func->func.name, func->type);
     if (func->func.body->kind != N_COMPOUND) {
         PANIC("Function body is not a compound,\n");
     }
@@ -541,56 +541,11 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
 
     ir_begin_scope(fn);
 
-    Type *abi_type = func->type->abi_func_type;
+    Type *abi_type = func->type->abi.type;
     ASSERT(abi_type, "Function did not recieve ABI type\n");
-    int hidde_ptr_offset = 0;
-    ABI_Result res = abi_classify(func->type->_func.return_type);
-    if (res.memory) {
-        set_hidden_sret_ptr(func->type->_func.return_type);
-        append(&fn->locals_array, &_hidden_sret_ptr);
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 1,
-                                                            .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
-                                                            .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
-    }
-
-    int params_emitted = hidde_ptr_offset;
-    // Just make everything ABI at this point 😔
-    for (int i = hidde_ptr_offset; i < func->type->_func.params.count + hidde_ptr_offset; i++) {
-        // ParamDecl *d = get(&abi_type->_func.params, i);
-        ParamDecl *d = get(&func->type->_func.params, i);
-        d->symbol->type = d->type;
-        append(&fn->locals_array, &d->symbol);
-        params_emitted++;
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 1,
-                                                            .ops = {[0] = ir_symbol_value(d->symbol)},
-                                                            .param = {.param_index = i, .type = d->type}});
-    }
-// Win64 Spill
-// TODO put in abi.h
-#ifdef _WIN64
-    if (func->type->_func.is_variadic) {
-        for (int i = params_emitted; i < PARAM_REGISTERS; i++) {
-            ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
-                                                                .op_count = 1,
-                                                                .ops = {[0] = ir_stack_value(8, 8, 16 + i * 8)},
-                                                                .param = {.param_index = i, .type = type_u64}});
-        }
-    }
-#else
-// subq 176 bytes,
-// for every gp register, overflow to stack starting from end at -168(%rbp) for %rsi
-// for every sse register, overflow to stack starting from -128(%rbp) for %xmm0
-// skip already stored named registers if possible
-
-// assume va_list is allocated to store gp_offset, fp_offset, overflow_arg_area, reg_save_area
-// gp_offset = offset in bytes from reg_save_area to the next gp variable (+8 each va_arg call with type != T_FLOAT)
-// sse_offset = offset in bytes from reg_save_area to the next sse variable (+8 each va_arg call with type == T_FLOAT)
-// reg_save_area = leaq -176(%rbp)
-// overflow_arg_area = lea 16(%rbp)
-#endif
-
+    
+    abi_gen_params(ctx, fn);
+    
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {
         ir_gen_block_item(ctx, get_node(&func->func.body->compound.items_array, i));

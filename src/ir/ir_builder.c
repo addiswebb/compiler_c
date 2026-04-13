@@ -96,7 +96,7 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
 
     i.call.type = expr->func_call.callee->type;
     if (i.call.type->kind == T_POINTER) i.call.type = i.call.type->base;
-    ASSERT(i.call.type->abi_func_type, "Function Type did not recieve ABI type\n");
+    ASSERT(i.call.type->abi.type, "Function Type did not recieve ABI type\n");
     array_init(&i.call.arg_array, expr->func_call.params_array.count ? expr->func_call.params_array.count : 1, sizeof(IR_CallArg));
     Type *return_type = i.call.type->_func.return_type;
     // TODO Abstract the condition to ABI, so it works for both SysV and Win64
@@ -114,8 +114,7 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     for (int j = 0; j < expr->func_call.params_array.count; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
         Type *arg_type = param->type;
-        if (j < i.call.type->abi_func_type->_func.params.count)
-            arg_type = ((ParamDecl *)get(&i.call.type->abi_func_type->_func.params, j))->type;
+        if (j < i.call.type->abi.type->_func.params.count) arg_type = ((ParamDecl *)get(&i.call.type->abi.type->_func.params, j))->type;
 
         IR_Value val;
         ABI_Result res = abi_classify(param->type);
