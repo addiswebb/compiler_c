@@ -376,6 +376,15 @@ static void print_ir_builtin_va_arg(const IR_Instruction *instr) {
     print_type(instr->builtin_va_arg.type);
     printf("\n");
 }
+
+static void print_ir_move(const IR_Instruction *instr) {
+    printf("    ");
+    printf("MOVE ");
+    print_ir_value(&instr->ops[1]);
+    printf(" -> ");
+    print_ir_value(&instr->ops[0]);
+    printf("\n");
+}
 void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr) {
     switch (instr->op) {
     case IR_CONST:
@@ -434,6 +443,9 @@ void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr) {
         break;
     case IR_PARAM:
         print_ir_param(instr);
+        break;
+    case IR_MOVE:
+        print_ir_move(instr);
         break;
     }
 }

@@ -1,23 +1,5 @@
 #include <stdarg.h>
-
-// double sum_mix(int n, ...) {
-//     va_list args;
-//     va_start(args, n);
-//     double s = 0;
-//     int a = 10;
-//     int b = 10;
-//     for (int i = 0; i < n; i++) {
-//         if (i % 2 == 0) {
-//             s += va_arg(args, int);
-//         } else {
-//             s += va_arg(args, double);
-//         }
-//         a++;
-//         b++;
-//     }
-//     va_end(args);
-//     return s;
-// }
+int printf(const char *, ...);
 
 int sum(int n, ...) {
     va_list ap;
@@ -30,5 +12,4 @@ int sum(int n, ...) {
     return sum;
 }
 
-// int main() { return (int)sum_mix(4, 1, 2.5, 3, 4.5); }
-int main() { return sum(4, 1, 2, 3, 4, 5, 6); }
+int main() { return sum(9, 1, 2, 3, 4, 5, 6, 7, 8, 9); }

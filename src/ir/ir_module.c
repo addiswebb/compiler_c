@@ -25,6 +25,7 @@ IR_OpInfo op_info[] = {
     [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
     [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
     [IR_PARAM] = {.def_mask = 0b001, .use_mask = 0b010},
+    [IR_MOVE] = {.def_mask = 0b000, .use_mask = 0b011},
     // IR_CALL all given params are 'used'
     [IR_CALL] = {.def_mask = 0b001, .use_mask = 0b010},
     // ---- Builtins ----

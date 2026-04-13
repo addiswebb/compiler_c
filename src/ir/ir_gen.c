@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "compiler_c/analyse/analysis.h"
 #include "compiler_c/analyse/sema.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"

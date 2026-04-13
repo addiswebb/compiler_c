@@ -7,6 +7,15 @@
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
 
+void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src) {
+    IR_Instruction i;
+    i.op = IR_MOVE;
+    i.ops[1] = src;
+    i.ops[0] = dst;
+    i.op_count = 2;
+    ir_append_instruction(ctx->block, &i);
+}
+
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
     IR_Instruction i;
     i.op = IR_LOAD;

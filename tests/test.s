@@ -5,7 +5,7 @@
 sum:
     push %rbp
     mov %rsp, %rbp
-    subq $256, %rsp
+    subq $272, %rsp
 sum_0:
     movl %edi, -184(%rbp)
     movq %rsi, -168(%rbp)
@@ -115,6 +115,23 @@ sum_2:
     movl %ecx, (%rax)
     jmp sum_4
 sum_3:
+    movq -240(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -240(%rbp)
+    movq -240(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -248(%rbp)
+    movq -248(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -264(%rbp)
+    movq -248(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -248(%rbp)
+    movq -240(%rbp), %rax
+    movq -248(%rbp), %rcx
+    movq %rcx, (%rax)
+    movq -264(%rbp), %rax
+    movq %rax, -256(%rbp)
 sum_4:
     movq -232(%rbp), %rax
     movl (%rax), %eax
@@ -155,8 +172,8 @@ main:
     mov %rsp, %rbp
     subq $16, %rsp
 main_0:
-    subq $184, %rsp
-    movl $4, %edi
+    subq $208, %rsp
+    movl $9, %edi
     movl $1, %esi
     movl $2, %edx
     movl $3, %ecx
@@ -164,9 +181,15 @@ main_0:
     movl $5, %r9d
     movl $6, %eax
     movl %eax, 0(%rsp)
+    movl $7, %eax
+    movl %eax, 8(%rsp)
+    movl $8, %eax
+    movl %eax, 16(%rsp)
+    movl $9, %eax
+    movl %eax, 24(%rsp)
     xor %eax, %eax
     call sum
-    addq $184, %rsp
+    addq $208, %rsp
     movl %eax, -8(%rbp)
     movl -8(%rbp), %eax
     mov %rbp, %rsp

@@ -37,6 +37,9 @@ static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instru
 static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_load(fp, &instr->ops[1], &instr->ops[0], instr->load.type);
 }
+static void x86_gen_move_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_move(fp, &instr->ops[0], &instr->ops[1]);
+}
 static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_unary(fp, &instr->ops[0], &instr->ops[1], instr->unary.op, instr->unary.type);
 }
@@ -56,6 +59,9 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         return;
     case IR_STORE:
         x86_gen_store_instruction(fp, ctx, instr);
+        return;
+    case IR_MOVE:
+        x86_gen_move_instruction(fp, ctx, instr);
         return;
     case IR_CALL:
         x86_gen_call_instruction(fp, ctx, instr);

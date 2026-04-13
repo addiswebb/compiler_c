@@ -1,4 +1,5 @@
 #include "compiler_c/abi/abi.h"
+#include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
@@ -572,12 +573,25 @@ void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t)
     x86_emit_rr(fp, "mov", op_suffix, "", v, "(%rax)");
 }
 void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t) {
-    const char *reg = x86_rax_reg(t);
+    const char *rax = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
 
     x86_emit_xr(fp, "mov", "q", "", addr, "%rax");
-    x86_emit_rr(fp, "mov", op_suffix, "", "(%rax)", reg);
-    x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
+    x86_emit_rr(fp, "mov", op_suffix, "", "(%rax)", rax);
+    x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
+}
+
+void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src) {
+    const char *rax = gp_register_str[RAX][REG_64];
+    const char *op_suffix = x86_integer_op_suffix(8);
+
+    if (dst->kind == IR_PHYS_REG && dst->phys_reg.data_kind == REG_DATA_NONE && src->kind == IR_PHYS_REG &&
+        src->phys_reg.data_kind == REG_DATA_NONE) {
+        x86_emit_xx(fp, "mov", op_suffix, "", src, dst);
+    }
+
+    x86_emit_xr(fp, "mov", op_suffix, "", src, rax);
+    x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
 }
 
 void x86_emit_string(FILE *fp, const char *str) {

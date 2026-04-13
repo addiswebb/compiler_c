@@ -205,7 +205,6 @@ IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
             ap_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr, ir_integer_literal(4), type_u32);
         IR_Value offset = ir_load(ctx, ap_addr, type_u32);
         IR_Value is_register_cmp = ir_cmp(ctx, LT, offset, ir_integer_literal(arg_type->kind == T_FLOAT ? 176 : 48), type_i32);
-        IR_Value result = ir_next_virtual_reg(ctx->func);
         IR_Block *overflow_block = ir_new_block();
         IR_Block *end_block = ir_new_block();
         ir_branch_cond(ctx, is_register_cmp, NULL, overflow_block);
@@ -217,45 +216,28 @@ IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
             ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr, ir_integer_literal(arg_type->kind == T_FLOAT ? 12 : 16), type_u64);
         IR_Value reg_save_area = ir_load(ctx, reg_save_area_addr, type_void_ptr);
         IR_Value reg_save_area_plus_offset = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), reg_save_area, offset, type_u32);
-        IR_Value t_res = ir_load(ctx, reg_save_area_plus_offset, arg_type);
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 2,
-                                                            .ops = {[0] = result, [1] = t_res},
-                                                            .param = {.type = type_void_ptr, .param_index = -1}});
+        IR_Value result = ir_load(ctx, reg_save_area_plus_offset, arg_type);
+
+        // Param defines
         IR_Value new_offset =
             ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), offset, ir_integer_literal(arg_type->kind == T_FLOAT ? 16 : 8), type_u32);
         ir_store(ctx, ap_addr, new_offset, type_u32);
         ir_branch(ctx, end_block);
         ir_append_block(ctx, overflow_block);
-
+        /*
+            res = *overflow_arg_area
+            overflow_arg_area += 8
+        */
+        IR_Value overflow_area_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr,
+                                                ir_integer_literal(arg_type->kind == T_FLOAT ? 4 : 8), type_void_ptr);
+        IR_Value overflow_area = ir_load(ctx, overflow_area_addr, type_void_ptr);
+        IR_Value f_res = ir_load(ctx, overflow_area, arg_type);
+        IR_Value new_overflow_area =
+            ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), overflow_area, ir_integer_literal(8), type_void_ptr);
+        ir_store(ctx, overflow_area_addr, new_overflow_area, type_void_ptr);
+        ir_move(ctx, result, f_res);
         ir_append_block(ctx, end_block);
-
         return result;
-        // IR_Value reg_save_area = ir_load(ctx, reg_save_area_addr, type_void_ptr);
-        // IR_Value reg_save_area_plus_offset = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), reg_save_area, offset, type_void_ptr);
-        // IR_Value t_res = ir_load(ctx, reg_save_area_plus_offset, arg_type);
-        // // offset = ir_binary(ctx, ADD, offset, offset, ir_integer_literal(arg_type->kind == T_FLOAT ? 16 : 8), type_u32);
-        // // ir_store(ctx, ap_addr, offset, type_u32);
-        // ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
-        //                                                     .op_count = 2,
-        //                                                     .ops = {[0] = result, [1] = t_res},
-        //                                                     .param = {.type = type_void_ptr, .param_index = -1}});
-        // ir_branch(ctx, end_block);
-        // ir_append_block(ctx, overflow_block);
-        // /*
-        //     res = *overflow_arg_area
-        //     overflow_arg_area += 8
-        // */
-        // ap_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr, ir_integer_literal(arg_type->kind == T_FLOAT ? 4 : 8),
-        //                     type_void_ptr);
-        // IR_Value f_res = ir_load(ctx, ap_addr, type_void_ptr);
-        // // ir_append_instruction(overflow_block, &(IR_Instruction){.op = IR_PARAM,
-        // //                                                         .op_count = 2,
-        // //                                                         .ops = {[0] = result, [1] = f_res},
-        // //                                                         .param = {.type = type_void_ptr, .param_index = -1}});
-        // IR_Value new_overflow_arg_area = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), result, ir_integer_literal(8),
-        // type_void_ptr); ir_store(ctx, ap_addr, new_overflow_arg_area, type_void_ptr); ir_append_block(ctx, end_block);
-        // return result;
     }
     case BUILTIN_VA_END:
         return ir_no_value;
