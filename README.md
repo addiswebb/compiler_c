@@ -247,7 +247,7 @@ When a block is full, instead of reallocating the whole block somewhere else at 
       * Floating point arguments cloned to general purpose registers (For 4 args)
     * `SysV`
       * Number of SSE registers used stored in `%al`
-    
+      
 ## 7. Pointers
 
 * Basic pointers & addresses
@@ -259,21 +259,20 @@ When a block is full, instead of reallocating the whole block somewhere else at 
 * Win64 ABI
 * SysV ABI
 * `libc` mini subset stdlib headers.
-
-## To be Implemented (Ordered from next to never...)
 * Compiler builtins
     * `__builtin_va_list` etc.
-* Create IR index instruction 
-    * `leaq 8(%rax), dst` instead of adding 8 to %rax and then `(%rax)`
-    * even just for `va_arg(ap, type)`
-* Support a standard library 
-    * ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
+
+## To be Implemented (Ordered from next to never...)
 * Use physical registers
     * Overflow to stack
-* Function ABI Calling Conventions
+* Create IR index instruction 
+    * `leaq 8(%rax), dst` instead of adding 8 to %rax and then `(%rax)`
+* Support a standard library 
+    * ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
+* ~~Function ABI Calling Conventions~~
     * Caller/Callee save registers
-* Bitfield in structs
+* ~~Bitfield in structs~~
     * `unsigned int flag : 1; // 1 bit`
-* Inline functions
-* Volatile/Atomic memory
-* Labels as values? (part of GCC, not standard C)
+* ~~Inline functions~~
+* ~~Volatile/Atomic memory~~
+* ~~Labels as values? (part of GCC, not standard C)~~
