@@ -1,0 +1,30 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit 18 %t
+
+struct L {
+    int a;
+    int b;
+    int c;
+    int d;
+    int e;
+};
+
+struct S {
+    int x;
+    int y;
+};
+struct S make_small() {
+    struct S s = {1, 2};
+    return s;
+}
+
+struct L make_large() {
+    struct L l = {1, 2, 3, 4, 5};
+    return l;
+}
+
+int main() {
+    struct S s = make_small();
+    struct L l = make_large();
+    return l.a + l.b + l.c + l.d + l.e + s.x + s.y;
+}

@@ -1,0 +1,15 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit 1 %t
+
+int main() {
+    int x = 1;
+    int y = 0;
+    int z = 2;
+
+    int r = x || y & z;
+    // precedence: & evaluated before ||
+    // y & z = 0 & 2 = 0
+    // x || 0 = 1
+
+    return r;
+}

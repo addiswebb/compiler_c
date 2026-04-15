@@ -1,0 +1,20 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit 403 %t
+
+int main() {
+    int sum = 0;
+
+    for (int i = 0; i < 5; i++) {
+        switch (i) {
+        case 2:
+            continue;   // skips sum += 100
+        case 3:
+            break;      // exits switch only
+        default:
+            sum += 1;
+        }
+        sum += 100;
+    }
+
+    return sum;
+}

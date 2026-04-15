@@ -13,7 +13,7 @@ config.test_format = lit.formats.ShTest()
 config.test_source_root = os.path.dirname(__file__)
 config.test_exec_root = config.test_source_root
 
-config.suffixes = [".test"]
+config.suffixes = [".c"]
 
 # Detect OS
 is_windows = sys.platform.startswith("win")

@@ -5,10 +5,10 @@
 [
     {
         "adapter": "CodeLLDB",
-        "label": "Debug Compiler_C -a",
+        "label": "Debug Compiler_C test.c",
         "request": "launch",
         "program": "./build/compiler_c",
-        "args": ["./tests/test.c", "-a"],
+        "args": ["./tests/test.test", "-c"],
         "build": {
             "command": "cmake",
             "args": ["--build", "build"],

@@ -1,0 +1,12 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit 19 %t
+
+int main() {
+    int a = 5;    // 0101
+    int b = 12;   // 1100
+    a = ~a;       // -6 (two's complement)
+    b <<= 1;      // 24
+    a += b;       // 18
+    a++;          // 19
+    return a;
+}

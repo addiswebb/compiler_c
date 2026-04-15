@@ -1,0 +1,11 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit -3 %t
+
+int main() {
+    int sum = 0;
+    for (int i = 1; i <= 5; i++) {
+        if (i % 2 == 0) sum += i; // sum even numbers
+        else sum -= i;            // subtract odd numbers
+    }
+    return sum; // -1+2-3+4-5 = -3
+}

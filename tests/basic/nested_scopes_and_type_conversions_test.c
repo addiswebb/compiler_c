@@ -1,0 +1,15 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit 3 %t
+
+int main() {
+    int x = 2;
+    float y = 3.5;
+    {
+        int x = (int)y + 1; // 4
+        {
+            x *= 2; // 8
+        }
+    }
+    x += 1; // outer x = 3
+    return x;
+}
