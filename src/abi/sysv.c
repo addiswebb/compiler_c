@@ -399,8 +399,8 @@ void abi_func_type_gen(Type *type) {
     type->abi.gp_count = 0;
     for (int i = 0; i < abi_type->_func.params.count; i++) {
         ParamDecl *d = get(&abi_type->_func.params, i);
-        if (d->type->kind == T_FLOAT && fp_count < FLOAT_PARAM_REGISTERS) type->abi.fp_count++;
-        else if (gp_count < INTEGER_PARAM_REGISTERS) type->abi.gp_count++;
+        if (d->type->kind == T_FLOAT && type->abi.fp_count < FLOAT_PARAM_REGISTERS) type->abi.fp_count++;
+        else if (type->abi.gp_count < INTEGER_PARAM_REGISTERS) type->abi.gp_count++;
         ABI_Result res = abi_classify(d->type);
         if (res.memory) {
             d->type = get_pointer_type(d->type);
