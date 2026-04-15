@@ -138,7 +138,7 @@ IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
 }
 
 void abi_gen_params(IR_Context *ctx, IR_Function *f) {
-    int hidde_ptr_offset = 0;
+    int hidden_ptr_offset = 0;
     ABI_Result res = abi_classify(f->type->_func.return_type);
     if (res.memory) {
         set_hidden_sret_ptr(f->type->_func.return_type);
@@ -146,11 +146,11 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
         ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
                                                             .op_count = 1,
                                                             .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
-                                                            .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
+                                                            .param = {.param_index = hidden_ptr_offset++, .type = _hidden_sret_ptr->type}});
     }
 
     int params_emitted = hidden_ptr_offset;
-    for (int i = hidde_ptr_offset; i < f->type->_func.params.count + hidde_ptr_offset; i++) {
+    for (int i = hidden_ptr_offset; i < f->type->_func.params.count + hidden_ptr_offset; i++) {
         // ParamDecl *d = get(&abi_type->_func.params, i);
         ParamDecl *d = get(&f->type->_func.params, i);
         d->symbol->type = d->type;
@@ -171,8 +171,42 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
     }
 }
 
+void abi_func_type_gen(Type *type) {
+    ASSERT(type->kind == T_FUNCTION, "Invalid Func Type\n");
+    Type *abi_type = new_type();
+    memcpy(abi_type, type, sizeof(Type));
+    array_init(&abi_type->_func.params, type->_func.params.capacity, type->_func.params.element_size);
+    memcpy(abi_type->_func.params.data, type->_func.params.data, type->_func.params.count * type->_func.params.element_size);
+    abi_type->_func.params.count = type->_func.params.count;
+
+    if (abi_type->_func.return_type->kind == T_STRUCT) {
+        ABI_Result res = abi_classify(type->_func.return_type);
+        if (res.memory) {
+            set_sret(type->_func.return_type);
+            insert(&abi_type->_func.params,
+                   &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret", .symbol = _sret}, 0);
+            abi_type->_func.return_type = type_void;
+        } else {
+            abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
+            ASSERT(res.class[1] == ABI_NO_CLASS, "[Win64] Not handling tuple return type\n");
+        }
+    }
+    int register_count = 0;
+    for (int i = 0; i < abi_type->_func.params.count; i++) {
+        ParamDecl *d = get(&abi_type->_func.params, i);
+        if (register_count < PARAM_REGISTERS) register_count++;
+        ABI_Result res = abi_classify(d->type);
+        if (res.memory) d->type = get_pointer_type(d->type);
+    }
+    type->abi.type = abi_type;
+    type->abi.fp_count = -1;
+    type->abi.gp_count = -1;
+}
+
+bool is_va_list_type(Type *type) { return type->kind == T_POINTER && type->base == type_i8; }
+
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    Type *t = instr->call.type->abi_func_type->_func.return_type;
+    Type *t = instr->call.type->abi.type->_func.return_type;
 
     int gp_index = 0;
 

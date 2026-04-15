@@ -395,20 +395,18 @@ void abi_func_type_gen(Type *type) {
             ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Not handling tuple return type\n");
         }
     }
-    int gp_count = 0;
-    int fp_count = 0;
+    type->abi.fp_count = 0;
+    type->abi.gp_count = 0;
     for (int i = 0; i < abi_type->_func.params.count; i++) {
         ParamDecl *d = get(&abi_type->_func.params, i);
-        if (d->type->kind == T_FLOAT && fp_count < FLOAT_PARAM_REGISTERS) fp_count++;
-        else if (gp_count < INTEGER_PARAM_REGISTERS) gp_count++;
+        if (d->type->kind == T_FLOAT && fp_count < FLOAT_PARAM_REGISTERS) type->abi.fp_count++;
+        else if (gp_count < INTEGER_PARAM_REGISTERS) type->abi.gp_count++;
         ABI_Result res = abi_classify(d->type);
         if (res.memory) {
             d->type = get_pointer_type(d->type);
         }
     }
     type->abi.type = abi_type;
-    type->abi.fp_count = fp_count;
-    type->abi.gp_count = gp_count;
 }
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
