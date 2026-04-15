@@ -344,9 +344,6 @@ IR_Value ir_gp_register(GP_Reg reg) {
                       }};
 }
 IR_Value ir_stack_value(int size, int align, int offset) {
-    if (offset > 0) {
-        printf("HoW");
-    }
     return (IR_Value){.kind = IR_PHYS_REG,
                       .size = size,
                       .align = align,
@@ -419,7 +416,9 @@ void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol
         Symbol *local_symbol = get_local_symbol(f, i);
         int size = align(local_symbol->type->size, 8);
         // Todo track scopes on symbol, so that we can reuse slots instead of '-1'
-        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, -(*frame_size) - size), .free_at = -1});
+        int offset = -(*frame_size) - size;
+
+        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
         append(symbol_map, &local_symbol);
         *frame_size += size;
     }
@@ -429,7 +428,7 @@ void generate_types() {
     int n = typepool.count;
     for (int i = 0; i < n; i++) {
         Type *t = (Type *)arena_get(&typepool, i);
-        if (t->kind == T_FUNCTION) t->abi_func_type = abi_func_type(t);
+        if (t->kind == T_FUNCTION) abi_func_type_gen(t);
     }
 }
 void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
@@ -528,7 +527,8 @@ void analysis(const IR_Context *ctx) {
         Array symbol_map = {};
         Array symbol_slots = {};
 
-        int frame_size = 0;
+        const int variadic_space = f->type->_func.is_variadic ? 176 : 0;
+        int frame_size = variadic_space;
 
         // Allocate local variables
         symbol_slot_allocation(f, &frame_size, &symbol_slots, &symbol_map);

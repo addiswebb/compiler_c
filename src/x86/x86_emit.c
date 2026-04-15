@@ -1,4 +1,5 @@
 #include "compiler_c/abi/abi.h"
+#include "compiler_c/analyse/analysis_types.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
@@ -480,7 +481,6 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
     // char/short/int/long/ -> char/short/int/long
     // pointer <-> char/short/int/long
     if ((from->kind == T_INT || from->kind == T_POINTER) && (to->kind == T_INT || to->kind == T_POINTER)) {
-        // if (from->kind == T_INT && to->kind == T_INT) {
         if (from->size < to->size) {
             x86_emit_xr(fp, "movs", from_op_suffix, to_op_suffix, src, to_reg);
         } else {
@@ -492,9 +492,14 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
 
     // char/short/int/long -> float/double
     if (from->kind == T_INT && to->kind == T_FLOAT) {
-        x86_emit_xr(fp, "movs", from_op_suffix, "q", src, "%rax");
-        x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
-        x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
+        if (src->kind == IR_INT_LITERAL) {
+            x86_emit_xr(fp, "mov", "", "", src, from_reg);
+            x86_emit_rx(fp, "mov", from_op_suffix, "", from_reg, dst);
+        } else {
+            x86_emit_xr(fp, "movs", from_op_suffix, "q", src, "%rax");
+            x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
+            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
+        }
         return;
     }
     // float/double -> char/short/int/long
@@ -568,12 +573,25 @@ void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t)
     x86_emit_rr(fp, "mov", op_suffix, "", v, "(%rax)");
 }
 void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t) {
-    const char *reg = x86_rax_reg(t);
+    const char *rax = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
 
     x86_emit_xr(fp, "mov", "q", "", addr, "%rax");
-    x86_emit_rr(fp, "mov", op_suffix, "", "(%rax)", reg);
-    x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
+    x86_emit_rr(fp, "mov", op_suffix, "", "(%rax)", rax);
+    x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
+}
+
+void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src) {
+    const char *rax = gp_register_str[RAX][REG_64];
+    const char *op_suffix = x86_integer_op_suffix(8);
+
+    if (dst->kind == IR_PHYS_REG && dst->phys_reg.data_kind == REG_DATA_NONE && src->kind == IR_PHYS_REG &&
+        src->phys_reg.data_kind == REG_DATA_NONE) {
+        x86_emit_xx(fp, "mov", op_suffix, "", src, dst);
+    }
+
+    x86_emit_xr(fp, "mov", op_suffix, "", src, rax);
+    x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
 }
 
 void x86_emit_string(FILE *fp, const char *str) {

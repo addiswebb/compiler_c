@@ -107,7 +107,9 @@ Type *new_function_type(Type *type, Array params, bool is_variadic) {
     fn_type->kind = T_FUNCTION;
     fn_type->size = sizeof(void);
     fn_type->align = sizeof(void);
-    fn_type->abi_func_type = NULL;
+    fn_type->abi.type = NULL;
+    fn_type->abi.gp_count = 0;
+    fn_type->abi.fp_count = 0;
     fn_type->_func.return_type = type;
     fn_type->_func.params = params;
     fn_type->_func.is_variadic = is_variadic;

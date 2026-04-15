@@ -205,19 +205,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         }
         return ir_cast(ctx, ir_gen_rvalue(ctx, expr->cast.expr), expr->type, expr->cast.from);
     case N_BUILTIN:
-        switch (expr->_builtin.kind) {
-        case BUILTIN_VA_START:
-            return ir_builtin_va_start(ctx, ir_gen_lvalue(ctx, get_node(&expr->_builtin.params, 0)),
-                                       ir_gen_lvalue(ctx, get_node(&expr->_builtin.params, 1)));
-        case BUILTIN_VA_ARG:
-            return ir_builtin_va_arg(ctx, ir_gen_lvalue(ctx, get_node(&expr->_builtin.params, 0)),
-                                     get_node(&expr->_builtin.params, 1)->type);
-        case BUILTIN_VA_END:
-            return ir_no_value;
-        case BUILTIN_NONE:
-        case BUILTIN_MEMCPY:
-            PANIC("Builtin none!\n");
-        }
+        return abi_gen_builtin(ctx, expr);
     default:
         break;
     }
@@ -538,7 +526,7 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
         return NULL;
     }
 
-    IR_Function *fn = ir_new_function(ctx, func->func.name, func->type->_func.return_type);
+    IR_Function *fn = ir_new_function(ctx, func->func.name, func->type);
     if (func->func.body->kind != N_COMPOUND) {
         PANIC("Function body is not a compound,\n");
     }
@@ -552,32 +540,11 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
 
     ir_begin_scope(fn);
 
-    Type *abi_type = func->type->abi_func_type;
+    Type *abi_type = func->type->abi.type;
     ASSERT(abi_type, "Function did not recieve ABI type\n");
-    int hidde_ptr_offset = 0;
-    ABI_Result res = abi_classify(func->type->_func.return_type);
-    if (res.memory) {
-        set_hidden_sret_ptr(func->type->_func.return_type);
-        append(&fn->locals_array, &_hidden_sret_ptr);
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 1,
-                                                            .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
-                                                            .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
-    }
-
-    // Add ABI specific param symbols to the function
-    // Just make everything ABI at this point 😔
-    for (int i = 0 + hidde_ptr_offset; i < func->type->_func.params.count + hidde_ptr_offset; i++) {
-        // ParamDecl *d = get(&abi_type->_func.params, i);
-        ParamDecl *d = get(&func->type->_func.params, i);
-        d->symbol->type = d->type;
-        append(&fn->locals_array, &d->symbol);
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 1,
-                                                            .ops = {[0] = ir_symbol_value(d->symbol)},
-                                                            .param = {.param_index = i, .type = d->type}});
-    }
-
+    
+    abi_gen_params(ctx, fn);
+    
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {
         ir_gen_block_item(ctx, get_node(&func->func.body->compound.items_array, i));

@@ -37,6 +37,9 @@ static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instru
 static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_load(fp, &instr->ops[1], &instr->ops[0], instr->load.type);
 }
+static void x86_gen_move_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_move(fp, &instr->ops[0], &instr->ops[1]);
+}
 static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_unary(fp, &instr->ops[0], &instr->ops[1], instr->unary.op, instr->unary.type);
 }
@@ -56,6 +59,9 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         return;
     case IR_STORE:
         x86_gen_store_instruction(fp, ctx, instr);
+        return;
+    case IR_MOVE:
+        x86_gen_move_instruction(fp, ctx, instr);
         return;
     case IR_CALL:
         x86_gen_call_instruction(fp, ctx, instr);
@@ -125,25 +131,27 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         fprintf(fp, "    jmp %s\n", instr->jmp.name);
         break;
     case IR_BUILTIN_VA_START:
-        x86_emit_xr(fp, "lea", "q", "", &instr->ops[1], "%rax");
-        fprintf(fp, "    subq $%d, %%rax\n", instr->ops[1].size);
-        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rax");
+        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[1]);
         break;
     case IR_BUILTIN_VA_ARG:
         x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
-        fprintf(fp, "    subq $%d, %%rax\n", instr->builtin_va_arg.type->size);
-        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[0]);
+        fprintf(fp, "    addq $%d, %%rax\n", instr->builtin_va_arg.type->size);
+        x86_emit_rr(fp, "mov", "q", "", "(%rax)", "%rcx");
+        x86_emit_rx(fp, "mov", "q", "", "%rcx", &instr->ops[0]);
         break;
     case IR_PARAM:
         ASSERT(instr->op_count == 2, "Param instruction not correctly lowered\n");
+        if (!memcmp(&instr->ops[0], &instr->ops[1], sizeof(IR_Value))) break;
         const char *param_op_suffix = x86_op_suffix(instr->param.type);
-        if (instr->param.param_index < PARAM_REGISTERS) {
+        if (instr->param.param_index < PARAM_REGISTERS && instr->param.param_index != -1) {
             x86_emit_xx(fp, "mov", param_op_suffix, "", &instr->ops[1], &instr->ops[0]);
         } else {
             const char *rax_reg = x86_rax_reg(instr->param.type);
             x86_emit_xr(fp, "mov", param_op_suffix, "", &instr->ops[1], rax_reg);
             x86_emit_rx(fp, "mov", param_op_suffix, "", rax_reg, &instr->ops[0]);
         }
+        break;
     }
 }
 static void x86_gen_block(FILE *fp, IR_Context *ctx) {

@@ -7,6 +7,15 @@
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
 
+void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src) {
+    IR_Instruction i;
+    i.op = IR_MOVE;
+    i.ops[1] = src;
+    i.ops[0] = dst;
+    i.op_count = 2;
+    ir_append_instruction(ctx->block, &i);
+}
+
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
     IR_Instruction i;
     i.op = IR_LOAD;
@@ -18,6 +27,9 @@ IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
     return i.ops[0];
 }
 IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
+    if (src.kind == IR_INT_LITERAL && type->kind != T_INT) {
+        DEBUG("here\n");
+    }
     IR_Instruction i;
     i.op = IR_STORE;
     i.ops[1] = src;
@@ -93,7 +105,7 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
 
     i.call.type = expr->func_call.callee->type;
     if (i.call.type->kind == T_POINTER) i.call.type = i.call.type->base;
-    ASSERT(i.call.type->abi_func_type, "Function Type did not recieve ABI type\n");
+    ASSERT(i.call.type->abi.type, "Function Type did not recieve ABI type\n");
     array_init(&i.call.arg_array, expr->func_call.params_array.count ? expr->func_call.params_array.count : 1, sizeof(IR_CallArg));
     Type *return_type = i.call.type->_func.return_type;
     // TODO Abstract the condition to ABI, so it works for both SysV and Win64
@@ -111,8 +123,7 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     for (int j = 0; j < expr->func_call.params_array.count; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
         Type *arg_type = param->type;
-        if (j < i.call.type->abi_func_type->_func.params.count)
-            arg_type = ((ParamDecl *)get(&i.call.type->abi_func_type->_func.params, j))->type;
+        if (j < i.call.type->abi.type->_func.params.count) arg_type = ((ParamDecl *)get(&i.call.type->abi.type->_func.params, j))->type;
 
         IR_Value val;
         ABI_Result res = abi_classify(param->type);
@@ -174,7 +185,7 @@ IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, I
     return ir_no_value;
 }
 IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
-    if (src.kind == IR_INT_LITERAL) return src;
+    if (src.kind == IR_INT_LITERAL && to->kind == T_INT) return src;
     if (from->kind == T_ARRAY && to->kind == T_POINTER && from->base->kind == to->base->kind) PANIC("HOW");
     IR_Instruction i;
     i.op = IR_CAST;
@@ -217,11 +228,11 @@ IR_Value ir_memcpy(IR_Context *ctx, IR_Value from_reg, IR_Value to_reg, int size
     return i.ops[0];
 }
 
-IR_Value ir_builtin_va_start(IR_Context *ctx, IR_Value ap, IR_Value last_named_param) {
+IR_Value ir_builtin_va_start(IR_Context *ctx, IR_Value ap, IR_Value first_arg) {
     IR_Instruction i;
     i.op = IR_BUILTIN_VA_START;
     i.ops[0] = ap;
-    i.ops[1] = last_named_param;
+    i.ops[1] = first_arg;
     i.op_count = 2;
     ir_append_instruction(ctx->block, &i);
     return ir_no_value;

@@ -21,11 +21,15 @@ typedef struct{
 ABI_Result abi_classify(Type *type);
 
 IR_Value abi_lower_param_register(Type *type, int i);
+bool is_va_list_type(Type *type);
 
 void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-Type *abi_func_type(Type *type);
+void abi_func_type_gen(Type *type);
+
+IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr);
+void abi_gen_params(IR_Context *ctx, IR_Function *f);
 
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
 

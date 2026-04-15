@@ -189,7 +189,12 @@ int compile(Compiler *compiler) {
 
 static int load_src_file(Compiler *compiler, const char *file) {
     char cmd[512];
+#ifdef __linux__
     snprintf(cmd, sizeof(cmd), "cpp -P -nostdinc -I./libc/ -std=c11 \"%s\"", file);
+#endif
+#ifdef _WIN64
+    snprintf(cmd, sizeof(cmd), "cpp -P -nostdinc -I./libc/ -std=c11 \"%s\"", file);
+#endif
 
     FILE *fp = popen(cmd, "r");
     if (!fp) {

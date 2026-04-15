@@ -1,9 +1,14 @@
-#ifndef _WIN64
-#include "compiler_c/abi/abi.h"
-#include "compiler_c/analyse/analysis.h"
-#include "compiler_c/core/type.h"
-#include "compiler_c/log/logger.h"
-#include "compiler_c/x86/x86.h"
+#ifdef __linux__
+
+#include <compiler_c/abi/abi.h>
+#include <compiler_c/analyse/analysis.h>
+#include <compiler_c/core/type.h>
+#include <compiler_c/ir/ir_builder.h>
+#include <compiler_c/ir/ir_gen.h>
+#include <compiler_c/ir/ir_module.h>
+#include <compiler_c/log/logger.h>
+#include <compiler_c/x86/x86.h>
+#include <stdbool.h>
 
 Symbol *_sret = NULL;
 Symbol *_hidden_sret_ptr = NULL;
@@ -104,15 +109,20 @@ IR_Value abi_lower_param_register(Type *type, int i) {
     return v;
 }
 
-void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+// Does not check members, only space
+// TODO: Check members also maybe?
+bool is_va_list_type(Type *type) { return type->kind == T_STRUCT && type->size == 24; }
 
+void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+    if (instr->param.param_index == -1) return;
     Type *type = instr->param.type;
     ABI_Result res = abi_classify(type);
     if (res.memory) type = type_u64;
     instr->op_count = 2;
     int param_registers = type->kind == T_FLOAT ? FLOAT_PARAM_REGISTERS : INTEGER_PARAM_REGISTERS;
+    const int variadic_space = f->type->_func.is_variadic ? 176 : 0;
     if (instr->param.param_index < param_registers) instr->ops[1] = abi_lower_param_register(type, instr->param.param_index);
-    else instr->ops[1] = ir_stack_value(8, 8, 8 * (instr->param.param_index - param_registers));
+    else instr->ops[1] = ir_stack_value(8, 8, 8 * (instr->param.param_index - param_registers) - variadic_space);
 
     if (instr->param.type->kind == T_STRUCT) {
         if (res.memory) {
@@ -160,8 +170,139 @@ void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     return;
 }
 
+IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
+    switch (expr->_builtin.kind) {
+    case BUILTIN_VA_START: {
+        Node *n = get_node(&expr->_builtin.params, 1);
+        int param_index = -1;
+        // Todo dont use variable at all, just find (type->_func->arg_count -1) *8+16 instead
+        for (int z = 0; z < ctx->func->locals_array.count; z++) {
+            Symbol *v = get_local_symbol(ctx->func, z);
+            if (n->identifier.symbol == v) param_index = z;
+        }
+        ASSERT(param_index != -1, "Expected named param, got bs.\n");
+        Node *ap_node = get_node(&expr->_builtin.params, 0);
+        IR_Value ap_addr = ir_gen_lvalue(ctx, ap_node);
+        // gp_offset
+        ir_store(ctx, ap_addr, ir_integer_literal(ctx->func->type->abi.gp_count * 8), type_u32);
+        // fp_offset
+        ap_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr, ir_integer_literal(4), type_void_ptr);
+        ir_store(ctx, ap_addr, ir_integer_literal(48 + ctx->func->type->abi.fp_count * 16), type_u32);
+        // overflow_args
+        ap_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr, ir_integer_literal(4), type_void_ptr);
+        IR_Value rbp_addr = ir_address(ctx, ir_stack_value(8, 8, 16), 0);
+        ir_store(ctx, ap_addr, rbp_addr, type_void_ptr);
+        // reg_save_area
+        ap_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr, ir_integer_literal(8), type_void_ptr);
+        ir_store(ctx, ap_addr, ir_address(ctx, ir_stack_value(8, 8, -176), 0), type_void_ptr);
+        return ir_no_value;
+    }
+    case BUILTIN_VA_ARG: {
+        Node *ap_node = get_node(&expr->_builtin.params, 0);
+        IR_Value ap_addr = ir_gen_lvalue(ctx, ap_node);
+        Type *arg_type = get_node(&expr->_builtin.params, 1)->type;
+        if (arg_type->kind == T_FLOAT)
+            ap_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr, ir_integer_literal(4), type_u32);
+        IR_Value offset = ir_load(ctx, ap_addr, type_u32);
+        IR_Value is_register_cmp = ir_cmp(ctx, LT, offset, ir_integer_literal(arg_type->kind == T_FLOAT ? 176 : 48), type_i32);
+        IR_Block *overflow_block = ir_new_block();
+        IR_Block *end_block = ir_new_block();
+        ir_branch_cond(ctx, is_register_cmp, NULL, overflow_block);
+        /*
+            res = *(reg_save_area + offset)
+            offset += 8
+        */
+        IR_Value reg_save_area_addr =
+            ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr, ir_integer_literal(arg_type->kind == T_FLOAT ? 12 : 16), type_u64);
+        IR_Value reg_save_area = ir_load(ctx, reg_save_area_addr, type_void_ptr);
+        IR_Value reg_save_area_plus_offset = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), reg_save_area, offset, type_u32);
+        IR_Value result = ir_load(ctx, reg_save_area_plus_offset, arg_type);
+
+        // Param defines
+        IR_Value new_offset =
+            ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), offset, ir_integer_literal(arg_type->kind == T_FLOAT ? 16 : 8), type_u32);
+        ir_store(ctx, ap_addr, new_offset, type_u32);
+        ir_branch(ctx, end_block);
+        ir_append_block(ctx, overflow_block);
+        /*
+            res = *overflow_arg_area
+            overflow_arg_area += 8
+        */
+        IR_Value overflow_area_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr,
+                                                ir_integer_literal(arg_type->kind == T_FLOAT ? 4 : 8), type_void_ptr);
+        IR_Value overflow_area = ir_load(ctx, overflow_area_addr, type_void_ptr);
+        IR_Value f_res = ir_load(ctx, overflow_area, arg_type);
+        IR_Value new_overflow_area =
+            ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), overflow_area, ir_integer_literal(8), type_void_ptr);
+        ir_store(ctx, overflow_area_addr, new_overflow_area, type_void_ptr);
+        ir_move(ctx, result, f_res);
+        ir_append_block(ctx, end_block);
+        return result;
+    }
+    case BUILTIN_VA_END:
+        return ir_no_value;
+    case BUILTIN_MEMCPY:
+        PANIC("Builtin Memcpy unimplemented\n");
+    case BUILTIN_NONE:
+        PANIC("Builtin none!\n");
+    }
+}
+
+void abi_gen_params(IR_Context *ctx, IR_Function *f) {
+    int hidde_ptr_offset = 0;
+    ABI_Result res = abi_classify(f->type->_func.return_type);
+    if (res.memory) {
+        set_hidden_sret_ptr(f->type->_func.return_type);
+        append(&f->locals_array, &_hidden_sret_ptr);
+        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+                                                            .op_count = 1,
+                                                            .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
+                                                            .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
+    }
+
+    int integers_emitted = hidde_ptr_offset;
+    int floats_emitted = 0;
+    for (int i = hidde_ptr_offset; i < f->type->_func.params.count + hidde_ptr_offset; i++) {
+        // ParamDecl *d = get(&abi_type->_func.params, i);
+        ParamDecl *d = get(&f->type->_func.params, i);
+        d->symbol->type = d->type;
+        append(&f->locals_array, &d->symbol);
+        const int param_index = d->type->kind == T_FLOAT ? floats_emitted++ : integers_emitted++;
+        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+                                                            .op_count = 1,
+                                                            .ops = {[0] = ir_symbol_value(d->symbol)},
+                                                            .param = {.param_index = param_index, .type = d->type}});
+    }
+    ASSERT(integers_emitted == f->type->abi.gp_count && floats_emitted == f->type->abi.fp_count, "Emission failed\n");
+    if (f->type->_func.is_variadic) {
+        // Space for this will be allocated later in x86 gen +176 bytes if variadic
+        for (int i = integers_emitted; i < INTEGER_PARAM_REGISTERS; i++) {
+            ir_append_instruction(ctx->block,
+                                  &(IR_Instruction){.op = IR_PARAM,
+                                                    .op_count = 1,
+                                                    .ops = {[0] = ir_stack_value(8, 8, -8 * (INTEGER_PARAM_REGISTERS - i) - 128)},
+                                                    .param = {.param_index = i, .type = type_u64}});
+        }
+        // TODO: Skip if float spill if (al == 0)
+        // testb %al, %al
+        // je after floats block
+        // use movaps
+        for (int i = floats_emitted; i < FLOAT_PARAM_REGISTERS; i++) {
+            ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+                                                                .op_count = 1,
+                                                                .ops = {[0] = ir_stack_value(8, 8, -16 * (FLOAT_PARAM_REGISTERS - i))},
+                                                                .param = {.param_index = i, .type = type_f64}});
+        }
+        // assume va_list is allocated to store gp_offset, fp_offset, overflow_arg_area, reg_save_area
+        // gp_offset = offset in bytes from reg_save_area to the next gp variable (+8 each va_arg call with type != T_FLOAT)
+        // sse_offset = offset in bytes from reg_save_area to the next sse variable (+8 each va_arg call with type == T_FLOAT)
+        // reg_save_area = leaq -176(%rbp)
+        // overflow_arg_area = lea 16(%rbp)
+    }
+}
+
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    Type *t = instr->call.type->abi_func_type->_func.return_type;
+    Type *t = instr->call.type->abi.type->_func.return_type;
 
     int gp_index = 0;
     int sse_index = 0;
@@ -174,8 +315,8 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const int spilled_count = instr->call.arg_array.count - (sse_index + gp_index);
     sse_index = 0;
     gp_index = 0;
-
-    const int param_frame_size = 8 * spilled_count;
+    const int variadic_space = instr->call.type->_func.is_variadic ? 176 : 0;
+    const int param_frame_size = 8 * spilled_count + variadic_space;
     int param_offset = 0;
     if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
@@ -233,9 +374,8 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_rx(fp, "mov", x86_op_suffix(t), "", x86_rax_reg(t), &instr->ops[0]);
 }
 
-Type *abi_func_type(Type *type) {
+void abi_func_type_gen(Type *type) {
     ASSERT(type->kind == T_FUNCTION, "Invalid Func Type\n");
-    bool changed = false;
     Type *abi_type = new_type();
     memcpy(abi_type, type, sizeof(Type));
     array_init(&abi_type->_func.params, type->_func.params.capacity, type->_func.params.element_size);
@@ -254,17 +394,19 @@ Type *abi_func_type(Type *type) {
             abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
             ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Not handling tuple return type\n");
         }
-        changed = true;
     }
+    type->abi.fp_count = 0;
+    type->abi.gp_count = 0;
     for (int i = 0; i < abi_type->_func.params.count; i++) {
         ParamDecl *d = get(&abi_type->_func.params, i);
+        if (d->type->kind == T_FLOAT && type->abi.fp_count < FLOAT_PARAM_REGISTERS) type->abi.fp_count++;
+        else if (type->abi.gp_count < INTEGER_PARAM_REGISTERS) type->abi.gp_count++;
         ABI_Result res = abi_classify(d->type);
         if (res.memory) {
             d->type = get_pointer_type(d->type);
-            changed = true;
         }
     }
-    return changed ? abi_type : type;
+    type->abi.type = abi_type;
 }
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc

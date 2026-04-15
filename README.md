@@ -263,6 +263,9 @@ When a block is full, instead of reallocating the whole block somewhere else at 
 ## To be Implemented (Ordered from next to never...)
 * Compiler builtins
     * `__builtin_va_list` etc.
+* Create IR index instruction 
+    * `leaq 8(%rax), dst` instead of adding 8 to %rax and then `(%rax)`
+    * even just for `va_arg(ap, type)`
 * Support a standard library 
     * ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
 * Use physical registers

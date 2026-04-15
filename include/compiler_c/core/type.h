@@ -93,7 +93,11 @@ struct Type{
     unsigned int qualifiers;
     union{
         Type *base;
-        Type *abi_func_type;
+        struct{
+            Type *type;
+            int gp_count;
+            int fp_count;
+        }abi;
     };
     // Data for special types
     union{
