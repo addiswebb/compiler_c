@@ -262,7 +262,12 @@ When a block is full, instead of reallocating the whole block somewhere else at 
 * Compiler builtins
     * `__builtin_va_list` etc.
 
+## Todo
+- [ ] Optimize SysV variadic float arg spilling to check `%al` 
+
 ## To be Implemented (Ordered from next to never...)
+* Const expressions
+    * Ideally just simple arithmetic `5 + 7`, literals and other constants.
 * Use physical registers
     * Overflow to stack
 * Create IR index instruction 

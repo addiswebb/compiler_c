@@ -855,6 +855,7 @@ void print_token(const Token *token) {
             printf("\\n");
         }
         // TODO fix this printf("%c ", token->value[0]);
+        // To print whole name safely with null termination
         printf("%c", token->value[0]);
     }
     printf("}\n");

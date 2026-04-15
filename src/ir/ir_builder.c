@@ -42,14 +42,14 @@ IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
 IR_Value ir_smart_const(IR_Context *ctx, IR_Literal *literal, Type *type) {
     // TODO places where ir_integer_literal are used must ensure that $x is allowed in context
     // E.g movss $x, %xmm0 is invalid
-    // Also note that if %xmm0 holds p0, and %xmm0 is later used to store p5 later, it gets clobbered.
+    // TODO use %xmm9 for all movements, as %rax for fp, instead of %xmm0 as
+    // if %xmm0 holds p0, and %xmm0 is later used to store p5 later, it gets clobbered.
     // Use a safe xmm0 for general operations or place reg params last.
     if (literal->type->kind == T_INT) return ir_integer_literal(literal->i);
     IR_Value l = ir_const(ctx, ir_append_literal(ctx->module, literal), type);
     if (literal->type->kind == T_ARRAY && literal->type->base == type_i8) return ir_address(ctx, l, 0);
     else return l;
 }
-// TODO: Always use the .LCx label, and replace it in analysis with the int literal (if type is compatible integer)
 IR_Value ir_const(IR_Context *ctx, int const_index, Type *type) {
     IR_Instruction i;
     i.op = IR_CONST;
