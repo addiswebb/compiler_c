@@ -80,7 +80,7 @@ void drive(Compiler *c) {
         c->output = NULL;
     }
     Array objs;
-    array_init(&objs, 4, sizeof(char *));
+    array_init(&objs, c->source_files.count, sizeof(char *));
     for (int i = 0; i < c->source_files.count; i++) {
         char *src = *(char **)get(&c->source_files, i);
         c->current_source = src;
