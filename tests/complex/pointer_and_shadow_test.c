@@ -5,8 +5,8 @@ int main() {
     int x = 10;
     int *p = &x;
     {
-        int x = 5;  // shadow outer x
-        *p += x;    // outer x = 10+5=15
+        int x = 5; // shadow outer x
+        *p += x;   // outer x = 10+5=15
     }
-    return x;      // 15
+    return x; // 15
 }

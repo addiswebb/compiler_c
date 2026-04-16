@@ -199,6 +199,9 @@ IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
     return i.ops[0];
 }
 IR_Value ir_address(IR_Context *ctx, IR_Value src, int offset) {
+    if (src.kind == IR_VREG) {
+        printf("HERE");
+    }
     IR_Instruction i;
     i.op = IR_ADDR;
     i.ops[1] = src;

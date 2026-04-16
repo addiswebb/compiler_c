@@ -18,7 +18,7 @@ program = sys.argv[2]
 result = subprocess.run([program])
 
 actual = normalize(result.returncode)
-expected = normalize(result.returncode)
+expected = normalize(expected)
 
 if actual != expected:
     print("Exit code mismatch:")

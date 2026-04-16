@@ -25,7 +25,7 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         return ir_address(ctx, v, 0);
     case N_UNARY:
         ASSERT(expr->unary.op == TK_MULTIPLY, "Can only generate *expr lvalue\n");
-        return ir_address(ctx, ir_gen_rvalue(ctx, expr->unary.expr), 0);
+        return ir_gen_rvalue(ctx, expr->unary.expr);
     case N_BINARY:
         return ir_gen_rvalue(ctx, expr);
     case N_INDEX:
@@ -542,9 +542,9 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
 
     Type *abi_type = func->type->abi.type;
     ASSERT(abi_type, "Function did not recieve ABI type\n");
-    
+
     abi_gen_params(ctx, fn);
-    
+
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {
         ir_gen_block_item(ctx, get_node(&func->func.body->compound.items_array, i));
