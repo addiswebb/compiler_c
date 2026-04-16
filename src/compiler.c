@@ -86,6 +86,7 @@ void drive(Compiler *c) {
         c->current_source = src;
         c->current_output = c->output && c->flags & COMP_STOP_AFTER_COMPILE ? c->output : replace_extension(src, ".s");
         compile(c);
+        if (c->flags & COMP_FLAG_IR) return;
         if (c->flags & COMP_STOP_AFTER_COMPILE) continue;
         c->current_source = c->current_output;
         c->current_output = c->output && c->flags & COMP_STOP_AFTER_ASSEMBLE ? c->output : replace_extension(src, ".o");
@@ -108,7 +109,7 @@ void drive(Compiler *c) {
     ASSERT(objs.count > 0, "No object files to link\n");
     link(c, &objs);
     set_log_stage(STAGE_COMPILER);
-    INFO("Done.");
+    INFO("Done.\n");
 }
 
 Compiler init_compiler(const int argc, char *argv[]) {

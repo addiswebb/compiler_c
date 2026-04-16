@@ -232,7 +232,7 @@ Node *p_parse_prefix(Parser *p, NodeManager *nm) {
             p_consume(p); // '('
             node->unary.expr->type = p_parse_abstract_type(p);
             p_consume_a(p, TK_CLOSE_PAREN); // ')'
-        } else node->unary.expr = p_parse_prefix(p, nm);
+        } else node->unary.expr = p_parse_cast(p, nm);
         return node;
     }
     return p_parse_postfix_expression(p, nm);
