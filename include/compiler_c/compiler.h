@@ -7,8 +7,13 @@
     And all necessary structures
 */
 typedef struct {
-    char *output_file;
+    /* Parsed from -o */
+    char *output;
+    char *current_source;
+    char *current_output;
+    Array source_files;
     unsigned int flags;
+    Array passthrough_args;
     char *src;
     int src_size;
     Tokenizer tk;
@@ -16,20 +21,24 @@ typedef struct {
     Parser p;
 } Compiler;
 
-// Generate and print Abstract Syntax Tree
+// Compile and print Abstract Syntax Tree
 #define COMP_FLAG_AST (1u << 0)    // -t
-// Generate and print IR Module and instructions
+// Compile and print IR Module and instructions
 #define COMP_FLAG_IR (1u << 1)     // -ir
-// Generate and save raw assembly
-#define COMP_FLAG_ASM (1u << 2)    // -a
-// Build and run a single source file
-#define COMP_FLAG_RUN (1u << 3)    // -run
+// Compile .c into .s
+#define COMP_STOP_AFTER_COMPILE (1u << 2)    // -S
+// Compile .s into .o
+#define COMP_STOP_AFTER_ASSEMBLE (1u << 3)    // -c
 
 /*
     Takes input from terminal and instantiates a compiler,
     Which is ready to compile the inputted file
 */
 Compiler init_compiler(int argc, char *argv[]);
+void drive(Compiler *c);
+
+void assemble(Compiler *c);
+void link(Compiler *c, Array *objs);
 
 /*
     Takes an initialized compiler and performes compilation,
@@ -41,5 +50,7 @@ void free_compiler(Compiler *compiler);
 
 // Loads the given file into the Compiler
 static int load_src_file(Compiler *compiler, const char *file);
+void handle_output_file(Compiler *compiler, const char *ext);
+char *replace_extension(const char *path, const char *ext);
 
 #endif // COMPILER_C_COMPILER_H

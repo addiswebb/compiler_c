@@ -55,7 +55,6 @@ void lower_ir_for_asm(IR_Function *f);
     Converts virtual stack registers to physical offsets. (use physical soon...)
     Converts function param slots to physical registers or offsets.
     Converts virtual mem slots to physical stack slots.
-    Converts ir_store for structs types to memcpy
 */
 void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots, const Array *symbol_map);
 /*

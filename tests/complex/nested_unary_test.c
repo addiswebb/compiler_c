@@ -1,0 +1,10 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit -4 %t
+
+int main() {
+    int x = 5;
+    x = - -x;   // double negation -> 5
+    x = ~x + 1; // two's complement -> -5
+    x++;        // -4
+    return x;
+}

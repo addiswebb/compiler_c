@@ -54,6 +54,7 @@ typedef struct Symbol{
 typedef struct {
     int index;
     int size;
+    int current_scope_depth;
     Array *src;
     bool expect_semi;
     Array scopes_array;
@@ -366,7 +367,7 @@ double parse_float(const char *raw, int len);
 
 /* ===== Symbol Table Functions ===== */
 
-Symbol *p_get_symbol(const Parser *p, const char *name, SymbolKind kind);
+Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind, const bool same_depth);
 Node *p_get_func_def(const Parser *p, const char* name);
 Typedef *p_get_typedef(const Parser *p, const char *name);
 Node *p_get_var_decl(const Parser *p, const char* name);

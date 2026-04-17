@@ -20,6 +20,8 @@ typedef enum {
     STAGE_SEMA_ANALYSIS,
     STAGE_IR,
     STAGE_X86_GEN,
+    STAGE_ASSEMBLER,
+    STAGE_LINKER
 } LogStage;
 
 typedef struct {
@@ -80,6 +82,12 @@ static inline void log_start(LogLevel lvl){
         break;
     case STAGE_SEMA_ANALYSIS:
         stage_str = "Semantic Analysis";
+        break;
+    case STAGE_ASSEMBLER:
+        stage_str = "Assembler";
+        break;
+    case STAGE_LINKER:
+        stage_str = "Linker";
         break;
     }
     fprintf(logger.file, "[%s] %s: ", level_str, stage_str);

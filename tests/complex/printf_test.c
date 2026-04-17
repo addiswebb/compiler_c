@@ -1,0 +1,9 @@
+// RUN: %cc %s -o %t
+// RUN: %t | %check_output "1,2,3,4,5,6,7,8,9"
+
+extern int printf(const char *format, ...);
+
+int main() {
+    printf("%d,%d,%d,%d,%d,%d,%d,%d,%d\n", 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    return 0;
+}

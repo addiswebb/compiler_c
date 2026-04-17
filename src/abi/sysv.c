@@ -81,6 +81,8 @@ ABI_Result abi_classify(Type *type) {
     switch (type->kind) {
     case T_INT:
     case T_POINTER:
+    // TODO make so array type never reaches here (arrays are decayed functionally in genlvalue but not by type)
+    case T_ARRAY:
         return (ABI_Result){.class = {ABI_INTEGER, ABI_NO_CLASS}, 0};
     case T_FLOAT:
         return (ABI_Result){.class = {ABI_SSE, ABI_NO_CLASS}, 0};
@@ -113,6 +115,12 @@ IR_Value abi_lower_param_register(Type *type, int i) {
 // TODO: Check members also maybe?
 bool is_va_list_type(Type *type) { return type->kind == T_STRUCT && type->size == 24; }
 
+void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+    if (instr->store.type->kind == T_STRUCT) {
+        ASSERT(instr->store.type->size <= 8, "[SysV] Not handling tuple sized struct");
+        instr->store.type = get_integer_type(instr->store.type->size);
+    }
+}
 void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     if (instr->param.param_index == -1) return;
     Type *type = instr->param.type;

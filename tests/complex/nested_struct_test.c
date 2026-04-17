@@ -1,0 +1,31 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit 17 %t
+
+struct Inner {
+    char c;
+    int x;
+};
+
+struct Outer {
+    int a;
+    struct Inner inner;
+    char tail;
+};
+
+int main() {
+    struct Outer o;
+
+    o.a = 5;
+    o.inner.c = 1;
+    o.inner.x = 20;
+    o.tail = 2;
+
+    // Reassign nested struct
+    struct Inner tmp;
+    tmp.c = 3;
+    tmp.x = 7;
+    o.inner = tmp;
+
+    return o.a + o.inner.c + o.inner.x + o.tail;
+    // Expected exit code: 5 + 3 + 7 + 2 = 17
+}

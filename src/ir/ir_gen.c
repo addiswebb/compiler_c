@@ -25,7 +25,7 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         return ir_address(ctx, v, 0);
     case N_UNARY:
         ASSERT(expr->unary.op == TK_MULTIPLY, "Can only generate *expr lvalue\n");
-        return ir_address(ctx, ir_gen_rvalue(ctx, expr->unary.expr), 0);
+        return ir_gen_rvalue(ctx, expr->unary.expr);
     case N_BINARY:
         return ir_gen_rvalue(ctx, expr);
     case N_INDEX:
@@ -89,14 +89,17 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         // TODO check if array also needs to be included here (passes tests without)
         // if (expr->type->kind == T_FUNCTION || expr->type->kind == T_ARRAY)
         if (expr->type->kind == T_FUNCTION) return ir_symbol_value(expr->identifier.symbol);
-        else if (expr->type->kind == T_STRUCT) return ir_gen_lvalue(ctx, expr);
-        return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
+        // else if (expr->type->kind == T_STRUCT) return ir_gen_lvalue(ctx, expr);
+        ABI_Result res = abi_classify(expr->type);
+        if (res.memory) return ir_gen_lvalue(ctx, expr);
+        else return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_LITERAL:
         IR_Literal c = ir_literal(expr);
         return ir_smart_const(ctx, &c, expr->type);
     case N_BINARY:
         if (is_assignment_op(expr->binary.op)) {
-            if (expr->type->kind == T_STRUCT) {
+            ABI_Result res = abi_classify(expr->type);
+            if (res.memory) {
                 ASSERT(expr->binary.op == TK_EQ, "Only direct assignment '=' is allowed between structs\n");
                 return ir_memcpy(ctx, ir_gen_lvalue(ctx, expr->binary.rhs), ir_gen_lvalue(ctx, expr->binary.lhs), expr->type->size);
             }
@@ -111,9 +114,6 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             // If it is assignment & binary op
             if (expr->binary.op != TK_EQ) {
                 IR_Value binop_val = ir_load(ctx, addr, dereference ? expr->binary.lhs->unary.expr->type : expr->binary.lhs->type);
-                if (expr->type->kind == T_POINTER) {
-                    PANIC("Cannot x= pointers rn\n");
-                }
                 val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
                                 expr->type);
             }
@@ -190,7 +190,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             const IR_Value binary_dst = ir_binary(ctx, expr->unary.op == TK_INCR ? ADD : SUB, ir_next_virtual_reg(ctx->func), val,
                                                   ir_smart_const(ctx, &c, expr->type), expr->type);
             const IR_Value store_dst = ir_store(ctx, val_addr, binary_dst, expr->type);
-            return expr->unary.associativity ? val : store_dst;
+            return expr->unary.associativity ? val : binary_dst;
         } else if (expr->unary.op == TK_AND) return ir_gen_lvalue(ctx, expr->unary.expr);                              // & ref
         else if (expr->unary.op == TK_MULTIPLY) return ir_load(ctx, ir_gen_rvalue(ctx, expr->unary.expr), expr->type); // * deref
         else if (expr->unary.op == TK_SIZEOF) return ir_integer_literal(expr->unary.expr->type->size);
@@ -445,7 +445,8 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
 
     IR_Value rhs = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
     if (rhs.kind == IR_SYMBOL && rhs.symbol->kind == FUNC) rhs = ir_address(ctx, rhs, 0);
-    if (var_decl->type->kind == T_ARRAY || var_decl->type->kind == T_STRUCT) {
+    ABI_Result res = abi_classify(var_decl->type);
+    if (var_decl->type->kind == T_ARRAY || res.memory) {
         // ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
         // dst = ir_address(ctx, dst, 0);
         ir_memcpy(ctx, rhs, dst, var_decl->type->size);
@@ -542,9 +543,9 @@ static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func) {
 
     Type *abi_type = func->type->abi.type;
     ASSERT(abi_type, "Function did not recieve ABI type\n");
-    
+
     abi_gen_params(ctx, fn);
-    
+
     // handle {[statement]*}
     for (int i = 0; i < func->func.body->compound.items_array.count; i++) {
         ir_gen_block_item(ctx, get_node(&func->func.body->compound.items_array, i));

@@ -11,12 +11,14 @@
 #include <stdlib.h>
 
 const char *gp_register_str[16][4] = {
-    [RAX] = {"%al", "%ax", "%eax", "%rax"},      [RBX] = {"%bl", "%bx", "%ebx", "%rbx"},      [RCX] = {"%cl", "%cx", "%ecx", "%rcx"},
-    [RDX] = {"%dl", "%dx", "%edx", "%rdx"},      [RSI] = {"%sil", "%si", "%esi", "%rsi"},     [RDI] = {"%dil", "%di", "%edi", "%rdi"},
-    [RBP] = {"%bpl", "%bp", "%ebp", "%rbp"},     [RSP] = {"%spl", "%sp", "%esp", "%rsp"},     [R8] = {"%r8b", "%r8w", "%r8d", "%r8"},
-    [R9] = {"%r9b", "%r9w", "%r9d", "%r9"},      [R10] = {"%r10b", "%r10w", "%r10d", "%r10"}, [R11] = {"%r11b", "%r11w", "%r11d", "%r11"},
-    [R12] = {"%r12b", "%r12w", "%r12d", "%r12"}, [R13] = {"%r13b", "%r13w", "%r13d", "%r13"}, [R14] = {"%r14b", "%r14w", "%r14d", "%r14"},
-    [R15] = {"%r15b", "%r15w", "%r15d", "%r15"},
+    [RAX] = {"%al", "%ax", "%eax", "%rax"},      [RBX] = {"%bl", "%bx", "%ebx", "%rbx"},
+    [RCX] = {"%cl", "%cx", "%ecx", "%rcx"},      [RDX] = {"%res.memorydl", "%dx", "%edx", "%rdx"},
+    [RSI] = {"%sil", "%si", "%esi", "%rsi"},     [RDI] = {"%dil", "%di", "%edi", "%rdi"},
+    [RBP] = {"%bpl", "%bp", "%ebp", "%rbp"},     [RSP] = {"%spl", "%sp", "%esp", "%rsp"},
+    [R8] = {"%r8b", "%r8w", "%r8d", "%r8"},      [R9] = {"%r9b", "%r9w", "%r9d", "%r9"},
+    [R10] = {"%r10b", "%r10w", "%r10d", "%r10"}, [R11] = {"%r11b", "%r11w", "%r11d", "%r11"},
+    [R12] = {"%r12b", "%r12w", "%r12d", "%r12"}, [R13] = {"%r13b", "%r13w", "%r13d", "%r13"},
+    [R14] = {"%r14b", "%r14w", "%r14d", "%r14"}, [R15] = {"%r15b", "%r15w", "%r15d", "%r15"},
 };
 
 const char *sse_register_str[16] = {
@@ -478,6 +480,8 @@ void lower_ir_for_asm(IR_Function *f) {
                 // Will fail if size > 8 bytes
                 ASSERT(instr->load.type->size <= 8, "ir_load of type sized larger than 8 bytes\n");
                 if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
+            } else if (instr->op == IR_STORE) {
+                abi_lower_store(f, b, instr, &j);
             }
         }
     }

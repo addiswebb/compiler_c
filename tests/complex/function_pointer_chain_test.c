@@ -1,0 +1,9 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit 6 %t
+
+int inc(int x) { return x + 1; }
+int apply(int (*f)(int), int x) { return f(x); }
+
+int main() {
+    return apply(inc, 5);
+}

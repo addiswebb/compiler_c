@@ -1,39 +1,39 @@
 [
     {
-        "label": "Build & Run Test.c",
-        "command": "cmake --build build;./build/compiler_c ./tests/test.c -run -o ./tests/test.s;",
+        "label": "Rebuild CMake",
+        "command": "cmake --fresh -S . -B build -G Ninja;cmake --build build",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,
         "reveal": "always",
-        "show_command": false
+        "show_command": false,
     },
     {
         "label": "Full Run Test.c",
-        "command": "cmake --build build;./build/compiler_c ./tests/test.c -a;echo \"Compile and Run: ./tests/test.s\"; gcc ./tests/test.s -o ./tests/test.exe; ./tests/test.exe; echo \"Exit Code: $LASTEXITCODE - $?\"",
+        "command": "cmake --build build;./build/compiler_c ./tests/test.c -o ./tests/test.exe; ./tests/test.exe; echo \"Exit Code: $LASTEXITCODE - $?\"",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,
         "reveal": "always",
-        "show_command": false
+        "show_command": false,
     },
     {
         "label": "Build",
-        "command": "cmake --build build;./build/compiler_c ./tests/test.c -a",
+        "command": "cmake --build build;./build/compiler_c ./tests/test.c -o ./tests/test.exe",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,
         "reveal": "always",
-        "show_command": false
+        "show_command": false,
     },
     {
         "label": "Run Tests",
-        "command": "cmake --build build;lit -vv ./tests",
+        "command": "cmake --build build;lit -vv ./tests/basic ./tests/complex",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,
         "reveal": "always",
-        "show_command": false
+        "show_command": false,
     },
     {
         "label": "Compile -ir",
@@ -42,7 +42,7 @@
         "use_new_terminal": false,
         "allow_concurrent_runs": false,
         "reveal": "always",
-        "show_command": false
+        "show_command": false,
     },
     {
         "label": "Compile -t",
@@ -51,6 +51,6 @@
         "use_new_terminal": false,
         "allow_concurrent_runs": false,
         "reveal": "always",
-        "show_command": false
-    }
+        "show_command": false,
+    },
 ]

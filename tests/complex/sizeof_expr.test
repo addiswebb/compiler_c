@@ -1,8 +1,0 @@
-// RUN: %cc %s -a -o %t.s
-// RUN: gcc %t.s -o %t
-// RUN: %check_exit 1 %t
-
-int main() {
-    int x = 5;
-    return sizeof(x) == sizeof(int);
-}

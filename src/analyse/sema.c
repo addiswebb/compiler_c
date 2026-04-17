@@ -233,7 +233,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             p_pop_scope(p);
         }
 
-        Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC);
+        Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC, false);
         if (func_symbol) {
             if (func_symbol->func_def->func.storage_class == STATIC && node->func.storage_class != STATIC) {
                 PANIC("Linkage conflict between function declarations of %s\n", node->func.name);
@@ -264,12 +264,12 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 PANIC("External variable cannot be initialized in the same statement\n");
             }
         }
-        Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR);
+        Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR, true);
         // TODO consider if symbol management can happen after symantic analysis
         if (var_symbol) {
             // If we are within a function and var_symbol is a also a local variable
             if (p->scopes_array.count > 1) {
-                if (var_symbol->scope_depth == p->scopes_array.count - 1) {
+                if (var_symbol->scope_depth == p->current_scope_depth) {
                     PANIC("Redeclaration of local variable %s\n", node->var_decl.identifier->identifier.name);
                 }
             } else if (!var_symbol->var_decl->var_decl.is_defined && node->var_decl.is_defined) {
@@ -389,7 +389,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
         break;
     case N_IDENTIFIER:
-        Symbol *ident_symbol = p_get_symbol(p, node->identifier.name, ANY);
+        Symbol *ident_symbol = p_get_symbol(p, node->identifier.name, ANY, false);
         if (!ident_symbol) {
             PANIC("Failed to find symbol %s\n", node->identifier.name);
         }

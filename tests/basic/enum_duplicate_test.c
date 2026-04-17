@@ -1,0 +1,8 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit 4 %t
+
+enum E { A = 1, B = 1, C };
+
+int main() {
+    return A + B + C;   // 1 + 1 + 2 = 4
+}
