@@ -4,7 +4,7 @@ on:
     push:
         branches: ["master"]
         tags:
-            - 'v*.*.*'
+            - "v*.*.*"
     pull_request:
         branches: ["master"]
 
@@ -60,7 +60,7 @@ jobs:
               run: >
                   lit
                   -D compiler_exe=${{ github.workspace }}/build/compiler_c
-                  -vv ${{ github.workspace }}/tests
+                  -vv ${{ github.workspace }}/tests/basic ${{ github.workspace }}/tests/complex
 
             - name: Package (Linux)
               if: runner.os == 'Linux'
