@@ -39,6 +39,7 @@ void p_append_symbol_table(Parser *p) {
     append(&p->scopes_array, &symbol_table);
 }
 
+int current_scope_depth;
 /*
 Is End of token array?
 */
@@ -611,19 +612,22 @@ void p_append_call_param(Node *func_call, Node *param) { append(&func_call->func
 
 Symbol *p_append_symbol(Array *st, const Symbol *s) { return *(Symbol **)append(st, &s); }
 
-Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind) {
+Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind, const bool same_depth) {
     for (int i = p->scopes_array.count - 1; i >= 0; i--) {
         Array *st = get_symbol_table(p, i);
         for (int j = 0; j < st->count; j++) {
             Symbol *symbol = get_symbol(st, j);
-            if ((kind == ANY || symbol->kind == kind) && strcmp(symbol->name, name) == 0) return symbol;
+            if (same_depth && symbol->scope_depth != p->current_scope_depth) continue;
+            if (symbol->scope_depth <= p->current_scope_depth && (kind == ANY || symbol->kind == kind) && strcmp(symbol->name, name) == 0) {
+                return symbol;
+            }
         }
     }
     return NULL;
 }
 
 Typedef *p_get_typedef(const Parser *p, const char *name) {
-    Symbol *s = p_get_symbol(p, name, TYPEDEF);
+    Symbol *s = p_get_symbol(p, name, TYPEDEF, false);
     if (s) return &s->_typedef;
     PANIC("Tried to get the typedef of %s, which does not exist\n", name);
 }
@@ -637,7 +641,7 @@ void p_append_typedef(Parser *p, const Typedef *t) {
                                                                            .storage = STORAGE_NONE,
                                                                            ._typedef = *t,
                                                                            .type = t->type,
-                                                                           .scope_depth = p->scopes_array.count - 1}));
+                                                                           .scope_depth = p->current_scope_depth}));
 }
 Symbol *p_append_func_def(Parser *p, Node *f) {
     if (p->scopes_array.count > 2) {
@@ -652,7 +656,7 @@ Symbol *p_append_func_def(Parser *p, Node *f) {
                                                                                   .storage = storage,
                                                                                   .func_def = f,
                                                                                   .type = f->type,
-                                                                                  .scope_depth = p->scopes_array.count - 1}));
+                                                                                  .scope_depth = p->current_scope_depth}));
 }
 Symbol *p_append_var_decl_symbol(Parser *p, Node *v) {
     Linkage linkage = LINK_NONE;
@@ -673,7 +677,7 @@ Symbol *p_append_var_decl_symbol(Parser *p, Node *v) {
                                                                                   .storage = storage,
                                                                                   .var_decl = v,
                                                                                   .type = v->type,
-                                                                                  .scope_depth = p->scopes_array.count - 1}));
+                                                                                  .scope_depth = p->current_scope_depth}));
 }
 
 Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param) {
@@ -684,7 +688,7 @@ Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param) {
                                                                                   .storage = STORAGE_NONE,
                                                                                   .var_decl = NULL,
                                                                                   .type = param->type,
-                                                                                  .scope_depth = p->scopes_array.count - 1}));
+                                                                                  .scope_depth = p->current_scope_depth}));
 }
 void p_append_enum_const(Parser *p, const EnumField *e) {
     p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = e->name,
@@ -693,19 +697,19 @@ void p_append_enum_const(Parser *p, const EnumField *e) {
                                                                            .storage = STORAGE_NONE,
                                                                            .enum_field = *e,
                                                                            .type = type_i32,
-                                                                           .scope_depth = p->scopes_array.count - 1}));
+                                                                           .scope_depth = p->current_scope_depth}));
 }
 
 void p_append_element(Node *init_list, Node *element) { append(&init_list->init_list.elements_array, &element); }
 
 Node *p_get_var_decl(const Parser *p, const char *name) {
-    const Symbol *s = p_get_symbol(p, name, VAR);
+    const Symbol *s = p_get_symbol(p, name, VAR, false);
     if (s) return s->var_decl;
     PANIC("Tried to find variable %s which does not exist\n", name);
 }
 
 EnumField *p_get_enum_const(const Parser *p, const char *name) {
-    Symbol *s = p_get_symbol(p, name, ENUM);
+    Symbol *s = p_get_symbol(p, name, ENUM, false);
     if (s) return &s->enum_field;
     PANIC("Tried to find enum constant %s which does not exist\n", name);
 }
@@ -913,8 +917,12 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
     }
 }
 
-void p_push_scope(Parser *p) { p_append_symbol_table(p); }
+void p_push_scope(Parser *p) {
+    p->current_scope_depth++;
+    p_append_symbol_table(p);
+}
 void p_pop_scope(Parser *p) {
+    p->current_scope_depth--;
     array_free(get_current_symbol_table(p));
     pop(&p->scopes_array);
 }
@@ -1130,7 +1138,7 @@ bool is_type_token(const Parser *p, const Token *t) {
     case TK_ENUM:
         return true;
     case TK_IDENTIFIER:
-        return p_get_symbol(p, t->value, TYPEDEF) != NULL;
+        return p_get_symbol(p, t->value, TYPEDEF, false) != NULL;
     default:
         return false;
     }

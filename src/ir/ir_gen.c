@@ -89,7 +89,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         // TODO check if array also needs to be included here (passes tests without)
         // if (expr->type->kind == T_FUNCTION || expr->type->kind == T_ARRAY)
         if (expr->type->kind == T_FUNCTION) return ir_symbol_value(expr->identifier.symbol);
-        else if (expr->type->kind == T_STRUCT) return ir_gen_lvalue(ctx, expr);
+        // else if (expr->type->kind == T_STRUCT) return ir_gen_lvalue(ctx, expr);
         return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_LITERAL:
         IR_Literal c = ir_literal(expr);
@@ -190,7 +190,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             const IR_Value binary_dst = ir_binary(ctx, expr->unary.op == TK_INCR ? ADD : SUB, ir_next_virtual_reg(ctx->func), val,
                                                   ir_smart_const(ctx, &c, expr->type), expr->type);
             const IR_Value store_dst = ir_store(ctx, val_addr, binary_dst, expr->type);
-            return expr->unary.associativity ? val : store_dst;
+            return expr->unary.associativity ? val : binary_dst;
         } else if (expr->unary.op == TK_AND) return ir_gen_lvalue(ctx, expr->unary.expr);                              // & ref
         else if (expr->unary.op == TK_MULTIPLY) return ir_load(ctx, ir_gen_rvalue(ctx, expr->unary.expr), expr->type); // * deref
         else if (expr->unary.op == TK_SIZEOF) return ir_integer_literal(expr->unary.expr->type->size);
