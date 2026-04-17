@@ -1,8 +1,7 @@
 int main() {
-    int a[4] = {1, 2, 3, 4};
-    char *p = (char *)a;
-
-    p += sizeof(int); // move to a[1]
-    // p = p + sizeof(int);
-    return a[0] + a[1] * 10 + a[3];
+    int a = 1;
+    long b = 2;
+    short c = 3;
+    int size_sum = sizeof(a) + sizeof(b) + sizeof(c); // assuming 4+8+2=14 on 64-bit
+    return size_sum;
 }

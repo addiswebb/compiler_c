@@ -50,6 +50,9 @@ ABI_Result abi_classify(Type *type) {
     return (ABI_Result){.class = {[0] = ABI_INTEGER, [1] = ABI_NO_CLASS}, .memory = type->size > HIDDEN_PTR_SIZE};
 }
 
+void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+    if (instr->store.type->kind == T_STRUCT) instr->store.type = get_integer_type(instr->store.type->size);
+}
 IR_Value abi_lower_param_register(Type *type, int i) {
     ASSERT(i >= 0 && i < PARAM_REGISTERS, "Win64 ABI Invalid param arg index %d\n", i);
     IR_Value v = (IR_Value){.kind = IR_PHYS_REG,
