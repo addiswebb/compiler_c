@@ -111,9 +111,9 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             // If it is assignment & binary op
             if (expr->binary.op != TK_EQ) {
                 IR_Value binop_val = ir_load(ctx, addr, dereference ? expr->binary.lhs->unary.expr->type : expr->binary.lhs->type);
-                if (expr->type->kind == T_POINTER) {
-                    PANIC("Cannot x= pointers rn\n");
-                }
+                // if (expr->type->kind == T_POINTER) {
+                //     PANIC("Cannot x= pointers rn\n");
+                // }
                 val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
                                 expr->type);
             }
