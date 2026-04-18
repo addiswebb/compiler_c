@@ -272,9 +272,8 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
 
     int integers_emitted = hidde_ptr_offset;
     int floats_emitted = 0;
-    for (int i = hidde_ptr_offset; i < f->type->_func.params.count + hidde_ptr_offset; i++) {
-        // ParamDecl *d = get(&abi_type->_func.params, i);
-        ParamDecl *d = get(&f->type->abi.type->_func.params, i);
+    for (int i = 0; i < f->type->_func.params.count; i++) {
+        ParamDecl *d = get(&f->type->_func.params, i);
         d->symbol->type = d->type;
         append(&f->locals_array, &d->symbol);
         const int param_index = d->type->kind == T_FLOAT ? floats_emitted++ : integers_emitted++;
