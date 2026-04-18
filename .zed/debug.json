@@ -34,11 +34,11 @@
     },
     {
         "adapter": "CodeLLDB",
-        "label": "Debug Test",
+        "label": "Debug Test new",
         "request": "launch",
         "program": "./tests/test",
         "build": {
-            "command": "gcc -g ./tests/test.s -o ./tests/test"
+            "command": "gcc -g ./tests/test.s -o ./tests/test -lc"
         }
     },
     {
