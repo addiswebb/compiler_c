@@ -1,2 +1,2 @@
 CompileFlags:
-    Add: [-xc, -I/libc]
+    Add: [-xc, -I/libc, -Wno-c23-extensions]
