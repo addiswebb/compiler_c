@@ -25,7 +25,7 @@ void ir_lower_const_value(IR_Value *v);
 void analysis(const IR_Context *ctx);
 
 void generate_types();
-void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map);
+void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map);
 int get_symbol_index(const Array *symbol_map, Symbol *symbol);
 
 // TODO: convert these from "bitset" to "block", so add_defined(IR_BLOCK*b), adds to b->defined;

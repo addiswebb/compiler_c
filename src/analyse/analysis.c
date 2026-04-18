@@ -404,15 +404,26 @@ int get_symbol_index(const Array *symbol_map, Symbol *symbol) {
     }
     return -1;
 }
-void symbol_slot_allocation(const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map) {
-    int slot_count = f->locals_array.count;
+void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map) {
+    int slot_count = f->locals_array.count + ctx->module->global_array.count;
     if (slot_count == 0) return;
     // TODO account parameters,
 
     array_init(symbol_map, slot_count, sizeof(Symbol *));
     array_init(symbol_slots, slot_count, sizeof(RegisterSlot));
 
-    for (int i = 0; i < slot_count; i++) {
+    for (int i = 0; i < ctx->module->global_array.count; i++) {
+        Symbol *global_symbol = get_global(ctx, i)->symbol;
+        int size = align(global_symbol->type->size, 8);
+        // Todo track scopes on symbols, so that we can reuse slots for symbols aswell, (instead of '-1' currently)
+        int offset = -(*frame_size) - size;
+
+        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
+        append(symbol_map, &global_symbol);
+        *frame_size += size;
+    }
+
+    for (int i = 0; i < f->locals_array.count; i++) {
         Symbol *local_symbol = get_local_symbol(f, i);
         int size = align(local_symbol->type->size, 8);
         // Todo track scopes on symbols, so that we can reuse slots for symbols aswell, (instead of '-1' currently)
@@ -533,10 +544,9 @@ void analysis(const IR_Context *ctx) {
         int frame_size = variadic_space;
 
         // Allocate local variables
-        symbol_slot_allocation(f, &frame_size, &symbol_slots, &symbol_map);
+        symbol_slot_allocation(ctx, f, &frame_size, &symbol_slots, &symbol_map);
         // Allocate virtual registers
         linear_stack_slot_allocation(lifetimes, reg_count, &frame_size);
-
         // Update all instances of IR_Value with the correct stack offsets
         lower_ir_values_to_stack(f, lifetimes, reg_count, &symbol_slots, &symbol_map);
 

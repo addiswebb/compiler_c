@@ -27,7 +27,7 @@ IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
     return i.ops[0];
 }
 IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
-    if (src.kind == IR_INT_LITERAL && type->kind != T_INT) {
+    if (src.kind == IR_INT_LITERAL && !(type->kind == T_INT || type->kind == T_POINTER)) {
         DEBUG("here\n");
     }
     IR_Instruction i;

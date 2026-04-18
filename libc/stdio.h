@@ -9,11 +9,12 @@
 
 typedef struct FILE FILE;
 
-extern const FILE * stdin;
-extern const FILE * stdout;
-extern const FILE * stderr;
+extern FILE * stdin;
+extern FILE * stdout;
+extern FILE * stderr;
 
 FILE *fopen(const char *, const char *);
+FILE *fdopen(int, const char *);
 int fclose(FILE *);
 
 int fflush(FILE *);

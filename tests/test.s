@@ -1,3 +1,4 @@
+.section .note.GNU-stack,"",@progbits
 
 .text
 .global main
@@ -14,8 +15,8 @@ main_0:
     leaq -16(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
-    movl $2, %ecx
-    movl %ecx, (%rax)
+    movq $2, %rcx
+    movq %rcx, (%rax)
     leaq -24(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
@@ -24,7 +25,7 @@ main_0:
     leaq -32(%rbp), %rax
     movq %rax, -40(%rbp)
     movl $4, %eax
-    addl $4, %eax
+    addl $8, %eax
     movl %eax, -48(%rbp)
     movl -48(%rbp), %eax
     addl $2, %eax

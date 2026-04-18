@@ -7,8 +7,8 @@
         "args": ["./tests/test.c", "-o", "./tests/test.exe"],
         "build": {
             "command": "cmake",
-            "args": ["--build", "build"],
-        },
+            "args": ["--build", "build"]
+        }
     },
     {
         "adapter": "CodeLLDB",
@@ -18,8 +18,8 @@
         "args": ["./tests/test.c", "-ir"],
         "build": {
             "command": "cmake",
-            "args": ["--build", "build"],
-        },
+            "args": ["--build", "build"]
+        }
     },
     {
         "adapter": "CodeLLDB",
@@ -29,8 +29,8 @@
         "args": ["./tests/test.c", "-t"],
         "build": {
             "command": "cmake",
-            "args": ["--build", "build"],
-        },
+            "args": ["--build", "build"]
+        }
     },
     {
         "adapter": "CodeLLDB",
@@ -38,7 +38,23 @@
         "request": "launch",
         "program": "./tests/test",
         "build": {
-            "command": "gcc -g ./tests/test.s -o ./tests/test",
-        },
+            "command": "gcc -g ./tests/test.s -o ./tests/test"
+        }
     },
+    {
+        "adapter": "CodeLLDB",
+        "label": "Debug calculator",
+        "request": "launch",
+        "program": "./build/compiler_c",
+        "args": [
+            "/mnt/e/Dev/calculator/main.c",
+            "-o",
+            "/mnt/e/Dev/calculator/build/main.exe",
+            "-I/mnt/e/Dev/compiler_c/libc"
+        ],
+        "build": {
+            "command": "cmake",
+            "args": ["--build", "build"]
+        }
+    }
 ]

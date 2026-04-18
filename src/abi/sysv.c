@@ -79,8 +79,10 @@ ABI_Result classify_struct(Type *type) {
 ABI_Result abi_classify(Type *type) {
     if (type->size > HIDDEN_PTR_SIZE) return (ABI_Result){.class = {}, .memory = true};
     switch (type->kind) {
+    case T_ENUM:
     case T_INT:
     case T_POINTER:
+    case T_VOID:
     // TODO make so array type never reaches here (arrays are decayed functionally in genlvalue but not by type)
     case T_ARRAY:
         return (ABI_Result){.class = {ABI_INTEGER, ABI_NO_CLASS}, 0};
@@ -272,7 +274,7 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
     int floats_emitted = 0;
     for (int i = hidde_ptr_offset; i < f->type->_func.params.count + hidde_ptr_offset; i++) {
         // ParamDecl *d = get(&abi_type->_func.params, i);
-        ParamDecl *d = get(&f->type->_func.params, i);
+        ParamDecl *d = get(&f->type->abi.type->_func.params, i);
         d->symbol->type = d->type;
         append(&f->locals_array, &d->symbol);
         const int param_index = d->type->kind == T_FLOAT ? floats_emitted++ : integers_emitted++;

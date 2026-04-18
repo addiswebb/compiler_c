@@ -42,6 +42,8 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         IR_Value addr = ir_gen_lvalue(ctx, expr->member_access.identifier);
         if (!expr->member_access.offset) return addr;
         return ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), addr, ir_integer_literal(expr->member_access.offset), type_u64);
+    case N_FUNCTION_CALL:
+        return ir_gen_rvalue(ctx, expr);
     case N_CAST:
         // Decay/implicit casting
         if (expr->cast.expr->type->kind == T_ARRAY || expr->cast.expr->type->kind == T_STRUCT ||
