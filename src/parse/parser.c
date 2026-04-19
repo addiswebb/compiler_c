@@ -822,7 +822,7 @@ Node *p_parse_switch_statement(Parser *p, NodeManager *nm) {
 
     p_consume_a(p, TK_SWITCH);
     p_consume_a(p, TK_OPEN_PAREN);
-    node->_switch.test = p_parse_primary_expression(p, nm);
+    node->_switch.test = p_parse_expression(p, nm, 0);
     p_consume_a(p, TK_CLOSE_PAREN);
 
     node->_switch.block = new_compound_node(nm);

@@ -652,6 +652,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         p_push_scope(p);
         sema_ctx->loop = node;
         semantic_analysis(sema_ctx, p, nm, node->_switch.test);
+        if (node->_switch.test->type != type_i32) node->_switch.test = cast_node(nm, node->_switch.test, type_i32);
         semantic_analysis(sema_ctx, p, nm, node->_switch.block);
         p_pop_scope(p);
         break;

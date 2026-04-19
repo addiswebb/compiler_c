@@ -55,7 +55,7 @@ char *CONSTANTS_NAMES[NUMBER_OF_CONSTANTS];
 
 double CONSTANTS_VALUES[NUMBER_OF_CONSTANTS];
 
-// Var last_result;
+Var last_result;
 
 char *variableNames[MAX_VARIABLES];
 Var variables[MAX_VARIABLES];
@@ -102,25 +102,25 @@ Var parseToken(char *token) {
 
     // # represents last computed value
     if (token[0] == '#') {
-        // res = last_result;
+        res = last_result;
         return res;
     }
 
     // Handle checking constants
-    // for (int i = 0; i < NUMBER_OF_CONSTANTS; i++) {
-    //     if (strcmp(token, CONSTANTS_NAMES[i]) == 0) {
-    //         res.value = CONSTANTS_VALUES[i];
-    //         return res;
-    //     }
-    // }
+    for (int i = 0; i < NUMBER_OF_CONSTANTS; i++) {
+        if (strcmp(token, CONSTANTS_NAMES[i]) == 0) {
+            res.value = CONSTANTS_VALUES[i];
+            return res;
+        }
+    }
 
     // Handle checking variables
-    // for (int i = 0; i < variableCount; i++) {
-    //     if (strcmp(token, variableNames[i]) == 0) {
-    //         res = variables[i];
-    //         return res;
-    //     }
-    // }
+    for (int i = 0; i < variableCount; i++) {
+        if (strcmp(token, variableNames[i]) == 0) {
+            res = variables[i];
+            return res;
+        }
+    }
 
     // At this point, the token should be some literal number e.g "2", "3.167" etc
     double val = atof(token);
@@ -136,70 +136,25 @@ Var parseToken(char *token) {
     return res;
 }
 
-Var solve_x(Var *a, Var *b, char operator) {
-    Var v;
-    if (a->type == ERROR || b->type == ERROR) {
-        v.type = ERROR;
-        v.value = 0.0;
-        return v;
-    }
-    // Ordered by order of operators, left to right
-    if (operator == '~') {
-        v.value = a->value == b->value;
-        v.type = BOOL;
-    } else if (operator == '<') {
-        v.value = a->value < b->value;
-        v.type = BOOL;
-    } else if (operator == '>') {
-        v.value = a->value > b->value;
-        v.type = BOOL;
-    } else if (operator == '^') {
-        v.value = my_pow(a->value, b->value);
-        printf("a= %lf\n", v.value);
-        v.type = FLOAT;
-    } else if (operator == '%') {
-        v.value = (float)((int)(a->value) % (int)(b->value));
-        v.type = FLOAT;
-    } else if (operator == 'x' || operator == '*') {
-        v.value = a->value * b->value;
-        v.type = FLOAT;
-    } else if (operator == '/') {
-        v.value = a->value / b->value;
-        v.type = FLOAT;
-    } else if (operator == '+') {
-        v.value = a->value + b->value;
-        v.type = FLOAT;
-    } else if (operator == '-') {
-        v.value = a->value - b->value;
-        v.type = FLOAT;
-    } else {
-        printf("No operator given\n");
-        v.type = ERROR;
-        v.value = 0.0;
-    }
-    return v;
-}
 Var solve(Var a, Var b, char operator) {
-    printf("s1\n\n");
     Var v;
     if (a.type == ERROR || b.type == ERROR) {
         v.type = ERROR;
         v.value = 0.0;
         return v;
     }
-    printf("s2\n");
     // Ordered by order of operators, left to right
     switch (operator) {
     case '~':
-        v.value = a.value == b.value;
+        v.value = (int)a.value == (int)b.value;
         v.type = BOOL;
         break;
     case '<':
-        v.value = a.value < b.value;
+        v.value = (int)a.value < (int)b.value;
         v.type = BOOL;
         break;
     case '>':
-        v.value = a.value > b.value;
+        v.value = (int)a.value > (int)b.value;
         v.type = BOOL;
         break;
     case '^':
@@ -211,6 +166,7 @@ Var solve(Var a, Var b, char operator) {
         v.type = FLOAT;
         break;
     case '*':
+    case 'x':
         v.value = a.value * b.value;
         v.type = FLOAT;
         break;
@@ -219,7 +175,6 @@ Var solve(Var a, Var b, char operator) {
         v.type = FLOAT;
         break;
     case '+':
-        printf("s3\n");
         v.value = a.value + b.value;
         v.type = FLOAT;
         break;
@@ -227,13 +182,11 @@ Var solve(Var a, Var b, char operator) {
         v.value = a.value - b.value;
         v.type = FLOAT;
         break;
-    case 'x':
     default:
         printf("No operator given");
         v.type = ERROR;
         v.value = 0.0;
     }
-    printf("s4\n");
     return v;
 }
 
@@ -310,8 +263,7 @@ Var parse(char *input, int length, enum ParseFlag *parse_flag) {
 
     // If no operator was found, this must be a singular token
     if (operator_i == -1) {
-        Var x = parseToken(input);
-        return x;
+        return parseToken(input);
     } else {
         // Otherwise, the equation must take the form @<operator>#
         // Where @ is either (#) or a singular token
@@ -368,8 +320,7 @@ Var parse(char *input, int length, enum ParseFlag *parse_flag) {
         Var lhs = parse(first_token, first_length, parse_flag);
         Var rhs = parse(rest_token, rest_length, parse_flag);
 
-        // Var v = solve(lhs, rhs, operator);
-        Var v = solve_x(&lhs, &rhs, operator);
+        Var v = solve(lhs, rhs, operator);
 
         free(first_token);
         free(rest_token);
@@ -396,17 +347,21 @@ int op_priority(char op) {
     }
 }
 bool is_operator(char c) {
-    if (c == '+') return true;
-    if (c == '-') return true;
-    if (c == 'x') return true;
-    if (c == '*') return true;
-    if (c == '/') return true;
-    if (c == '%') return true;
-    if (c == '^') return true;
-    if (c == '>') return true;
-    if (c == '<') return true;
-    if (c == '~') return true;
-    return false;
+    switch (c) {
+    case '+':
+    case '-':
+    case 'x':
+    case '*':
+    case '/':
+    case '%':
+    case '^':
+    case '>':
+    case '<':
+    case '~':
+        return true;
+    default:
+        return false;
+    }
 }
 
 bool isAlpha(char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
@@ -419,7 +374,7 @@ void printVar(Var v) {
         printf("%g", v.value);
         break;
     case BOOL:
-        if (v.value) {
+        if ((int)v.value) {
             printf("true");
         } else {
             printf("false");
@@ -433,15 +388,14 @@ void printVar(Var v) {
 /* paste here */
 
 int main() {
-    // CONSTANTS_NAMES[0] = "PI";
-    // CONSTANTS_NAMES[1] = "E";
-    // CONSTANTS_NAMES[2] = "root2";
+    CONSTANTS_NAMES[0] = "PI";
+    CONSTANTS_NAMES[1] = "E";
+    CONSTANTS_NAMES[2] = "root2";
 
-    // CONSTANTS_VALUES[0] = 3.14159265358979323846;
-    // CONSTANTS_VALUES[1] = 2.71828182845904523536;
-    // CONSTANTS_VALUES[2] = 1.41421356237309504880;
+    CONSTANTS_VALUES[0] = 3.14159265358979323846;
+    CONSTANTS_VALUES[1] = 2.71828182845904523536;
+    CONSTANTS_VALUES[2] = 1.41421356237309504880;
     printf("Starting Calculator\n");
-    Var last_result;
     last_result.value = 0.0;
     last_result.type = FLOAT;
     char *original_input = malloc(sizeof(char) * 100);
@@ -454,7 +408,7 @@ int main() {
         printf(">> ");
         FILE *my_stdin = fdopen(0, "r");
         fgets(input, sizeof(input), my_stdin);
-        if (input[0] - '\n' == 0) {
+        if (input[0] == '\n') {
             printf("Ending Calculator.\n");
             return 0;
         } else if (strcmp(input, "exit\n") == 0) {
@@ -474,10 +428,8 @@ int main() {
         format(input);
 
         enum ParseFlag parse_flag = EQUATION;
-        enum ParseFlag *test = &parse_flag;
 
-        Var x = parse(input, 100, &parse_flag);
-        last_result = x;
+        last_result = parse(input, 100, &parse_flag);
 
         if (parse_flag == EQUATION && last_result.type != ERROR) {
             printf("%s = ", original_input);
@@ -487,12 +439,12 @@ int main() {
     }
 
     // Clean up
-    // for (int i = 0; i < MAX_VARIABLES; i++) {
-    //     if (variableNames[i] != NULL) {
-    //         free(variableNames[i]);
-    //         variableNames[i] = NULL;
-    //     }
-    // }
+    for (int i = 0; i < MAX_VARIABLES; i++) {
+        if (variableNames[i] != NULL) {
+            free(variableNames[i]);
+            variableNames[i] = NULL;
+        }
+    }
 
     free(original_input);
     return 0;
