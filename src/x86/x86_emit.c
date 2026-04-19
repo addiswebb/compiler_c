@@ -3,6 +3,7 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
+#include "compiler_c/parse/parser.h"
 #include "compiler_c/x86/x86.h"
 
 #include <inttypes.h>
@@ -53,9 +54,12 @@ void x86_operand(const IR_Value *v, char *buf, const int n) {
     case IR_INT_LITERAL:
         snprintf(buf, n, "$%" PRId64, v->int_literal);
         return;
+    case IR_SYMBOL:
+        ASSERT(v->symbol->storage != STORAGE_NONE, "Can only emit global symbols to x86\n");
+        snprintf(buf, n, "%s", v->symbol->name);
+        return;
     case IR_UNDEFINED:
     case IR_VREG:
-    case IR_SYMBOL:
         PANIC("Undefined operand\n");
     }
     // TODO print IR_PHYS_REG properly

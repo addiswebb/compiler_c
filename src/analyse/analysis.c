@@ -6,6 +6,7 @@
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
+#include "compiler_c/parse/parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -314,11 +315,15 @@ void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *
     IR_Value old = *v;
     switch (old.symbol->kind) {
     case VAR:
-        int index = get_symbol_index(symbol_map, v->symbol);
-        ASSERT(index != -1, "Tried to find symbol index of %s\n", v->symbol->name);
-        v->kind = IR_PHYS_REG;
-        *v = ((RegisterSlot *)get(symbol_slots, index))->v;
-        break;
+        // Handle global variables
+        if (old.symbol->storage == STORAGE_NONE) {
+            int index = get_symbol_index(symbol_map, v->symbol);
+            ASSERT(index != -1, "Tried to find symbol index of %s\n", v->symbol->name);
+            v->kind = IR_PHYS_REG;
+            *v = ((RegisterSlot *)get(symbol_slots, index))->v;
+            break;
+        }
+        // !!INTENTIONAL PASSTHROUGH!!
     case FUNC:
         v->kind = IR_PHYS_REG;
         v->phys_reg.kind = REG_IP;
@@ -418,7 +423,7 @@ void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *fr
         // Todo track scopes on symbols, so that we can reuse slots for symbols aswell, (instead of '-1' currently)
         int offset = -(*frame_size) - size;
 
-        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
+        append(symbol_slots, &(RegisterSlot){.v = ir_symbol_value(global_symbol), .free_at = -1});
         append(symbol_map, &global_symbol);
         *frame_size += size;
     }
