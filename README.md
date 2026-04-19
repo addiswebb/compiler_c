@@ -263,9 +263,15 @@ When a block is full, instead of reallocating the whole block somewhere else at 
     * `__builtin_va_list` etc.
 
 ## Todo
+- [ ] Fix switch statements
+- [ ] Successfully compile `calculator`
 - [ ] Optimize SysV variadic float arg spilling to check `%al` 
 
 ## To be Implemented (Ordered from next to never...)
+* Globals
+    * Allow expression assignment
+        * `init-list`
+    * Fix read/writing to globals
 * Const expressions
     * Ideally just simple arithmetic `5 + 7`, literals and other constants.
 * Use physical registers
