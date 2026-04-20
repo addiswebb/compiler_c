@@ -1,4 +1,3 @@
-#include "compiler_c/ir/ir_util.h"
 #ifdef _WIN64
 
 #include "compiler_c/abi/abi.h"
@@ -7,6 +6,7 @@
 #include "compiler_c/ir/ir_builder.h"
 #include "compiler_c/ir/ir_gen.h"
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/x86/x86.h"
 
