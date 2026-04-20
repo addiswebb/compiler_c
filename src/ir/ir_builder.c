@@ -85,6 +85,9 @@ IR_Value ir_binary(IR_Context *ctx, IR_BINOP_OP op, IR_Value dst, IR_Value lhs_r
     return i.ops[0];
 }
 IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg, IR_Value rhs_reg, Type *type) {
+    if (type == type_invalid) {
+        printf("Found invalid\n");
+    }
     IR_Instruction i;
     i.op = IR_CMP;
     i.cmp.op = op;

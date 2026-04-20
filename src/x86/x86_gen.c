@@ -11,6 +11,9 @@
 #include <string.h>
 
 static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memcpy_instruction(fp, instr); }
+static void x86_gen_cmp_instruction(FILE *fp, const IR_Instruction *instr) {
+    x86_emit_cmp(fp, instr->cmp.op, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->cmp.type);
+}
 
 static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr) { x86_emit_addr(fp, &instr->ops[1], &instr->ops[0]); }
 static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
@@ -80,8 +83,10 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
     case IR_MEMCPY:
         x86_gen_memcpy_instruction(fp, instr);
         break;
+    case IR_CMP:
+        x86_gen_cmp_instruction(fp, instr);
+        break;
     case IR_RET:
-
         if (instr->ops[0].kind != IR_UNDEFINED)
             x86_emit_xr(fp, "mov", x86_op_suffix(instr->ret.type), "", &instr->ops[0], x86_rax_reg(instr->ret.type));
         fprintf(fp, "    mov %%rbp, %%rsp\n");
@@ -91,38 +96,11 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
     case IR_BR:
         fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.block->id);
         return;
-    case IR_CMP:
-        x86_emit_xr(fp, "mov", "l", "", &instr->ops[1], "%eax");
-        x86_emit_xr(fp, "cmp", "l", "", &instr->ops[2], "%eax");
-        bool use_unsigned = instr->cmp.type->kind == T_INT && !instr->cmp.type->is_signed;
-        const char *al_reg = "%al";
-        switch (instr->cmp.op) {
-        case LT:
-            x86_emit_r(fp, "set", use_unsigned ? "b" : "l", "", al_reg);
-            break;
-        case LE:
-            x86_emit_r(fp, "set", use_unsigned ? "be" : "le", "", al_reg);
-            break;
-        case GT:
-            x86_emit_r(fp, "set", use_unsigned ? "a" : "g", "", al_reg);
-            break;
-        case GE:
-            x86_emit_r(fp, "set", use_unsigned ? "ae" : "ge", "", al_reg);
-            break;
-        case EQ:
-            x86_emit_r(fp, "set", "e", "", al_reg);
-            break;
-        case NEQ:
-            x86_emit_r(fp, "set", "ne", "", al_reg);
-            break;
-        }
-        x86_emit_rr(fp, "mov", "zbl", "", "%al", "%eax");
-        x86_emit_rx(fp, "mov", "l", "", "%eax", &instr->ops[0]);
-        return;
     case IR_BR_COND:
         x86_emit_xr(fp, "mov", "l", "", &instr->ops[0], "%eax");
         fprintf(fp, "    testl %%eax, %%eax\n");
         if (instr->br_cond.f_block) fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_block->id);
+        else if (instr->br_cond.t_block) fprintf(fp, "    jnz %s_%d\n", ctx->func->name, instr->br_cond.t_block->id);
         break;
     case IR_LABEL:
         fprintf(fp, "%s:\n", instr->label.name);

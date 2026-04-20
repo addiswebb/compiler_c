@@ -35,6 +35,7 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c,
 void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
 void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
 void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src);
+void x86_emit_cmp(FILE *fp,IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t);
 void x86_emit_string(FILE *fp, const char *str);
 
 static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);

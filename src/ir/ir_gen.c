@@ -127,26 +127,23 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
 
         // Handle early branching for '&&' and '||' binary operations
         if (expr->binary.op == TK_OR_OR || expr->binary.op == TK_AND_AND) {
-            IR_Value lhs_cmp = ir_cmp(ctx, NEQ, lhs, ir_integer_literal(0), expr->type);
-
             if (ir_is_within_cond(ctx)) {
-                if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, lhs_cmp, NULL, ctx->false_block);
-                if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, lhs_cmp, ctx->true_block, NULL);
+                if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, lhs, NULL, ctx->false_block);
+                if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, lhs, ctx->true_block, NULL);
             }
 
             IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
-            IR_Value rhs_cmp = ir_cmp(ctx, NEQ, rhs, ir_integer_literal(0), expr->type);
             // No need to cmp both results, if we reach here it means lhs is 1 or rhs represents (lhs op rhs)
             // Early out
-            if (ir_is_within_cond(ctx)) return rhs_cmp;
+            if (ir_is_within_cond(ctx)) return rhs;
 
             // Otherwise generate the whole || or && result
-            return ir_binary(ctx, expr->binary.op == TK_OR_OR ? BW_OR : BW_AND, ir_next_virtual_reg(ctx->func), lhs_cmp, rhs_cmp, type_i32);
+            return ir_binary(ctx, expr->binary.op == TK_OR_OR ? BW_OR : BW_AND, ir_next_virtual_reg(ctx->func), lhs, rhs, type_i32);
         }
 
         IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
         if (is_comparison_op(expr->binary.op)) {
-            return ir_cmp(ctx, ir_cmp_op(expr->binary.op), lhs, rhs, expr->type);
+            return ir_cmp(ctx, ir_cmp_op(expr->binary.op), lhs, rhs, expr->binary.common_type);
         }
 
         // Otherwise it is a arithmetic binary operation

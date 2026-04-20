@@ -75,7 +75,7 @@ bool is_valid_binary_op(TokenType op, const Node *lhs, const Node *rhs) {
 
 Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
     if (binop->binary.lhs->type == type_invalid || binop->binary.rhs->type == type_invalid) {
-        PANIC("Semantic Analysis: Binary op was given expression with an invalid type\n");
+        PANIC("Binary op was given expression with an invalid type\n");
     }
     const Node *lhs = binop->binary.lhs;
     Node *rhs = binop->binary.rhs;
@@ -85,7 +85,7 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
     }
     if (is_assignment_op(op)) {
         if (!is_lvalue(lhs)) {
-            PANIC("Semantic Analysis: Binary op lhs is not assignable\n");
+            PANIC("Analysis: Binary op lhs is not assignable\n");
         }
         const TokenType underlying = get_underlying_op(op);
         if (is_arithmetic_op(underlying) || is_bitwise_op(underlying)) {
@@ -97,8 +97,6 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
         }
         return lhs->type;
     }
-    if (binop->binary.op != TK_MINUS || is_comparison_op(binop->binary.op)) {
-    }
 
     Type *common = promote_binary_operands(nm, binop);
     if (!common || common == type_invalid) {
@@ -107,7 +105,8 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
 
     if (is_arithmetic_op(op)) return common;
     // Review this to ensure correctness
-    if (is_comparison_op(op)) return common->is_signed ? type_i32 : type_u32;
+    if (is_comparison_op(op)) return common;
+
     // Review this to ensure correctness
     if (is_bitwise_op(op)) {
         if (lhs->type->kind != T_INT || rhs->type->kind != T_INT) {
@@ -139,6 +138,7 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     if ((*rhs)->type->kind == T_ARRAY) {
         *rhs = cast_node(nm, (*rhs), get_pointer_type((*rhs)->type->base));
     }
+
     // Integer promotion
     if (is_arithmetic_op(binop->binary.op) || is_comparison_op(binop->binary.op)) {
         if ((*lhs)->type->kind == T_INT && (*lhs)->type->size < type_i32->size)
@@ -319,7 +319,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_BINARY:
         semantic_analysis(sema_ctx, p, nm, node->binary.lhs);
         semantic_analysis(sema_ctx, p, nm, node->binary.rhs);
-        node->type = check_binary_op(nm, node->binary.op, node);
+        node->binary.common_type = check_binary_op(nm, node->binary.op, node);
+        node->type = is_comparison_op(node->binary.op) ? type_i32 : node->binary.common_type;
         break;
     case N_CAST:
         semantic_analysis(sema_ctx, p, nm, node->cast.expr);
@@ -654,6 +655,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         semantic_analysis(sema_ctx, p, nm, node->_switch.test);
         if (node->_switch.test->type != type_i32) node->_switch.test = cast_node(nm, node->_switch.test, type_i32);
         semantic_analysis(sema_ctx, p, nm, node->_switch.block);
+        node->type = node->_switch.test->type;
         p_pop_scope(p);
         break;
     case N_CASE:

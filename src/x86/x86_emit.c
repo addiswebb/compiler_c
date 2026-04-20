@@ -497,13 +497,14 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
     // char/short/int/long -> float/double
     if (from->kind == T_INT && to->kind == T_FLOAT) {
         if (src->kind == IR_INT_LITERAL) {
-            x86_emit_xr(fp, "mov", "", "", src, from_reg);
-            x86_emit_rx(fp, "mov", from_op_suffix, "", from_reg, dst);
+            x86_emit_xr(fp, "mov", from_op_suffix, "", src, from_reg);
+            x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", from_reg, to_reg);
+            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         } else {
             x86_emit_xr(fp, "movs", from_op_suffix, "q", src, "%rax");
             x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
-            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         }
+        x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         return;
     }
     // float/double -> char/short/int/long
@@ -596,6 +597,44 @@ void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src) {
 
     x86_emit_xr(fp, "mov", op_suffix, "", src, rax);
     x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
+}
+
+void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t) {
+    const char *reg = x86_rax_reg(t);
+    const char *op_suffix = x86_op_suffix(t);
+    x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
+    bool use_unsigned;
+    if (t->kind == T_FLOAT) {
+        x86_emit_xr(fp, "ucomi", op_suffix, "", rhs, reg);
+        use_unsigned = true;
+    } else {
+        x86_emit_xr(fp, "cmp", op_suffix, "", rhs, reg);
+        use_unsigned = t->kind == T_INT && !t->is_signed;
+    }
+    const char *al_reg = "%al";
+    switch (op) {
+    case LT:
+        x86_emit_r(fp, "set", use_unsigned ? "b" : "l", "", al_reg);
+        break;
+    case LE:
+        x86_emit_r(fp, "set", use_unsigned ? "be" : "le", "", al_reg);
+        break;
+    case GT:
+        x86_emit_r(fp, "set", use_unsigned ? "a" : "g", "", al_reg);
+        break;
+    case GE:
+        x86_emit_r(fp, "set", use_unsigned ? "ae" : "ge", "", al_reg);
+        break;
+    case EQ:
+        x86_emit_r(fp, "set", "e", "", al_reg);
+        break;
+    case NEQ:
+        x86_emit_r(fp, "set", "ne", "", al_reg);
+        break;
+    }
+    x86_emit_rr(fp, "mov", "zbl", "", "%al", "%eax");
+    x86_emit_rx(fp, "mov", "l", "", "%eax", dst);
+    return;
 }
 
 void x86_emit_string(FILE *fp, const char *str) {
