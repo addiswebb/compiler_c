@@ -123,7 +123,7 @@ void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
         instr->store.type = get_integer_type(instr->store.type->size);
     }
 }
-void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i, int param_index, int *param_cursor) {
     if (instr->param.param_index == -1) return;
     Type *type = instr->param.type;
     ABI_Result res = abi_classify(type);
@@ -149,10 +149,12 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
                 .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = s_addr, [1] = hidden_ptr}, .memcpy = {.size = instr->param.type->size}};
 
             set(&b->instruction_array, &param_instr, (*i));
-            insert(&b->instruction_array, &addr, (*i + 1));
+            insert(&b->instruction_array, &addr, *param_cursor);
             (*i)++;
-            insert(&b->instruction_array, &memcpy, (*i + 1));
+            (*param_cursor)++;
+            insert(&b->instruction_array, &memcpy, *param_cursor);
             (*i)++;
+            (*param_cursor)++;
         } else {
             instr->param.type = type->kind == T_FLOAT ? get_float_type(instr->param.type->size) : get_integer_type(instr->param.type->size);
             ASSERT(res.class[1] == ABI_NO_CLASS, "Structs sized [8 < size <= 16] are not handled yet\n");

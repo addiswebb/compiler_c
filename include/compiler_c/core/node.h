@@ -100,6 +100,7 @@ struct Node {
             Node *lhs;
             Node *rhs;
             TokenType op;
+            Type *common_type;
         } binary;
         // return expr;
         struct {

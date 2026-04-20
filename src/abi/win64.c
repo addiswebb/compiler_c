@@ -1,3 +1,4 @@
+#include "compiler_c/ir/ir_util.h"
 #ifdef _WIN64
 
 #include "compiler_c/abi/abi.h"
@@ -67,7 +68,7 @@ IR_Value abi_lower_param_register(Type *type, int i) {
     return v;
 }
 
-void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i, int param_index, int *param_cursor) {
     Type *type = instr->param.type;
     if (type->size > MAX_STRUCT_SIZE) type = type_u64;
     instr->op_count = 2;
@@ -88,11 +89,13 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i)
             IR_Instruction memcpy = {
                 .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = s_addr, [1] = hidden_ptr}, .memcpy = {.size = instr->param.type->size}};
 
-            set(&b->instruction_array, &param_instr, (*i));
-            insert(&b->instruction_array, &addr, (*i + 1));
+            set(&b->instruction_array, &param_instr, param_index);
+            insert(&b->instruction_array, &addr, *param_cursor);
             (*i)++;
-            insert(&b->instruction_array, &memcpy, (*i + 1));
+            (*param_cursor)++;
+            insert(&b->instruction_array, &memcpy, *param_cursor);
             (*i)++;
+            (*param_cursor)++;
         } else instr->param.type = get_integer_type(instr->param.type->size);
     }
 }
@@ -153,23 +156,21 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
     }
 
     int params_emitted = hidden_ptr_offset;
-    for (int i = hidden_ptr_offset; i < f->type->_func.params.count + hidden_ptr_offset; i++) {
-        // ParamDecl *d = get(&abi_type->_func.params, i);
+    for (int i = 0; i < f->type->_func.params.count; i++) {
         ParamDecl *d = get(&f->type->_func.params, i);
         d->symbol->type = d->type;
         append(&f->locals_array, &d->symbol);
-        params_emitted++;
         ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
                                                             .op_count = 1,
                                                             .ops = {[0] = ir_symbol_value(d->symbol)},
-                                                            .param = {.param_index = i, .type = d->type}});
+                                                            .param = {.param_index = params_emitted++, .type = d->type}});
     }
     if (f->type->_func.is_variadic) {
         for (int i = params_emitted; i < PARAM_REGISTERS; i++) {
             ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
                                                                 .op_count = 1,
                                                                 .ops = {[0] = ir_stack_value(8, 8, 16 + i * 8)},
-                                                                .param = {.param_index = i, .type = type_u64}});
+                                                                .param = {.param_index = params_emitted++, .type = type_u64}});
         }
     }
 }

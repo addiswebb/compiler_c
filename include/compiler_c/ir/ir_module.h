@@ -371,8 +371,6 @@ IR_LabeledBlock *ir_append_labeled_block(IR_Context *ctx, const char*label);
 */
 IR_Value ir_get_symbol_value(IR_Context *ctx, const char *name, bool give_lvalue);
 
-IR_Value ir_value_from_global(IR_Global *g);
-IR_Value ir_value_from_func_def(IR_Func_Def *f);
 /*
     Retrieves the Block which has the corresponding label.
 */

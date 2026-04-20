@@ -7,6 +7,7 @@
 #include "compiler_c/log/logger.h"
 #include "compiler_c/tokenize/tokenizer.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -822,7 +823,7 @@ Node *p_parse_switch_statement(Parser *p, NodeManager *nm) {
 
     p_consume_a(p, TK_SWITCH);
     p_consume_a(p, TK_OPEN_PAREN);
-    node->_switch.test = p_parse_primary_expression(p, nm);
+    node->_switch.test = p_parse_expression(p, nm, 0);
     p_consume_a(p, TK_CLOSE_PAREN);
 
     node->_switch.block = new_compound_node(nm);
@@ -1292,6 +1293,7 @@ int parse_multi_character(const char *raw, int len) {
 }
 
 double parse_float(const char *raw, int len) {
+    if (raw[0] == '-') return -parse_float(raw + 1, len - 1);
     double res = 0;
     const char *end = raw + len;
     double m = 0;

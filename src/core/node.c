@@ -225,8 +225,8 @@ void print_node(const Node *node, const int depth) {
     case N_BINARY:
         printf(": [op= ");
         print_token_type(node->binary.op);
-        printf(", type= ");
-        print_type(node->type);
+        printf(", common= ");
+        print_type(node->binary.common_type);
         printf(" ]\n");
         print_node(node->binary.lhs, depth + 1);
         print_node(node->binary.rhs, depth + 1);

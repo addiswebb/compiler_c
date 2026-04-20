@@ -27,7 +27,7 @@ IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
     return i.ops[0];
 }
 IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
-    if (src.kind == IR_INT_LITERAL && !(type->kind == T_INT || type->kind == T_POINTER)) {
+    if (src.kind == IR_INT_LITERAL && !(type->kind == T_INT || type->kind == T_ENUM || type->kind == T_POINTER)) {
         DEBUG("here\n");
     }
     IR_Instruction i;
@@ -85,6 +85,9 @@ IR_Value ir_binary(IR_Context *ctx, IR_BINOP_OP op, IR_Value dst, IR_Value lhs_r
     return i.ops[0];
 }
 IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg, IR_Value rhs_reg, Type *type) {
+    if (type == type_invalid) {
+        printf("Found invalid\n");
+    }
     IR_Instruction i;
     i.op = IR_CMP;
     i.cmp.op = op;
@@ -107,6 +110,7 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     if (i.call.type->kind == T_POINTER) i.call.type = i.call.type->base;
     ASSERT(i.call.type->abi.type, "Function Type did not recieve ABI type\n");
     array_init(&i.call.arg_array, expr->func_call.params_array.count ? expr->func_call.params_array.count : 1, sizeof(IR_CallArg));
+    int hidden_ptr_offset = 0;
     Type *return_type = i.call.type->_func.return_type;
     // TODO Abstract the condition to ABI, so it works for both SysV and Win64
     if (return_type != type_void) {
@@ -116,22 +120,25 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
             // Pass hidden pointer as first arg
             set_sret(return_type);
             append(&ctx->func->locals_array, &_sret);
+            hidden_ptr_offset++;
             append(&i.call.arg_array,
                    &(IR_CallArg){.v = ir_address(ctx, ir_symbol_value(_sret), 0), .type = get_pointer_type(return_type)});
         }
     }
+
     for (int j = 0; j < expr->func_call.params_array.count; j++) {
         Node *param = get_node(&expr->func_call.params_array, j);
         Type *arg_type = param->type;
-        if (j < i.call.type->abi.type->_func.params.count) arg_type = ((ParamDecl *)get(&i.call.type->abi.type->_func.params, j))->type;
+
+        if (j < i.call.type->abi.type->_func.params.count)
+            arg_type = ((ParamDecl *)get(&i.call.type->abi.type->_func.params, j + hidden_ptr_offset))->type;
 
         IR_Value val;
-        ABI_Result res = abi_classify(param->type);
+        ABI_Result res = abi_classify(arg_type);
         if (res.memory) val = ir_gen_lvalue(ctx, param);
         else if (param->type->kind == T_FUNCTION || is_func_ptr(param->type)) val = ir_gen_lvalue(ctx, param);
         // else if (is_func_ptr(param->type)) val = ir_gen_rvalue(ctx, param);
         else val = ir_gen_rvalue(ctx, param);
-
         append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg_type});
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
