@@ -90,10 +90,10 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i,
                 .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = s_addr, [1] = hidden_ptr}, .memcpy = {.size = instr->param.type->size}};
 
             set(&b->instruction_array, &param_instr, param_index);
-            insert(&b->instruction_array, &addr, (*param_cursor));
+            insert(&b->instruction_array, &addr, *param_cursor);
             (*i)++;
             (*param_cursor)++;
-            insert(&b->instruction_array, &memcpy, (*param_cursor));
+            insert(&b->instruction_array, &memcpy, *param_cursor);
             (*i)++;
             (*param_cursor)++;
         } else instr->param.type = get_integer_type(instr->param.type->size);

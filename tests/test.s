@@ -1,3 +1,4 @@
+.section .note.GNU-stack,"",@progbits
 .section .rodata
 .align 8
 .LC0:
