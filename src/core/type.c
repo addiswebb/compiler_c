@@ -279,7 +279,10 @@ Type *get_enum_type(const char *name) {
     if (name == NULL) return NULL;
     for (int i = 0; i < typepool.count; i++) {
         Type *type = arena_get(&typepool, i);
-        if (type->kind == T_ENUM && strcmp(name, type->_enum.name) == 0) return type;
+        if (type->kind == T_ENUM) {
+            if (type->_enum.name == NULL) continue;
+            if (strcmp(name, type->_enum.name) == 0) return type;
+        }
     }
     return NULL;
 }
@@ -288,7 +291,10 @@ Type *get_union_type(const char *name) {
     if (name == NULL) return NULL;
     for (int i = 0; i < typepool.count; i++) {
         Type *type = arena_get(&typepool, i);
-        if (type->kind == T_UNION && strcmp(name, type->_union.name) == 0) return type;
+        if (type->kind == T_UNION) {
+            if (type->_union.name == NULL) continue;
+            if (strcmp(name, type->_union.name) == 0) return type;
+        }
     }
     return NULL;
 }
@@ -296,7 +302,10 @@ Type *get_struct_type(const char *name) {
     if (name == NULL) return NULL;
     for (int i = 0; i < typepool.count; i++) {
         Type *type = arena_get(&typepool, i);
-        if (type->kind == T_STRUCT && strcmp(name, type->_struct.name) == 0) return type;
+        if (type->kind == T_STRUCT) {
+            if (type->_struct.name == NULL) continue;
+            if (strcmp(name, type->_struct.name) == 0) return type;
+        }
     }
     return NULL;
 }
