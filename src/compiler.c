@@ -60,7 +60,7 @@ void link(Compiler *c, Array *objs) {
     set_log_stage(STAGE_LINKER);
     INFO("Linking ");
     char cmd[512] = {};
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc ");
+    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -lc -lm ");
     for (int i = 0; i < objs->count; i++) {
         char *src = *(char **)get(objs, i);
         printf("%s", src);

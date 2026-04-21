@@ -47,10 +47,10 @@
         "request": "launch",
         "program": "./build/compiler_c",
         "args": [
-            "/mnt/e/Dev/calculator/main.c",
+            "/home/addis/dev/calculator/main.c",
             "-o",
-            "/mnt/e/Dev/calculator/build/main.exe",
-            "-I/mnt/e/Dev/compiler_c/libc",
+            "/home/addis/dev/calculator/main.exe",
+            "-I/home/addis/dev/compiler_c/libc",
         ],
         "build": {
             "command": "cmake",
