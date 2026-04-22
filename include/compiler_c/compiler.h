@@ -2,6 +2,12 @@
 #define COMPILER_C_COMPILER_H
 #include "compiler_c/parse/parser.h"
 
+#ifdef _WIN64
+#define DEFAULT_OUT_PATH "a.exe"
+#else
+#define DEFAULT_OUT_PATH "a.out"
+#endif
+
 /*
     Represents the whole compilation of a single file
     And all necessary structures
@@ -9,8 +15,8 @@
 typedef struct {
     /* Parsed from -o */
     char *output;
-    char *current_source;
-    char *current_output;
+    Array current_source;
+    Array current_output;
     Array source_files;
     unsigned int flags;
     Array passthrough_args;
@@ -22,13 +28,13 @@ typedef struct {
 } Compiler;
 
 // Compile and print Abstract Syntax Tree
-#define COMP_FLAG_AST (1u << 0)    // -t
+#define COMP_FLAG_AST (1u << 0) // -t
 // Compile and print IR Module and instructions
-#define COMP_FLAG_IR (1u << 1)     // -ir
+#define COMP_FLAG_IR (1u << 1) // -ir
 // Compile .c into .s
-#define COMP_STOP_AFTER_COMPILE (1u << 2)    // -S
+#define COMP_STOP_AFTER_COMPILE (1u << 2) // -S
 // Compile .s into .o
-#define COMP_STOP_AFTER_ASSEMBLE (1u << 3)    // -c
+#define COMP_STOP_AFTER_ASSEMBLE (1u << 3) // -c
 
 /*
     Takes input from terminal and instantiates a compiler,
@@ -50,7 +56,6 @@ void free_compiler(Compiler *compiler);
 
 // Loads the given file into the Compiler
 static int load_src_file(Compiler *compiler, const char *file);
-void handle_output_file(Compiler *compiler, const char *ext);
 char *replace_extension(const char *path, const char *ext);
 
 #endif // COMPILER_C_COMPILER_H

@@ -14,12 +14,12 @@ if(WIN32)
 else()
     set(ABI_SRC src/abi/sysv.c)
 
-    # if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    #     message(STATUS "Enabling AddressSanitizer and UndefinedBehaviorSanitizer")
-    #     set(SANITIZE_FLAGS "-fsanitize=address,undefined -fno-omit-frame-pointer")
-    #     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SANITIZE_FLAGS}")
-    #     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SANITIZE_FLAGS}")
-    # endif()
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        message(STATUS "Enabling AddressSanitizer and UndefinedBehaviorSanitizer")
+        set(SANITIZE_FLAGS "-fsanitize=address,undefined -fno-omit-frame-pointer")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SANITIZE_FLAGS}")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SANITIZE_FLAGS}")
+    endif()
 endif()
 
 add_executable(compiler_c

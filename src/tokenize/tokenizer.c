@@ -876,9 +876,7 @@ void print_token(const Token *token) {
         } else if (token->value[0] == '\n') {
             printf("\\n");
         }
-        // TODO fix this printf("%c ", token->value[0]);
-        // To print whole name safely with null termination
-        printf("%c", token->value[0]);
+        printf("%.*s", token->size, token->value);
     }
     printf("}\n");
 }

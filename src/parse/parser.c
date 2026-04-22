@@ -1281,7 +1281,6 @@ int64_t parse_hex(const char *raw, int len) {
         res = res * 16 + value;
         raw++;
     }
-    printf("%ld\n", res);
     return res;
 }
 

@@ -1,7 +1,7 @@
 .section .note.GNU-stack,"",@progbits
 .section .rodata
 .LC0:
-    .byte '3', 0
+    .byte 0xAA, 0
 
 .text
 .global main

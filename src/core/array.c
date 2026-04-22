@@ -63,7 +63,22 @@ void set(const Array *arr, const void *element, int index) {
     memcpy(((char *)arr->data + index * arr->element_size), element, arr->element_size);
 }
 
+void ptr_array_free(Array *arr) {
+    for (int i = 0; i < arr->count; i++) {
+        free(*(void **)get(arr, i));
+    }
+    array_free(arr);
+}
+
 void array_free(Array *arr) {
     free(arr->data);
     arr->data = NULL;
+}
+
+void array_str_cpy(Array *arr, const char *str) {
+    arr->count = 0;
+    while (*str != '\0') {
+        append(arr, str++);
+    }
+    append(arr, &(char){'\0'});
 }

@@ -31,6 +31,7 @@ void read_args(Compiler *compiler, const int argc, char *argv[]) {
                     PANIC("Improper Usage,\n  compiler_c [input] -o [output]\n");
                 }
                 compiler->output = argv[++i];
+                ASSERT(compiler->output, "Failed to strdup output\n");
             } else {
                 PANIC("Improper Usage,\n  compiler_c [input] -o [output]\n");
             }
@@ -49,12 +50,12 @@ void read_args(Compiler *compiler, const int argc, char *argv[]) {
 
 void assemble(Compiler *c) {
     set_log_stage(STAGE_ASSEMBLER);
-    ASSERT(c->current_source && c->current_output, "Source or output is not set for assemble\n");
-    INFO("Assembling %s to %s\n", c->current_source, c->current_output);
+    ASSERT(c->current_source.count && c->current_output.count, "Source or output is not set for assemble\n");
+    INFO("Assembling %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
     char cmd[512];
-    snprintf(cmd, sizeof(cmd), "gcc -c %s -o %s", c->current_source, c->current_output);
+    snprintf(cmd, sizeof(cmd), "gcc -c %s -o %s", (char *)c->current_source.data, (char *)c->current_output.data);
     int ret = system(cmd);
-    ASSERT(ret == 0, "Failed to assemble %s to %s\n", c->current_source, c->current_output);
+    ASSERT(ret == 0, "Failed to assemble %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
 }
 void link(Compiler *c, Array *objs) {
     set_log_stage(STAGE_LINKER);
@@ -67,46 +68,56 @@ void link(Compiler *c, Array *objs) {
         cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", src);
         if (i < objs->count - 1) putchar(' ');
     }
-    printf(" to %s\n", c->current_output);
-    snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "-o %s ", c->current_output);
+    printf(" to %s\n", (char *)c->current_output.data);
+    snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "-o %s ", (char *)c->current_output.data);
     int ret = system(cmd);
-    ASSERT(ret == 0, "Failed to link %d objs to %s\n", objs->count, c->current_output);
+    ASSERT(ret == 0, "Failed to link %d objs to %s\n", objs->count, (char *)c->current_output.data);
+}
+
+void update_current_output(Compiler *c, bool cond, char *path, const char *ext) {
+    if (cond && c->output) {
+        array_str_cpy(&c->current_output, c->output);
+    } else {
+        char *out = strdup(path);
+        char *dot = strrchr(out, '.');
+        if (dot) strcpy(dot, ext);
+        else PANIC("Failed to append '%s' to %s\n", ext, path);
+        array_str_cpy(&c->current_output, out);
+        free(out);
+    }
 }
 
 void drive(Compiler *c) {
     if (c->flags & (COMP_STOP_AFTER_COMPILE | COMP_STOP_AFTER_ASSEMBLE) && c->source_files.count > 1 && c->output) {
         WARN("-o ignored with multiple inputs\n");
+        free(c->output);
         c->output = NULL;
     }
     Array objs;
     array_init(&objs, c->source_files.count, sizeof(char *));
     for (int i = 0; i < c->source_files.count; i++) {
-        char *src = *(char **)get(&c->source_files, i);
-        c->current_source = src;
-        c->current_output = c->output && c->flags & COMP_STOP_AFTER_COMPILE ? c->output : replace_extension(src, ".s");
+        char *src_path = *(char **)get(&c->source_files, i);
+        array_str_cpy(&c->current_source, src_path);
+        update_current_output(c, c->flags & COMP_STOP_AFTER_COMPILE, src_path, ".s");
         compile(c);
         if (c->flags & COMP_FLAG_IR) return;
         if (c->flags & COMP_STOP_AFTER_COMPILE) continue;
-        c->current_source = c->current_output;
-        c->current_output = c->output && c->flags & COMP_STOP_AFTER_ASSEMBLE ? c->output : replace_extension(src, ".o");
+
+        array_str_cpy(&c->current_source, c->current_output.data);
+        update_current_output(c, c->flags & COMP_STOP_AFTER_ASSEMBLE, src_path, ".o");
         assemble(c);
         if (c->flags & COMP_STOP_AFTER_ASSEMBLE) continue;
-        append(&objs, &c->current_output);
+
+        char *obj_path = strdup((char *)c->current_output.data);
+        append(&objs, &obj_path);
     }
     if (c->flags & (COMP_STOP_AFTER_COMPILE | COMP_STOP_AFTER_ASSEMBLE)) return;
-    c->current_source = NULL;
-    if (c->output) c->current_output = c->output;
 
-    else {
-        c->current_output =
-#ifdef _WIN64
-            "a.exe";
-#else
-            "a.out";
-#endif
-    }
+    array_str_cpy(&c->current_output, c->output ? c->output : DEFAULT_OUT_PATH);
+
     ASSERT(objs.count > 0, "No object files to link\n");
     link(c, &objs);
+    ptr_array_free(&objs);
     set_log_stage(STAGE_COMPILER);
     INFO("Done.\n");
 }
@@ -128,8 +139,8 @@ Compiler init_compiler(const int argc, char *argv[]) {
 
     Compiler compiler;
     compiler.flags = 0;
-    compiler.current_output = NULL;
-    compiler.current_source = NULL;
+    array_init(&compiler.current_output, 4, sizeof(char));
+    array_init(&compiler.current_source, 4, sizeof(char));
     compiler.output = NULL;
     array_init(&compiler.passthrough_args, 4, sizeof(char *));
     array_init(&compiler.source_files, 4, sizeof(char *));
@@ -146,32 +157,28 @@ void free_compiler(Compiler *compiler) {
     free_parser(&compiler->p);
     t_free(&compiler->tk);
 
-    // free(compiler->current_output);
-    compiler->current_output = NULL;
+    array_free(&compiler->passthrough_args);
+    array_free(&compiler->source_files);
+    array_free(&compiler->current_source);
+    array_free(&compiler->current_output);
     free(compiler->src);
     compiler->src = NULL;
 }
 
-char *replace_extension(const char *path, const char *ext) {
-    char *out = strdup(path);
-    char *dot = strrchr(out, '.');
-    if (dot) strcpy(dot, ext);
-    return out;
-}
-void handle_output_file(Compiler *compiler, const char *ext) {
-    ASSERT(compiler->current_source,
-           "Tried handling output file while current_source is NULL. Make sure compiler was initialized correctly.\n");
-    if (compiler->current_output == NULL) {
-        compiler->current_output = replace_extension(compiler->current_source, ext);
-    }
-}
+// char *replace_extension(const char *path, const char *ext) {
+//     char *out = strdup(path);
+//     char *dot = strrchr(out, '.');
+//     if (dot) strcpy(dot, ext);
+//     else PANIC("Failed to append '%s' to %s\n", ext, path);
+//     return out;
+// }
 
 int compile(Compiler *compiler) {
     set_log_stage(STAGE_COMPILER);
-    ASSERT(compiler->current_source && compiler->current_output, "Source or output is not set for compile\n");
-    INFO("Compiling %s to %s\n", compiler->current_source, compiler->current_output);
+    ASSERT(compiler->current_source.count && compiler->current_output.count, "Source or output is not set for compile\n");
+    INFO("Compiling %s to %s\n", (char *)compiler->current_source.data, (char *)compiler->current_output.data);
 
-    load_src_file(compiler, compiler->current_source);
+    load_src_file(compiler, (char *)compiler->current_source.data);
 
     compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
     compiler->nm = new_node_manager();
@@ -223,7 +230,7 @@ int compile(Compiler *compiler) {
     }
 
     set_log_stage(STAGE_X86_GEN);
-    FILE *fp = fopen(compiler->current_output, "w");
+    FILE *fp = fopen((char *)compiler->current_output.data, "w");
     x86_gen_module(fp, &ctx);
     fclose(fp);
 
