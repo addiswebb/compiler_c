@@ -1,4 +1,4 @@
 int main() {
-    char a[] = "\033a";
-    return a[1];
+    char a[] = "\x33";
+    return a[0];
 }

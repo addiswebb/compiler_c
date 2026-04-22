@@ -38,12 +38,12 @@ char b[] = "Hello " "World";
 ```
 Both of these are parsed to be identical strings `"Hello World"`, as option `a` is perfectly fine, I do not plan to support option `b` until absolutely necessary. While the goal is to fully support C89, some useful features from future standards are also supported. For example designated initliazers for `struct` and `array` types,
 ```c
-int x[] = { [1] =5, 4, 5, [5]= 6 };
+int x[] = { [1] = 5, 4, 5, [5] = 6 };
 ```
 
 ```c
-struct Point{ int x; int y;  };
-struct Point p = {.x = 10, .y=10};
+struct Point { int x; int y; };
+struct Point p = { .x = 10, .y=10 };
 ```
 Or compound literals
 ```c

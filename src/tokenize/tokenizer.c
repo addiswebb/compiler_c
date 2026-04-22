@@ -313,9 +313,10 @@ static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
                 t_skip(tk);
             } else break;
         }
-        array_free(&hexal);
         *length = 0;
-        return parse_hex(hexal.data, hexal.count);
+        int64_t res = parse_hex(hexal.data, hexal.count);
+        array_free(&hexal);
+        return res;
     default:
         PANIC("Invalid escape sequence\n");
     }

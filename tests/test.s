@@ -1,7 +1,7 @@
 .section .note.GNU-stack,"",@progbits
 .section .rodata
 .LC0:
-    .byte 0x1B, 'a', 0
+    .byte '3', 0
 
 .text
 .global main
@@ -16,11 +16,11 @@ main_0:
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rsi
     movq -16(%rbp), %rdi
-    mov $3, %rdx
+    mov $2, %rdx
     call memcpy
     leaq -8(%rbp), %rax
     movq %rax, -16(%rbp)
-    movq $1, %rax
+    movq $0, %rax
     imulq $1, %rax
     movq %rax, -24(%rbp)
     movq -16(%rbp), %rax
