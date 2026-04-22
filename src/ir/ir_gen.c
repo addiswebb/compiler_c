@@ -109,7 +109,6 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             IR_Value addr = ir_gen_lvalue(ctx, expr->binary.lhs);
             IR_Value val = ir_gen_rvalue(ctx, expr->binary.rhs);
             if (val.kind == IR_SYMBOL && val.symbol->kind == FUNC) {
-                // DEBUG("NEEDED IR_FUNC CHECK\n");
                 val = ir_address(ctx, val, 0);
             }
             bool dereference = expr->binary.lhs->kind == N_INDEX || expr->binary.lhs->kind == N_MEMBER_ACCESS || is_deref(expr->binary.lhs);

@@ -1,31 +1,24 @@
 .section .note.GNU-stack,"",@progbits
 .section .rodata
-.align 8
 .LC0:
-    .quad 0xc020000000000000
+    .byte 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', '1', '2', '3', '1', '2', '4', '5', '3', '1', 0
 
 .text
 .global main
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $32, %rsp
+    subq $48, %rsp
 main_0:
-    leaq -8(%rbp), %rax
-    movq %rax, -16(%rbp)
-    movsd .LC0(%rip), %xmm0
-    movsd %xmm0, -24(%rbp)
-    movq -16(%rbp), %rax
-    movsd -24(%rbp), %xmm2
-    movsd %xmm2, (%rax)
-    leaq -8(%rbp), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    movsd (%rax), %xmm0
-    movsd %xmm0, -16(%rbp)
-    cvttsd2si -16(%rbp), %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
+    leaq -24(%rbp), %rax
+    movq %rax, -32(%rbp)
+    leaq .LC0(%rip), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rsi
+    movq -32(%rbp), %rdi
+    mov $19, %rdx
+    call memcpy
+    movl $19, %eax
     mov %rbp, %rsp
     pop %rbp
     ret

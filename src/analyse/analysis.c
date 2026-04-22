@@ -417,13 +417,8 @@ void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *fr
 
     for (int i = 0; i < ctx->module->global_array.count; i++) {
         Symbol *global_symbol = get_global(ctx, i)->symbol;
-        int size = align(global_symbol->type->size, 8);
-        // Todo track scopes on symbols, so that we can reuse slots for symbols aswell, (instead of '-1' currently)
-        int offset = -(*frame_size) - size;
-
         append(symbol_slots, &(RegisterSlot){.v = ir_symbol_value(global_symbol), .free_at = -1});
         append(symbol_map, &global_symbol);
-        *frame_size += size;
     }
 
     for (int i = 0; i < f->locals_array.count; i++) {
