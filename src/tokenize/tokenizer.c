@@ -1,6 +1,8 @@
 #include "compiler_c/tokenize/tokenizer.h"
+#include "compiler_c/core/array.h"
 #include "compiler_c/core/util.h"
 #include "compiler_c/log/logger.h"
+#include "compiler_c/parse/parser.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -288,14 +290,33 @@ static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
     case '\'':
         return '\'';
     case '0':
-        return 0;
-    // Dont forget to update *length to correctly skip escaped characters.
-    case 'x':
-        PANIC("Escaped hex sequences are currently unsupported\n");
-    default:
-        if (is_oct(c)) {
-            PANIC("Escaped oct sequences are currently unsupported\n");
+        t_skip(tk);
+        char octal[3] = {};
+        int o_i = 0;
+        while (o_i < 3) {
+            char o = t_peek(tk);
+            if (is_oct(o)) {
+                octal[o_i++] = o;
+                t_skip(tk);
+            } else break;
         }
+        *length = 0;
+        return parse_oct(octal, o_i);
+    case 'x':
+        t_skip(tk);
+        Array hexal;
+        array_init(&hexal, 4, sizeof(char));
+        for (;;) {
+            char x = t_peek(tk);
+            if (is_hex(x)) {
+                append(&hexal, &x);
+                t_skip(tk);
+            } else break;
+        }
+        array_free(&hexal);
+        *length = 0;
+        return parse_hex(hexal.data, hexal.count);
+    default:
         PANIC("Invalid escape sequence\n");
     }
 }

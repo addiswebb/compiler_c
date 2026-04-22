@@ -20,7 +20,7 @@ typedef struct {
 #define KEYWORDS_N 33
 
 /* All standard C keywords */
-extern const char* KEYWORDS[KEYWORDS_N];
+extern const char *KEYWORDS[KEYWORDS_N];
 
 /*
     Adding a Keyword Checklist:
@@ -68,27 +68,58 @@ typedef enum {
     TK_VOLATILE,
     TK_WHILE,
     // Unary Operators
-    TK_L_NOT, TK_BW_NOT, TK_INCR, TK_DECR,
+    TK_L_NOT,
+    TK_BW_NOT,
+    TK_INCR,
+    TK_DECR,
     // Binary Operators
-    TK_EQ, TK_PLUS, TK_MINUS, TK_MULTIPLY, TK_DIVIDE, TK_MOD,
-    TK_EQ_EQ, TK_PLUS_EQ, TK_MINUS_EQ, TK_MULTIPLY_EQ, TK_DIVIDE_EQ, TK_MOD_EQ,
+    TK_EQ,
+    TK_PLUS,
+    TK_MINUS,
+    TK_MULTIPLY,
+    TK_DIVIDE,
+    TK_MOD,
+    TK_EQ_EQ,
+    TK_PLUS_EQ,
+    TK_MINUS_EQ,
+    TK_MULTIPLY_EQ,
+    TK_DIVIDE_EQ,
+    TK_MOD_EQ,
     TK_NEQ,
-    TK_LT, TK_LE, TK_GT, TK_GE,
-    TK_SHL, TK_SHR,
-    TK_SHL_EQ, TK_SHR_EQ,
-    TK_AND, TK_AND_AND, TK_AND_EQ,
-    TK_OR, TK_OR_OR, TK_OR_EQ,
-    TK_XOR, TK_XOR_EQ,
+    TK_LT,
+    TK_LE,
+    TK_GT,
+    TK_GE,
+    TK_SHL,
+    TK_SHR,
+    TK_SHL_EQ,
+    TK_SHR_EQ,
+    TK_AND,
+    TK_AND_AND,
+    TK_AND_EQ,
+    TK_OR,
+    TK_OR_OR,
+    TK_OR_EQ,
+    TK_XOR,
+    TK_XOR_EQ,
     // Member Access
-    TK_DOT, TK_ARROW,
+    TK_DOT,
+    TK_ARROW,
     // Semantics
-    TK_OPEN_PAREN, TK_CLOSE_PAREN,
-    TK_OPEN_CURLY, TK_CLOSE_CURLY,
-    TK_OPEN_SQUARE, TK_CLOSE_SQUARE,
+    TK_OPEN_PAREN,
+    TK_CLOSE_PAREN,
+    TK_OPEN_CURLY,
+    TK_CLOSE_CURLY,
+    TK_OPEN_SQUARE,
+    TK_CLOSE_SQUARE,
     TK_COMMA,
-    TK_SEMI, TK_COLON,
+    TK_SEMI,
+    TK_COLON,
     // Other
-    TK_INT_LITERAL, TK_FLT_LITERAL, TK_CHAR_LITERAL, TK_STRING_LITERAL,
+    TK_INT_LITERAL,
+    TK_FLT_LITERAL,
+    TK_CHAR_LITERAL,
+    TK_STRING_LITERAL,
     TK_EXPR,
     TK_IDENTIFIER,
     TK_ELLIPSES,
@@ -118,10 +149,10 @@ typedef struct {
 } Tokenizer;
 
 /* Defines number of characters a specific token type is comprised of. Used for correctly parsing +=,/=,-= etc. */
-typedef struct{
+typedef struct {
     TokenType type;
     int n_chars;
-}TokenMatch;
+} TokenMatch;
 
 /* Creates a new tokenizer for a given source file. Also handles the token array and buffer. */
 Tokenizer t_new_tokenizer(const char *src, int src_size);
