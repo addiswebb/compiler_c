@@ -4,7 +4,6 @@
 #include "compiler_c/core/array.h"
 #include <stdbool.h>
 
-#define DEBUG_TOKENIZER 0
 #define MIN_BINARY_OP_PRECEDENCE 0
 
 #define LEFT_ASSOCIATIVITY 1

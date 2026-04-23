@@ -4,11 +4,6 @@
 /* Include enum fields when printing an enum type */
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
-#define DEBUG_ENUM_DETAILED 0
-/* Include struct members when printing an enum type */
-#define DEBUG_STRUCT_DETAILED 0
-/* Print all types stored in the typepool */
-#define DEBUG_TYPEPOOL 0
 #define SIGNED 1
 #define UNSIGNED 0
 

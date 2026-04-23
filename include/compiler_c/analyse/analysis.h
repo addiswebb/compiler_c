@@ -3,8 +3,6 @@
 
 #include "compiler_c/ir/ir_module.h"
 
-#define DEBUG_LIFETIMES 0
-
 IR_Value ir_stack_value(int size, int align, int offset);
 
 /*
