@@ -1,4 +1,5 @@
 #include "compiler_c/tokenize/tokenizer.h"
+#include "compiler_c/compiler.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/util.h"
 #include "compiler_c/log/logger.h"
@@ -82,7 +83,7 @@ static void t_consume_n(Tokenizer *tk, const int n) {
         PANIC("T_Consume Reached the end of the file");
     } else {
         for (int i = 0; i < n; i++) {
-            if (DEBUG_TOKENIZER) {
+            if (has_flag(CF_DEBUG_TOKENIZER)) {
                 printf("%c", tk->src[tk->index]);
             }
             tk->buf.buf[tk->buf.size++] = tk->src[tk->index++];

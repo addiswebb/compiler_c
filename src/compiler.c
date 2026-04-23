@@ -14,6 +14,45 @@
 #include <stdlib.h>
 #include <string.h>
 
+unsigned int compiler_flags = 0u;
+const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",        [CF_STOP_AFTER_IR] = "ir",
+                                      [CF_STOP_AFTER_COMPILE] = "S",      [CF_STOP_AFTER_ASSEMBLE] = "c",
+                                      [CF_DEBUG_TYPEPOOL] = "gtypepool",  [CF_DEBUG_LIFETIMES] = "glifetimes",
+                                      [CF_DEBUG_ENUM] = "genum",          [CF_DEBUG_STRUCT] = "gstruct",
+                                      [CF_DEBUG_UNION] = "gunion",        [CF_DEBUG_LOWERED_IR] = "glowered-ir",
+                                      [CF_DEBUG_IR_INSTR] = "gir-instr",  [CF_DEBUG_PARSER] = "gparser",
+                                      [CF_DEBUG_TOKENIZER] = "gtokenizer"};
+
+[CF_STOP_AFTER_AST] = "ast",        
+[CF_STOP_AFTER_IR] = "ir",
+[CF_STOP_AFTER_COMPILE] = "S",
+[CF_STOP_AFTER_ASSEMBLE] = "c",
+[CF_DEBUG_TYPEPOOL] = "gtypepool",  
+[CF_DEBUG_LIFETIMES] = "glifetimes",
+[CF_DEBUG_ENUM] = "genum",          
+[CF_DEBUG_STRUCT] = "gstruct",
+[CF_DEBUG_UNION] = "gunion",        
+[CF_DEBUG_LOWERED_IR] = "glowered-ir",
+[CF_DEBUG_IR_INSTR] = "gir-instr",  
+[CF_DEBUG_PARSER] = "gparser",
+[CF_DEBUG_TOKENIZER] = "gtokenizer";
+    
+`CF_STOP_AFTER_AST` as "ast",        
+`CF_STOP_AFTER_IR` as "ir",
+`CF_STOP_AFTER_COMPILE` as "S",
+`CF_STOP_AFTER_ASSEMBLE` as "c",
+`CF_DEBUG_TYPEPOOL` as "gtypepool",  
+`CF_DEBUG_LIFETIMES` as "glifetimes",
+`CF_DEBUG_ENUM` as "genum",          
+`CF_DEBUG_STRUCT` as "gstruct",
+`CF_DEBUG_UNION` as "gunion",        
+`CF_DEBUG_LOWERED_IR` as "glowered-ir",
+`CF_DEBUG_IR_INSTR` as "gir-instr",  
+`CF_DEBUG_PARSER` as "gparser",
+`CF_DEBUG_TOKENIZER` as "gtokenizer";
+                                      
+bool has_flag(CompilerFlag f) { return compiler_flags & FLAG(f); }
+
 bool is_source_file(const char *arg) {
     if (arg[0] == '-') return false;
     const char *dot = strrchr(arg, '.');
@@ -24,27 +63,30 @@ bool is_source_file(const char *arg) {
 void read_args(Compiler *compiler, const int argc, char *argv[]) {
     // Loop and try find compile flags
     for (int i = 1; i < argc; i++) {
-        char *c = argv[i];
-        if (strcmp(argv[i], "-o") == 0) {
-            if (argv[i + 1] != NULL && i + 1 < argc) {
-                if (argv[i + 1][0] == '-') {
-                    PANIC("Improper Usage,\n  compiler_c [input] -o [output]\n");
+        char *arg = argv[i];
+        if (arg[0] == '-') {
+            arg++;
+            if (strcmp(arg, "o") == 0) {
+                if (i + 1 < argc && argv[i + 1] != NULL) {
+                    ASSERT(argv[i + 1][0] != '-', IMPROPER_USAGE);
+                    compiler->output = argv[++i];
+                    ASSERT(compiler->output, "Failed to strdup output\n");
+                    continue;
                 }
-                compiler->output = argv[++i];
-                ASSERT(compiler->output, "Failed to strdup output\n");
-            } else {
-                PANIC("Improper Usage,\n  compiler_c [input] -o [output]\n");
+                PANIC(IMPROPER_USAGE);
             }
-        } else if (strcmp(argv[i], "-t") == 0) {
-            compiler->flags |= COMP_FLAG_AST;
-        } else if (strcmp(argv[i], "-ir") == 0) {
-            compiler->flags |= COMP_FLAG_IR;
-        } else if (strcmp(argv[i], "-S") == 0) {
-            compiler->flags |= COMP_STOP_AFTER_COMPILE;
-        } else if (strcmp(argv[i], "-c") == 0) {
-            compiler->flags |= COMP_STOP_AFTER_ASSEMBLE;
+            bool consumed_flag = false;
+
+            for (int j = 0; j < CF_COUNT; j++) {
+                if (strcmp(arg, flag_strings[j]) == 0) {
+                    compiler_flags |= FLAG(j);
+                    consumed_flag = true;
+                    break;
+                }
+            }
+            if (consumed_flag) continue;
+            append(&compiler->passthrough_args, &argv[i]);
         } else if (is_source_file(argv[i])) append(&compiler->source_files, &argv[i]);
-        else append(&compiler->passthrough_args, &argv[i]);
     }
 }
 
@@ -88,7 +130,7 @@ void update_current_output(Compiler *c, bool cond, char *path, const char *ext) 
 }
 
 void drive(Compiler *c) {
-    if (c->flags & (COMP_STOP_AFTER_COMPILE | COMP_STOP_AFTER_ASSEMBLE) && c->source_files.count > 1 && c->output) {
+    if (has_flag(CF_STOP_AFTER_COMPILE | CF_STOP_AFTER_ASSEMBLE) && c->source_files.count > 1 && c->output) {
         WARN("-o ignored with multiple inputs\n");
         free(c->output);
         c->output = NULL;
@@ -98,20 +140,20 @@ void drive(Compiler *c) {
     for (int i = 0; i < c->source_files.count; i++) {
         char *src_path = *(char **)get(&c->source_files, i);
         array_str_cpy(&c->current_source, src_path);
-        update_current_output(c, c->flags & COMP_STOP_AFTER_COMPILE, src_path, ".s");
+        update_current_output(c, has_flag(CF_STOP_AFTER_COMPILE), src_path, ".s");
         compile(c);
-        if (c->flags & COMP_FLAG_IR) return;
-        if (c->flags & COMP_STOP_AFTER_COMPILE) continue;
+        if (has_flag(CF_STOP_AFTER_IR)) return;
+        if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
 
         array_str_cpy(&c->current_source, c->current_output.data);
-        update_current_output(c, c->flags & COMP_STOP_AFTER_ASSEMBLE, src_path, ".o");
+        update_current_output(c, has_flag(CF_STOP_AFTER_ASSEMBLE), src_path, ".o");
         assemble(c);
-        if (c->flags & COMP_STOP_AFTER_ASSEMBLE) continue;
+        if (has_flag(CF_STOP_AFTER_ASSEMBLE)) continue;
 
         char *obj_path = strdup((char *)c->current_output.data);
         append(&objs, &obj_path);
     }
-    if (c->flags & (COMP_STOP_AFTER_COMPILE | COMP_STOP_AFTER_ASSEMBLE)) return;
+    if (has_flag(CF_STOP_AFTER_COMPILE | CF_STOP_AFTER_ASSEMBLE)) return;
 
     array_str_cpy(&c->current_output, c->output ? c->output : DEFAULT_OUT_PATH);
 
@@ -124,7 +166,7 @@ void drive(Compiler *c) {
 
 Compiler init_compiler(const int argc, char *argv[]) {
     if (argc < 2) {
-        PANIC("Improper Usage,\n  compiler [input]\n");
+        PANIC(IMPROPER_USAGE);
     }
     if (argc == 2 && strcmp(argv[1], "-h") == 0) {
         printf("compiler [input]\n");
@@ -138,7 +180,7 @@ Compiler init_compiler(const int argc, char *argv[]) {
     }
 
     Compiler compiler;
-    compiler.flags = 0;
+    compiler_flags = 0u;
     array_init(&compiler.current_output, 4, sizeof(char));
     array_init(&compiler.current_source, 4, sizeof(char));
     compiler.output = NULL;
@@ -196,12 +238,12 @@ int compile(Compiler *compiler) {
     SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL};
     array_init(&sema_ctx.i_array, 4, sizeof(int));
 
-    if (DEBUG_TYPEPOOL) print_typepool();
+    if (has_flag(CF_DEBUG_TYPEPOOL)) print_typepool();
 
     semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
     array_free(&sema_ctx.i_array);
 
-    if (compiler->flags & COMP_FLAG_AST) print_ast(&compiler->nm);
+    if (has_flag(CF_STOP_AFTER_AST)) print_ast(&compiler->nm);
 
     generate_types();
     lower_nodes(&compiler->nm);
@@ -210,18 +252,18 @@ int compile(Compiler *compiler) {
     IR_Context ctx = ir_init_ctx(&compiler->p);
     IR_Module *module = ir_gen_translation_unit(&ctx, arena_get(&compiler->nm, 0));
 
-    if (compiler->flags & COMP_FLAG_IR) {
+    if (has_flag(CF_STOP_AFTER_IR)) {
         printf("---- IR ----\n");
         print_ir_module(&ctx, module);
         printf("\n");
     }
     analysis(&ctx);
 
-    if (compiler->flags & COMP_FLAG_IR) {
-        if (DEBUG_LIFETIMES) {
+    if (has_flag(CF_STOP_AFTER_IR)) {
+        if (has_flag(CF_DEBUG_LIFETIMES)) {
             for (int i = 0; i < module->functions_array.count; i++) print_cfg(get_func(module, i));
         }
-        if (DEBUG_LOWERED_IR) {
+        if (has_flag(CF_DEBUG_LOWERED_IR)) {
             printf("---- Lowered IR ----\n");
             print_ir_module(&ctx, module);
             printf("\n");

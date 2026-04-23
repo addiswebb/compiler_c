@@ -18,7 +18,6 @@ typedef struct {
     Array current_source;
     Array current_output;
     Array source_files;
-    unsigned int flags;
     Array passthrough_args;
     char *src;
     int src_size;
@@ -27,14 +26,35 @@ typedef struct {
     Parser p;
 } Compiler;
 
-// Compile and print Abstract Syntax Tree
-#define COMP_FLAG_AST (1u << 0) // -t
-// Compile and print IR Module and instructions
-#define COMP_FLAG_IR (1u << 1) // -ir
-// Compile .c into .s
-#define COMP_STOP_AFTER_COMPILE (1u << 2) // -S
-// Compile .s into .o
-#define COMP_STOP_AFTER_ASSEMBLE (1u << 3) // -c
+#define FLAG(f) (1u << f)
+
+typedef enum {
+    // Compile and print Abstract Syntax Tree
+    CF_STOP_AFTER_AST,
+    // Compile and print IR Module and instructions
+    CF_STOP_AFTER_IR,
+    // Compile .c into .s
+    CF_STOP_AFTER_COMPILE,
+    // Compile .s into .o
+    CF_STOP_AFTER_ASSEMBLE,
+    CF_DEBUG_TYPEPOOL,
+    CF_DEBUG_LIFETIMES,
+    CF_DEBUG_ENUM,
+    CF_DEBUG_STRUCT,
+    CF_DEBUG_UNION,
+    CF_DEBUG_LOWERED_IR,
+    CF_DEBUG_IR_INSTR,
+    CF_DEBUG_PARSER,
+    CF_DEBUG_TOKENIZER,
+    CF_COUNT,
+} CompilerFlag;
+
+extern unsigned int compiler_flags;
+extern const char *flag_strings[CF_COUNT];
+
+bool has_flag(CompilerFlag f);
+
+#define IMPROPER_USAGE "Improper Usage,\n  compiler_c [input] -o [output]\n"
 
 /*
     Takes input from terminal and instantiates a compiler,

@@ -1,6 +1,7 @@
 #include "compiler_c/analyse/analysis.h"
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis_types.h"
+#include "compiler_c/compiler.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
@@ -510,7 +511,7 @@ void analysis(const IR_Context *ctx) {
 
         lower_ir_for_asm(f);
 
-        if (DEBUG_LOWERED_IR) {
+        if (has_flag(CF_DEBUG_LOWERED_IR)) {
             printf("vvvvvvvvvvvvvvvvvvvvv\n");
             print_ir_function(ctx, f);
             printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
@@ -536,7 +537,7 @@ void analysis(const IR_Context *ctx) {
             lifetimes = compute_lifetimes(f, reg_count, rpo);
             qsort(lifetimes, reg_count, sizeof(Lifetime), cmp_lifetime);
 
-            if (DEBUG_LIFETIMES) {
+            if (has_flag(CF_DEBUG_LIFETIMES)) {
                 for (int j = 0; j < reg_count; j++) {
                     printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
                 }
