@@ -1,4 +1,5 @@
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/compiler.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
@@ -239,7 +240,7 @@ void ir_free_module(IR_Module *module) {
 }
 
 void ir_append_instruction(IR_Block *b, IR_Instruction *instr) {
-    if (DEBUG_IR_INSTRUCTIONS) print_ir_instruction(NULL, instr);
+    if (has_flag(CF_DEBUG_IR_INSTR)) print_ir_instruction(NULL, instr);
 
     append(&b->instruction_array, instr);
 }

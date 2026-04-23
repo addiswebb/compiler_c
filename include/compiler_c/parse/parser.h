@@ -6,7 +6,6 @@
 #include "compiler_c/tokenize/tokenizer.h"
 #include <stdbool.h>
 
-#define DEBUG_CONSUME 0
 #define DEFAULT_STATEMENTS_PER_BLOCK 8
 
 typedef struct{

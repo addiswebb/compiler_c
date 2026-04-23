@@ -1,5 +1,6 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/analyse/sema.h"
+#include "compiler_c/compiler.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
@@ -62,7 +63,7 @@ Token *p_consume_n(Parser *p, const int n) {
     }
     Token *token = get_token(p->src, p->index);
     p->index += n;
-    if (DEBUG_CONSUME) print_token(token);
+    if (has_flag(CF_DEBUG_PARSER)) print_token(token);
     return token;
 }
 

@@ -1,4 +1,5 @@
 #include "compiler_c/core/type.h"
+#include "compiler_c/compiler.h"
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
@@ -427,7 +428,7 @@ void print_type(const Type *type) {
         break;
     case T_STRUCT:
         printf("struct %s ", type->_struct.name);
-        if (DEBUG_STRUCT_DETAILED) {
+        if (has_flag(CF_DEBUG_STRUCT)) {
             printf("{");
             for (int i = 0; i < type->_struct.members_array.count; i++) {
                 StructMember *member = get_struct_member(type, i);
@@ -439,7 +440,7 @@ void print_type(const Type *type) {
         break;
     case T_ENUM:
         printf("enum %s ", type->_enum.name);
-        if (DEBUG_ENUM_DETAILED) {
+        if (has_flag(CF_DEBUG_ENUM)) {
             printf("{");
             for (int i = 0; i < type->_enum.fields_array.count; i++) {
                 EnumField *field = get_enum_field(type, i);
@@ -450,7 +451,7 @@ void print_type(const Type *type) {
         break;
     case T_UNION:
         printf("union %s ", type->_union.name);
-        if (DEBUG_STRUCT_DETAILED) {
+        if (has_flag(CF_DEBUG_UNION)) {
             printf("{");
             for (int i = 0; i < type->_union.members_array.count; i++) {
                 UnionMember *member = get_union_member(type, i);
