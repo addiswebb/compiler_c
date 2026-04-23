@@ -23,34 +23,6 @@ const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",        [CF_ST
                                       [CF_DEBUG_IR_INSTR] = "gir-instr",  [CF_DEBUG_PARSER] = "gparser",
                                       [CF_DEBUG_TOKENIZER] = "gtokenizer"};
 
-[CF_STOP_AFTER_AST] = "ast",        
-[CF_STOP_AFTER_IR] = "ir",
-[CF_STOP_AFTER_COMPILE] = "S",
-[CF_STOP_AFTER_ASSEMBLE] = "c",
-[CF_DEBUG_TYPEPOOL] = "gtypepool",  
-[CF_DEBUG_LIFETIMES] = "glifetimes",
-[CF_DEBUG_ENUM] = "genum",          
-[CF_DEBUG_STRUCT] = "gstruct",
-[CF_DEBUG_UNION] = "gunion",        
-[CF_DEBUG_LOWERED_IR] = "glowered-ir",
-[CF_DEBUG_IR_INSTR] = "gir-instr",  
-[CF_DEBUG_PARSER] = "gparser",
-[CF_DEBUG_TOKENIZER] = "gtokenizer";
-    
-`CF_STOP_AFTER_AST` as "ast",        
-`CF_STOP_AFTER_IR` as "ir",
-`CF_STOP_AFTER_COMPILE` as "S",
-`CF_STOP_AFTER_ASSEMBLE` as "c",
-`CF_DEBUG_TYPEPOOL` as "gtypepool",  
-`CF_DEBUG_LIFETIMES` as "glifetimes",
-`CF_DEBUG_ENUM` as "genum",          
-`CF_DEBUG_STRUCT` as "gstruct",
-`CF_DEBUG_UNION` as "gunion",        
-`CF_DEBUG_LOWERED_IR` as "glowered-ir",
-`CF_DEBUG_IR_INSTR` as "gir-instr",  
-`CF_DEBUG_PARSER` as "gparser",
-`CF_DEBUG_TOKENIZER` as "gtokenizer";
-                                      
 bool has_flag(CompilerFlag f) { return compiler_flags & FLAG(f); }
 
 bool is_source_file(const char *arg) {
