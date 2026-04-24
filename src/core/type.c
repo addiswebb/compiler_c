@@ -31,7 +31,7 @@ Type *type_invalid;
 
 Arena typepool;
 
-void init_types() {
+void init_typepool() {
     arena_init(&typepool, 2, sizeof(Type));
 
     type_i8 = init_global_type(T_INT, sizeof(char), QUAL_NONE, SIGNED);
@@ -112,7 +112,9 @@ Type *new_function_type(Type *type, Array params, bool is_variadic) {
     fn_type->abi.gp_count = 0;
     fn_type->abi.fp_count = 0;
     fn_type->_func.return_type = type;
-    fn_type->_func.params = params;
+    array_init(&fn_type->_func.params, params.capacity, params.element_size);
+    memcpy(fn_type->_func.params.data, params.data, params.count * params.element_size);
+    fn_type->_func.params.count = params.count;
     fn_type->_func.is_variadic = is_variadic;
     return fn_type;
 }

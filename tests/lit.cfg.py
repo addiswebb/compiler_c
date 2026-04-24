@@ -14,6 +14,7 @@ config.test_source_root = os.path.dirname(__file__)
 config.test_exec_root = config.test_source_root
 
 config.suffixes = [".c"]
+config.excludes = ["input"]
 
 # Detect OS
 is_windows = sys.platform.startswith("win")

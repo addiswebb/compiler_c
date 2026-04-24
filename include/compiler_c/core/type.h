@@ -157,7 +157,7 @@ static inline int align(int size, int align) {
 }
 
 /* Initialises all global types and the typepool */
-void init_types();
+void init_typepool();
 
 void free_typepool();
 

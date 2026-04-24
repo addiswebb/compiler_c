@@ -290,19 +290,6 @@ static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
         return '\"';
     case '\'':
         return '\'';
-    case '0':
-        t_skip(tk);
-        char octal[3] = {};
-        int o_i = 0;
-        while (o_i < 3) {
-            char o = t_peek(tk);
-            if (is_oct(o)) {
-                octal[o_i++] = o;
-                t_skip(tk);
-            } else break;
-        }
-        *length = 0;
-        return parse_oct(octal, o_i);
     case 'x':
         t_skip(tk);
         Array hexal;
@@ -319,6 +306,19 @@ static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
         array_free(&hexal);
         return res;
     default:
+        if (is_oct(t_peek(tk))) {
+            char octal[3] = {};
+            int o_i = 0;
+            while (o_i < 3) {
+                char o = t_peek(tk);
+                if (is_oct(o)) {
+                    octal[o_i++] = o;
+                    t_skip(tk);
+                } else break;
+            }
+            *length = 0;
+            return parse_oct(octal, o_i);
+        }
         PANIC("Invalid escape sequence\n");
     }
 }

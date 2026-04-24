@@ -113,7 +113,12 @@ void drive(Compiler *c) {
         char *src_path = *(char **)get(&c->source_files, i);
         array_str_cpy(&c->current_source, src_path);
         update_current_output(c, has_flag(CF_STOP_AFTER_COMPILE), src_path, ".s");
+
+        load_src_file(c, (char *)c->current_source.data);
+        init_compiler(c);
         compile(c);
+        clear_compiler(c);
+
         if (has_flag(CF_STOP_AFTER_IR)) return;
         if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
 
@@ -136,7 +141,14 @@ void drive(Compiler *c) {
     INFO("Done.\n");
 }
 
-Compiler init_compiler(const int argc, char *argv[]) {
+void init_compiler(Compiler *compiler) {
+    compiler_flags = 0u;
+    compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
+    compiler->nm = new_node_manager();
+    compiler->p = new_parser();
+    init_typepool();
+}
+Compiler begin_compiler(const int argc, char *argv[]) {
     if (argc < 2) {
         PANIC(IMPROPER_USAGE);
     }
@@ -151,54 +163,41 @@ Compiler init_compiler(const int argc, char *argv[]) {
         exit(0);
     }
 
-    Compiler compiler;
-    compiler_flags = 0u;
-    array_init(&compiler.current_output, 4, sizeof(char));
-    array_init(&compiler.current_source, 4, sizeof(char));
+    Compiler compiler = {};
+
     compiler.output = NULL;
     array_init(&compiler.passthrough_args, 4, sizeof(char *));
     array_init(&compiler.source_files, 4, sizeof(char *));
+    array_init(&compiler.current_output, 4, sizeof(char));
+    array_init(&compiler.current_source, 4, sizeof(char));
 
     read_args(&compiler, argc, argv);
 
     return compiler;
 }
 
-void free_compiler(Compiler *compiler) {
+void clear_compiler(Compiler *compiler) {
     free_typepool();
     free_node(arena_get(&compiler->nm, 0));
     arena_free(&compiler->nm);
     free_parser(&compiler->p);
     t_free(&compiler->tk);
+    free(compiler->src);
+}
 
+void free_compiler(Compiler *compiler) {
     array_free(&compiler->passthrough_args);
     array_free(&compiler->source_files);
     array_free(&compiler->current_source);
     array_free(&compiler->current_output);
-    free(compiler->src);
     compiler->src = NULL;
 }
-
-// char *replace_extension(const char *path, const char *ext) {
-//     char *out = strdup(path);
-//     char *dot = strrchr(out, '.');
-//     if (dot) strcpy(dot, ext);
-//     else PANIC("Failed to append '%s' to %s\n", ext, path);
-//     return out;
-// }
 
 int compile(Compiler *compiler) {
     set_log_stage(STAGE_COMPILER);
     ASSERT(compiler->current_source.count && compiler->current_output.count, "Source or output is not set for compile\n");
     INFO("Compiling %s to %s\n", (char *)compiler->current_source.data, (char *)compiler->current_output.data);
 
-    load_src_file(compiler, (char *)compiler->current_source.data);
-
-    compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
-    compiler->nm = new_node_manager();
-    compiler->p = new_parser();
-
-    init_types();
     set_log_stage(STAGE_TOKENIZING);
     t_tokenize(&compiler->tk);
 
