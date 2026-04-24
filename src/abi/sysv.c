@@ -1,3 +1,4 @@
+#include "compiler_c/analyse/analysis_types.h"
 #ifdef __linux__
 
 #include <compiler_c/abi/abi.h>
@@ -294,21 +295,30 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
                                                     .ops = {[0] = ir_stack_value(8, 8, -8 * (INTEGER_PARAM_REGISTERS - i) - 128)},
                                                     .param = {.param_index = i, .type = type_u64}});
         }
-        // TODO: Skip if float spill if (al == 0)
-        // testb %al, %al
-        // je after floats block
-        // use movaps
+        IR_Value al_equal_zero = ir_cmp(ctx, EQ,
+                                        (IR_Value){.kind = IR_PHYS_REG,
+                                                   .size = 8,
+                                                   .align = 8,
+                                                   .phys_reg =
+                                                       (PhysReg){
+                                                           .kind = REG_GP,
+                                                           .gp_reg = RAX,
+                                                           .data_kind = REG_DATA_NONE,
+                                                           .size = REG_8,
+                                                       }},
+                                        ir_integer_literal(0), type_u8);
+
+        IR_Block *skip_floats_block = ir_new_block();
+        ir_branch_cond(ctx, al_equal_zero, skip_floats_block, NULL);
+
+        // Todo use movaps or move this to x86 lowering
         for (int i = floats_emitted; i < FLOAT_PARAM_REGISTERS; i++) {
             ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
                                                                 .op_count = 1,
                                                                 .ops = {[0] = ir_stack_value(8, 8, -16 * (FLOAT_PARAM_REGISTERS - i))},
                                                                 .param = {.param_index = i, .type = type_f64}});
         }
-        // assume va_list is allocated to store gp_offset, fp_offset, overflow_arg_area, reg_save_area
-        // gp_offset = offset in bytes from reg_save_area to the next gp variable (+8 each va_arg call with type != T_FLOAT)
-        // sse_offset = offset in bytes from reg_save_area to the next sse variable (+8 each va_arg call with type == T_FLOAT)
-        // reg_save_area = leaq -176(%rbp)
-        // overflow_arg_area = lea 16(%rbp)
+        ir_append_block(ctx, skip_floats_block);
     }
 }
 
