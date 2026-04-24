@@ -397,6 +397,13 @@ Type *p_parse_abstract_type(Parser *p) {
     return type;
 }
 
+void free_declarator(Declarator *decl) {
+    for (int i = 0; i < decl->modifiers.count; i++) {
+        Modifier *mod = get(&decl->modifiers, i);
+        if (mod->kind == MOD_FUNCTION) array_free(&mod->function.params);
+    }
+    array_free(&decl->modifiers);
+}
 Type *p_parse_type(Parser *p, const char **name) {
     Type *type;
     unsigned int qualifiers = QUAL_NONE;
@@ -423,7 +430,8 @@ Type *p_parse_type(Parser *p, const char **name) {
     *name = decl.name;
     type = get_modified_type(type, &decl);
     if (qualifiers != QUAL_NONE) type = get_qualified_type(type, qualifiers);
-    array_free(&decl.modifiers);
+    // array_free(&decl.modifiers);
+    free_declarator(&decl);
     return type;
 }
 
@@ -437,7 +445,7 @@ Declarator p_parse_declarator(Parser *p) {
     }
     if (p_peek(p)->type == TK_OPEN_PAREN) {
         p_consume(p);
-        array_free(&d.modifiers);
+        free_declarator(&d);
         d = p_parse_declarator(p);
         p_consume_a(p, TK_CLOSE_PAREN);
     } else if (p_peek(p)->type == TK_IDENTIFIER) d.name = p_consume_a(p, TK_IDENTIFIER)->value;

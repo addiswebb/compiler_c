@@ -60,7 +60,11 @@ bool has_flag(CompilerFlag f);
     Takes input from terminal and instantiates a compiler,
     Which is ready to compile the inputted file
 */
-Compiler init_compiler(int argc, char *argv[]);
+Compiler begin_compiler(int argc, char *argv[]);
+void init_compiler(Compiler *compiler);
+void clear_compiler(Compiler *compiler);
+void free_compiler(Compiler *compiler);
+
 void drive(Compiler *c);
 
 void assemble(Compiler *c);

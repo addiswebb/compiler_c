@@ -359,6 +359,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
 
         Type *fn_type = callee_type->kind == T_FUNCTION ? callee_type : callee_type->base;
         if (!fn_type->_func.is_variadic && fn_type->_func.params.count != node->func_call.params_array.count) {
+            print_type(fn_type);
+            printf("\n");
             PANIC("Argument count mismatch: Function %s expects %d found %d\n", fn_name, fn_type->_func.params.count,
                   node->func_call.params_array.count);
         }

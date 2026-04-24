@@ -43,16 +43,15 @@
     },
     {
         "adapter": "CodeLLDB",
-        "label": "Debug calculator",
+        "label": "Debug linker",
         "request": "launch",
         "program": "./build/compiler_c",
         "args": [
-            "/home/addis/dev/calculator/double/main.c",
-            "/home/addis/dev/calculator/double/calculator.c",
+            "./tests/basic/linker/main.c",
+            "./tests/basic/linker/input/foo.c",
             "-o",
-            "/home/addis/dev/calculator/double/main",
-            "-I/home/addis/dev/compiler_c/libc/",
-            "-I/home/addis/dev/calculator/double/",
+            "./tests/test",
+            "-I./tests/basic/linker/",
         ],
         "build": {
             "command": "cmake",
