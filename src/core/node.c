@@ -1,3 +1,4 @@
+#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
@@ -308,7 +309,12 @@ void print_node(const Node *node, const int depth) {
         if (node->var_decl.storage_class == STATIC) printf(", static");
         if (node->var_decl.is_global) printf(", global");
         printf("]\n");
-        if (node->var_decl.expr) print_node(node->var_decl.expr, depth + 1);
+        if (node->var_decl.is_global) {
+            print_indent(depth + 1);
+            printf("Const Expr: ");
+            print_const_expr(node->var_decl.const_expr);
+            printf("\n");
+        } else if (node->var_decl.expr) print_node(node->var_decl.expr, depth + 1);
         break;
     case N_RETURN:
         printf("\n");
@@ -466,7 +472,8 @@ void free_node(Node *node) {
     case N_VAR_DECL:
         free_node(node->var_decl.identifier);
         node->var_decl.identifier = NULL;
-        free_node(node->var_decl.expr);
+        if (node->var_decl.is_global) free(node->var_decl.const_expr);
+        else free_node(node->var_decl.expr);
         node->var_decl.expr = NULL;
         break;
     case N_IF:

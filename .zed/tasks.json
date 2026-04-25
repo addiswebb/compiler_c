@@ -45,8 +45,8 @@
         "show_command": false,
     },
     {
-        "label": "Compile -t",
-        "command": "cmake --build build;./build/compiler_c ./tests/test.c -t",
+        "label": "Compile -ast",
+        "command": "cmake --build build;./build/compiler_c ./tests/test.c -ast",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,

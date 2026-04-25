@@ -7,6 +7,7 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -87,6 +88,20 @@ Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is
 }
 Type *new_type() { return arena_append(&typepool, &(Type){0}); }
 
+Type *new_incomplete_array_type(Type *type, Node *const_expr) {
+    Type *arr_type = malloc(sizeof(Type));
+    // TODO dont forget to free when resolving array types
+    ASSERT(arr_type, "Failed to malloc for incomplete array_type\n");
+    arr_type->kind = T_ARRAY;
+    arr_type->size = type->size;
+    arr_type->align = type->align;
+    arr_type->base = type;
+    arr_type->_array.const_expr = const_expr;
+    arr_type->is_signed = SIGNED;
+    arr_type->qualifiers = QUAL_NONE;
+    arr_type->_array.is_complete = false;
+    return arr_type;
+}
 Type *new_array_type(Type *type, int len) {
     Type *arr_type = new_type();
     arr_type->kind = T_ARRAY;
@@ -96,6 +111,7 @@ Type *new_array_type(Type *type, int len) {
     arr_type->_array.array_len = len;
     arr_type->is_signed = SIGNED;
     arr_type->qualifiers = QUAL_NONE;
+    arr_type->_array.is_complete = true;
     return arr_type;
 }
 Type *infer_array_length(Type *arr_type, int len) {
@@ -227,7 +243,7 @@ Type *get_modified_type(Type *type, Declarator *decl) {
         if (mod->kind == MOD_POINTER) {
             type = get_pointer_type(type);
         } else if (mod->kind == MOD_ARRAY) {
-            type = get_array_type(type, mod->array_size);
+            type = new_incomplete_array_type(type, mod->array_bounds);
         } else if (mod->kind == MOD_FUNCTION) {
             type = get_function_type(type, mod->function.params, mod->function.is_variadic);
         }
@@ -388,11 +404,11 @@ void print_type(const Type *type) {
     if (type->kind == T_INT && !type->is_signed) printf("%s ", KEYWORDS[TK_UNSIGNED]);
     switch (type->kind) {
     case T_INVALID:
-        printf("[###]");
+        printf("[#]");
         break;
     case T_ARRAY:
         print_type(type->base);
-        printf("[%d]", type->_array.array_len);
+        printf("[%" PRId64 "]", type->_array.array_len);
         break;
     case T_INT:
         switch (type->size) {

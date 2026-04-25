@@ -23,10 +23,10 @@
     },
     {
         "adapter": "CodeLLDB",
-        "label": "Debug Compiler_C -t",
+        "label": "Debug Compiler_C -ast",
         "request": "launch",
         "program": "./build/compiler_c",
-        "args": ["./tests/test.c", "-t"],
+        "args": ["./tests/test.c", "-ast"],
         "build": {
             "command": "cmake",
             "args": ["--build", "build"],

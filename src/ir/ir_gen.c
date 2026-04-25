@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/analyse/sema.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
@@ -58,6 +59,21 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     PANIC("Tried to ir_gen_lvalue for a node which is not an lvalue\n");
 }
 
+IR_Literal ir_const_expr_literal(ConstExpr *expr, Type *type) {
+    IR_Literal c;
+    c.type = type;
+    switch (expr->kind) {
+    case CONST_INTEGER:
+        c.i = expr->i;
+        break;
+    case CONST_FLOAT:
+        c.f = expr->f;
+        break;
+    case CONST_INIT_LIST:
+        PANIC("Cannot generate a literal for init list yet\n");
+    }
+    return c;
+}
 IR_Literal ir_literal(const Node *node) {
     ASSERT(node->kind == N_LITERAL, "ir_literal expects a N_LITERAL node\n");
     IR_Literal c;
@@ -429,7 +445,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
         IR_Literal *l = &x;
         if (var_decl->var_decl.is_defined) {
             Node *x = var_decl->var_decl.expr;
-            *l = ir_literal(var_decl->var_decl.expr);
+            *l = ir_const_expr_literal(var_decl->var_decl.const_expr, var_decl->type);
         } else l = NULL;
         return ir_append_global(ctx->module, var_decl->var_decl.symbol, l);
     }

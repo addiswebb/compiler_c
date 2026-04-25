@@ -1,5 +1,6 @@
 #include "compiler_c/analyse/sema.h"
 #include "compiler_c/abi/abi.h"
+#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/log/logger.h"
@@ -200,6 +201,36 @@ void handle_builtin_call(BuiltinKind kind, Node *node) {
     memcpy(node, &builtin, sizeof(Node));
 }
 
+Type *resolve_type(Type *t) {
+    switch (t->kind) {
+    case T_POINTER:
+        return get_pointer_type(resolve_type(t->base));
+    case T_ARRAY:
+        Type *base = resolve_type(t->base);
+        if (t->_array.is_complete) return get_array_type(base, t->_array.array_len);
+        else return get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
+    case T_STRUCT:
+        for (int i = 0; i < t->_struct.members_array.count; i++) {
+            StructMember *m = get_struct_member(t, i);
+            m->type = resolve_type(m->type);
+        }
+        return t;
+    case T_UNION:
+        for (int i = 0; i < t->_union.members_array.count; i++) {
+            UnionMember *u = get_union_member(t, i);
+            u->type = resolve_type(u->type);
+        }
+        return t;
+    case T_FUNCTION:
+    case T_VOID:
+    case T_INT:
+    case T_ENUM:
+    case T_FLOAT:
+    case T_INVALID:
+        return t;
+    }
+}
+
 void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
     if (!node) return;
     switch (node->kind) {
@@ -259,6 +290,10 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_VAR_DECL:
         // Skip extern nodes
+        if (node->type->kind == T_ARRAY && !node->type->_array.is_complete) {
+            semantic_analysis(sema_ctx, p, nm, node->type->_array.const_expr);
+            node->type = resolve_type(node->type);
+        }
         if (node->var_decl.storage_class == EXTERN) {
             if (node->var_decl.is_defined) {
                 PANIC("External variable cannot be initialized in the same statement\n");
@@ -296,6 +331,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
         if (node->var_decl.expr->kind == N_LITERAL && node->var_decl.expr->literal.kind == L_STRING) {
             if (node->var_decl.expr->literal.kind == L_STRING) {
+                // TODO allow char* str = ""
                 if (node->type->kind != T_ARRAY && node->type->base == type_i8) {
                     log_start(LOG_ERROR);
                     printf("Cannot initialize ");
@@ -314,6 +350,13 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->var_decl.expr = cast_node(nm, node->var_decl.expr, node->type);
         }
 
+        if (node->var_decl.is_global) {
+            ConstExpr val = evaluate_const_expression(node->var_decl.expr);
+            // TODO move this into a assign const_expr function:
+            node->var_decl.const_expr = malloc(sizeof(ConstExpr));
+            ASSERT(node->var_decl.const_expr, "Failed to allocate for const expr");
+            *node->var_decl.const_expr = val;
+        }
         break;
     case N_UNARY:
         semantic_analysis(sema_ctx, p, nm, node->unary.expr);

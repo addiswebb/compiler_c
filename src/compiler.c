@@ -142,7 +142,6 @@ void drive(Compiler *c) {
 }
 
 void init_compiler(Compiler *compiler) {
-    compiler_flags = 0u;
     compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
     compiler->nm = new_node_manager();
     compiler->p = new_parser();
@@ -166,6 +165,7 @@ Compiler begin_compiler(const int argc, char *argv[]) {
     Compiler compiler = {};
 
     compiler.output = NULL;
+    compiler_flags = 0;
     array_init(&compiler.passthrough_args, 4, sizeof(char *));
     array_init(&compiler.source_files, 4, sizeof(char *));
     array_init(&compiler.current_output, 4, sizeof(char));
@@ -209,9 +209,10 @@ int compile(Compiler *compiler) {
     SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL};
     array_init(&sema_ctx.i_array, 4, sizeof(int));
 
+    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
+
     if (has_flag(CF_DEBUG_TYPEPOOL)) print_typepool();
 
-    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
     array_free(&sema_ctx.i_array);
 
     if (has_flag(CF_STOP_AFTER_AST)) print_ast(&compiler->nm);
