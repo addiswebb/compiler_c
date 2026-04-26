@@ -193,6 +193,8 @@ ConstExpr literal_to_const(Node *node) {
 
     switch (node->type->kind) {
     case T_INT:
+    // Enums are not decayed to integer until after sema, so we must allow them here
+    case T_ENUM:
         e.kind = CONST_INTEGER;
         e.i = node->literal.i;
         break;
@@ -201,7 +203,11 @@ ConstExpr literal_to_const(Node *node) {
         e.f = node->literal.f;
         break;
     default:
-        PANIC("Tried to create IR_CONST instruction with an invalid type\n");
+        log_start(LOG_ERROR);
+        printf("Tried to convert literal with an invalid type ");
+        print_type(node->type);
+        printf(" to ConstExpr.\n");
+        exit(1);
     }
     return e;
 }

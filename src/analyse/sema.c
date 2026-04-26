@@ -221,10 +221,10 @@ Type *resolve_type(Type *t) {
             u->type = resolve_type(u->type);
         }
         return t;
+    case T_ENUM:
     case T_FUNCTION:
     case T_VOID:
     case T_INT:
-    case T_ENUM:
     case T_FLOAT:
     case T_INVALID:
         return t;
@@ -636,7 +636,14 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
 
                 StructMember *member = NULL;
                 if (is_array) {
-                    if (is_designator) index = e->designated_init._array.index;
+                    if (is_designator) {
+                        if (!e->designated_init._array.is_complete) {
+                            semantic_analysis(sema_ctx, p, nm, e->designated_init._array.const_expr);
+                            e->designated_init._array.index = evaluate_const_expression(e->designated_init._array.const_expr).i;
+                            e->designated_init._array.is_complete = true;
+                        }
+                        index = e->designated_init._array.index;
+                    }
                 } else
                     member = is_designator ? get_struct_member_named(node->type, e->designated_init._struct.name, &index)
                                            : get_struct_member(node->type, index);
@@ -707,11 +714,12 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         p_pop_scope(p);
         break;
     case N_CASE:
-        semantic_analysis(sema_ctx, p, nm, node->_case.test);
-        if (!node->_case.test) break;
-        if (!(node->_case.test->type->kind == T_INT || node->_case.test->type->kind == T_ENUM)) {
+        semantic_analysis(sema_ctx, p, nm, node->_case.const_expr);
+        if (!node->_case.const_expr) break;
+        if (!(node->_case.const_expr->type->kind == T_INT || node->_case.const_expr->type->kind == T_ENUM)) {
             PANIC("Not ready to handle non int test cases\n");
         }
+        node->_case.test = evaluate_const_expression(node->_case.const_expr).i;
         break;
     case N_COMPOUND_LITERAL:
         node->compound_literal.value->type = node->type;
@@ -722,8 +730,15 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_TYPE:
         // Add enum consts to symbol table
         if (node->type->kind == T_ENUM) {
+            int64_t value = 0;
             for (int i = 0; i < node->type->_enum.fields_array.count; i++) {
-                p_append_enum_const(p, get_enum_field(node->type, i));
+                EnumField *f = get_enum_field(node->type, i);
+                if (f->const_expr) {
+                    semantic_analysis(sema_ctx, p, nm, f->const_expr);
+                    value = evaluate_const_expression(f->const_expr).i;
+                }
+                f->value = value++;
+                p_append_enum_const(p, f);
             }
         }
         break;

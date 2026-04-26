@@ -217,10 +217,10 @@ int compile(Compiler *compiler) {
 
     if (has_flag(CF_STOP_AFTER_AST)) print_ast(&compiler->nm);
 
+    set_log_stage(STAGE_IR);
     generate_types();
     lower_nodes(&compiler->nm);
 
-    set_log_stage(STAGE_IR);
     IR_Context ctx = ir_init_ctx(&compiler->p);
     IR_Module *module = ir_gen_translation_unit(&ctx, arena_get(&compiler->nm, 0));
 

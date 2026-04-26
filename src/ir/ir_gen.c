@@ -283,10 +283,9 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
     for (int i = 0; i < _switch->_switch.cases_array.count; i++) {
         // Is a case x:
         Node *_case = get_node(&_switch->_switch.cases_array, i);
-        if (_case->_case.test) {
+        if (_case->_case.const_expr) {
             cases[block_index++] = ir_new_block();
-            IR_Value test_case = ir_gen_rvalue(ctx, _case->_case.test);
-            IR_Value cmp_reg = ir_cmp(ctx, NEQ, test, test_case, _switch->type);
+            IR_Value cmp_reg = ir_cmp(ctx, NEQ, test, ir_integer_literal(_case->_case.test), _switch->type);
             // branch for fallthrough to the next test.
             ir_branch_cond(ctx, cmp_reg, NULL, cases[block_index - 1]);
         }
@@ -299,7 +298,7 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
     for (int i = 0; i < _switch->_switch.block->compound.items_array.count; i++) {
         Node *node = get_node(&_switch->_switch.block->compound.items_array, i);
         if (node->kind == N_CASE) {
-            if (node->_case.test) ir_append_block(ctx, cases[j++]);
+            if (node->_case.const_expr) ir_append_block(ctx, cases[j++]);
             else ir_append_block(ctx, default_block);
         } else {
             ir_gen_block_item(ctx, node);

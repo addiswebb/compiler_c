@@ -294,12 +294,13 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
         } else if (p_peek(p)->type == TK_OPEN_SQUARE) {
             p_consume(p);
 
-            const Token *t = p_consume_a(p, TK_INT_LITERAL);
+            Node *index_expr = p_parse_expression(p, nm, 0);
             p_consume_a(p, TK_CLOSE_SQUARE);
             p_consume_a(p, TK_EQ);
             Node *element_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+            // TODO investigate why this was commented, and uncomment if good
             // element_assign->designated_init.kind = T_ARRAY;
-            element_assign->designated_init._array.index = (int)parse_int(t->value, t->size);
+            element_assign->designated_init._array.const_expr = index_expr;
             element_assign->designated_init.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
             p_append_element(node, element_assign);
         } else p_append_element(node, p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE));
@@ -416,7 +417,7 @@ Type *p_parse_type(Parser *p, NodeManager *nm, const char **name) {
         p_consume(p);
     }
     if (p_peek(p)->type == TK_STRUCT) type = p_parse_struct(p, nm);
-    else if (p_peek(p)->type == TK_ENUM) type = p_parse_enum(p);
+    else if (p_peek(p)->type == TK_ENUM) type = p_parse_enum(p, nm);
     else if (p_peek(p)->type == TK_UNION) type = p_parse_union(p, nm);
     else type = token_to_type(p, p_consume(p));
 
@@ -468,7 +469,7 @@ Declarator p_parse_declarator(Parser *p, NodeManager *nm) {
     return d;
 }
 
-Type *p_parse_enum(Parser *p) {
+Type *p_parse_enum(Parser *p, NodeManager *nm) {
     Type enum_t = enum_type();
     p_consume_a(p, TK_ENUM);
     if (p_peek(p)->type == TK_IDENTIFIER) {
@@ -480,14 +481,12 @@ Type *p_parse_enum(Parser *p) {
         p_consume(p); // {
         int val = 0;
         while (p_peek(p)->type != TK_CLOSE_CURLY) {
-            EnumField f;
+            EnumField f = {};
             f.name = p_consume_a(p, TK_IDENTIFIER)->value;
             if (p_peek(p)->type == TK_EQ) {
                 p_consume(p);
-                const Token *t = p_consume_a(p, TK_INT_LITERAL);
-                val = (int)parse_int(t->value, t->size);
+                f.const_expr = p_parse_expression(p, nm, 0);
             }
-            f.value = val++;
             f._enum_t = NULL;
             append_enum_field(&enum_t, &f);
             if (p_peek(p)->type == TK_COMMA) p_consume(p);
@@ -767,10 +766,10 @@ Node *p_parse_case(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_CASE);
     if (p_peek(p)->type == TK_CASE) {
         p_consume_a(p, TK_CASE);
-        node->_case.test = p_parse_primary_expression(p, nm);
+        node->_case.const_expr = p_parse_primary_expression(p, nm);
     } else {
         p_consume_a(p, TK_DEFAULT);
-        node->_case.test = NULL;
+        node->_case.const_expr = NULL;
     }
     p_consume_a(p, TK_COLON);
     return node;

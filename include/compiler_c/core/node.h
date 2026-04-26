@@ -204,7 +204,8 @@ struct Node {
         } _switch;
         // case test:
         struct {
-            Node *test;
+            Node *const_expr;
+            int64_t test;
             int i;
         } _case;
         // typedef Type Symbol
@@ -221,7 +222,11 @@ struct Node {
             TypeKind kind;
             union {
                 struct {
-                    unsigned int index;
+                    bool is_complete;
+                    union {
+                        unsigned int index;
+                        Node *const_expr;
+                    };
                 } _array;
                 struct {
                     const char *name;

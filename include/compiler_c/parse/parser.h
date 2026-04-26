@@ -321,7 +321,7 @@ Declarator p_parse_declarator(Parser *p, NodeManager *nm);
     `enum [Tag]? [{[Field Identifier]*}]?`
     Where `Field Identifier` is any `[Identifier]`
 */
-Type *p_parse_enum(Parser *p);
+Type *p_parse_enum(Parser *p, NodeManager *nm);
 
 /*
     Consumes

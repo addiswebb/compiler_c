@@ -405,9 +405,9 @@ void print_node(const Node *node, const int depth) {
         print_node(node->_switch.block, depth + 1);
         break;
     case N_CASE:
-        if (node->_case.test) {
+        if (node->_case.const_expr) {
             printf(": [index=%d]\n", node->_case.i);
-            print_node(node->_case.test, depth + 1);
+            print_node(node->_case.const_expr, depth + 1);
         } else printf(": Default\n");
         break;
     case N_TYPEDEF:
@@ -511,8 +511,8 @@ void free_node(Node *node) {
         node->_switch.test = NULL;
         break;
     case N_CASE:
-        free_node(node->_case.test);
-        node->_case.test = NULL;
+        free_node(node->_case.const_expr);
+        node->_case.const_expr = NULL;
         break;
     case N_RETURN:
         free_node(node->_return.expr);

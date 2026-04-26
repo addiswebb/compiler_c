@@ -67,7 +67,10 @@ typedef struct {
 /* Represents an enumerator within a defined enum */
 typedef struct {
     char *name;
-    int value;
+    union {
+        int value;
+        Node *const_expr;
+    };
     Type *_enum_t;
 } EnumField;
 
