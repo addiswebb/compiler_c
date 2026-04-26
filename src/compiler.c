@@ -256,7 +256,7 @@ int compile(Compiler *compiler) {
 
 static int load_src_file(Compiler *compiler, const char *file) {
     char cmd[512];
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -I./libc -std=c11 %s ", file);
+    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 %s ", file);
     for (int i = 0; i < compiler->passthrough_args.count; i++) {
         cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }

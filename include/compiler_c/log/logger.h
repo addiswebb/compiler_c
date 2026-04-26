@@ -1,9 +1,9 @@
 #ifndef COMPILER_C_LOGGER_H
 #define COMPILER_C_LOGGER_H
 
-#include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef enum {
     LOG_DEBUG,
@@ -32,7 +32,6 @@ typedef struct {
 
 extern Logger logger;
 
-
 static inline void init_logger(FILE *fp, LogLevel level) {
     logger.file = fp ? fp : stderr;
     logger.stage = STAGE_COMPILER;
@@ -40,7 +39,7 @@ static inline void init_logger(FILE *fp, LogLevel level) {
 }
 static inline void set_log_stage(LogStage stage) { logger.stage = stage; }
 
-static inline void log_start(LogLevel lvl){
+static inline void log_start(LogLevel lvl) {
     if (lvl < logger.min_level) return;
     const char *level_str;
     switch (lvl) {
@@ -101,17 +100,24 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     vfprintf(logger.file, fmt, args);
     va_end(args);
     fflush(logger.file);
-    if(lvl == LOG_PANIC) exit(1);
+    if (lvl == LOG_PANIC) exit(1);
 }
 #define DEBUG(fmt, ...) log_message(LOG_DEBUG, fmt, ##__VA_ARGS__)
 #define INFO(fmt, ...) log_message(LOG_INFO, fmt, ##__VA_ARGS__)
 #define WARN(fmt, ...) log_message(LOG_WARN, fmt, ##__VA_ARGS__)
 #define ERROR(fmt, ...) log_message(LOG_ERROR, fmt, ##__VA_ARGS__)
-#define PANIC(fmt, ...) do { \
-    log_message(LOG_ERROR, fmt, ##__VA_ARGS__); \
-    exit(1); \
-} while(0)
+#define PANIC(fmt, ...)                                                                                                                    \
+    do {                                                                                                                                   \
+        log_message(LOG_ERROR, fmt, ##__VA_ARGS__);                                                                                        \
+        exit(1);                                                                                                                           \
+    } while (0)
 
-#define ASSERT(cond, fmt, ...) if (__builtin_expect(!(cond),0)) PANIC(fmt, ##__VA_ARGS__)
+#ifdef __COMPILER_C
+#define ASSERT(cond, fmt, ...)                                                                                                             \
+    if (!cond) PANIC(fmt, ##__VA_ARGS__)
+#else
+#define ASSERT(cond, fmt, ...)                                                                                                             \
+    if (__builtin_expect(!(cond), 0)) PANIC(fmt, ##__VA_ARGS__)
+#endif
 
 #endif // COMPILER_C_LOGGER_H
