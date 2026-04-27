@@ -2,26 +2,11 @@
 #define COMPILER_C_CONST_EXPR_H
 
 #include "compiler_c/core/node.h"
+#include "compiler_c/core/type.h"
 #include <stdint.h>
 
-typedef enum {
-    CONST_INTEGER,
-    CONST_FLOAT,
-    CONST_INIT_LIST,
-} ConstExprType;
-
-typedef struct ConstExpr ConstExpr;
-
-struct ConstExpr {
-    ConstExprType kind;
-    union {
-        double f;
-        int64_t i;
-        Array init_list;
-    };
-};
-
-ConstExpr evaluate_const_expression(Node *const_expr);
-void print_const_expr(const ConstExpr *expr);
+ConstLiteral evaluate_const_expression(const Node *node);
+ConstLiteral evaluate_const_literal(const Node *node);
+void print_const_literal(const ConstLiteral *node);
 
 #endif

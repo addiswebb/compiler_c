@@ -7,8 +7,6 @@
 #include <stdint.h>
 #include <string.h>
 
-typedef struct ConstExpr ConstExpr;
-
 typedef enum {
     N_TRANSLATION_UNIT,
     N_FUNCTION,
@@ -153,7 +151,7 @@ struct Node {
             Node *identifier;
             union {
                 Node *expr;
-                ConstExpr *const_expr;
+                ConstLiteral *const_expr;
             };
             StorageClass storage_class;
             bool is_global;

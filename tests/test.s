@@ -1,6 +1,19 @@
 .section .note.GNU-stack,"",@progbits
 .global arr
 .data
+.align 4
+arr:
+    .long 1
+    .long 0
+    .long 0
+    .long 13
+    .long 0
+    .long 0
+    .long 0
+    .long 0
+    .long 0
+    .long 0
+    .long 0
 
 .text
 .global main
@@ -11,7 +24,14 @@ main:
 main_0:
     leaq arr(%rip), %rax
     movq %rax, -8(%rbp)
-    movq $0, %rax
+    movl $7, %eax
+    cltd
+    movl $2, %ecx
+    idivl %ecx
+    movl %eax, -16(%rbp)
+    movslq -16(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
     imulq $4, %rax
     movq %rax, -16(%rbp)
     movq -8(%rbp), %rax

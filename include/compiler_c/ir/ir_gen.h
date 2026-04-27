@@ -1,7 +1,7 @@
 #ifndef COMPILER_C_IR_GEN_H
 #define COMPILER_C_IR_GEN_H
 
-
+#include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 
 /*
@@ -10,8 +10,6 @@
     The IR Value must be assignable.
 */
 IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr);
-/* Lowers an N_LITERAL node to an IR_LITERAL. */
-IR_Literal ir_literal(const Node *node);
 
 /*
     Generates the corresponding IR instructions to evaluate the given expression node.
@@ -21,11 +19,11 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr);
 
 static void ir_gen_block_item(IR_Context *ctx, const Node *item);
 static void ir_gen_compound(IR_Context *ctx, const Node *comp);
-static void ir_gen_while_loop(IR_Context *ctx,const Node *_while);
-static void ir_gen_for_loop(IR_Context *ctx,const Node *_for);
+static void ir_gen_while_loop(IR_Context *ctx, const Node *_while);
+static void ir_gen_for_loop(IR_Context *ctx, const Node *_for);
 static void ir_gen_if_statement(IR_Context *ctx, const Node *_if);
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl);
-static void ir_gen_statement(IR_Context *ctx,const Node *stmt);
+static void ir_gen_statement(IR_Context *ctx, const Node *stmt);
 static void ir_gen_return(IR_Context *ctx, const Node *_return);
 static void ir_gen_goto(IR_Context *ctx, const Node *_goto);
 static void ir_gen_label(IR_Context *ctx, const Node *label);

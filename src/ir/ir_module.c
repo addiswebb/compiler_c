@@ -98,7 +98,7 @@ IR_Module *ir_new_module() {
     if (!module) {
         PANIC("Failed to allocate new IR module\n");
     }
-    array_init(&module->const_array, 4, sizeof(IR_Literal));
+    array_init(&module->const_array, 4, sizeof(ConstLiteral));
     array_init(&module->global_array, 4, sizeof(IR_Global));
     array_init(&module->functions_array, 4, sizeof(IR_Function *));
     array_init(&module->labeled_block_array, 4, sizeof(IR_LabeledBlock));
@@ -188,13 +188,13 @@ IR_LabeledBlock *ir_get_labeled_block(IR_Context *ctx, const char *label) {
     return NULL;
 }
 
-void ir_append_global(IR_Module *module, Symbol *symbol, const IR_Literal *literal) {
+void ir_append_global(IR_Module *module, Symbol *symbol, const ConstLiteral *literal) {
     append(&module->global_array, &(IR_Global){
                                       .symbol = symbol,
-                                      .val = literal ? *literal : (IR_Literal){.type = type_invalid, .i = 0},
+                                      .val = literal ? *literal : (ConstLiteral){.kind = CONST_INTEGER, .i = 0},
                                   });
 }
-int ir_append_literal(IR_Module *module, const IR_Literal *literal) {
+int ir_append_literal(IR_Module *module, const ConstLiteral *literal) {
     append(&module->const_array, literal);
     return module->const_array.count - 1;
 }

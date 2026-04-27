@@ -6,7 +6,7 @@
 void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src);
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type);
 IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type);
-IR_Value ir_smart_const(IR_Context *ctx, IR_Literal *literal, Type *type);
+IR_Value ir_smart_const(IR_Context *ctx, ConstLiteral *literal, Type *type);
 IR_Value ir_const(IR_Context *ctx, int const_index, Type *type);
 IR_Value ir_unary(IR_Context *ctx, IR_UNARY_OP op, IR_Value expr_reg, Type *type);
 IR_Value ir_binary(IR_Context *ctx, IR_BINOP_OP op, IR_Value dst, IR_Value lhs_reg, IR_Value rhs_reg, Type *type);

@@ -1,10 +1,11 @@
 #ifndef COMPILER_C_X86_H
 #define COMPILER_C_X86_H
 
+#include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #define MAX_OPERAND_BUFFER_SIZE 64
 
@@ -31,12 +32,13 @@ void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const I
 void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNARY_OP op, Type *t);
 void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst);
 void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to);
-void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c, int pool_index);
+void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, int pool_index);
 void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
 void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
 void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src);
-void x86_emit_cmp(FILE *fp,IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t);
+void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t);
 void x86_emit_string(FILE *fp, const char *str);
+void x86_emit_literal(FILE *fp, const ConstLiteral *c);
 
 static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
 static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr);

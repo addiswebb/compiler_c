@@ -202,7 +202,7 @@ static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
     printf(" = CONST ");
     print_ir_value(&instr->ops[1]);
     if (ctx) {
-        IR_Literal *c = NULL;
+        ConstLiteral *c = NULL;
         if (instr->ops[1].kind == IR_CONSTANT) {
             c = get_const(ctx, instr->ops[1].const_index);
         } else if (instr->ops[1].kind == IR_PHYS_REG && instr->ops[1].phys_reg.data_kind == REG_DATA_CONST_INDEX) {

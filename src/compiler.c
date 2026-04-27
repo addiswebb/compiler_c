@@ -119,7 +119,7 @@ void drive(Compiler *c) {
         compile(c);
         clear_compiler(c);
 
-        if (has_flag(CF_STOP_AFTER_IR)) return;
+        if (has_flag(CF_STOP_AFTER_IR | CF_STOP_AFTER_AST)) return;
         if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
 
         array_str_cpy(&c->current_source, c->current_output.data);
@@ -215,7 +215,10 @@ int compile(Compiler *compiler) {
 
     array_free(&sema_ctx.i_array);
 
-    if (has_flag(CF_STOP_AFTER_AST)) print_ast(&compiler->nm);
+    if (has_flag(CF_STOP_AFTER_AST)) {
+        print_ast(&compiler->nm);
+        return 1;
+    }
 
     set_log_stage(STAGE_IR);
     generate_types();

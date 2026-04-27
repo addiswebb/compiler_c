@@ -5,6 +5,7 @@
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include <stddef.h>
+#include <stdint.h>
 #define SIGNED 1
 #define UNSIGNED 0
 
@@ -134,6 +135,27 @@ struct Type {
         } _func;
     };
 };
+
+typedef enum {
+    CONST_INTEGER,
+    CONST_FLOAT,
+    CONST_STRING,
+    CONST_INIT_LIST,
+} ConstLiteralType;
+
+typedef struct {
+    Type *type;
+    ConstLiteralType kind;
+    union {
+        double f;
+        int64_t i;
+        struct {
+            const char *data;
+            int len;
+        } s;
+        Array arr;
+    };
+} ConstLiteral;
 
 /* Global canonical definitions for all predefined C types */
 extern Type *type_i8;

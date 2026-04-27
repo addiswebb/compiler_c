@@ -330,8 +330,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->var_decl.expr->type = node->type;
             semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
             if (node->var_decl.is_global) {
-                ConstExpr init_list = evaluate_const_expression(node->var_decl.expr);
-                node->var_decl.const_expr = malloc(sizeof(ConstExpr));
+                ConstLiteral init_list = evaluate_const_expression(node->var_decl.expr);
+                node->var_decl.const_expr = malloc(sizeof(ConstLiteral));
                 ASSERT(node->var_decl.const_expr, "Failed to allocate for const expr");
                 *node->var_decl.const_expr = init_list;
             }
@@ -361,9 +361,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
 
         if (node->var_decl.is_global) {
-            ConstExpr val = evaluate_const_expression(node->var_decl.expr);
+            ConstLiteral val = evaluate_const_expression(node->var_decl.expr);
             // TODO move this into a assign const_expr function:
-            node->var_decl.const_expr = malloc(sizeof(ConstExpr));
+            node->var_decl.const_expr = malloc(sizeof(ConstLiteral));
             ASSERT(node->var_decl.const_expr, "Failed to allocate for const expr");
             *node->var_decl.const_expr = val;
         }

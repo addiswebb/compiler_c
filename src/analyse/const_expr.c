@@ -1,11 +1,13 @@
+#include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/tokenize/tokenizer.h"
 #include <compiler_c/analyse/const_expr.h>
 #include <inttypes.h>
 
-ConstExpr evaluate_const_unary(Node *node) {
-    ConstExpr e = evaluate_const_expression(node->unary.expr);
+ConstLiteral evaluate_const_unary(const Node *node) {
+    ConstLiteral e = evaluate_const_expression(node->unary.expr);
+    e.type = node->type;
     switch (node->type->kind) {
     case T_INT:
         switch (node->unary.op) {
@@ -56,10 +58,11 @@ ConstExpr evaluate_const_unary(Node *node) {
     }
     return e;
 }
-ConstExpr evaluate_const_binary(Node *node) {
-    ConstExpr lhs = evaluate_const_expression(node->binary.lhs);
-    ConstExpr rhs = evaluate_const_expression(node->binary.rhs);
-    ConstExpr e = {};
+ConstLiteral evaluate_const_binary(const Node *node) {
+    ConstLiteral lhs = evaluate_const_expression(node->binary.lhs);
+    ConstLiteral rhs = evaluate_const_expression(node->binary.rhs);
+    ConstLiteral e = {};
+    e.type = node->type;
     switch (node->type->kind) {
     case T_INT:
         e.kind = CONST_INTEGER;
@@ -167,8 +170,9 @@ ConstExpr evaluate_const_binary(Node *node) {
     }
     return e;
 }
-ConstExpr evaluate_const_cast(Node *node) {
-    ConstExpr e = evaluate_const_expression(node->cast.expr);
+ConstLiteral evaluate_const_cast(const Node *node) {
+    ConstLiteral e = evaluate_const_expression(node->cast.expr);
+    e.type = node->type;
     switch (node->type->kind) {
     case T_INT:
         e.i = (int)e.f;
@@ -186,22 +190,43 @@ ConstExpr evaluate_const_cast(Node *node) {
     }
     return e;
 }
-ConstExpr evaluate_const_init_list(Node *node) { return (ConstExpr){}; }
+ConstLiteral evaluate_const_init_list(const Node *node) {
+    ASSERT(node->kind == N_INIT_LIST, "Expected N_INIT_LIST node.\n");
+    ConstLiteral l = {.kind = CONST_INIT_LIST};
+    l.type = node->type;
+    array_init(&l.arr, node->type->_array.array_len, sizeof(ConstLiteral));
+    for (int i = 0; i < l.arr.capacity; i++) append(&l.arr, &(ConstLiteral){.type = l.type->base, .i = 0});
 
-ConstExpr literal_to_const(Node *node) {
-    ConstExpr e = {};
+    // TODO dont forget to free this shi
+    ConstLiteral *arr = l.arr.data;
+    for (int i = 0; i < node->init_list.elements_array.count; i++) {
+        Node *designated_initializer = get_node(&node->init_list.elements_array, i);
+        ConstLiteral e = evaluate_const_expression(designated_initializer->designated_init.value);
+        set(&l.arr, &e, designated_initializer->designated_init._array.index);
+    }
+    return l;
+}
 
+ConstLiteral evaluate_const_literal(const Node *node) {
+    ASSERT(node->kind == N_LITERAL, "Expected a N_LITERAL node.\n");
+    ConstLiteral l = {};
+    l.type = node->type;
     switch (node->type->kind) {
     case T_INT:
-    // Enums are not decayed to integer until after sema, so we must allow them here
     case T_ENUM:
-        e.kind = CONST_INTEGER;
-        e.i = node->literal.i;
+        // Enums are not decayed to integer until after sema, so we must allow them here
+        l.i = node->literal.i;
         break;
     case T_FLOAT:
-        e.kind = CONST_FLOAT;
-        e.f = node->literal.f;
+        l.f = node->literal.f;
         break;
+    case T_POINTER:
+    case T_ARRAY:
+        if (l.type->base == type_i8) {
+            l.s.data = node->literal.s.data;
+            l.s.len = node->literal.s.len;
+            break;
+        }
     default:
         log_start(LOG_ERROR);
         printf("Tried to convert literal with an invalid type ");
@@ -209,36 +234,23 @@ ConstExpr literal_to_const(Node *node) {
         printf(" to ConstExpr.\n");
         exit(1);
     }
-    return e;
+    return l;
 }
 
-ConstExpr evaluate_const_expression(Node *const_expr) {
-    switch (const_expr->kind) {
+ConstLiteral evaluate_const_expression(const Node *node) {
+    switch (node->kind) {
     case N_UNARY:
-        return evaluate_const_unary(const_expr);
+        return evaluate_const_unary(node);
     case N_BINARY:
-        return evaluate_const_binary(const_expr);
+        return evaluate_const_binary(node);
     case N_LITERAL:
-        return literal_to_const(const_expr);
+        return evaluate_const_literal(node);
     case N_CAST:
-        return evaluate_const_cast(const_expr);
+        return evaluate_const_cast(node);
     case N_TYPE:
-        return (ConstExpr){.i = const_expr->type->size, .kind = CONST_INTEGER};
+        return (ConstLiteral){.type = type_u64, .i = node->type->size, .kind = CONST_INTEGER};
     case N_INIT_LIST:
-        ConstExpr l = {.kind = CONST_INIT_LIST};
-        l.init_list.capacity = const_expr->type->_array.array_len;
-        l.init_list.count = l.init_list.capacity;
-        l.init_list.element_size = sizeof(ConstExpr);
-        l.init_list.data = calloc(l.init_list.count, l.init_list.element_size);
-        // TODO dont forget to free this shi
-        ASSERT(l.init_list.data, "Failed to calloc for const expr init list\n");
-        ConstExpr *arr = l.init_list.data;
-        for (int i = 0; i < const_expr->init_list.elements_array.count; i++) {
-            Node *designated_initializer = get_node(&const_expr->init_list.elements_array, i);
-            arr[designated_initializer->designated_init._array.index] =
-                evaluate_const_expression(designated_initializer->designated_init.value);
-        }
-        return l;
+        return evaluate_const_init_list(node);
     case N_INDEX:
         PANIC("Indexing not handled in const expr yet\n");
     case N_MEMBER_ACCESS:
@@ -249,22 +261,25 @@ ConstExpr evaluate_const_expression(Node *const_expr) {
     }
 }
 
-void print_const_expr(const ConstExpr *expr) {
-    switch (expr->kind) {
+void print_const_literal(const ConstLiteral *l) {
+    switch (l->kind) {
     case CONST_INTEGER:
-        printf("%ld", expr->i);
+        printf("%ld", l->i);
         break;
     case CONST_FLOAT:
-        printf("%lf", expr->f);
+        printf("%lf", l->f);
         break;
     case CONST_INIT_LIST:
         printf("{");
-        for (int i = 0; i < expr->init_list.count; i++) {
-            ConstExpr *e = get(&expr->init_list, i);
-            print_const_expr(e);
-            if (i < expr->init_list.count - 1) printf(", ");
+        for (int i = 0; i < l->arr.count; i++) {
+            ConstLiteral *e = get(&l->arr, i);
+            print_const_literal(e);
+            if (i < l->arr.count - 1) printf(", ");
         }
         printf("}");
+        break;
+    case CONST_STRING:
+        printf("\"%.*s\"", l->s.len, l->s.data);
         break;
     }
 }

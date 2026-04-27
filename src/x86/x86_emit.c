@@ -62,28 +62,6 @@ void x86_operand(const IR_Value *v, char *buf, const int n) {
     case IR_VREG:
         PANIC("Undefined operand\n");
     }
-    // TODO print IR_PHYS_REG properly
-    // switch (v->kind) {
-    // case IR_STACK:
-    //     snprintf(buf, n, "%d(%%rbp)", v->stack_offset);
-    //     return;
-    // case IR_LITERAL:
-    //     snprintf(buf, n, ".LC%d(%%rip)", v->const_index);
-    //     return;
-    // case IR_GLOBAL:
-    //     snprintf(buf, n, "%s(%%rip)", v->global->name);
-    //     return;
-    // case IR_PHYS_REG:
-    //     snprintf(buf, n, "%s", x86_reg(v));
-    //     return;
-    // case IR_FUNCTION:
-    //     snprintf(buf, n, "%s(%%rip)", v->func.name);
-    //     return;
-    // case IR_VREG:
-    // case IR_MEM:
-    // case IR_UNDEFINED:
-    //     PANIC("Tried to gen assembly for undefined IR_Value\n");
-    // }
 }
 
 void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst) {
@@ -528,7 +506,7 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
 
     PANIC("Cast node did literally nothing?\n");
 }
-void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const IR_Literal *c, const int pool_index) {
+void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, const int pool_index) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
 
@@ -649,4 +627,33 @@ void x86_emit_string(FILE *fp, const char *str) {
         str++;
     }
     fprintf(fp, "0\n");
+}
+
+void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
+    if (c->type == type_f64) {
+        uint64_t bits;
+        memcpy(&bits, &c->f, sizeof(bits));
+        fprintf(fp, "    .quad 0x%016" PRIx64 "\n", bits);
+    } else if (c->type == type_f32) {
+        uint32_t bits;
+        memcpy(&bits, &c->f, sizeof(bits));
+        fprintf(fp, "    .long 0x%08x\n", bits);
+    } else if (c->type->kind == T_ARRAY && c->type->base == type_i8) {
+        x86_emit_string(fp, c->s.data);
+    } else if (c->type == type_i8 || c->type == type_u8) {
+        fprintf(fp, "    .byte %d\n", (char)c->i);
+    } else if (c->type == type_i16 || c->type == type_u16) {
+        fprintf(fp, "    .word %d\n", (short)c->i);
+    } else if (c->type == type_i32 || c->type == type_u32) {
+        fprintf(fp, "    .long %d\n", (int)c->i);
+    } else if (c->type == type_i64 || c->type == type_u64) {
+        fprintf(fp, "    .quad %" PRId64 "\n", c->i);
+    } else if (c->type->kind == T_ARRAY) {
+        for (int i = 0; i < c->arr.count; i++) {
+            ConstLiteral *e = get(&c->arr, i);
+            x86_emit_literal(fp, e);
+        }
+    } else {
+        PANIC("Failed to x86_emit_literal\n");
+    }
 }
