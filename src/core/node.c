@@ -191,6 +191,9 @@ void print_node_type(const NodeKind type) {
     case N_BUILTIN:
         printf("__Builtin");
         break;
+    case N_TERNARY:
+        printf("Ternary");
+        break;
     }
 }
 
@@ -438,6 +441,12 @@ void print_node(const Node *node, const int depth) {
             print_node(get_node(&node->_builtin.params, i), depth + 1);
         }
         break;
+    case N_TERNARY:
+        printf(": [cond, true, false]\n");
+        print_node(node->ternary.cond, depth + 1);
+        print_node(node->ternary.if_true, depth + 1);
+        print_node(node->ternary.if_false, depth + 1);
+        break;
     }
 }
 
@@ -614,6 +623,14 @@ void free_node(Node *node) {
             free_node(get_node(&node->_builtin.params, i));
         }
         array_free(&node->_builtin.params);
+        break;
+    case N_TERNARY:
+        free_node(node->ternary.cond);
+        node->ternary.cond = NULL;
+        free_node(node->ternary.if_true);
+        node->ternary.if_true = NULL;
+        free_node(node->ternary.if_false);
+        node->ternary.if_false = NULL;
         break;
     }
 }

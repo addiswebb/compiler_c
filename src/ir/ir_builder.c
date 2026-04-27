@@ -215,7 +215,7 @@ IR_Value ir_address(IR_Context *ctx, IR_Value src, int offset) {
     ir_append_instruction(ctx->block, &i);
     return i.ops[0];
 }
-IR_Value ir_alloca(IR_Context *ctx, IR_Value dst, int size, int al) {
+IR_Value ir_alloca(IR_Context *ctx, IR_Value dst, int size, int align) {
     IR_Instruction i;
     i.op = IR_ALLOCA;
     i.alloca.size = size;

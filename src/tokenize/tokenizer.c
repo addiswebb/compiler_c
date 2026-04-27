@@ -266,6 +266,9 @@ static void t_consume_special_char(Tokenizer *tk) {
     case ':':
         type = TK_COLON;
         break;
+    case '?':
+        type = TK_TERNARY;
+        break;
     default:
         PANIC("Unexpected '%c'\n", t_peek(tk));
     }
@@ -680,40 +683,42 @@ int op_precedence(const TokenType type) {
     case TK_DIVIDE_EQ:
     case TK_MOD_EQ:
         return 0;
+    case TK_TERNARY:
+        return 1;
     case TK_SHR_EQ:
     case TK_SHL_EQ:
     case TK_AND_EQ:
     case TK_XOR_EQ:
     case TK_OR_EQ:
-        return 1;
-    case TK_OR_OR:
         return 2;
-    case TK_AND_AND:
+    case TK_OR_OR:
         return 3;
-    case TK_OR:
+    case TK_AND_AND:
         return 4;
-    case TK_XOR:
+    case TK_OR:
         return 5;
-    case TK_AND:
+    case TK_XOR:
         return 6;
+    case TK_AND:
+        return 7;
     case TK_EQ_EQ:
     case TK_NEQ:
-        return 7;
+        return 8;
     case TK_LT:
     case TK_LE:
     case TK_GT:
     case TK_GE:
-        return 8;
+        return 9;
     case TK_SHR:
     case TK_SHL:
-        return 9;
+        return 10;
     case TK_PLUS:
     case TK_MINUS:
-        return 10;
+        return 11;
     case TK_MULTIPLY:
     case TK_DIVIDE:
     case TK_MOD:
-        return 11;
+        return 12;
     default:
         log_start(LOG_ERROR);
         printf("Tried to get the precedence of a token which is not a binary operator");
@@ -761,71 +766,73 @@ const char *token_type_str(const TokenType type) {
     case TK_IDENTIFIER:
         return "Identifier";
     case TK_MOD:
-        return "\'%\'";
+        return "'%'";
     case TK_EQ_EQ:
-        return "\'==\'";
+        return "'=='";
     case TK_PLUS_EQ:
-        return "\'+=\'";
+        return "'+='";
     case TK_MINUS_EQ:
-        return "\'-=\'";
+        return "'-='";
     case TK_MULTIPLY_EQ:
-        return "\'*=\'";
+        return "'*='";
     case TK_DIVIDE_EQ:
-        return "\'/=\'";
+        return "'/='";
     case TK_MOD_EQ:
-        return "\'%=\'";
+        return "'%='";
     case TK_NEQ:
-        return "\'!=\'";
+        return "'!='";
     case TK_LT:
-        return "\'<\'";
+        return "'<'";
     case TK_LE:
-        return "\'<=\'";
+        return "'<='";
     case TK_GT:
-        return "\'>\'";
+        return "'>'";
     case TK_GE:
-        return "\'>=\'";
+        return "'>='";
     case TK_SHL:
-        return "\'<<\'";
+        return "'<<'";
     case TK_SHR:
-        return "\'>>\'";
+        return "'>>'";
     case TK_SHL_EQ:
-        return "\'<<=\'";
+        return "'<<='";
     case TK_SHR_EQ:
-        return "\'>>=\'";
+        return "'>>='";
     case TK_AND:
-        return "\'&\'";
+        return "'&'";
     case TK_AND_AND:
-        return "\'&&\'";
+        return "'&&'";
     case TK_AND_EQ:
-        return "\'&=\'";
+        return "'&='";
     case TK_OR:
-        return "\'|\'";
+        return "'|'";
     case TK_OR_OR:
-        return "\'||\'";
+        return "'||'";
     case TK_OR_EQ:
-        return "\'|=\'";
+        return "'|='";
     case TK_XOR_EQ:
-        return "\'^=\'";
+        return "'^='";
+    case TK_TERNARY:
+        return "'?'";
     case TK_L_NOT:
-        return "\'!\'";
+        return "'!'";
     case TK_BW_NOT:
-        return "\'~\'";
+        return "'~'";
     case TK_INCR:
-        return "\'++\'";
+        return "'++'";
     case TK_DECR:
-        return "\'--\'";
+        return "'--'";
     case TK_OPEN_SQUARE:
-        return "\'[\'";
+        return "'['";
     case TK_CLOSE_SQUARE:
-        return "\']\'";
+        return "']'";
     case TK_DOT:
-        return "\'.\'";
+        return "'.'";
     case TK_ARROW:
-        return "\'->\'";
+        return "'->'";
     case TK_COLON:
-        return "\':\'";
+        return "':'";
     case TK_ELLIPSES:
-        return "\'...\'";
+        return "'...'";
     case TK_AUTO:
     case TK_BREAK:
     case TK_CASE:

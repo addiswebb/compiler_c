@@ -74,6 +74,18 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_LITERAL:
         ConstLiteral c = evaluate_const_literal(expr);
         return ir_smart_const(ctx, &c, expr->type);
+    case N_TERNARY:
+        IR_Block *tern_if_false = ir_new_block();
+        IR_Block *tern_end_block = ir_new_block();
+        IR_Value tern_cmp = ir_cmp(ctx, EQ, ir_gen_rvalue(ctx, expr->ternary.cond), ir_integer_literal(0), expr->ternary.cond->type);
+        IR_Value tern_val = ir_alloca(ctx, ir_next_virtual_reg(ctx->func), 8, 8);
+        ir_branch_cond(ctx, tern_cmp, tern_if_false, NULL);
+        ir_move(ctx, tern_val, ir_gen_rvalue(ctx, expr->ternary.if_true));
+        ir_branch(ctx, tern_end_block);
+        ir_append_block(ctx, tern_if_false);
+        ir_move(ctx, tern_val, ir_gen_rvalue(ctx, expr->ternary.if_false));
+        ir_append_block(ctx, tern_end_block);
+        return tern_val;
     case N_BINARY:
         if (is_assignment_op(expr->binary.op)) {
             ABI_Result res = abi_classify(expr->type);

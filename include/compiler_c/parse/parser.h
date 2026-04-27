@@ -158,6 +158,18 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm);
 Node *p_parse_expression(Parser *p, NodeManager *nm, int min_prec);
 
 /*
+    Consumes `op [rhs]`
+    Where `op` is a binary op and `lhs` was already parsed
+*/
+Node *p_parse_binary(Parser *p, NodeManager *nm, Node *lhs, const int min_prec);
+
+/*
+    Consumes `? [if_true] : [if_false]`
+    Where `[cond]` was already parsed
+*/
+Node *p_parse_ternary(Parser *p, NodeManager *nm, Node *cond);
+
+/*
     Tries to consume
     `(type)`
     Otherwise parses `postfix expr`
