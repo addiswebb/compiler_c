@@ -137,7 +137,11 @@ static void t_parse_and_push_buffer(Tokenizer *tk) {
     }
     if (!is_keyword) {
         token.type = TK_IDENTIFIER;
+#ifdef __linux__
         token.value = strndup(tk->buf.buf, tk->buf.size);
+#else
+        token.value = strdup(tk->buf.buf, tk->buf.size);
+#endif
         token.size = tk->buf.size;
     }
     append(&tk->tokens_array, &token);
