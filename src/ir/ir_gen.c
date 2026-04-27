@@ -65,9 +65,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     case N_INDEX:
     case N_IDENTIFIER:
         // TODO check if array also needs to be included here (passes tests without)
-        // if (expr->type->kind == T_FUNCTION || expr->type->kind == T_ARRAY)
         if (expr->type->kind == T_FUNCTION) return ir_symbol_value(expr->identifier.symbol);
-        // else if (expr->type->kind == T_STRUCT) return ir_gen_lvalue(ctx, expr);
         ABI_Result res = abi_classify(expr->type);
         if (res.memory) return ir_gen_lvalue(ctx, expr);
         else return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);

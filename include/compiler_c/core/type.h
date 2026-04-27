@@ -142,7 +142,6 @@ typedef enum {
 
 typedef struct {
     Type *type;
-    ConstLiteralType kind;
     union {
         double f;
         int64_t i;

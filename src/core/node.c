@@ -313,10 +313,12 @@ void print_node(const Node *node, const int depth) {
         if (node->var_decl.is_global) printf(", global");
         printf("]\n");
         if (node->var_decl.is_global) {
-            print_indent(depth + 1);
-            printf("Const Expr: ");
-            print_const_literal(node->var_decl.const_expr);
-            printf("\n");
+            if (node->var_decl.const_expr) {
+                print_indent(depth + 1);
+                printf("Const Expr: ");
+                print_const_literal(node->var_decl.const_expr);
+                printf("\n");
+            }
         } else if (node->var_decl.expr) print_node(node->var_decl.expr, depth + 1);
         break;
     case N_RETURN:

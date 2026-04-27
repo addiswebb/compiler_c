@@ -65,7 +65,6 @@ ConstLiteral evaluate_const_binary(const Node *node) {
     e.type = node->type;
     switch (node->type->kind) {
     case T_INT:
-        e.kind = CONST_INTEGER;
         switch (node->binary.op) {
         case TK_PLUS:
             e.i = lhs.i + rhs.i;
@@ -126,7 +125,6 @@ ConstLiteral evaluate_const_binary(const Node *node) {
         }
         break;
     case T_FLOAT:
-        e.kind = CONST_FLOAT;
         switch (node->binary.op) {
         case TK_PLUS:
             e.f = lhs.f + rhs.f;
@@ -182,17 +180,17 @@ ConstLiteral evaluate_const_cast(const Node *node) {
         break;
     default:
         log_start(LOG_ERROR);
-        printf("Unsupported cast from ");
+        printf("Unsupported const expr cast from ");
         print_type(node->cast.from);
         printf(" to ");
-        print_type(node->cast.to);
+        print_type(node->type);
         printf("\n");
     }
     return e;
 }
 ConstLiteral evaluate_const_init_list(const Node *node) {
     ASSERT(node->kind == N_INIT_LIST, "Expected N_INIT_LIST node.\n");
-    ConstLiteral l = {.kind = CONST_INIT_LIST};
+    ConstLiteral l = {};
     l.type = node->type;
     array_init(&l.arr, node->type->_array.array_len, sizeof(ConstLiteral));
     for (int i = 0; i < l.arr.capacity; i++) append(&l.arr, &(ConstLiteral){.type = l.type->base, .i = 0});
@@ -213,8 +211,8 @@ ConstLiteral evaluate_const_literal(const Node *node) {
     l.type = node->type;
     switch (node->type->kind) {
     case T_INT:
-    case T_ENUM:
         // Enums are not decayed to integer until after sema, so we must allow them here
+    case T_ENUM:
         l.i = node->literal.i;
         break;
     case T_FLOAT:
@@ -248,7 +246,7 @@ ConstLiteral evaluate_const_expression(const Node *node) {
     case N_CAST:
         return evaluate_const_cast(node);
     case N_TYPE:
-        return (ConstLiteral){.type = type_u64, .i = node->type->size, .kind = CONST_INTEGER};
+        return (ConstLiteral){.type = type_u64, .i = node->type->size};
     case N_INIT_LIST:
         return evaluate_const_init_list(node);
     case N_INDEX:
@@ -262,29 +260,30 @@ ConstLiteral evaluate_const_expression(const Node *node) {
 }
 
 void print_const_literal(const ConstLiteral *l) {
-    if (l == NULL) {
-        printf("[#]");
-        return;
-    };
+    ASSERT(l, "Recieved null const literal to print\n");
 
-    switch (l->kind) {
-    case CONST_INTEGER:
+    switch (l->type->kind) {
+    case T_INT:
         printf("%ld", l->i);
         break;
-    case CONST_FLOAT:
+    case T_FLOAT:
         printf("%lf", l->f);
         break;
-    case CONST_INIT_LIST:
-        printf("{");
-        for (int i = 0; i < l->arr.count; i++) {
-            ConstLiteral *e = get(&l->arr, i);
-            print_const_literal(e);
-            if (i < l->arr.count - 1) printf(", ");
+    case T_ARRAY:
+    case T_POINTER:
+        if (l->type->base == type_i8) {
+            printf("\"%.*s\"", l->s.len, l->s.data);
+        } else {
+            printf("{");
+            for (int i = 0; i < l->arr.count; i++) {
+                ConstLiteral *e = get(&l->arr, i);
+                print_const_literal(e);
+                if (i < l->arr.count - 1) printf(", ");
+            }
+            printf("}");
         }
-        printf("}");
         break;
-    case CONST_STRING:
-        printf("\"%.*s\"", l->s.len, l->s.data);
-        break;
+    default:
+        PANIC("Got incompatible type to print const expr\n");
     }
 }

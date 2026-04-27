@@ -351,7 +351,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                     exit(1);
                 }
                 // Infer array length
-                if (node->type->_array.array_len == -1) {
+                if (node->type->kind == T_ARRAY && node->type->_array.array_len == -1) {
                     node->type = node->var_decl.expr->type;
                     node->var_decl.symbol->type = node->type;
                 }
