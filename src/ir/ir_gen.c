@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/analyse/sema.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
@@ -20,7 +21,7 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         return ir_address(ctx, ir_symbol_value(expr->identifier.symbol), 0);
     case N_LITERAL:
         ASSERT(expr->literal.kind == L_STRING, "Only string literal can be lvalue\n");
-        const IR_Literal l = ir_literal(expr);
+        const ConstLiteral l = evaluate_const_literal(expr);
         IR_Value v = ir_const(ctx, ir_append_literal(ctx->module, &l), expr->type);
         return ir_address(ctx, v, 0);
     case N_UNARY:
@@ -58,31 +59,6 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     PANIC("Tried to ir_gen_lvalue for a node which is not an lvalue\n");
 }
 
-IR_Literal ir_literal(const Node *node) {
-    ASSERT(node->kind == N_LITERAL, "ir_literal expects a N_LITERAL node\n");
-    IR_Literal c;
-    c.type = node->type;
-    switch (c.type->kind) {
-    case T_INT:
-        c.i = node->literal.i;
-        break;
-    case T_FLOAT:
-        c.f = node->literal.f;
-        break;
-    case T_POINTER:
-    case T_ARRAY:
-        if (c.type->base == type_i8) {
-            c.s.data = node->literal.s.data;
-            c.s.len = node->literal.s.len;
-            break;
-        }
-    case T_INVALID:
-    default:
-        PANIC("Tried to create IR_CONST instruction with an invalid type\n");
-    }
-    return c;
-}
-
 IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
     case N_MEMBER_ACCESS:
@@ -96,7 +72,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         if (res.memory) return ir_gen_lvalue(ctx, expr);
         else return ir_load(ctx, ir_gen_lvalue(ctx, expr), expr->type);
     case N_LITERAL:
-        IR_Literal c = ir_literal(expr);
+        ConstLiteral c = evaluate_const_literal(expr);
         return ir_smart_const(ctx, &c, expr->type);
     case N_BINARY:
         if (is_assignment_op(expr->binary.op)) {
@@ -170,7 +146,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             if (expr->unary.expr->kind != N_IDENTIFIER) {
                 PANIC("Can only increment on a identifieir/variable\n");
             }
-            IR_Literal c;
+            ConstLiteral c;
             c.type = expr->type;
             switch (expr->type->kind) {
             case T_INT:
@@ -267,10 +243,9 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
     for (int i = 0; i < _switch->_switch.cases_array.count; i++) {
         // Is a case x:
         Node *_case = get_node(&_switch->_switch.cases_array, i);
-        if (_case->_case.test) {
+        if (_case->_case.const_expr) {
             cases[block_index++] = ir_new_block();
-            IR_Value test_case = ir_gen_rvalue(ctx, _case->_case.test);
-            IR_Value cmp_reg = ir_cmp(ctx, NEQ, test, test_case, _switch->type);
+            IR_Value cmp_reg = ir_cmp(ctx, NEQ, test, ir_integer_literal(_case->_case.test), _switch->type);
             // branch for fallthrough to the next test.
             ir_branch_cond(ctx, cmp_reg, NULL, cases[block_index - 1]);
         }
@@ -283,7 +258,7 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
     for (int i = 0; i < _switch->_switch.block->compound.items_array.count; i++) {
         Node *node = get_node(&_switch->_switch.block->compound.items_array, i);
         if (node->kind == N_CASE) {
-            if (node->_case.test) ir_append_block(ctx, cases[j++]);
+            if (node->_case.const_expr) ir_append_block(ctx, cases[j++]);
             else ir_append_block(ctx, default_block);
         } else {
             ir_gen_block_item(ctx, node);
@@ -425,11 +400,11 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     // Handle globals seperately to locals
     if (var_decl->var_decl.is_global) {
-        IR_Literal x;
-        IR_Literal *l = &x;
+        ConstLiteral x;
+        ConstLiteral *l = &x;
         if (var_decl->var_decl.is_defined) {
-            Node *x = var_decl->var_decl.expr;
-            *l = ir_literal(var_decl->var_decl.expr);
+            *l = *var_decl->var_decl.const_expr;
+            l->type = var_decl->type;
         } else l = NULL;
         return ir_append_global(ctx->module, var_decl->var_decl.symbol, l);
     }

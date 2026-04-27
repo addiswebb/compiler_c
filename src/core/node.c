@@ -1,3 +1,4 @@
+#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
@@ -308,7 +309,12 @@ void print_node(const Node *node, const int depth) {
         if (node->var_decl.storage_class == STATIC) printf(", static");
         if (node->var_decl.is_global) printf(", global");
         printf("]\n");
-        if (node->var_decl.expr) print_node(node->var_decl.expr, depth + 1);
+        if (node->var_decl.is_global) {
+            print_indent(depth + 1);
+            printf("Const Expr: ");
+            print_const_literal(node->var_decl.const_expr);
+            printf("\n");
+        } else if (node->var_decl.expr) print_node(node->var_decl.expr, depth + 1);
         break;
     case N_RETURN:
         printf("\n");
@@ -399,9 +405,9 @@ void print_node(const Node *node, const int depth) {
         print_node(node->_switch.block, depth + 1);
         break;
     case N_CASE:
-        if (node->_case.test) {
+        if (node->_case.const_expr) {
             printf(": [index=%d]\n", node->_case.i);
-            print_node(node->_case.test, depth + 1);
+            print_node(node->_case.const_expr, depth + 1);
         } else printf(": Default\n");
         break;
     case N_TYPEDEF:
@@ -466,7 +472,8 @@ void free_node(Node *node) {
     case N_VAR_DECL:
         free_node(node->var_decl.identifier);
         node->var_decl.identifier = NULL;
-        free_node(node->var_decl.expr);
+        if (node->var_decl.is_global) free(node->var_decl.const_expr);
+        else free_node(node->var_decl.expr);
         node->var_decl.expr = NULL;
         break;
     case N_IF:
@@ -504,8 +511,8 @@ void free_node(Node *node) {
         node->_switch.test = NULL;
         break;
     case N_CASE:
-        free_node(node->_case.test);
-        node->_case.test = NULL;
+        free_node(node->_case.const_expr);
+        node->_case.const_expr = NULL;
         break;
     case N_RETURN:
         free_node(node->_return.expr);

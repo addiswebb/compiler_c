@@ -6,12 +6,10 @@
 #include "compiler_c/tokenize/tokenizer.h"
 #include <stdbool.h>
 
-#define DEFAULT_STATEMENTS_PER_BLOCK 8
-
-typedef struct{
+typedef struct {
     const char *new_def;
     Type *type;
-}Typedef;
+} Typedef;
 
 typedef enum {
     ENUM,
@@ -21,34 +19,29 @@ typedef enum {
     ANY,
 } SymbolKind;
 
-typedef enum{
-    LINK_NONE,
-    LINK_INTERNAL,
-    LINK_EXTERNAL
-}Linkage;
+typedef enum { LINK_NONE, LINK_INTERNAL, LINK_EXTERNAL } Linkage;
 
-typedef enum{
+typedef enum {
     STORAGE_NONE,
     STORAGE_DATA,
     STORAGE_BSS,
     STORAGE_TEXT,
-}Storage;
+} Storage;
 
-
-typedef struct Symbol{
+typedef struct Symbol {
     const char *name;
     Type *type;
     SymbolKind kind;
     Linkage linkage;
     Storage storage;
     int scope_depth;
-    union{
+    union {
         Node *var_decl;
         Node *func_def;
         EnumField enum_field;
         Typedef _typedef;
     };
-}Symbol;
+} Symbol;
 
 typedef struct {
     int index;
@@ -61,7 +54,7 @@ typedef struct {
 } Parser;
 
 Parser new_parser();
-void init_parser(Parser *p, Array* src, int size);
+void init_parser(Parser *p, Array *src, int size);
 void free_parser(Parser *p);
 
 /* ===== Parsing Utility Functions ===== */
@@ -89,7 +82,7 @@ void p_expect(const Parser *p, TokenType expected_type);
     Consumes the current token expecting the given type.
     Errors on type mismatch.
 */
-Token *p_consume_a(Parser *p,TokenType type);
+Token *p_consume_a(Parser *p, TokenType type);
 /*
     Consumes a `;` and errors on any other token.
 */
@@ -105,7 +98,6 @@ bool is_start_of_type(const Parser *p, const Token *t);
     Converts token using C standard types, and typedef table.
 */
 Type *token_to_type(Parser *p, const Token *t);
-
 
 /*
     Pushes a new symbol table onto the stack, where local variables declarations will be recorded.
@@ -144,6 +136,11 @@ Node *p_parse_builtin(Parser *p, NodeManager *nm, BuiltinKind kind);
     `(expr) postfix`
 */
 Node *p_parse_prefix(Parser *p, NodeManager *nm);
+
+/*
+    Converts cstr literal to corresponding literal value.
+*/
+Node *p_parse_literal(Parser *p, NodeManager *nm);
 /*
     Consumes
     `{ [expr]* }`.
@@ -158,7 +155,7 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm);
     Postfix: `[expr] op`
     Where `op` is any prefixed or postfixed unary op respectively.
 */
-Node *p_parse_expression(Parser *p,NodeManager *nm,int min_prec);
+Node *p_parse_expression(Parser *p, NodeManager *nm, int min_prec);
 
 /*
     Tries to consume
@@ -172,14 +169,14 @@ Node *p_parse_cast(Parser *p, NodeManager *nm);
     `goto [label];`
     Where `label` is any valid unique identifier.
 */
-Node *p_parse_goto_statement(Parser *p,NodeManager *nm);
+Node *p_parse_goto_statement(Parser *p, NodeManager *nm);
 
 /*
     Consumes
     `[label]:`
     Where `label` is any valid unique identifier.
 */
-Node *p_parse_label(Parser *p,NodeManager *nm);
+Node *p_parse_label(Parser *p, NodeManager *nm);
 
 /*
     Consumes either,
@@ -205,7 +202,6 @@ Node *p_parse_while_loop(Parser *p, NodeManager *nm);
 */
 Node *p_parse_do_while_loop(Parser *p, NodeManager *nm);
 
-
 /*
     Consumes
     `switch ([cond]) {[[case]/[statement]]*}
@@ -228,19 +224,18 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm);
     `return [expr]?;
     Where [expr] is optional.
 */
-Node *p_parse_return(Parser*p, NodeManager *nm);
+Node *p_parse_return(Parser *p, NodeManager *nm);
 /*
     Consumes
     `continue`
 */
-Node *p_parse_continue(Parser*p, NodeManager *nm);
+Node *p_parse_continue(Parser *p, NodeManager *nm);
 
 /*
     Consumes
     `break`
 */
-Node *p_parse_break(Parser*p, NodeManager *nm);
-
+Node *p_parse_break(Parser *p, NodeManager *nm);
 
 /*
     Consumes any of,
@@ -267,14 +262,14 @@ Node *p_parse_compound(Parser *p, NodeManager *nm);
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm, Type *type,const char *name, const StorageClass storage_class, bool is_inline);
+Node *p_parse_function(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, bool is_inline);
 
 /*
     Consums
     `([var decl]*)`
     Where var decl cannot have a definition, and identifier is optional.
 */
-Modifier p_parse_parameter_list(Parser *p);
+Modifier p_parse_parameter_list(Parser *p, NodeManager *nm);
 /*
     Consumes any valid declaration.
     `Function, Struct, Enum, Global Variable`.
@@ -313,34 +308,34 @@ Node *p_parse_typedef(Parser *p, NodeManager *nm);
 /*
     Consumes the whole translation unit.
 */
-Node *p_parse_translation_unit(Parser* p, NodeManager *nm);
+Node *p_parse_translation_unit(Parser *p, NodeManager *nm);
 /*
     Consumes either
     `struct or enum` or a primitive `[type]`.
 */
-Type *p_parse_abstract_type(Parser *p);
-Type *p_parse_type(Parser *p, const char **name);
-Declarator p_parse_declarator(Parser *p);
+Type *p_parse_abstract_type(Parser *p, NodeManager *nm);
+Type *p_parse_type(Parser *p, NodeManager *nm, const char **name);
+Declarator p_parse_declarator(Parser *p, NodeManager *nm);
 /*
     Consumes
     `enum [Tag]? [{[Field Identifier]*}]?`
     Where `Field Identifier` is any `[Identifier]`
 */
-Type *p_parse_enum(Parser *p);
+Type *p_parse_enum(Parser *p, NodeManager *nm);
 
 /*
     Consumes
     `struct [Tag]? [{[Member Declaration]*}]?`
     Where `Member Declaration` is any `[var decl]`
 */
-Type *p_parse_struct(Parser *p);
+Type *p_parse_struct(Parser *p, NodeManager *nm);
 
 /*
     Consumes
     `union [Tag]? [{[Member Declaration]*}]?`
     Where `Member Declaration` is any `[var decl]`
 */
-Type *p_parse_union(Parser *p);
+Type *p_parse_union(Parser *p, NodeManager *nm);
 
 /*
     Consumes either,
@@ -367,10 +362,10 @@ double parse_float(const char *raw, int len);
 /* ===== Symbol Table Functions ===== */
 
 Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind, const bool same_depth);
-Node *p_get_func_def(const Parser *p, const char* name);
+Node *p_get_func_def(const Parser *p, const char *name);
 Typedef *p_get_typedef(const Parser *p, const char *name);
-Node *p_get_var_decl(const Parser *p, const char* name);
-EnumField *p_get_enum_const(const Parser *p, const char* name);
+Node *p_get_var_decl(const Parser *p, const char *name);
+EnumField *p_get_enum_const(const Parser *p, const char *name);
 
 /* ===== Array Helper Functions ===== */
 
@@ -385,17 +380,21 @@ void p_append_element(Node *init_list, Node *element);
 void p_append_symbol_table(Parser *p);
 Symbol *p_append_symbol(Array *st, const Symbol *s);
 void p_append_typedef(Parser *p, const Typedef *t);
-Symbol * p_append_func_def(Parser *p, Node *f);
+Symbol *p_append_func_def(Parser *p, Node *f);
 void p_append_block_item(Node *root, Node *item);
 void p_append_case(Node *s, Node *c);
 
-static inline Array* get_symbol_table(const Parser *p, int index){ return (Array *) get(&p->scopes_array, index); }
-static inline Array* get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count-1); }
+static inline Array *get_symbol_table(const Parser *p, int index) { return (Array *)get(&p->scopes_array, index); }
+static inline Array *get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count - 1); }
 static inline Symbol *get_symbol(Array *symbol_table, int index) { return *(Symbol **)get(symbol_table, index); }
 
-static inline EnumField *get_enum_field(const Type *enum_t, int index) { return (EnumField*)get(&enum_t->_enum.fields_array, index); }
-static inline StructMember *get_struct_member(const Type *struct_t, int index) { return (StructMember *)get(&struct_t->_struct.members_array, index); }
-static inline UnionMember *get_union_member(const Type *union_t, int index) { return (UnionMember*)get(&union_t->_union.members_array, index); }
+static inline EnumField *get_enum_field(const Type *enum_t, int index) { return (EnumField *)get(&enum_t->_enum.fields_array, index); }
+static inline StructMember *get_struct_member(const Type *struct_t, int index) {
+    return (StructMember *)get(&struct_t->_struct.members_array, index);
+}
+static inline UnionMember *get_union_member(const Type *union_t, int index) {
+    return (UnionMember *)get(&union_t->_union.members_array, index);
+}
 
 UnionMember *get_union_member_named(const Type *union_t, const char *name);
 StructMember *get_struct_member_named(const Type *struct_t, const char *name, int *index);

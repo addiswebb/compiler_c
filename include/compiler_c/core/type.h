@@ -4,6 +4,8 @@
 /* Include enum fields when printing an enum type */
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
+#include <stddef.h>
+#include <stdint.h>
 #define SIGNED 1
 #define UNSIGNED 0
 
@@ -24,106 +26,136 @@ typedef enum {
 
 typedef struct Type Type;
 
-typedef enum{
+typedef enum {
     MOD_POINTER,
     MOD_ARRAY,
     MOD_FUNCTION,
-}ModifierKind;
+} ModifierKind;
 
 typedef struct {
     const char *name;
     Array modifiers;
-}Declarator;
+} Declarator;
 
 typedef struct Symbol Symbol;
 
-typedef struct{
+typedef struct {
     Type *type;
     const char *name;
     Symbol *symbol;
-}ParamDecl;
+} ParamDecl;
+
+typedef struct Node Node;
 
 typedef struct {
     ModifierKind kind;
-    union{
-        int array_size;
-        struct{
+    union {
+        Node *array_bounds;
+        struct {
             Array params;
             bool is_variadic;
         } function;
     };
-}Modifier;
+} Modifier;
 
 /* Represents a member within a defined struct */
-typedef struct{
+typedef struct {
     const char *name;
     Type *type;
     int offset;
-}StructMember;
+} StructMember;
 
 /* Represents an enumerator within a defined enum */
-typedef struct{
+typedef struct {
     char *name;
-    int value;
-    Type* _enum_t;
-}EnumField;
+    union {
+        int value;
+        Node *const_expr;
+    };
+    Type *_enum_t;
+} EnumField;
 
-typedef struct{
+typedef struct {
     const char *name;
     Type *type;
-}UnionMember;
+} UnionMember;
 
-typedef enum{
+typedef enum {
     QUAL_NONE = 0u,
     QUAL_CONST = 1u << 0,
     QUAL_VOLATILE = 1u << 1,
 } TypeQualifier;
 
 /* Represents a canonical type of any TypeKind */
-struct Type{
+struct Type {
     TypeKind kind;
     int size;
     int align;
     bool is_signed;
     unsigned int qualifiers;
-    union{
+    union {
         Type *base;
-        struct{
+        struct {
             Type *type;
             int gp_count;
             int fp_count;
-        }abi;
+        } abi;
     };
     // Data for special types
-    union{
+    union {
         // T_ARRAY
-        struct{
-            int array_len;
-        }_array;
+        struct {
+            bool is_complete;
+            union {
+                size_t array_len;
+                Node *const_expr;
+            };
+        } _array;
         // T_STRUCT
-        struct{
+        struct {
             bool complete;
             char *name;
             Array members_array;
-        }_struct;
+        } _struct;
         // T_ENUM
-        struct{
+        struct {
             bool complete;
             char *name;
             Array fields_array;
-        }_enum;
-        struct{
+        } _enum;
+        struct {
             bool complete;
             char *name;
             Array members_array;
-        }_union;
-        struct{
+        } _union;
+        struct {
             Type *return_type;
             Array params;
             bool is_variadic;
-        }_func;
+        } _func;
     };
 };
+
+typedef enum {
+    CONST_INTEGER,
+    CONST_FLOAT,
+    CONST_STRING,
+    CONST_INIT_LIST,
+} ConstLiteralType;
+
+typedef struct {
+    Type *type;
+    ConstLiteralType kind;
+    union {
+        double f;
+        int64_t i;
+        struct {
+            const char *data;
+            int len;
+        } s;
+        Array arr;
+    };
+} ConstLiteral;
 
 /* Global canonical definitions for all predefined C types */
 extern Type *type_i8;
@@ -152,9 +184,7 @@ extern Type *type_invalid;
 extern Arena typepool;
 
 /* Aligns the given size to the correct alignment */
-static inline int align(int size, int align) {
-    return (size + align - 1) & ~(align - 1);
-}
+static inline int align(int size, int align) { return (size + align - 1) & ~(align - 1); }
 
 /* Initialises all global types and the typepool */
 void init_typepool();
@@ -174,6 +204,9 @@ Type *new_qualified_type(Type *type, unsigned int qualifiers);
 Type *new_unsigned_type(Type *type);
 /* Creates a sized array of the given type */
 Type *new_array_type(Type *type, int len);
+
+/* Creates a array type with const expr for array_bounds */
+Type *new_incomplete_array_type(Type *type, Node *const_expr);
 
 Type *get_float_type(int size);
 Type *get_integer_type(int size);
@@ -222,7 +255,6 @@ Type enum_type();
 StructMember *get_member(Type *struct_t, const char *name);
 
 bool is_func_ptr(Type *t);
-
 
 /* Prints the given type as seen in C */
 void print_type(const Type *type);

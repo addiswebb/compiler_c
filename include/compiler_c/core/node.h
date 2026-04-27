@@ -40,35 +40,31 @@ typedef enum {
 
 #define BUILTIN_COUNT 4
 
-typedef enum{
+typedef enum {
     BUILTIN_MEMCPY,
     BUILTIN_VA_START,
     BUILTIN_VA_ARG,
     BUILTIN_VA_END,
     BUILTIN_NONE,
-}BuiltinKind;
+} BuiltinKind;
 
 extern const char *builtin_names[BUILTIN_COUNT];
 
-typedef enum{
+typedef enum {
     L_INT,
     L_FLOAT,
     L_CHAR,
     L_STRING,
 } LiteralKind;
 
-typedef enum{
-    NONE,
-    EXTERN,
-    STATIC
-}StorageClass;
+typedef enum { NONE, EXTERN, STATIC } StorageClass;
 
 typedef struct Node Node;
 typedef struct Symbol Symbol;
 
 struct Node {
     NodeKind kind;
-    Type* type;
+    Type *type;
     // The type of the values associated with this node
     union {
         struct {
@@ -130,7 +126,7 @@ struct Node {
             LiteralKind kind;
             const char *raw_rata;
             int len;
-            union{
+            union {
                 int64_t i;
                 double f;
                 char c;
@@ -142,9 +138,9 @@ struct Node {
             };
             Symbol *symbol;
         } literal;
-        struct{
-            Node * value;
-        }compound_literal;
+        struct {
+            Node *value;
+        } compound_literal;
         struct {
             const char *name;
             int len;
@@ -153,7 +149,10 @@ struct Node {
         // type name = expr;
         struct {
             Node *identifier;
-            Node *expr;
+            union {
+                Node *expr;
+                ConstLiteral *const_expr;
+            };
             StorageClass storage_class;
             bool is_global;
             bool is_defined;
@@ -177,66 +176,71 @@ struct Node {
             Node *index;
         } index;
         // break;
-        struct{
+        struct {
             Node *loop;
-        }_break;
+        } _break;
         // continue;
-        struct{
+        struct {
             Node *loop;
-        }_continue;
+        } _continue;
         // { [element]+ }
-        struct{
+        struct {
             Array elements_array;
-        }init_list;
+        } init_list;
         // a->b, a.b
-        struct{
+        struct {
             TokenType op;
             Node *identifier;
             Node *member;
             int offset;
-        }member_access;
+        } member_access;
         // switch(cond) {}
-        struct{
+        struct {
             Node *test;
             Node *block;
             Array cases_array;
-        }_switch;
+        } _switch;
         // case test:
-        struct{
-            Node *test;
+        struct {
+            Node *const_expr;
+            int64_t test;
             int i;
-        }_case;
+        } _case;
         // typedef Type Symbol
-        struct{
+        struct {
             const char *name;
-        }_typedef;
-        struct{
+        } _typedef;
+        struct {
             Node *identifier;
-        }_goto;
-        struct{
+        } _goto;
+        struct {
             Node *identifier;
-        }label;
-        struct{
+        } label;
+        struct {
             TypeKind kind;
-            union{
-                struct{
-                    unsigned int index;
-                }_array;
-                struct{
+            union {
+                struct {
+                    bool is_complete;
+                    union {
+                        unsigned int index;
+                        Node *const_expr;
+                    };
+                } _array;
+                struct {
                     const char *name;
                     StructMember *member;
-                }_struct;
-                struct{
+                } _struct;
+                struct {
                     const char *name;
                     UnionMember *member;
-                }_union;
+                } _union;
             };
             Node *value;
-        }designated_init;
-        struct{
+        } designated_init;
+        struct {
             BuiltinKind kind;
             Array params;
-        }_builtin;
+        } _builtin;
     };
 };
 
@@ -266,13 +270,12 @@ Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type);
 Node *cast_node(NodeManager *nm, Node *node, Type *type);
 bool is_valid_cast(const Type *from, const Type *to);
 
-
 LiteralKind literal_kind(TokenType type);
 void print_node_type(NodeKind type);
 
 void print_indent(int depth);
 
-void print_node(const Node *node,int depth);
+void print_node(const Node *node, int depth);
 
 /*
     Recursively prints the parse tree starting with the translation unit
@@ -282,10 +285,8 @@ void print_ast(const NodeManager *nm);
 void free_node(Node *node);
 
 static inline Node *get_node(const Array *node_array, int index) { return *(Node **)get(node_array, index); }
-static inline void set_node(Array *node_array, Node** node, int index) {
-    memcpy((char*)node_array->data + index * node_array->element_size, node, sizeof(Node *));
+static inline void set_node(Array *node_array, Node **node, int index) {
+    memcpy((char *)node_array->data + index * node_array->element_size, node, sizeof(Node *));
 }
-static inline Node* insert_node(Array *node_array, Node **node, int index){
-    return (Node*) insert(node_array, node, index);
-}
+static inline Node *insert_node(Array *node_array, Node **node, int index) { return (Node *)insert(node_array, node, index); }
 #endif // COMPILER_C_NODE_H

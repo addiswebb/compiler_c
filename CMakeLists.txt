@@ -40,6 +40,7 @@ add_executable(compiler_c
     src/ir/ir_module.c
     src/analyse/sema.c
     src/analyse/analysis.c
+    src/analyse/const_expr.c
     ${ABI_SRC}
     src/log/logger.c
 )

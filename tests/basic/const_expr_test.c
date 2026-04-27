@@ -1,3 +1,6 @@
+// RUN: %cc %s -o %t
+// RUN: %check_exit 54 %t
+
 int a = sizeof(int) + 16;
 int b[11] = {1, [7 / 2] = 3 + 5 * 2};
 

@@ -5,12 +5,12 @@
 #include "compiler_c/parse/parser.h"
 #include <complex.h>
 
-typedef struct{
+typedef struct {
     Node *loop;
     Node *func;
     Node *compound;
     Array i_array;
-}SemanticContext;
+} SemanticContext;
 
 /* Is a node which is assignable */
 bool is_lvalue(const Node *n);
@@ -40,7 +40,7 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop);
     Ensures that the resulting AST is safe and correct to lower to IR.
     Casts types, lowers enums, handles literals, assigns correct types, lowers `a->` to `*(a).b`.
 */
-void semantic_analysis(SemanticContext *sema_ctx,Parser *p, NodeManager *nm, Node *node);
+void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
 
 void handle_builtin_call(BuiltinKind kind, Node *node);
 
@@ -71,8 +71,6 @@ void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n);
 */
 void pop_sema_scope(SemanticContext *sema_ctx, Parser *p);
 
-static inline int* get_i(SemanticContext *sema_ctx){
-    return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count-1);
-}
+static inline int *get_i(SemanticContext *sema_ctx) { return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
 
 #endif // COMPILER_C_SEMA_H

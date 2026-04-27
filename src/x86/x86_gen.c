@@ -22,7 +22,7 @@ static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
 }
 static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
     if (instr->ops[1].kind == IR_CONSTANT) {
-        IR_Literal *c = get_const(ctx, instr->ops[1].const_index);
+        ConstLiteral *c = get_const(ctx, instr->ops[1].const_index);
         x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
         return;
     }
@@ -160,7 +160,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
     if (ctx->module->const_array.count > 0) {
         fprintf(fp, ".section .rodata\n");
         for (int i = 0; i < ctx->module->const_array.count; i++) {
-            const IR_Literal *c = get_const(ctx, i);
+            const ConstLiteral *c = get_const(ctx, i);
             if (c->type == type_f64) {
                 uint64_t bits;
                 memcpy(&bits, &c->f, sizeof(bits));
@@ -178,7 +178,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
     }
     for (int i = 0; i < ctx->module->global_array.count; i++) {
         const IR_Global *g = get_global(ctx, i);
-        const IR_Literal *c = &g->val;
+        const ConstLiteral *c = &g->val;
         if (g->symbol->storage == STORAGE_NONE) {
             fprintf(fp, ".extern %s\n", g->symbol->name);
             continue;
@@ -189,26 +189,9 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
             fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->symbol->type->align, g->symbol->name, g->symbol->type->size);
         } else {
             ASSERT(c->type != type_invalid, "Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
-            if (c->type == type_f64) {
-                uint64_t bits;
-                memcpy(&bits, &c->f, sizeof(bits));
-                fprintf(fp, ".align 8\n%s:\n    .quad 0x%016" PRIx64 "\n", g->symbol->name, bits);
-            } else if (c->type == type_f32) {
-                uint32_t bits;
-                memcpy(&bits, &c->f, sizeof(bits));
-                fprintf(fp, ".align 4\n%s:\n    .long 0x%08x\n", g->symbol->name, bits);
-            } else if (c->type->kind == T_ARRAY && c->type->base == type_i8) {
-                fprintf(fp, ".align 8\n%s:\n", g->symbol->name);
-                x86_emit_string(fp, c->s.data);
-            } else if (c->type == type_i32 || c->type == type_u32) {
-                fprintf(fp, ".align 4\n%s:\n    .long %d\n", g->symbol->name, (int)c->i);
-            } else if (c->type == type_i8 || c->type == type_u8) {
-                fprintf(fp, "%s:\n    .byte %d\n", g->symbol->name, (char)c->i);
-            } else if (c->type == type_i16 || c->type == type_u16) {
-                fprintf(fp, ".align 2\n%s:\n    .word %d\n", g->symbol->name, (short)c->i);
-            } else if (c->type == type_i64 || c->type == type_u64) {
-                fprintf(fp, ".align 8\n%s:\n    .quad %" PRId64 "\n", g->symbol->name, c->i);
-            }
+            if (c->type->align > 1) fprintf(fp, ".align %d\n", c->type->align);
+            fprintf(fp, "%s:\n", g->symbol->name);
+            x86_emit_literal(fp, &g->val);
         }
     }
 

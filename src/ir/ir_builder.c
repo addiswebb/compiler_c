@@ -36,7 +36,7 @@ IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     ir_append_instruction(ctx->block, &i);
     return i.ops[0];
 }
-IR_Value ir_smart_const(IR_Context *ctx, IR_Literal *literal, Type *type) {
+IR_Value ir_smart_const(IR_Context *ctx, ConstLiteral *literal, Type *type) {
     // TODO places where ir_integer_literal are used must ensure that $x is allowed in context
     // E.g movss $x, %xmm0 is invalid
     // TODO use %xmm9 for all movements, as %rax for fp, instead of %xmm0 as
