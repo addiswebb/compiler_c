@@ -102,7 +102,7 @@ void update_current_output(Compiler *c, bool cond, char *path, const char *ext) 
 }
 
 void drive(Compiler *c) {
-    if (has_flag(CF_STOP_AFTER_COMPILE | CF_STOP_AFTER_ASSEMBLE) && c->source_files.count > 1 && c->output) {
+    if (has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE) && c->source_files.count > 1 && c->output) {
         WARN("-o ignored with multiple inputs\n");
         free(c->output);
         c->output = NULL;
@@ -119,7 +119,7 @@ void drive(Compiler *c) {
         compile(c);
         clear_compiler(c);
 
-        if (has_flag(CF_STOP_AFTER_IR | CF_STOP_AFTER_AST)) return;
+        if (has_flag(CF_STOP_AFTER_AST) || has_flag(CF_STOP_AFTER_IR)) return;
         if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
 
         array_str_cpy(&c->current_source, c->current_output.data);
@@ -130,7 +130,7 @@ void drive(Compiler *c) {
         char *obj_path = strdup((char *)c->current_output.data);
         append(&objs, &obj_path);
     }
-    if (has_flag(CF_STOP_AFTER_COMPILE | CF_STOP_AFTER_ASSEMBLE)) return;
+    if (has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) return;
 
     array_str_cpy(&c->current_output, c->output ? c->output : DEFAULT_OUT_PATH);
 
