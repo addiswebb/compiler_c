@@ -17,7 +17,7 @@ struct ConstExpr {
     union {
         double f;
         int64_t i;
-        Node *init_list;
+        Array init_list;
     };
 };
 

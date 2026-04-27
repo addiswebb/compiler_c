@@ -224,10 +224,23 @@ ConstExpr evaluate_const_expression(Node *const_expr) {
         return evaluate_const_cast(const_expr);
     case N_TYPE:
         return (ConstExpr){.i = const_expr->type->size, .kind = CONST_INTEGER};
+    case N_INIT_LIST:
+        ConstExpr l = {.kind = CONST_INIT_LIST};
+        l.init_list.capacity = const_expr->type->_array.array_len;
+        l.init_list.count = l.init_list.capacity;
+        l.init_list.element_size = sizeof(ConstExpr);
+        l.init_list.data = calloc(l.init_list.count, l.init_list.element_size);
+        // TODO dont forget to free this shi
+        ASSERT(l.init_list.data, "Failed to calloc for const expr init list\n");
+        ConstExpr *arr = l.init_list.data;
+        for (int i = 0; i < const_expr->init_list.elements_array.count; i++) {
+            Node *designated_initializer = get_node(&const_expr->init_list.elements_array, i);
+            arr[designated_initializer->designated_init._array.index] =
+                evaluate_const_expression(designated_initializer->designated_init.value);
+        }
+        return l;
     case N_INDEX:
         PANIC("Indexing not handled in const expr yet\n");
-    case N_INIT_LIST:
-        PANIC("init lists in const expr yet\n");
     case N_MEMBER_ACCESS:
         PANIC("member access in const expr yet\n");
     default:
@@ -245,6 +258,13 @@ void print_const_expr(const ConstExpr *expr) {
         printf("%lf", expr->f);
         break;
     case CONST_INIT_LIST:
-        PANIC("Not printing initlists yet\n");
+        printf("{");
+        for (int i = 0; i < expr->init_list.count; i++) {
+            ConstExpr *e = get(&expr->init_list, i);
+            print_const_expr(e);
+            if (i < expr->init_list.count - 1) printf(", ");
+        }
+        printf("}");
+        break;
     }
 }

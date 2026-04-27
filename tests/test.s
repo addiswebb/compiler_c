@@ -1,4 +1,6 @@
 .section .note.GNU-stack,"",@progbits
+.global arr
+.data
 
 .text
 .global main
@@ -7,11 +9,16 @@ main:
     mov %rsp, %rbp
     subq $16, %rsp
 main_0:
-    movl $5, %eax
-    addl $0, %eax
-    movl %eax, -8(%rbp)
-    movl -8(%rbp), %eax
-    addl $1, %eax
+    leaq arr(%rip), %rax
+    movq %rax, -8(%rbp)
+    movq $0, %rax
+    imulq $4, %rax
+    movq %rax, -16(%rbp)
+    movq -8(%rbp), %rax
+    addq -16(%rbp), %rax
+    movq %rax, -8(%rbp)
+    movq -8(%rbp), %rax
+    movl (%rax), %eax
     movl %eax, -8(%rbp)
     movl -8(%rbp), %eax
     mov %rbp, %rsp

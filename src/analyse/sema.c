@@ -208,7 +208,10 @@ Type *resolve_type(Type *t) {
     case T_ARRAY:
         Type *base = resolve_type(t->base);
         if (t->_array.is_complete) return get_array_type(base, t->_array.array_len);
-        else return get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
+        else {
+            t->_array.is_complete = true;
+            return get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
+        }
     case T_STRUCT:
         for (int i = 0; i < t->_struct.members_array.count; i++) {
             StructMember *m = get_struct_member(t, i);
@@ -290,6 +293,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_VAR_DECL:
         // Skip extern nodes
+        // Resolve const expr array bounds for array types
         if (node->type->kind == T_ARRAY && !node->type->_array.is_complete) {
             semantic_analysis(sema_ctx, p, nm, node->type->_array.const_expr);
             node->type = resolve_type(node->type);
@@ -325,6 +329,12 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         if (node->var_decl.expr->kind == N_INIT_LIST) {
             node->var_decl.expr->type = node->type;
             semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
+            if (node->var_decl.is_global) {
+                ConstExpr init_list = evaluate_const_expression(node->var_decl.expr);
+                node->var_decl.const_expr = malloc(sizeof(ConstExpr));
+                ASSERT(node->var_decl.const_expr, "Failed to allocate for const expr");
+                *node->var_decl.const_expr = init_list;
+            }
             Node *init_list = node->var_decl.expr;
             break;
         }
@@ -640,7 +650,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                         if (!e->designated_init._array.is_complete) {
                             semantic_analysis(sema_ctx, p, nm, e->designated_init._array.const_expr);
                             e->designated_init._array.index = evaluate_const_expression(e->designated_init._array.const_expr).i;
-                            e->designated_init._array.is_complete = true;
                         }
                         index = e->designated_init._array.index;
                     }
