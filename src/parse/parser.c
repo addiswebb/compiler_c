@@ -766,7 +766,7 @@ Node *p_parse_case(Parser *p, NodeManager *nm) {
     Node *node = new_node(nm, N_CASE);
     if (p_peek(p)->type == TK_CASE) {
         p_consume_a(p, TK_CASE);
-        node->_case.const_expr = p_parse_primary_expression(p, nm);
+        node->_case.const_expr = p_parse_expression(p, nm, 0);
     } else {
         p_consume_a(p, TK_DEFAULT);
         node->_case.const_expr = NULL;
