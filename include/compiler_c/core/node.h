@@ -20,6 +20,7 @@ typedef enum {
     N_RETURN,
     N_UNARY,
     N_BINARY,
+    N_TERNARY,
     N_LITERAL,
     N_IDENTIFIER,
     N_FUNCTION_CALL,
@@ -98,6 +99,12 @@ struct Node {
             TokenType op;
             Type *common_type;
         } binary;
+        // cond ? true : false
+        struct {
+            Node *cond;
+            Node *if_true;
+            Node *if_false;
+        } ternary;
         // return expr;
         struct {
             Node *expr;

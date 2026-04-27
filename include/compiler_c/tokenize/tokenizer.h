@@ -101,6 +101,8 @@ typedef enum {
     TK_OR_EQ,
     TK_XOR,
     TK_XOR_EQ,
+    // Ternary operator
+    TK_TERNARY,
     // Member Access
     TK_DOT,
     TK_ARROW,

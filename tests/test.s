@@ -7,79 +7,54 @@ main:
     mov %rsp, %rbp
     subq $32, %rsp
 main_0:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-main_1:
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $5, %eax
-    setl %al
+    movl $1, %eax
+    subl $2, %eax
+    movl %eax, -8(%rbp)
+    movl -8(%rbp), %eax
+    cmpl $0, %eax
+    setg %al
     movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
+    movl %eax, -8(%rbp)
+    movl -8(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -8(%rbp)
+    movl -8(%rbp), %eax
     testl %eax, %eax
-    jz main_4
-main_2:
-    leaq -8(%rbp), %rax
+    jnz main_1
+    movl $3, %eax
+    imull $4, %eax
+    movl %eax, -8(%rbp)
+    movq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    jmp main_4
+main_1:
+    movl $5, %eax
+    addl $6, %eax
+    movl %eax, -8(%rbp)
+    movl -8(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -8(%rbp)
+    movl -8(%rbp), %eax
+    testl %eax, %eax
+    jnz main_2
+    movl $7, %eax
+    subl $1, %eax
+    movl %eax, -8(%rbp)
+    movq -8(%rbp), %rax
     movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -32(%rbp)
-    movq -24(%rbp), %rax
-    movl -32(%rbp), %ecx
-    movl %ecx, (%rax)
     jmp main_3
+main_2:
+    movq $8, %rax
+    movq %rax, -24(%rbp)
 main_3:
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -32(%rbp)
-    movq -24(%rbp), %rax
-    movl -32(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp main_1
+    movq %rax, -16(%rbp)
 main_4:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz main_6
-main_5:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl $8, %ecx
-    movl %ecx, (%rax)
-    jmp main_6
-main_6:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
+    movl -16(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp
     ret

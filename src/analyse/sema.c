@@ -378,6 +378,12 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         node->binary.common_type = check_binary_op(nm, node->binary.op, node);
         node->type = is_comparison_op(node->binary.op) ? type_i32 : node->binary.common_type;
         break;
+    case N_TERNARY:
+        semantic_analysis(sema_ctx, p, nm, node->ternary.cond);
+        semantic_analysis(sema_ctx, p, nm, node->ternary.if_true);
+        semantic_analysis(sema_ctx, p, nm, node->ternary.if_false);
+        node->type = node->ternary.if_true->type;
+        break;
     case N_CAST:
         semantic_analysis(sema_ctx, p, nm, node->cast.expr);
         if (is_valid_cast(node->cast.expr->type, node->cast.to)) {

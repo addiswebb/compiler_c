@@ -367,19 +367,33 @@ Node *p_parse_cast(Parser *p, NodeManager *nm) {
     }
     return p_parse_prefix(p, nm);
 }
+Node *p_parse_binary(Parser *p, NodeManager *nm, Node *lhs, const int min_prec) {
+    Node *b = new_node(nm, N_BINARY);
+    b->binary.op = p_consume(p)->type;
+    b->binary.rhs = p_parse_expression(p, nm, op_precedence(b->binary.op) + op_associativity(b->binary.op));
+    b->binary.lhs = lhs;
+    return b;
+}
+Node *p_parse_ternary(Parser *p, NodeManager *nm, Node *cond) {
+    p_consume(p);
+    Node *t = new_node(nm, N_TERNARY);
+    t->ternary.cond = cond;
+    t->ternary.if_true = p_parse_expression(p, nm, 0);
+    p_consume_a(p, TK_COLON);
+    t->ternary.if_false = p_parse_expression(p, nm, op_precedence(TK_TERNARY));
+    return t;
+}
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
     Node *primary = p_parse_cast(p, nm);
-    // post decrement/increment
+    // Post-decrement/increment
     while (is_postfix_operator(p_peek(p)->type)) primary = p_parse_postfix_expression(p, nm);
 
-    while (is_binary_operator(p_peek(p)->type) && !p_is_last_token(p) && op_precedence(p_peek(p)->type) >= min_prec) {
-        const int prec = op_precedence(p_peek(p)->type);
-        const int assoc = op_associativity(p_peek(p)->type);
-        Node *binary = new_node(nm, N_BINARY);
-        binary->binary.op = p_consume(p)->type;
-        binary->binary.rhs = p_parse_expression(p, nm, prec + assoc);
-        binary->binary.lhs = primary;
-        primary = binary;
+    for (;;) {
+        if (is_binary_operator(p_peek(p)->type) && op_precedence(p_peek(p)->type) >= min_prec) {
+            primary = p_parse_binary(p, nm, primary, min_prec);
+        } else if (p_peek(p)->type == TK_TERNARY && op_precedence(TK_TERNARY) >= min_prec) {
+            primary = p_parse_ternary(p, nm, primary);
+        } else break;
     }
 
     return primary;
