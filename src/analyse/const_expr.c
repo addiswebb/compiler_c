@@ -262,6 +262,11 @@ ConstLiteral evaluate_const_expression(const Node *node) {
 }
 
 void print_const_literal(const ConstLiteral *l) {
+    if (l == NULL) {
+        printf("[#]");
+        return;
+    };
+
     switch (l->kind) {
     case CONST_INTEGER:
         printf("%ld", l->i);

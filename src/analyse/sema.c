@@ -201,27 +201,28 @@ void handle_builtin_call(BuiltinKind kind, Node *node) {
     memcpy(node, &builtin, sizeof(Node));
 }
 
-Type *resolve_type(Type *t) {
+Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *t) {
     switch (t->kind) {
     case T_POINTER:
-        return get_pointer_type(resolve_type(t->base));
+        return get_pointer_type(resolve_type(sema_ctx, p, nm, t->base));
     case T_ARRAY:
-        Type *base = resolve_type(t->base);
+        Type *base = resolve_type(sema_ctx, p, nm, t->base);
         if (t->_array.is_complete) return get_array_type(base, t->_array.array_len);
         else {
             t->_array.is_complete = true;
+            semantic_analysis(sema_ctx, p, nm, t->_array.const_expr);
             return get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
         }
     case T_STRUCT:
         for (int i = 0; i < t->_struct.members_array.count; i++) {
             StructMember *m = get_struct_member(t, i);
-            m->type = resolve_type(m->type);
+            m->type = resolve_type(sema_ctx, p, nm, m->type);
         }
         return t;
     case T_UNION:
         for (int i = 0; i < t->_union.members_array.count; i++) {
             UnionMember *u = get_union_member(t, i);
-            u->type = resolve_type(u->type);
+            u->type = resolve_type(sema_ctx, p, nm, u->type);
         }
         return t;
     case T_ENUM:
@@ -296,7 +297,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         // Resolve const expr array bounds for array types
         if (node->type->kind == T_ARRAY && !node->type->_array.is_complete) {
             semantic_analysis(sema_ctx, p, nm, node->type->_array.const_expr);
-            node->type = resolve_type(node->type);
+            node->type = resolve_type(sema_ctx, p, nm, node->type);
         }
         if (node->var_decl.storage_class == EXTERN) {
             if (node->var_decl.is_defined) {
@@ -713,7 +714,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->member_access.identifier = deref;
             node->member_access.op = TK_DOT;
         }
-        StructMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name);
+        AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, true);
         node->member_access.member->type = member_f->type;
         node->member_access.offset = lhs_t->kind == T_UNION ? 0 : member_f->offset;
         node->type = member_f->type;

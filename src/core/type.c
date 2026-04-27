@@ -147,12 +147,9 @@ Type *new_pointer_type(Type *type) {
 
 Type *new_qualified_type(Type *type, unsigned int qualifiers) {
     Type *qual_type = new_type();
-    qual_type->kind = type->kind;
-    qual_type->size = type->size;
-    qual_type->align = type->align;
-    qual_type->is_signed = type->is_signed;
+    *qual_type = *type;
     qual_type->qualifiers = qualifiers;
-    qual_type->base = type->kind == T_POINTER ? type->base : type;
+    // qual_type->base = type->kind == T_POINTER || type->kind == T_ARRAY ? type->base : type;
     return qual_type;
 }
 Type *new_unsigned_type(Type *type) {
@@ -384,12 +381,18 @@ Type enum_type() {
     return e;
 }
 
-StructMember *get_member(Type *struct_t, const char *name) {
+AggrMember *get_member(Type *struct_t, const char *name, bool is_root) {
     for (int i = 0; i < struct_t->_struct.members_array.count; i++) {
-        StructMember *member = get_struct_member(struct_t, i);
-        if (strcmp(name, member->name) == 0) return member;
+        AggrMember *member = get_struct_member(struct_t, i);
+        if (member->name) {
+            if (strcmp(name, member->name) == 0) return member;
+        } else if (member->type->kind == T_STRUCT || member->type->kind == T_UNION) {
+            AggrMember *x = get_member(member->type, name, false);
+            if (x) return x;
+        }
     }
-    PANIC("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
+    if (is_root) PANIC("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
+    else return NULL;
 }
 
 bool is_func_ptr(Type *t) { return t->kind == T_POINTER && t->base->kind == T_FUNCTION; }
@@ -519,7 +522,6 @@ void print_typepool() {
     printf("---- Type Pool -----\n");
     for (int i = 0; i < typepool.count; i++) {
         print_type(arena_get(&typepool, i));
-        printf("\n");
     }
 }
 

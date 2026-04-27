@@ -12,6 +12,23 @@
     },
     {
         "adapter": "CodeLLDB",
+        "label": "Debug Compiler_C compiler_c main.c",
+        "request": "launch",
+        "program": "./build/compiler_c",
+        "args": [
+            "./src/main.c",
+            "-o",
+            "./tests/test.s",
+            "-ast",
+            "-I./include/",
+        ],
+        "build": {
+            "command": "cmake",
+            "args": ["--build", "build"],
+        },
+    },
+    {
+        "adapter": "CodeLLDB",
         "label": "Debug Compiler_C -ir",
         "request": "launch",
         "program": "./build/compiler_c",

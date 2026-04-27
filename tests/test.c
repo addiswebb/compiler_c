@@ -1,6 +1,5 @@
-
-
-int main() {
-    // ((1-2) > 0) ? (3*4) : ((5+6) ? (7-1) : 8) = 6
-    return 1 - 2 > 0 ? 3 * 4 : 5 + 6 ? 7 - 1 : 8;
+#include <stdio.h>
+int main(int argc, char *argv[]) {
+    printf("%s\n", argv[0]);
+    return 0;
 }

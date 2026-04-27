@@ -4,7 +4,6 @@
 /* Include enum fields when printing an enum type */
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
-#include <stddef.h>
 #include <stdint.h>
 #define SIGNED 1
 #define UNSIGNED 0
@@ -58,12 +57,15 @@ typedef struct {
     };
 } Modifier;
 
-/* Represents a member within a defined struct */
+/* Represents a member within a defined struct or union */
 typedef struct {
     const char *name;
     Type *type;
     int offset;
-} StructMember;
+} AggrMember;
+
+typedef AggrMember StructMember;
+typedef AggrMember UnionMember;
 
 /* Represents an enumerator within a defined enum */
 typedef struct {
@@ -74,11 +76,6 @@ typedef struct {
     };
     Type *_enum_t;
 } EnumField;
-
-typedef struct {
-    const char *name;
-    Type *type;
-} UnionMember;
 
 typedef enum {
     QUAL_NONE = 0u,
@@ -107,7 +104,7 @@ struct Type {
         struct {
             bool is_complete;
             union {
-                size_t array_len;
+                int64_t array_len;
                 Node *const_expr;
             };
         } _array;
@@ -252,7 +249,7 @@ Type struct_type();
 Type enum_type();
 
 /* Gets the struct member by name from a struct type */
-StructMember *get_member(Type *struct_t, const char *name);
+StructMember *get_member(Type *struct_t, const char *name, bool is_root);
 
 bool is_func_ptr(Type *t);
 

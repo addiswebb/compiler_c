@@ -102,9 +102,8 @@ void update_current_output(Compiler *c, bool cond, char *path, const char *ext) 
 }
 
 void drive(Compiler *c) {
-    if (has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE) && c->source_files.count > 1 && c->output) {
-        WARN("-o ignored with multiple inputs\n");
-        free(c->output);
+    if ((has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) && c->source_files.count > 1 && c->output) {
+        WARN("-o ignored with multiple inputs %d\n");
         c->output = NULL;
     }
     Array objs;

@@ -545,7 +545,7 @@ Type *p_parse_union(Parser *p, NodeManager *nm) {
             UnionMember m;
             m.name = NULL;
             Type *t = p_parse_type(p, nm, &m.name);
-            ASSERT(m.name, "Struct member must be named\n");
+            if (!(t->kind == T_STRUCT || t->kind == T_UNION)) ASSERT(m.name, "Scalar Union member must be named\n");
             m.type = t;
             append_union_member(&union_t, &m);
             p_consume_semi(p);
@@ -583,7 +583,7 @@ Type *p_parse_struct(Parser *p, NodeManager *nm) {
             StructMember f;
             f.name = NULL;
             Type *t = p_parse_type(p, nm, &f.name);
-            ASSERT(f.name, "Struct member must be named\n");
+            if (!(t->kind == T_STRUCT || t->kind == T_UNION)) ASSERT(f.name, "Scalar Struct member must be named\n");
             f.type = t;
             append_struct_member(&struct_t, &f);
             p_consume_semi(p);
@@ -959,6 +959,11 @@ Node *p_parse_compound(Parser *p, NodeManager *nm) {
     return node;
 }
 
+Type *decay_array_type(Type *t) {
+    if (t->kind == T_ARRAY) return get_pointer_type(decay_array_type(t->base));
+    return t;
+}
+
 Modifier p_parse_parameter_list(Parser *p, NodeManager *nm) {
     Modifier mod = {.kind = MOD_FUNCTION, .function = {.is_variadic = false}};
     array_init(&mod.function.params, 4, sizeof(ParamDecl));
@@ -970,7 +975,7 @@ Modifier p_parse_parameter_list(Parser *p, NodeManager *nm) {
             break;
         }
         const char *name = NULL;
-        append(&mod.function.params, &(ParamDecl){.type = p_parse_type(p, nm, &name), .name = name});
+        append(&mod.function.params, &(ParamDecl){.type = decay_array_type(p_parse_type(p, nm, &name)), .name = name});
         if (p_peek(p)->type == TK_COMMA) p_consume(p);
         else break;
     }

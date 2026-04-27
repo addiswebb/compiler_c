@@ -268,7 +268,8 @@ When a block is full, instead of reallocating the whole block somewhere else at 
 - [x] Implicit cast comparison operands to type_i32
     * `5.0 > 2.0` fails
 - [x] Fix if statements with `||` and possibly `&&`
-- [ ] Optimize SysV variadic float arg spilling to check `%al` 
+- [x] Optimize SysV variadic float arg spilling to check `%al` 
+- [ ] const global var_decls dont evaluate array bounds correctly
 
 ## To be Implemented (Ordered from next to never...)
 * Globals

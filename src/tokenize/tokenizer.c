@@ -137,8 +137,8 @@ static void t_parse_and_push_buffer(Tokenizer *tk) {
     }
     if (!is_keyword) {
         token.type = TK_IDENTIFIER;
-        // TODO! replace with explicit malloc +memcpy
-        token.value = strdup(tk->buf.buf);
+        token.value = strndup(tk->buf.buf, tk->buf.size);
+        token.size = tk->buf.size;
     }
     append(&tk->tokens_array, &token);
 }
@@ -883,8 +883,7 @@ void print_token(const Token *token) {
             printf("\\0");
         } else if (token->value[0] == '\n') {
             printf("\\n");
-        }
-        printf("%.*s", token->size, token->value);
+        } else printf("%.*s", token->size, token->value);
     }
     printf("}\n");
 }
