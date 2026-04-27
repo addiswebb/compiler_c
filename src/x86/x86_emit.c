@@ -636,9 +636,10 @@ void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
         fprintf(fp, "    .quad 0x%016" PRIx64 "\n", bits);
     } else if (c->type == type_f32) {
         uint32_t bits;
-        memcpy(&bits, &c->f, sizeof(bits));
+        float f = (float)c->f;
+        memcpy(&bits, &f, sizeof(bits));
         fprintf(fp, "    .long 0x%08x\n", bits);
-    } else if (c->type->kind == T_ARRAY && c->type->base == type_i8) {
+    } else if ((c->type->kind == T_ARRAY || c->type->kind == T_POINTER) && c->type->base == type_i8) {
         x86_emit_string(fp, c->s.data);
     } else if (c->type == type_i8 || c->type == type_u8) {
         fprintf(fp, "    .byte %d\n", (char)c->i);

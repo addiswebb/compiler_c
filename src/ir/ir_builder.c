@@ -43,7 +43,7 @@ IR_Value ir_smart_const(IR_Context *ctx, ConstLiteral *literal, Type *type) {
     // if %xmm0 holds p0, and %xmm0 is later used to store p5 later, it gets clobbered.
     // Use a safe xmm0 for general operations or place reg params last.
     if (literal->type->kind == T_INT) return ir_integer_literal(literal->i);
-    IR_Value l = ir_const(ctx, ir_append_literal(ctx->module, literal), type);
+    IR_Value l = ir_const(ctx, ir_append_const(ctx->module, literal), type);
     if (literal->type->kind == T_ARRAY && literal->type->base == type_i8) return ir_address(ctx, l, 0);
     else return l;
 }

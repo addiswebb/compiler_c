@@ -343,7 +343,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         if (node->var_decl.expr->kind == N_LITERAL && node->var_decl.expr->literal.kind == L_STRING) {
             if (node->var_decl.expr->literal.kind == L_STRING) {
                 // TODO allow char* str = ""
-                if (node->type->kind != T_ARRAY && node->type->base == type_i8) {
+                if (!(node->type->kind == T_ARRAY || node->type->kind == T_POINTER) && node->type->base == type_i8) {
                     log_start(LOG_ERROR);
                     printf("Cannot initialize ");
                     print_type(node->type);

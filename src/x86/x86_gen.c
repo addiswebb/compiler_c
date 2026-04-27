@@ -161,19 +161,9 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
         fprintf(fp, ".section .rodata\n");
         for (int i = 0; i < ctx->module->const_array.count; i++) {
             const ConstLiteral *c = get_const(ctx, i);
-            if (c->type == type_f64) {
-                uint64_t bits;
-                memcpy(&bits, &c->f, sizeof(bits));
-                fprintf(fp, ".align 8\n.LC%d:\n    .quad 0x%016" PRIx64 "\n", i, bits);
-            } else if (c->type == type_f32) {
-                uint32_t bits;
-                float f = (float)c->f;
-                memcpy(&bits, &f, sizeof(bits));
-                fprintf(fp, ".align 4\n.LC%d:\n    .long 0x%08x\n", i, bits);
-            } else if (c->type->kind == T_ARRAY && c->type->base == type_i8) {
-                fprintf(fp, ".LC%d:\n", i);
-                x86_emit_string(fp, c->s.data);
-            }
+            if (c->type->align > 1) fprintf(fp, ".align %d\n", c->type->align);
+            fprintf(fp, ".LC%d:\n", i);
+            x86_emit_literal(fp, c);
         }
     }
     for (int i = 0; i < ctx->module->global_array.count; i++) {
@@ -189,9 +179,14 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
             fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->symbol->type->align, g->symbol->name, g->symbol->type->size);
         } else {
             ASSERT(c->type != type_invalid, "Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
-            if (c->type->align > 1) fprintf(fp, ".align %d\n", c->type->align);
+            if (g->symbol->type->align > 1) fprintf(fp, ".align %d\n", g->symbol->type->align);
             fprintf(fp, "%s:\n", g->symbol->name);
-            x86_emit_literal(fp, &g->val);
+            if (g->kind == IR_GLOBAL_VALUE) x86_emit_literal(fp, &g->val);
+            else {
+                if (g->reloc.kind == IR_CONSTANT) {
+                    fprintf(fp, "    .quad .LC%d\n", g->reloc.const_index);
+                } else PANIC("Not implemented yet\n");
+            }
         }
     }
 

@@ -82,11 +82,6 @@ typedef enum {
     IR_INT_LITERAL,
 } IR_ValueKind;
 
-typedef struct {
-    Symbol *symbol;
-    ConstLiteral val;
-} IR_Global;
-
 typedef struct PhysReg PhysReg;
 
 /* Represents every possible way to represent values and memory in IR */
@@ -106,6 +101,17 @@ typedef struct IR_Value {
         int64_t int_literal;
     };
 } IR_Value;
+
+typedef enum { IR_GLOBAL_VALUE, IR_GLOBAL_RELOC } IR_GlobalKind;
+
+typedef struct {
+    Symbol *symbol;
+    IR_GlobalKind kind;
+    union {
+        ConstLiteral val;
+        IR_Value reloc;
+    };
+} IR_Global;
 
 typedef struct {
     Type *type;
@@ -310,6 +316,7 @@ typedef struct {
     int size;
     int capacity;
 } IR_LoopStack;
+
 /*
     Stores the current and in use module, function, block.
     Stores the true/false blocks to early jump out of (a && b) conditions.
@@ -389,7 +396,7 @@ void ir_append_function(const IR_Context *ctx, IR_Function *func);
 /* Appends the given global variable to the module's global dynamic variable array. */
 void ir_append_global(IR_Module *module, Symbol *symbol, const ConstLiteral *literal);
 /* Appends the given Literal to the module's dynamic const array. */
-int ir_append_literal(IR_Module *module, const ConstLiteral *literal);
+int ir_append_const(IR_Module *module, const ConstLiteral *literal);
 /* Appends the given IR Block to the context's current function. */
 IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
 /* Appends, uniquely, a new labeled block. */

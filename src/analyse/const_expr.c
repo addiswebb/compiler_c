@@ -178,6 +178,8 @@ ConstLiteral evaluate_const_cast(const Node *node) {
     case T_FLOAT:
         e.f = (int)e.i;
         break;
+    case T_POINTER:
+        if (node->cast.from->kind == T_ARRAY && node->cast.from->base == type_i8) break;
     default:
         log_start(LOG_ERROR);
         printf("Unsupported const expr cast from ");

@@ -188,13 +188,7 @@ IR_LabeledBlock *ir_get_labeled_block(IR_Context *ctx, const char *label) {
     return NULL;
 }
 
-void ir_append_global(IR_Module *module, Symbol *symbol, const ConstLiteral *literal) {
-    append(&module->global_array, &(IR_Global){
-                                      .symbol = symbol,
-                                      .val = literal ? *literal : (ConstLiteral){.type = type_u64, .i = 0},
-                                  });
-}
-int ir_append_literal(IR_Module *module, const ConstLiteral *literal) {
+int ir_append_const(IR_Module *module, const ConstLiteral *literal) {
     append(&module->const_array, literal);
     return module->const_array.count - 1;
 }
