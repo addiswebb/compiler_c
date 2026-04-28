@@ -265,11 +265,10 @@ static int load_src_file(Compiler *compiler, const char *file) {
     }
 
     FILE *fp = popen(cmd, "r");
-    if (!fp) {
-        PANIC("Failed to open %s\n", file);
-    }
+    ASSERT(fp, "Failed to open %s\n", file);
+
     Array src;
-    array_init(&src, 1000, sizeof(char));
+    array_init(&src, 1024, sizeof(char));
 
     char c;
     for (;;) {
@@ -283,5 +282,6 @@ static int load_src_file(Compiler *compiler, const char *file) {
 
     compiler->src = (char *)src.data;
     compiler->src_size = src.count - 1;
+    if (compiler->src_size == 0) WARN("Loaded an empty source file\n");
     return 0;
 }
