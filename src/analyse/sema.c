@@ -464,8 +464,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         case ENUM:
             node->kind = N_LITERAL;
             node->literal.kind = L_INT;
-            node->literal.i = (int64_t)ident_symbol->enum_field.value;
-            node->type = ident_symbol->enum_field._enum_t;
+            node->literal.i = (int64_t)ident_symbol->enum_field->value;
+            node->type = ident_symbol->enum_field->_enum_t;
             break;
         case VAR:
             node->type = ident_symbol->var_decl->type;
@@ -532,6 +532,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         node->type = expected_type;
         break;
     case N_LITERAL:
+        if (node->type->kind == T_ENUM) break;
         char *data = malloc(node->literal.len + 1);
         if (!data) {
             PANIC("Failed to allocate for sema literal analysis\n");
@@ -756,6 +757,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 f->value = value++;
                 p_append_enum_const(p, f);
             }
+            print_type(node->type);
+            printf("\n");
         }
         break;
     case N_BUILTIN:

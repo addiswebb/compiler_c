@@ -527,7 +527,7 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
             f->_enum_t = t;
         }
         *t = enum_t;
-
+        print_type(t);
         return t;
     }
 }
@@ -547,6 +547,7 @@ Type *p_parse_union(Parser *p, NodeManager *nm) {
             Type *t = p_parse_type(p, nm, &m.name);
             if (!(t->kind == T_STRUCT || t->kind == T_UNION)) ASSERT(m.name, "Scalar Union member must be named\n");
             m.type = t;
+            m.offset = 0;
             append_union_member(&union_t, &m);
             p_consume_semi(p);
         }
@@ -712,7 +713,7 @@ void p_append_enum_const(Parser *p, const EnumField *e) {
                                                                            .kind = ENUM,
                                                                            .linkage = LINK_NONE,
                                                                            .storage = STORAGE_NONE,
-                                                                           .enum_field = *e,
+                                                                           .enum_field = e,
                                                                            .type = type_i32,
                                                                            .scope_depth = p->current_scope_depth}));
 }
@@ -725,9 +726,9 @@ Node *p_get_var_decl(const Parser *p, const char *name) {
     PANIC("Tried to find variable %s which does not exist\n", name);
 }
 
-EnumField *p_get_enum_const(const Parser *p, const char *name) {
+const EnumField *p_get_enum_const(const Parser *p, const char *name) {
     Symbol *s = p_get_symbol(p, name, ENUM, false);
-    if (s) return &s->enum_field;
+    if (s) return s->enum_field;
     PANIC("Tried to find enum constant %s which does not exist\n", name);
 }
 /*

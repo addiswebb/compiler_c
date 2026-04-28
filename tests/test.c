@@ -1,13 +1,25 @@
-// RUN: %cc %s -o %t
-// RUN: %t | %check_output "hello world 15"
-int printf(const char *, ...);
+typedef struct {
+    int count;
+    int capacity;
+    int element_size;
+    void *data;
+} Array;
+void *get(const Array *arr, int index);
+typedef struct Type Type;
+typedef struct {
+    const char *name;
+    Type *type;
+    int offset;
+} StructMember;
 
-char *strs[2] = {"hello", "world"};
-int a = 10;
-int c = 15;
-int *b = &a + 1;
-
-int main() {
-    printf("%s %s %d\n", strs[0], strs[1], *b);
-    return 0;
+struct Type {
+    union {
+        struct {
+            char *name;
+            Array members_array;
+        } _struct;
+    };
+};
+static inline StructMember *get_struct_member(const Type *struct_t, int index) {
+    return (StructMember *)get(&struct_t->_struct.members_array, index);
 }

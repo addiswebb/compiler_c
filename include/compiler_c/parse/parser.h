@@ -38,7 +38,7 @@ typedef struct Symbol {
     union {
         Node *var_decl;
         Node *func_def;
-        EnumField enum_field;
+        const EnumField *enum_field;
         Typedef _typedef;
     };
 } Symbol;
@@ -377,7 +377,7 @@ Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind, c
 Node *p_get_func_def(const Parser *p, const char *name);
 Typedef *p_get_typedef(const Parser *p, const char *name);
 Node *p_get_var_decl(const Parser *p, const char *name);
-EnumField *p_get_enum_const(const Parser *p, const char *name);
+const EnumField *p_get_enum_const(const Parser *p, const char *name);
 
 /* ===== Array Helper Functions ===== */
 

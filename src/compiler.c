@@ -202,6 +202,7 @@ int compile(Compiler *compiler) {
 
     set_log_stage(STAGE_PARSING);
     init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
+
     p_parse_translation_unit(&compiler->p, &compiler->nm);
 
     set_log_stage(STAGE_SEMA_ANALYSIS);

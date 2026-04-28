@@ -148,6 +148,24 @@ Type *new_pointer_type(Type *type) {
 Type *new_qualified_type(Type *type, unsigned int qualifiers) {
     Type *qual_type = new_type();
     *qual_type = *type;
+    switch (type->kind) {
+    case T_ENUM:
+    case T_STRUCT:
+        array_init(&qual_type->_struct.members_array, type->_struct.members_array.count, sizeof(StructMember));
+        memcpy(qual_type->_struct.members_array.data, type->_struct.members_array.data,
+               type->_struct.members_array.count * sizeof(StructMember));
+        break;
+    case T_UNION:
+        array_init(&qual_type->_enum.fields_array, type->_enum.fields_array.count, sizeof(EnumField));
+        memcpy(qual_type->_enum.fields_array.data, type->_enum.fields_array.data, type->_enum.fields_array.count * sizeof(EnumField));
+        break;
+    case T_FUNCTION:
+        array_init(&qual_type->_func.params, type->_func.params.count, sizeof(ParamDecl));
+        memcpy(qual_type->_func.params.data, type->_func.params.data, type->_func.params.count * sizeof(ParamDecl));
+        break;
+    default:
+        break;
+    }
     qual_type->qualifiers = qualifiers;
     // qual_type->base = type->kind == T_POINTER || type->kind == T_ARRAY ? type->base : type;
     return qual_type;
@@ -201,7 +219,7 @@ Type *get_pointer_type(Type *type) {
 Type *get_array_type(Type *type, int len) {
     for (int i = 0; i < typepool.count; i++) {
         Type *t = arena_get(&typepool, i);
-        if (t->base == type && t->kind == T_ARRAY && t->_array.array_len == len) return t;
+        if (t->base == type && t->kind == T_ARRAY && t->_array.is_complete && t->_array.array_len == len) return t;
     }
     return new_array_type(type, len);
 }
@@ -253,6 +271,7 @@ Type *get_qualified_type(Type *type, unsigned int qualifiers) {
         Type *t = arena_get(&typepool, i);
         if (t->base == type->base && t->kind == type->kind && t->size == type->size && t->qualifiers == qualifiers &&
             t->is_signed == type->is_signed) {
+            if (t->kind == T_ARRAY && !t->_array.is_complete) continue;
             return t;
         }
     }
@@ -385,6 +404,8 @@ AggrMember *get_member(Type *struct_t, const char *name, bool is_root) {
     for (int i = 0; i < struct_t->_struct.members_array.count; i++) {
         AggrMember *member = get_struct_member(struct_t, i);
         if (member->name) {
+            print_type(struct_t);
+            printf("\n");
             if (strcmp(name, member->name) == 0) return member;
         } else if (member->type->kind == T_STRUCT || member->type->kind == T_UNION) {
             AggrMember *x = get_member(member->type, name, false);
@@ -522,6 +543,7 @@ void print_typepool() {
     printf("---- Type Pool -----\n");
     for (int i = 0; i < typepool.count; i++) {
         print_type(arena_get(&typepool, i));
+        printf("\n");
     }
 }
 
