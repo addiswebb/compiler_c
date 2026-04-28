@@ -4,7 +4,7 @@
         "label": "Debug Compiler_C test.c",
         "request": "launch",
         "program": "./build/compiler_c",
-        "args": ["./tests/test.c", "-o", "./tests/test.exe", "-ast", "-genum"],
+        "args": ["./tests/test.c", "-o", "./tests/test.exe", "-ast"],
         "build": {
             "command": "cmake",
             "args": ["--build", "build"],
@@ -15,14 +15,7 @@
         "label": "Debug Compiler_C compiler_c main.c",
         "request": "launch",
         "program": "./build/compiler_c",
-        "args": [
-            "./src/main.c",
-            "-o",
-            "./tests/test.s",
-            "-ast",
-            "-genum",
-            "-I./include/",
-        ],
+        "args": ["./src/main.c", "-o", "./tests/test.s", "-ir", "-I./include/"],
         "build": {
             "command": "cmake",
             "args": ["--build", "build"],

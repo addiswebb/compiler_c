@@ -215,14 +215,14 @@ int compile(Compiler *compiler) {
 
     array_free(&sema_ctx.i_array);
 
+    set_log_stage(STAGE_IR);
+    generate_types();
+    lower_nodes(&compiler->nm);
+
     if (has_flag(CF_STOP_AFTER_AST)) {
         print_ast(&compiler->nm);
         return 1;
     }
-
-    set_log_stage(STAGE_IR);
-    generate_types();
-    lower_nodes(&compiler->nm);
 
     IR_Context ctx = ir_init_ctx(&compiler->p);
     IR_Module *module = ir_gen_translation_unit(&ctx, arena_get(&compiler->nm, 0));

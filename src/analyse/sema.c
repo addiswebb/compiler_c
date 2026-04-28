@@ -211,7 +211,8 @@ Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *
         else {
             t->_array.is_complete = true;
             semantic_analysis(sema_ctx, p, nm, t->_array.const_expr);
-            return get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
+            *t = *get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
+            return t;
         }
     case T_STRUCT:
         for (int i = 0; i < t->_struct.members_array.count; i++) {
@@ -757,8 +758,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 f->value = value++;
                 p_append_enum_const(p, f);
             }
-            print_type(node->type);
-            printf("\n");
         }
         break;
     case N_BUILTIN:

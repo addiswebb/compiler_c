@@ -89,9 +89,7 @@ Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is
 Type *new_type() { return arena_append(&typepool, &(Type){0}); }
 
 Type *new_incomplete_array_type(Type *type, Node *const_expr) {
-    Type *arr_type = malloc(sizeof(Type));
-    // TODO dont forget to free when resolving array types
-    ASSERT(arr_type, "Failed to malloc for incomplete array_type\n");
+    Type *arr_type = new_type();
     arr_type->kind = T_ARRAY;
     arr_type->size = type->size;
     arr_type->align = type->align;
@@ -404,8 +402,6 @@ AggrMember *get_member(Type *struct_t, const char *name, bool is_root) {
     for (int i = 0; i < struct_t->_struct.members_array.count; i++) {
         AggrMember *member = get_struct_member(struct_t, i);
         if (member->name) {
-            print_type(struct_t);
-            printf("\n");
             if (strcmp(name, member->name) == 0) return member;
         } else if (member->type->kind == T_STRUCT || member->type->kind == T_UNION) {
             AggrMember *x = get_member(member->type, name, false);

@@ -1,3 +1,4 @@
+#include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/log/logger.h"
@@ -303,6 +304,21 @@ void print_const_literal(const ConstLiteral *l) {
     case CONST_REFERENCE:
         printf("&%s", l->ref.symbol->name);
         if (l->ref.offset) printf(" + %d", l->ref.offset);
+        break;
+    }
+}
+
+void free_const_literal(ConstLiteral *l) {
+    if (!l) return;
+    switch (l->kind) {
+    case CONST_ARRAY:
+        array_free(&l->arr);
+    case CONST_LABEL:
+    case CONST_REFERENCE:
+    case CONST_INTEGER:
+    case CONST_FLOAT:
+    case CONST_STRING:
+        free(l);
         break;
     }
 }

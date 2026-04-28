@@ -156,10 +156,8 @@ struct Node {
         // type name = expr;
         struct {
             Node *identifier;
-            union {
-                Node *expr;
-                ConstLiteral *const_expr;
-            };
+            Node *expr;
+            ConstLiteral *const_expr;
             StorageClass storage_class;
             bool is_global;
             bool is_defined;

@@ -9,4 +9,6 @@ ConstLiteral evaluate_const_expression(const Node *node);
 ConstLiteral evaluate_const_literal(const Node *node);
 void print_const_literal(const ConstLiteral *node);
 
+void free_const_literal(ConstLiteral *l);
+
 #endif

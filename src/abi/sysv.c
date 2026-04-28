@@ -352,6 +352,7 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         const char *suffix = x86_op_suffix(arg_type);
         switch (arg_type->kind) {
         case T_INT:
+        case T_ENUM:
         case T_POINTER:
             if (gp_index < INTEGER_PARAM_REGISTERS) {
                 x86_emit_xr(fp, "mov", x86_op_suffix(arg_type), "", &v->v,

@@ -483,8 +483,9 @@ void free_node(Node *node) {
     case N_VAR_DECL:
         free_node(node->var_decl.identifier);
         node->var_decl.identifier = NULL;
-        if (node->var_decl.is_global) free(node->var_decl.const_expr);
-        else free_node(node->var_decl.expr);
+        if (node->var_decl.is_global) free_const_literal(node->var_decl.const_expr);
+        node->var_decl.const_expr = NULL;
+        free_node(node->var_decl.expr);
         node->var_decl.expr = NULL;
         break;
     case N_IF:

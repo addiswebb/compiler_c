@@ -228,6 +228,10 @@ void ir_free_module(IR_Module *module) {
     }
     array_free(&module->functions_array);
     array_free(&module->const_array);
+    for (int i = 0; i < module->global_array.count; i++) {
+        IR_Global *g = get(&module->global_array, i);
+        if (g->val.kind == CONST_ARRAY) array_free(&g->val.arr);
+    }
     array_free(&module->global_array);
     array_free(&module->labeled_block_array);
     free(module);

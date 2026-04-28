@@ -527,7 +527,6 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
             f->_enum_t = t;
         }
         *t = enum_t;
-        print_type(t);
         return t;
     }
 }

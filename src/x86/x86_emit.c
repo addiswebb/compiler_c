@@ -212,7 +212,7 @@ const char *x86_integer_op_suffix(int size) {
 }
 const char *x86_op_suffix(const Type *t) {
     if (t->kind == T_FLOAT) return x86_float_op_suffix(t->size);
-    if (t->kind == T_INT) return x86_integer_op_suffix(t->size);
+    if (t->kind == T_INT || t->kind == T_ENUM) return x86_integer_op_suffix(t->size);
     if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "q";
     PANIC("Tried to op of unsupported type\n");
 }
