@@ -5,7 +5,7 @@ int printf(const char *, ...);
 
 char *strs[2] = {[0] = "hello", [1] = "world"};
 int a = 10;
-int c = {15};
+int c = 15;
 int *b = &a + 1;
 
 int main() {

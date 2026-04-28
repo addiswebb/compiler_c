@@ -1,6 +1,5 @@
 // RUN: %cc %s -o %t
 // RUN: %t | %check_output "hello world 15"
-
 int printf(const char *, ...);
 
 char *strs[2] = {"hello", "world"};
