@@ -2,7 +2,7 @@
 #define _STDIO_H
 
 #include "stdarg.h"
-#include <stdint.h>
+#include "stdint.h"
 
 #define NULL ((void *)0)
 
