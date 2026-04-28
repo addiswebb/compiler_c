@@ -1,8 +1,14 @@
-#include <stdio.h>
+// RUN: %cc %s -o %t
+// RUN: %t | %check_output "hello world 15"
+
+int printf(const char *, ...);
+
 char *strs[2] = {"hello", "world"};
+int a = 10;
+int c = 15;
+int *b = &a + 1;
+
 int main() {
-    for (int i = 0; i < 12; i++) {
-        printf("%c\n", *(strs[0] + i));
-    }
+    printf("%s %s %d\n", strs[0], strs[1], *b);
     return 0;
 }

@@ -1,6 +1,7 @@
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/log/logger.h"
+#include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
 #include <compiler_c/analyse/const_expr.h>
 #include <inttypes.h>
@@ -8,8 +9,10 @@
 ConstLiteral evaluate_const_unary(const Node *node) {
     ConstLiteral e = evaluate_const_expression(node->unary.expr);
     e.type = node->type;
+    if (node->unary.op == TK_AND) return e;
     switch (node->type->kind) {
     case T_INT:
+        e.kind = CONST_INTEGER;
         switch (node->unary.op) {
         case TK_PLUS:
             break;
@@ -21,10 +24,7 @@ ConstLiteral evaluate_const_unary(const Node *node) {
             break;
         case TK_BW_NOT:
             e.i = ~e.i;
-        case TK_AND:
-            PANIC("Integer Const expr reference not handled yet\n");
-        case TK_MULTIPLY:
-            PANIC("Integer Const expr dereference not handled yet\n");
+            break;
         case TK_SIZEOF:
             e.i = node->unary.expr->type->size;
             break;
@@ -33,17 +33,15 @@ ConstLiteral evaluate_const_unary(const Node *node) {
         }
         break;
     case T_FLOAT:
+        e.kind = CONST_FLOAT;
         switch (node->unary.op) {
         case TK_PLUS:
             break;
         case TK_MINUS:
             e.f = -e.f;
             break;
-        case TK_AND:
-            PANIC("Float Const expr reference not handled yet\n");
-        case TK_MULTIPLY:
-            PANIC("Float Const expr dereference not handled yet\n");
         case TK_SIZEOF:
+            PANIC("MAybe should be uncreachable\n");
             e.i = node->unary.expr->type->size;
             break;
         default:
@@ -61,10 +59,10 @@ ConstLiteral evaluate_const_unary(const Node *node) {
 ConstLiteral evaluate_const_binary(const Node *node) {
     ConstLiteral lhs = evaluate_const_expression(node->binary.lhs);
     ConstLiteral rhs = evaluate_const_expression(node->binary.rhs);
-    ConstLiteral e = {};
-    e.type = node->type;
+    ConstLiteral e = {.type = node->type};
     switch (node->type->kind) {
     case T_INT:
+        e.kind = CONST_INTEGER;
         switch (node->binary.op) {
         case TK_PLUS:
             e.i = lhs.i + rhs.i;
@@ -125,6 +123,7 @@ ConstLiteral evaluate_const_binary(const Node *node) {
         }
         break;
     case T_FLOAT:
+        e.kind = CONST_FLOAT;
         switch (node->binary.op) {
         case TK_PLUS:
             e.f = lhs.f + rhs.f;
@@ -160,6 +159,14 @@ ConstLiteral evaluate_const_binary(const Node *node) {
             PANIC("Invalid binary op for float const expr\n");
         }
         break;
+    case T_POINTER:
+        if (lhs.kind == CONST_REFERENCE && rhs.kind == CONST_REFERENCE) PANIC("Cannot add two const expr pointers\n");
+        ConstLiteral *ptr = lhs.kind == CONST_REFERENCE ? &lhs : &rhs;
+        ConstLiteral *d = lhs.kind != CONST_REFERENCE ? &lhs : &rhs;
+        e = *ptr;
+        ASSERT(d->kind == CONST_INTEGER, "Pointer addition must be with an integer\n");
+        e.ref.offset += d->i * ptr->type->base->size;
+        break;
     default:
         log_start(LOG_ERROR);
         printf("Invalid const binary type");
@@ -173,10 +180,13 @@ ConstLiteral evaluate_const_cast(const Node *node) {
     e.type = node->type;
     switch (node->type->kind) {
     case T_INT:
+        if (node->cast.from->kind == T_INT) break;
         e.i = (int)e.f;
+        e.kind = CONST_INTEGER;
         break;
     case T_FLOAT:
         e.f = (int)e.i;
+        e.kind = CONST_FLOAT;
         break;
     case T_POINTER:
         if (node->cast.from->kind == T_ARRAY && node->cast.from->base == type_i8) break;
@@ -192,11 +202,10 @@ ConstLiteral evaluate_const_cast(const Node *node) {
 }
 ConstLiteral evaluate_const_init_list(const Node *node) {
     ASSERT(node->kind == N_INIT_LIST, "Expected N_INIT_LIST node.\n");
-    ConstLiteral l = {};
-    l.type = node->type;
+    ConstLiteral l = {.type = node->type, .kind = CONST_ARRAY};
     array_init(&l.arr, node->type->_array.array_len, sizeof(ConstLiteral));
-    for (int i = 0; i < l.arr.capacity; i++) append(&l.arr, &(ConstLiteral){.type = l.type->base, .i = 0});
-
+    // Fill with zeros
+    for (int i = 0; i < l.arr.capacity; i++) append(&l.arr, &(ConstLiteral){.type = l.type->base, .kind = CONST_INTEGER, .i = 0});
     // TODO dont forget to free this shi
     ConstLiteral *arr = l.arr.data;
     for (int i = 0; i < node->init_list.elements_array.count; i++) {
@@ -216,13 +225,17 @@ ConstLiteral evaluate_const_literal(const Node *node) {
         // Enums are not decayed to integer until after sema, so we must allow them here
     case T_ENUM:
         l.i = node->literal.i;
+        l.kind = CONST_INTEGER;
         break;
     case T_FLOAT:
         l.f = node->literal.f;
+        l.kind = CONST_FLOAT;
         break;
     case T_POINTER:
+        DEBUG("Evaluate const literal from pointer to string\n");
     case T_ARRAY:
         if (l.type->base == type_i8) {
+            l.kind = CONST_STRING;
             l.s.data = node->literal.s.data;
             l.s.len = node->literal.s.len;
             break;
@@ -248,9 +261,11 @@ ConstLiteral evaluate_const_expression(const Node *node) {
     case N_CAST:
         return evaluate_const_cast(node);
     case N_TYPE:
-        return (ConstLiteral){.type = type_u64, .i = node->type->size};
+        return (ConstLiteral){.type = type_u64, .kind = CONST_INTEGER, .i = node->type->size};
     case N_INIT_LIST:
         return evaluate_const_init_list(node);
+    case N_IDENTIFIER:
+        return (ConstLiteral){.ref = {.symbol = node->identifier.symbol}, .kind = CONST_REFERENCE};
     case N_INDEX:
         PANIC("Indexing not handled in const expr yet\n");
     case N_MEMBER_ACCESS:
@@ -263,29 +278,31 @@ ConstLiteral evaluate_const_expression(const Node *node) {
 
 void print_const_literal(const ConstLiteral *l) {
     ASSERT(l, "Recieved null const literal to print\n");
-
-    switch (l->type->kind) {
-    case T_INT:
+    switch (l->kind) {
+    case CONST_INTEGER:
         printf("%ld", l->i);
         break;
-    case T_FLOAT:
+    case CONST_FLOAT:
         printf("%lf", l->f);
         break;
-    case T_ARRAY:
-    case T_POINTER:
-        if (l->type->base == type_i8) {
-            printf("\"%.*s\"", l->s.len, l->s.data);
-        } else {
-            printf("{");
-            for (int i = 0; i < l->arr.count; i++) {
-                ConstLiteral *e = get(&l->arr, i);
-                print_const_literal(e);
-                if (i < l->arr.count - 1) printf(", ");
-            }
-            printf("}");
-        }
+    case CONST_STRING:
+        printf("\"%.*s\"", l->s.len, l->s.data);
         break;
-    default:
-        PANIC("Got incompatible type to print const expr\n");
+    case CONST_ARRAY:
+        printf("{");
+        for (int i = 0; i < l->arr.count; i++) {
+            ConstLiteral *e = get(&l->arr, i);
+            print_const_literal(e);
+            if (i < l->arr.count - 1) printf(", ");
+        }
+        printf("}");
+        break;
+    case CONST_LABEL:
+        printf(".LC%d", l->const_index);
+        break;
+    case CONST_REFERENCE:
+        printf("&%s", l->ref.symbol->name);
+        if (l->ref.offset) printf(" + %d", l->ref.offset);
+        break;
     }
 }

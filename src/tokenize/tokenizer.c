@@ -111,9 +111,7 @@ static void t_push_buffer(Tokenizer *tk, const TokenType type) {
         WARN("Tried to push an empty buffer to TokenArray, skipping.\n");
         return;
     }
-    // TODO! tk->buf.size+1 or use strdup
     char *buf_dupe = malloc(sizeof(char) * tk->buf.size);
-    // buf_dupe[tk->buf.size] ='\0';
     if (!buf_dupe) {
         PANIC("Failed to allocate for buffer duplicate\n");
     }
@@ -140,7 +138,7 @@ static void t_parse_and_push_buffer(Tokenizer *tk) {
 #ifdef __linux__
         token.value = strndup(tk->buf.buf, tk->buf.size);
 #else
-        token.value = strdup(tk->buf.buf, tk->buf.size);
+        token.value = strdup(tk->buf.buf);
 #endif
         token.size = tk->buf.size;
     }

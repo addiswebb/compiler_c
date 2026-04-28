@@ -102,15 +102,9 @@ typedef struct IR_Value {
     };
 } IR_Value;
 
-typedef enum { IR_GLOBAL_VALUE, IR_GLOBAL_RELOC } IR_GlobalKind;
-
 typedef struct {
     Symbol *symbol;
-    IR_GlobalKind kind;
-    union {
-        ConstLiteral val;
-        IR_Value reloc;
-    };
+    ConstLiteral val;
 } IR_Global;
 
 typedef struct {

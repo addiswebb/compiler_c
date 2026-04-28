@@ -137,11 +137,14 @@ typedef enum {
     CONST_INTEGER,
     CONST_FLOAT,
     CONST_STRING,
-    CONST_INIT_LIST,
-} ConstLiteralType;
+    CONST_ARRAY,
+    CONST_LABEL,
+    CONST_REFERENCE,
+} ConstLiteralKind;
 
 typedef struct {
     Type *type;
+    ConstLiteralKind kind;
     union {
         double f;
         int64_t i;
@@ -150,6 +153,11 @@ typedef struct {
             int len;
         } s;
         Array arr;
+        int const_index;
+        struct {
+            Symbol *symbol;
+            int offset;
+        } ref;
     };
 } ConstLiteral;
 

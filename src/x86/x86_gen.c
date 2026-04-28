@@ -181,12 +181,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
             ASSERT(c->type != type_invalid, "Received invalid type, probably an uninitialized global with incorrect storage specifier\n");
             if (g->symbol->type->align > 1) fprintf(fp, ".align %d\n", g->symbol->type->align);
             fprintf(fp, "%s:\n", g->symbol->name);
-            if (g->kind == IR_GLOBAL_VALUE) x86_emit_literal(fp, &g->val);
-            else {
-                if (g->reloc.kind == IR_CONSTANT) {
-                    fprintf(fp, "    .quad .LC%d\n", g->reloc.const_index);
-                } else PANIC("Not implemented yet\n");
-            }
+            x86_emit_literal(fp, &g->val);
         }
     }
 

@@ -4,6 +4,7 @@
 
 #include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/analyse/sema.h"
+#include "compiler_c/core/array.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
@@ -407,37 +408,41 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
     return;
 }
 
+ConstLiteral lower_const_literal(IR_Context *ctx, ConstLiteral *l) {
+    ConstLiteral e;
+    switch (l->type->kind) {
+    case T_ENUM:
+        DEBUG("Lower const literal from enum\n");
+    case T_INT:
+    case T_FLOAT:
+        return *l;
+    case T_POINTER:
+        if (l->type->base == type_i8) {
+            return (ConstLiteral){.const_index = ir_append_const(ctx->module, l), .kind = CONST_LABEL, .type = l->type};
+        }
+        ASSERT(l->kind == CONST_REFERENCE, "Cannot assign pointer with given const expr type\n");
+        return *l;
+    case T_ARRAY:
+        array_init(&e.arr, l->arr.count, sizeof(ConstLiteral));
+        for (int i = 0; i < l->arr.count; i++) {
+            ConstLiteral y = lower_const_literal(ctx, get(&l->arr, i));
+            append(&e.arr, &y);
+        }
+        e.kind = CONST_ARRAY;
+        e.type = l->type;
+        return e;
+    default:
+        PANIC("Incompatible const expr type\n");
+        break;
+    }
+}
+
 static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     // Handle globals seperately to locals
     if (var_decl->var_decl.is_global) {
         IR_Global g = {.symbol = var_decl->var_decl.symbol};
-        ConstLiteral *l = var_decl->var_decl.const_expr;
-        if (var_decl->var_decl.is_defined) {
-            // l->type = var_decl->type;
-            if (l->type->kind == T_ARRAY && l->type->base == type_i8) {
-                // Handle char *str = "";
-                g.kind = IR_GLOBAL_RELOC;
-                g.reloc = (IR_Value){
-                    .const_index = ir_append_const(ctx->module, var_decl->var_decl.const_expr),
-                    .kind = IR_CONSTANT,
-                    .size = l->type->size,
-                    .align = l->type->align,
-                };
-            } else if (l->type->kind == T_POINTER) {
-                // Handle int *b = &a;
-                // g.reloc = ir_symbol_value(Symbol *s)
-                PANIC("Cant lower referencing variables in global context yet soz ;_;\n");
-            } else {
-                print_type(l->type);
-                printf("\n");
-                g.kind = IR_GLOBAL_VALUE;
-                g.val = *l;
-            }
-        } else {
-            g.kind = IR_GLOBAL_VALUE;
-            g.val = (ConstLiteral){.type = type_u64, .i = 0};
-        }
-
+        g.val = var_decl->var_decl.is_defined ? lower_const_literal(ctx, var_decl->var_decl.const_expr)
+                                              : (ConstLiteral){.kind = CONST_INTEGER, .i = 0, .type = var_decl->type};
         append(&ctx->module->global_array, &g);
         return;
     }

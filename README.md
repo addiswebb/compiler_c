@@ -261,6 +261,7 @@ When a block is full, instead of reallocating the whole block somewhere else at 
 * `libc` mini subset stdlib headers.
 * Compiler builtins
     * `__builtin_va_list` etc.
+* Const Expression Evaluation
 
 ## Todo
 - [x] Fix switch statements
@@ -269,14 +270,9 @@ When a block is full, instead of reallocating the whole block somewhere else at 
     * `5.0 > 2.0` fails
 - [x] Fix if statements with `||` and possibly `&&`
 - [x] Optimize SysV variadic float arg spilling to check `%al` 
-- [ ] const global var_decls dont evaluate array bounds correctly
+- [x] const global var_decls dont evaluate array bounds correctly
 
 ## To be Implemented (Ordered from next to never...)
-* Globals
-    * Allow expression assignment
-        * `init-list`
-* Const expressions
-    * Ideally just simple arithmetic `5 + 7`, literals and other constants.
 * Use physical registers
     * Overflow to stack
 * Create IR index instruction 

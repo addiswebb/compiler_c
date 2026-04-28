@@ -3,14 +3,32 @@
 .align 8
 .LC0:
     .byte 'h', 'e', 'l', 'l', 'o', 0
-    .byte 'w', 'o', 'r', 'l', 'd', 0
+.align 8
 .LC1:
-    .byte '%', 'c', 0x0A, 0
+    .byte 'w', 'o', 'r', 'l', 'd', 0
+.LC2:
+    .byte '%', 's', ' ', '%', 's', ' ', '%', 'd', 0x0A, 0
 .global strs
 .data
 .align 8
 strs:
     .quad .LC0
+    .quad .LC1
+.global a
+.data
+.align 4
+a:
+    .long 10
+.global c
+.data
+.align 4
+c:
+    .long 15
+.global b
+.data
+.align 8
+b:
+    .quad a + 4
 
 .text
 .global main
@@ -19,31 +37,22 @@ main:
     mov %rsp, %rbp
     subq $32, %rsp
 main_0:
-    leaq -8(%rbp), %rax
+    leaq .LC2(%rip), %rax
+    movq %rax, -8(%rbp)
+    leaq strs(%rip), %rax
+    movq %rax, -16(%rbp)
+    movq $0, %rax
+    imulq $8, %rax
+    movq %rax, -24(%rbp)
+    movq -16(%rbp), %rax
+    addq -24(%rbp), %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-main_1:
-    leaq -8(%rbp), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
-    cmpl $12, %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
-    testl %eax, %eax
-    jz main_4
-main_2:
-    leaq .LC1(%rip), %rax
+    movq (%rax), %rax
     movq %rax, -16(%rbp)
     leaq strs(%rip), %rax
     movq %rax, -24(%rbp)
-    movq $0, %rax
+    movq $1, %rax
     imulq $8, %rax
     movq %rax, -32(%rbp)
     movq -24(%rbp), %rax
@@ -52,46 +61,23 @@ main_2:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq -8(%rbp), %rax
+    leaq b(%rip), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
     movl (%rax), %eax
     movl %eax, -32(%rbp)
-    movslq -32(%rbp), %rax
-    movq %rax, -32(%rbp)
-    movq -32(%rbp), %rax
-    imulq $1, %rax
-    movq %rax, -32(%rbp)
-    movq -24(%rbp), %rax
-    addq -32(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movb (%rax), %al
-    movb %al, -24(%rbp)
-    movsbl -24(%rbp), %eax
-    movl %eax, -24(%rbp)
     subq $176, %rsp
-    movq -16(%rbp), %rdi
-    movl -24(%rbp), %esi
+    movq -8(%rbp), %rdi
+    movq -16(%rbp), %rsi
+    movq -24(%rbp), %rdx
+    movl -32(%rbp), %ecx
     xor %eax, %eax
     call printf
     addq $176, %rsp
-    movl %eax, -16(%rbp)
-    jmp main_3
-main_3:
-    leaq -8(%rbp), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -24(%rbp)
-    movq -16(%rbp), %rax
-    movl -24(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp main_1
-main_4:
+    movl %eax, -8(%rbp)
     movl $0, %eax
     mov %rbp, %rsp
     pop %rbp

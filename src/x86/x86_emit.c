@@ -630,31 +630,46 @@ void x86_emit_string(FILE *fp, const char *str) {
 }
 
 void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
-    if (c->type == type_f64) {
-        uint64_t bits;
-        memcpy(&bits, &c->f, sizeof(bits));
-        fprintf(fp, "    .quad 0x%016" PRIx64 "\n", bits);
-    } else if (c->type == type_f32) {
-        uint32_t bits;
-        float f = (float)c->f;
-        memcpy(&bits, &f, sizeof(bits));
-        fprintf(fp, "    .long 0x%08x\n", bits);
-    } else if ((c->type->kind == T_ARRAY || c->type->kind == T_POINTER) && c->type->base == type_i8) {
+    switch (c->kind) {
+    case CONST_INTEGER:
+        if (c->type == type_i8 || c->type == type_u8) {
+            fprintf(fp, "    .byte %d\n", (char)c->i);
+        } else if (c->type == type_i16 || c->type == type_u16) {
+            fprintf(fp, "    .word %d\n", (short)c->i);
+        } else if (c->type == type_i32 || c->type == type_u32) {
+            fprintf(fp, "    .long %d\n", (int)c->i);
+        } else if (c->type == type_i64 || c->type == type_u64) {
+            fprintf(fp, "    .quad %" PRId64 "\n", c->i);
+        }
+        break;
+    case CONST_FLOAT:
+        if (c->type == type_f64) {
+            uint64_t bits;
+            memcpy(&bits, &c->f, sizeof(bits));
+            fprintf(fp, "    .quad 0x%016" PRIx64 "\n", bits);
+        } else if (c->type == type_f32) {
+            uint32_t bits;
+            float f = (float)c->f;
+            memcpy(&bits, &f, sizeof(bits));
+            fprintf(fp, "    .long 0x%08x\n", bits);
+        }
+        break;
+    case CONST_STRING:
         x86_emit_string(fp, c->s.data);
-    } else if (c->type == type_i8 || c->type == type_u8) {
-        fprintf(fp, "    .byte %d\n", (char)c->i);
-    } else if (c->type == type_i16 || c->type == type_u16) {
-        fprintf(fp, "    .word %d\n", (short)c->i);
-    } else if (c->type == type_i32 || c->type == type_u32) {
-        fprintf(fp, "    .long %d\n", (int)c->i);
-    } else if (c->type == type_i64 || c->type == type_u64) {
-        fprintf(fp, "    .quad %" PRId64 "\n", c->i);
-    } else if (c->type->kind == T_ARRAY) {
+        break;
+    case CONST_ARRAY:
         for (int i = 0; i < c->arr.count; i++) {
             ConstLiteral *e = get(&c->arr, i);
             x86_emit_literal(fp, e);
         }
-    } else {
-        PANIC("Failed to x86_emit_literal\n");
+        break;
+    case CONST_LABEL:
+        fprintf(fp, "    .quad .LC%d\n", c->const_index);
+        break;
+    case CONST_REFERENCE:
+        fprintf(fp, "    .quad %s", c->ref.symbol->name);
+        if (c->ref.offset) fprintf(fp, " + %d", c->ref.offset);
+        fprintf(fp, "\n");
+        break;
     }
 }
