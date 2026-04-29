@@ -307,7 +307,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
 
     ir_branch(ctx, iter_block);
     ir_append_block(ctx, iter_block);
-    if (_for->_for.iter) ir_gen_rvalue(ctx, _for->_for.iter);
+    if (_for->_for.iter) ir_gen_statement(ctx, _for->_for.iter);
 
     ir_branch(ctx, cond_block);
 

@@ -1,7 +1,9 @@
-#include <stdio.h>
 int main() {
-    for (;;) {
-        printf("y\n");
-    }
-    return 0;
+    int a = 0;
+    ;
+    a++;
+    a++;
+    ;
+    a *= a * 5;
+    return a;
 }

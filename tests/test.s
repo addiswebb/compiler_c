@@ -1,30 +1,64 @@
 .section .note.GNU-stack,"",@progbits
-.section .rodata
-.LC0:
-    .byte 'y', 0x0A, 0
 
 .text
 .global main
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $16, %rsp
+    subq $32, %rsp
 main_0:
-main_1:
-main_2:
-    leaq .LC0(%rip), %rax
-    movq %rax, -8(%rbp)
-    subq $176, %rsp
-    movq -8(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -8(%rbp)
-    jmp main_3
-main_3:
-    jmp main_1
-main_4:
-    movl $0, %eax
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movl $0, %ecx
+    movl %ecx, (%rax)
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -24(%rbp)
+    movq -16(%rbp), %rax
+    movl -24(%rbp), %ecx
+    movl %ecx, (%rax)
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -24(%rbp)
+    movq -16(%rbp), %rax
+    movl -24(%rbp), %ecx
+    movl %ecx, (%rax)
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    imull $5, %eax
+    movl %eax, -24(%rbp)
+    movq -16(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -32(%rbp)
+    movl -32(%rbp), %eax
+    imull -24(%rbp)
+    movl %eax, -24(%rbp)
+    movq -16(%rbp), %rax
+    movl -24(%rbp), %ecx
+    movl %ecx, (%rax)
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -16(%rbp)
+    movl -16(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp
     ret
