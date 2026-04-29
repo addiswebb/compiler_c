@@ -37,6 +37,7 @@ typedef enum {
     N_COMPOUND_LITERAL,
     N_DESIGNATED_INITIALIZER,
     N_BUILTIN,
+    N_NULL,
 } NodeKind;
 
 #define BUILTIN_COUNT 4

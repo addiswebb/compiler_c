@@ -384,6 +384,10 @@ Node *p_parse_ternary(Parser *p, NodeManager *nm, Node *cond) {
     return t;
 }
 Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
+    if (p_peek(p)->type == TK_SEMI) {
+        if (p->expect_semi) p_consume(p);
+        return new_node(nm, N_NULL);
+    }
     Node *primary = p_parse_cast(p, nm);
     // Post-decrement/increment
     while (is_postfix_operator(p_peek(p)->type)) primary = p_parse_postfix_expression(p, nm);
@@ -865,11 +869,21 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_OPEN_PAREN);
     // Manually consume semi colons
     p->expect_semi = false;
-    node->_for.init = p_parse_block_item(p, nm);
+    if (p_peek(p)->type != TK_SEMI) {
+        node->_for.init = p_parse_block_item(p, nm);
+    }
     p_consume_a(p, TK_SEMI);
-    node->_for.cond = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+
+    if (p_peek(p)->type != TK_SEMI) {
+        node->_for.cond = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+    }
+
     p_consume_a(p, TK_SEMI);
-    node->_for.iter = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+
+    if (p_peek(p)->type != TK_CLOSE_PAREN) {
+        node->_for.iter = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
+    }
+
     p->expect_semi = true;
     p_consume_a(p, TK_CLOSE_PAREN);
     node->_for.block = p_parse_statement(p, nm);
@@ -925,8 +939,6 @@ Node *p_parse_statement(Parser *p, NodeManager *nm) {
         return n;
     case TK_OPEN_CURLY:
         return p_parse_compound(p, nm);
-    case TK_SEMI:
-        PANIC("Null statement is currently unsupported ';'\n");
     case TK_GOTO:
         return p_parse_goto_statement(p, nm);
     default:

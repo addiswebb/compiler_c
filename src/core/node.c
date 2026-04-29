@@ -194,6 +194,9 @@ void print_node_type(const NodeKind type) {
     case N_TERNARY:
         printf("Ternary");
         break;
+    case N_NULL:
+        printf("Null Statement");
+        break;
     }
 }
 
@@ -449,6 +452,8 @@ void print_node(const Node *node, const int depth) {
         print_node(node->ternary.if_true, depth + 1);
         print_node(node->ternary.if_false, depth + 1);
         break;
+    case N_NULL:
+        break;
     }
 }
 
@@ -458,10 +463,7 @@ void print_node(const Node *node, const int depth) {
 void print_ast(const NodeManager *nm) { print_node(arena_get(nm, 0), 0); }
 
 void free_node(Node *node) {
-    if (!node) {
-        // WARN("Tried to free NULL node\n");
-        return;
-    }
+    if (!node) return;
     switch (node->kind) {
     case N_TRANSLATION_UNIT:
         for (int i = 0; i < node->translation_unit.declarations_array.count; i++) {
@@ -634,6 +636,8 @@ void free_node(Node *node) {
         node->ternary.if_true = NULL;
         free_node(node->ternary.if_false);
         node->ternary.if_false = NULL;
+        break;
+    case N_NULL:
         break;
     }
 }
