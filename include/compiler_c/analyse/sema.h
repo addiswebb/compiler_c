@@ -3,7 +3,6 @@
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"
 #include "compiler_c/parse/parser.h"
-#include <complex.h>
 
 typedef struct {
     Node *loop;

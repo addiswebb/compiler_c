@@ -5,6 +5,7 @@
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include <stdint.h>
+#include <stdio.h>
 #define SIGNED 1
 #define UNSIGNED 0
 
@@ -89,7 +90,12 @@ struct Type {
     int size;
     int align;
     bool is_signed;
+    // Const, etc
     unsigned int qualifiers;
+    // False if the type has const expressions which need evaluating
+    bool is_resolved;
+    // Prevent recursive printing for debug
+    bool printing;
     union {
         Type *base;
         struct {
@@ -102,7 +108,6 @@ struct Type {
     union {
         // T_ARRAY
         struct {
-            bool is_complete;
             union {
                 int64_t array_len;
                 Node *const_expr;
@@ -261,7 +266,7 @@ StructMember *get_member(Type *struct_t, const char *name, bool is_root);
 bool is_func_ptr(Type *t);
 
 /* Prints the given type as seen in C */
-void print_type(const Type *type);
+void print_type(Type *type);
 void print_struct_type(Type *s);
 void print_param_decl(ParamDecl *decl);
 void print_typepool();

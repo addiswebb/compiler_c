@@ -156,7 +156,7 @@ Compiler begin_compiler(const int argc, char *argv[]) {
         printf("\t-S          : Compile to Assembly File\n");
         printf("\t-c          : Compile to Object File\n");
         printf("\t-ir         : Compile and print IR\n");
-        printf("\t-t          : Print parse tree\n");
+        printf("\t-ast          : Print parse tree\n");
         printf("\t-h          : Get help\n");
         exit(0);
     }
@@ -263,6 +263,7 @@ static int load_src_file(Compiler *compiler, const char *file) {
     for (int i = 0; i < compiler->passthrough_args.count; i++) {
         cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }
+    printf("Running: %s\n", cmd);
 
     FILE *fp = popen(cmd, "r");
     ASSERT(fp, "Failed to open %s\n", file);

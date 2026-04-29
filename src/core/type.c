@@ -84,6 +84,7 @@ Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is
     t->base = NULL;
     t->qualifiers = qualifiers;
     t->is_signed = is_signed;
+    t->is_resolved = true;
     return t;
 }
 Type *new_type() { return arena_append(&typepool, &(Type){0}); }
@@ -97,7 +98,7 @@ Type *new_incomplete_array_type(Type *type, Node *const_expr) {
     arr_type->_array.const_expr = const_expr;
     arr_type->is_signed = SIGNED;
     arr_type->qualifiers = QUAL_NONE;
-    arr_type->_array.is_complete = false;
+    arr_type->is_resolved = false;
     return arr_type;
 }
 Type *new_array_type(Type *type, int len) {
@@ -109,12 +110,13 @@ Type *new_array_type(Type *type, int len) {
     arr_type->_array.array_len = len;
     arr_type->is_signed = SIGNED;
     arr_type->qualifiers = QUAL_NONE;
-    arr_type->_array.is_complete = true;
+    arr_type->is_resolved = true;
     return arr_type;
 }
 Type *infer_array_length(Type *arr_type, int len) {
     arr_type->_array.array_len = len;
     arr_type->size = len * arr_type->base->size;
+    arr_type->is_resolved = true;
     return arr_type;
 }
 Type *new_function_type(Type *type, Array params, bool is_variadic) {
@@ -140,6 +142,7 @@ Type *new_pointer_type(Type *type) {
     ptr_type->base = type;
     ptr_type->is_signed = SIGNED;
     ptr_type->qualifiers = QUAL_NONE;
+    ptr_type->is_resolved = type->is_resolved;
     return ptr_type;
 }
 
@@ -165,10 +168,12 @@ Type *new_qualified_type(Type *type, unsigned int qualifiers) {
         break;
     }
     qual_type->qualifiers = qualifiers;
+    qual_type->is_resolved = type->is_resolved;
     // qual_type->base = type->kind == T_POINTER || type->kind == T_ARRAY ? type->base : type;
     return qual_type;
 }
 Type *new_unsigned_type(Type *type) {
+    WARN("Creating new unsigned type\n");
     Type *unsigned_type = new_type();
     unsigned_type->kind = type->kind;
     unsigned_type->size = type->size;
@@ -176,6 +181,7 @@ Type *new_unsigned_type(Type *type) {
     unsigned_type->is_signed = UNSIGNED;
     unsigned_type->qualifiers = type->qualifiers;
     unsigned_type->base = type;
+    unsigned_type->is_resolved = type->is_resolved;
     return unsigned_type;
 }
 
@@ -217,7 +223,8 @@ Type *get_pointer_type(Type *type) {
 Type *get_array_type(Type *type, int len) {
     for (int i = 0; i < typepool.count; i++) {
         Type *t = arena_get(&typepool, i);
-        if (t->base == type && t->kind == T_ARRAY && t->_array.is_complete && t->_array.array_len == len) return t;
+        if (!t->is_resolved) continue;
+        if (t->base == type && t->kind == T_ARRAY && t->_array.array_len == len) return t;
     }
     return new_array_type(type, len);
 }
@@ -269,7 +276,11 @@ Type *get_qualified_type(Type *type, unsigned int qualifiers) {
         Type *t = arena_get(&typepool, i);
         if (t->base == type->base && t->kind == type->kind && t->size == type->size && t->qualifiers == qualifiers &&
             t->is_signed == type->is_signed) {
-            if (t->kind == T_ARRAY && !t->_array.is_complete) continue;
+            // if (!t->is_resolved) {
+            //     WARN("Skipped qualified type unresolved\n");
+            //     print_type(t);
+            //     continue;
+            // }
             return t;
         }
     }
@@ -342,14 +353,14 @@ void append_union_member(Type *u, UnionMember *m) {
 }
 void append_struct_member(Type *s, StructMember *m) {
     if (m->type->align > s->align) s->align = m->type->align;
-    s->size = align(s->size, s->align);
+    s->size = align(s->size, m->type->align);
     m->offset = s->size;
     append(&s->_struct.members_array, m);
-    s->size += align(m->type->size, s->align);
+    s->size += m->type->size;
 }
 
 Type union_type() {
-    Type u;
+    Type u = {};
     u.kind = T_UNION;
     u.base = NULL;
     u.align = 0;
@@ -362,10 +373,11 @@ Type union_type() {
     u._union.members_array.count = 0;
     u._union.members_array.element_size = -1;
     u._union.members_array.data = NULL;
+    u.is_resolved = false;
     return u;
 }
 Type struct_type() {
-    Type s;
+    Type s = {};
     s.kind = T_STRUCT;
     s.base = NULL;
     s.align = 0;
@@ -378,11 +390,12 @@ Type struct_type() {
     s._struct.members_array.count = 0;
     s._struct.members_array.element_size = -1;
     s._struct.members_array.data = NULL;
+    s.is_resolved = false;
     return s;
 }
 
 Type enum_type() {
-    Type e;
+    Type e = {};
     e.kind = T_ENUM;
     e.base = type_i32;
     e.align = 4;
@@ -395,6 +408,7 @@ Type enum_type() {
     e._enum.fields_array.count = 0;
     e._enum.fields_array.element_size = -1;
     e._enum.fields_array.data = NULL;
+    e.is_resolved = false;
     return e;
 }
 
@@ -414,11 +428,16 @@ AggrMember *get_member(Type *struct_t, const char *name, bool is_root) {
 
 bool is_func_ptr(Type *t) { return t->kind == T_POINTER && t->base->kind == T_FUNCTION; }
 
-void print_type(const Type *type) {
+void print_type(Type *type) {
     if (!type) {
         printf("NULL");
         return;
     }
+    if (type->printing) {
+        printf("<recursive>\n");
+        return;
+    }
+    type->printing = true;
     if (type->qualifiers & QUAL_CONST) printf("%s ", KEYWORDS[TK_CONST]);
     if (type->qualifiers & QUAL_VOLATILE) printf("%s ", KEYWORDS[TK_VOLATILE]);
     if (type->kind == T_INT && !type->is_signed) printf("%s ", KEYWORDS[TK_UNSIGNED]);
@@ -428,7 +447,8 @@ void print_type(const Type *type) {
         break;
     case T_ARRAY:
         print_type(type->base);
-        printf("[%" PRId64 "]", type->_array.array_len);
+        if (type->is_resolved) printf("[%" PRId64 "]", type->_array.array_len);
+        else printf("[!!!]");
         break;
     case T_INT:
         switch (type->size) {
@@ -516,6 +536,7 @@ void print_type(const Type *type) {
         printf(")");
         break;
     }
+    type->printing = false;
 }
 
 void print_struct_type(Type *s) {

@@ -25,6 +25,7 @@ int putc(int, FILE *);
 int putchar(int);
 
 char *fgets(char *, int, FILE *);
+char fgetc(FILE *);
 char *gets(char *);
 
 int fputs(const char *, FILE *);

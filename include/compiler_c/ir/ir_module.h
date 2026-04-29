@@ -168,10 +168,12 @@ typedef struct {
             IR_Block *block;
         } br;
         struct {
-            IR_Block *t_block, *f_block;
+            IR_Block *t_block;
+            IR_Block *f_block;
         } br_cond;
         struct {
-            Type *from, *to;
+            Type *from;
+            Type *to;
         } cast;
         struct {
             int offset;

@@ -26,7 +26,11 @@ static void ensure_capacity(Array *arr) {
     }
 }
 static void ensure_index(const Array *arr, int index) {
+    #ifdef __COMPILER_C__
+    if (index >= arena->count || index < 0) {
+    #else
     if (__builtin_expect(index >= arr->count || index < 0, 0)) {
+    #endif
         PANIC("Index of %d is out of Array bounds of %d\n", index, arr->count);
     }
 }

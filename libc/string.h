@@ -15,6 +15,8 @@ int strncmp(const char *, const char *, size_t);
 
 size_t strlen(const char *);
 
+char *strrchr(const char *, int);
+
 char *strdup(const char *);
 char *strndup(const char *, size_t);
 

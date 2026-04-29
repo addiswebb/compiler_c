@@ -531,6 +531,7 @@ Type *p_parse_enum(Parser *p, NodeManager *nm) {
             f->_enum_t = t;
         }
         *t = enum_t;
+        t->is_resolved = false;
         return t;
     }
 }
@@ -798,7 +799,7 @@ void p_append_case(Node *s, Node *c) {
     append(&s->_switch.cases_array, &c);
 }
 
-UnionMember *get_union_member_named(const Type *union_t, const char *name) {
+UnionMember *get_union_member_named(Type *union_t, const char *name) {
     bool found_member = false;
     for (int j = 0; j < union_t->_union.members_array.count; j++) {
         UnionMember *member = get_union_member(union_t, j);
@@ -816,7 +817,7 @@ UnionMember *get_union_member_named(const Type *union_t, const char *name) {
     }
     return NULL;
 }
-StructMember *get_struct_member_named(const Type *struct_t, const char *name, int *index) {
+StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index) {
     bool found_member = false;
     for (int j = 0; j < struct_t->_struct.members_array.count; j++) {
         StructMember *member = get_struct_member(struct_t, j);

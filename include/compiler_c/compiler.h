@@ -54,7 +54,7 @@ extern const char *flag_strings[CF_COUNT];
 
 bool has_flag(CompilerFlag f);
 
-#define IMPROPER_USAGE "Compiler_C Improper Usage,\n  compiler_c [input] -o [output]\n"
+#define IMPROPER_USAGE "Improper Usage,\n  compiler_c [input] -o [output]\n"
 
 /*
     Takes input from terminal and instantiates a compiler,

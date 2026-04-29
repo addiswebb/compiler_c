@@ -10,6 +10,8 @@ typedef unsigned long long size_t;
 
 typedef long int64_t;
 typedef unsigned long size_t;
+typedef short int8_t;
+typedef unsigned short uint8_t;
 
 #endif
 

@@ -408,7 +408,7 @@ static inline UnionMember *get_union_member(const Type *union_t, int index) {
     return (UnionMember *)get(&union_t->_union.members_array, index);
 }
 
-UnionMember *get_union_member_named(const Type *union_t, const char *name);
-StructMember *get_struct_member_named(const Type *struct_t, const char *name, int *index);
+UnionMember *get_union_member_named(Type *union_t, const char *name);
+StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index);
 
 #endif // COMPILER_C_PARSER_H

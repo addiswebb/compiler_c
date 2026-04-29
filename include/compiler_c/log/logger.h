@@ -112,9 +112,9 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
         exit(1);                                                                                                                           \
     } while (0)
 
-#ifdef __COMPILER_C
+#ifdef __COMPILER_C__
 #define ASSERT(cond, fmt, ...)                                                                                                             \
-    if (!cond) PANIC(fmt, ##__VA_ARGS__)
+    if (!(cond)) PANIC(fmt, ##__VA_ARGS__)
 #else
 #define ASSERT(cond, fmt, ...)                                                                                                             \
     if (__builtin_expect(!(cond), 0)) PANIC(fmt, ##__VA_ARGS__)

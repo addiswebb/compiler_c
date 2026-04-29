@@ -202,37 +202,57 @@ void handle_builtin_call(BuiltinKind kind, Node *node) {
 }
 
 Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *t) {
+    if (t->is_resolved) return t;
+    t->is_resolved = true;
     switch (t->kind) {
     case T_POINTER:
-        return get_pointer_type(resolve_type(sema_ctx, p, nm, t->base));
+        // Todo make function that does not create a new type to remove useless types
+        Type *new_pt = get_pointer_type(resolve_type(sema_ctx, p, nm, t->base));
+        new_pt->is_resolved = true;
+        return new_pt;
     case T_ARRAY:
         Type *base = resolve_type(sema_ctx, p, nm, t->base);
-        if (t->_array.is_complete) return get_array_type(base, t->_array.array_len);
-        else {
-            t->_array.is_complete = true;
-            semantic_analysis(sema_ctx, p, nm, t->_array.const_expr);
-            *t = *get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
-            return t;
-        }
+        semantic_analysis(sema_ctx, p, nm, t->_array.const_expr);
+        Type *new_at = get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
+        new_at->is_resolved = true;
+        return new_at;
     case T_STRUCT:
-        for (int i = 0; i < t->_struct.members_array.count; i++) {
-            StructMember *m = get_struct_member(t, i);
-            m->type = resolve_type(sema_ctx, p, nm, m->type);
-        }
-        return t;
     case T_UNION:
-        for (int i = 0; i < t->_union.members_array.count; i++) {
-            UnionMember *u = get_union_member(t, i);
-            u->type = resolve_type(sema_ctx, p, nm, u->type);
+        t->size = 0;
+        t->align = 0;
+        for (int i = 0; i < t->_struct.members_array.count; i++) {
+            AggrMember *m = get_struct_member(t, i);
+            m->type = resolve_type(sema_ctx, p, nm, m->type);
+            if (m->type->align > t->align) t->align = m->type->align;
+            t->size = align(t->size, m->type->align);
+            m->offset = t->size;
+            t->size += m->type->size;
         }
+        t->size = align(t->size, t->align);
+        t->is_resolved = true;
         return t;
     case T_ENUM:
+        int64_t value = 0;
+        for (int i = 0; i < t->_enum.fields_array.count; i++) {
+            EnumField *f = get_enum_field(t, i);
+            if (f->const_expr) {
+                semantic_analysis(sema_ctx, p, nm, f->const_expr);
+                value = evaluate_const_expression(f->const_expr).i;
+            }
+            f->value = value++;
+            p_append_enum_const(p, f);
+        }
+        t->is_resolved = true;
+        return t;
     case T_FUNCTION:
+        WARN("Functions not resolved yet, params might be cooked\n");
     case T_VOID:
     case T_INT:
     case T_FLOAT:
-    case T_INVALID:
+        t->is_resolved = true;
         return t;
+    case T_INVALID:
+        PANIC("Trying to resolve invalid type\n");
     }
 }
 
@@ -296,10 +316,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_VAR_DECL:
         // Skip extern nodes
         // Resolve const expr array bounds for array types
-        if (node->type->kind == T_ARRAY && !node->type->_array.is_complete) {
-            semantic_analysis(sema_ctx, p, nm, node->type->_array.const_expr);
-            node->type = resolve_type(sema_ctx, p, nm, node->type);
-        }
+        if (!node->type->is_resolved) node->type = resolve_type(sema_ctx, p, nm, node->type);
         if (node->var_decl.storage_class == EXTERN) {
             if (node->var_decl.is_defined) {
                 PANIC("External variable cannot be initialized in the same statement\n");
@@ -747,18 +764,10 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_TYPEDEF:
     case N_TYPE:
         // Add enum consts to symbol table
-        if (node->type->kind == T_ENUM) {
-            int64_t value = 0;
-            for (int i = 0; i < node->type->_enum.fields_array.count; i++) {
-                EnumField *f = get_enum_field(node->type, i);
-                if (f->const_expr) {
-                    semantic_analysis(sema_ctx, p, nm, f->const_expr);
-                    value = evaluate_const_expression(f->const_expr).i;
-                }
-                f->value = value++;
-                p_append_enum_const(p, f);
-            }
+        if (node->type->kind == T_STRUCT && node->type->_struct.name && strcmp(node->type->_struct.name, "Arena") == 0) {
+            printf("here\n");
         }
+        if (!node->type->is_resolved) node->type = resolve_type(sema_ctx, p, nm, node->type);
         break;
     case N_BUILTIN:
         switch (node->_builtin.kind) {

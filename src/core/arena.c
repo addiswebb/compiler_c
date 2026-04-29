@@ -27,7 +27,11 @@ void arena_free(Arena *arena) {
 }
 
 static void ensure_index(const Arena *arena, int index) {
+    #ifdef __COMPILER_C__
+    if (index >= arena->count || index < 0) {
+    #else
     if (__builtin_expect(index >= arena->count || index < 0, 0)) {
+    #endif
         PANIC("Index of %d is out of Arena bounds of %d\n", index, arena->count);
     }
 }
