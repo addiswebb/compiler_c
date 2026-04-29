@@ -251,6 +251,7 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
     IR_Block *default_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
     int block_index = 0;
+    bool has_default_block = false;
     for (int i = 0; i < _switch->_switch.cases_array.count; i++) {
         // Is a case x:
         Node *_case = get_node(&_switch->_switch.cases_array, i);
@@ -259,9 +260,9 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
             IR_Value cmp_reg = ir_cmp(ctx, NEQ, test, ir_integer_literal(_case->_case.test), _switch->type);
             // branch for fallthrough to the next test.
             ir_branch_cond(ctx, cmp_reg, NULL, cases[block_index - 1]);
-        }
+        } else has_default_block = true;
     }
-    ir_branch(ctx, default_block);
+    if (has_default_block) ir_branch(ctx, default_block);
 
     ir_begin_scope(ctx->func);
     ir_push_loop_ctx(ctx, NULL, end_block);
