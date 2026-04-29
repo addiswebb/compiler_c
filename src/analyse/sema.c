@@ -507,7 +507,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         sema_ctx->loop = node;
         semantic_analysis(sema_ctx, p, nm, node->_for.init);
         semantic_analysis(sema_ctx, p, nm, node->_for.cond);
-        if (node->_for.cond->type != type_i32) {
+        if (node->_for.cond && node->_for.cond->type != type_i32) {
             node->_for.cond = cast_node(nm, node->_for.cond, type_i32);
         }
         semantic_analysis(sema_ctx, p, nm, node->_for.iter);
@@ -806,6 +806,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         case BUILTIN_NONE:
             PANIC("given __builtin_none but BUILTIN?\n");
         }
+        break;
+    case N_NULL:
         break;
     case N_GOTO:
     case N_LABEL:

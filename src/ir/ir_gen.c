@@ -284,7 +284,7 @@ static void ir_gen_switch_statement(IR_Context *ctx, const Node *_switch) {
 
 static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_begin_scope(ctx->func);
-    ir_gen_block_item(ctx, _for->_for.init);
+    if (_for->_for.init) ir_gen_block_item(ctx, _for->_for.init);
 
     IR_Block *cond_block = ir_add_block(ctx);
     IR_Block *block_block = ir_new_block();
@@ -294,18 +294,20 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     // Update ctx for continue/break statements
     ir_push_loop_ctx(ctx, iter_block, end_block);
 
-    ir_set_cond_block(ctx, block_block, end_block);
-    const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
-    ir_reset_cond_block(ctx);
+    if (_for->_for.cond) {
+        ir_set_cond_block(ctx, block_block, end_block);
+        const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
+        ir_reset_cond_block(ctx);
 
-    ir_branch_cond(ctx, cond_reg, block_block, end_block);
+        ir_branch_cond(ctx, cond_reg, block_block, end_block);
+    }
 
     ir_append_block(ctx, block_block);
-    ir_gen_statement(ctx, _for->_for.block);
+    if (_for->_for.block) ir_gen_statement(ctx, _for->_for.block);
 
     ir_branch(ctx, iter_block);
     ir_append_block(ctx, iter_block);
-    ir_gen_rvalue(ctx, _for->_for.iter);
+    if (_for->_for.iter) ir_gen_statement(ctx, _for->_for.iter);
 
     ir_branch(ctx, cond_block);
 
@@ -484,9 +486,6 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     case N_BUILTIN:
         ir_gen_rvalue(ctx, stmt);
         return;
-    case N_IDENTIFIER:
-    case N_LITERAL:
-        return;
     case N_BREAK:
         ir_branch(ctx, get_loop_ctx(ctx)->break_block);
         return;
@@ -497,6 +496,10 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
         return ir_gen_goto(ctx, stmt);
     case N_LABEL:
         return ir_gen_label(ctx, stmt);
+    case N_NULL:
+    case N_IDENTIFIER:
+    case N_LITERAL:
+        return;
     default:
         // given invalid statement? probably an expression
         log_start(LOG_ERROR);
