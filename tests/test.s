@@ -5,54 +5,45 @@
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $32, %rsp
+    subq $16, %rsp
 main_0:
     leaq -8(%rbp), %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
+    movl $3, %eax
+    cmpl $1, %eax
+    setne %al
+    movzbl %al, %eax
+    movl %eax, -16(%rbp)
+    movl -16(%rbp), %eax
+    testl %eax, %eax
+    jz main_1
+    movl $3, %eax
+    cmpl $2, %eax
+    setne %al
+    movzbl %al, %eax
+    movl %eax, -16(%rbp)
+    movl -16(%rbp), %eax
+    testl %eax, %eax
+    jz main_2
+    jmp main_3
+main_1:
     leaq -8(%rbp), %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -24(%rbp)
-    movq -16(%rbp), %rax
-    movl -24(%rbp), %ecx
+    movl $1, %ecx
     movl %ecx, (%rax)
+    jmp main_3
+main_2:
     leaq -8(%rbp), %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -24(%rbp)
-    movq -16(%rbp), %rax
-    movl -24(%rbp), %ecx
+    movl $2, %ecx
     movl %ecx, (%rax)
-    leaq -8(%rbp), %rax
-    movq %rax, -16(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    imull $5, %eax
-    movl %eax, -24(%rbp)
-    movq -16(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    imull -24(%rbp)
-    movl %eax, -24(%rbp)
-    movq -16(%rbp), %rax
-    movl -24(%rbp), %ecx
-    movl %ecx, (%rax)
+    jmp main_3
+main_3:
     leaq -8(%rbp), %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rax
