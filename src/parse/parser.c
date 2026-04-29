@@ -869,20 +869,12 @@ Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
     p_consume_a(p, TK_OPEN_PAREN);
     // Manually consume semi colons
     p->expect_semi = false;
-    if (p_peek(p)->type != TK_SEMI) {
-        node->_for.init = p_parse_block_item(p, nm);
-    }
+
+    if (p_peek(p)->type != TK_SEMI) node->_for.init = p_parse_block_item(p, nm);
     p_consume_a(p, TK_SEMI);
-
-    if (p_peek(p)->type != TK_SEMI) {
-        node->_for.cond = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-    }
-
+    if (p_peek(p)->type != TK_SEMI) node->_for.cond = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
     p_consume_a(p, TK_SEMI);
-
-    if (p_peek(p)->type != TK_CLOSE_PAREN) {
-        node->_for.iter = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
-    }
+    if (p_peek(p)->type != TK_CLOSE_PAREN) node->_for.iter = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
 
     p->expect_semi = true;
     p_consume_a(p, TK_CLOSE_PAREN);
