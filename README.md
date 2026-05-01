@@ -2,7 +2,7 @@
 ![GitHub release](https://img.shields.io/github/v/release/addiswebb/compiler_c)
 ![Build Status](https://github.com/addiswebb/compiler_c/actions/workflows/build-test.yml/badge.svg)
 
-An unoptimised C compiler written in C supporting C89 following Win64 MS ABI Conventions.
+An unoptimised C compiler written in C. Supports C89 x86-64 Win64 & SysV.
 With the goal of eventual self compilation.
 
 ## Table of Contents
