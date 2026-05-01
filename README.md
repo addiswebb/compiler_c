@@ -61,8 +61,11 @@ A good way to understand what is supported is as follows,
 
 # Architecture
 Any C compiler has 4 main stages. The Preprocessor, Compiler, Assembler and Linker. Compiler_c implents the compiler stage and offloads the other 3 tasks to `gcc`. For ease of use, the compiler complies with the GNU interface, allowing things like `-o <output>`, any unknown flags are passed to `gcc` and ignored by the compiler. This allows Compiler_c to be a drop-in replacement of `gcc` in build systems like CMake with no extra work.
+
 The compiler uses a driver function to handle moving between the 4 major stages. For every source file passed, it is given to `gcc` for preprocessing. Here we define `-D__COMPILER_C__` so header files know which compiler is being used. We also direct `gcc` to use our own libc headers with `-nostdlib` and `-I./libc/`. Once the source file has been preprocessed, the driver passes it on to the compiler.
+
 The structure of the compiler will be explained in detail later, for now it takes a `.c` source file and emits a correponding `.s` x86-64 assembly file. Once finished the driver passes it to the assembler which goes from `.s` to a `.o` object file, no special flags needed. Every source file is compiled to any object file and collected by the driver before moving onto the next step.
+
 Finally when all source files have been compiled to objects, the driver has `gcc` link them together. It is important to include `-lc` and `-lm` to link against libc and math libraries which allows for the use of functions like `printf`. ( `-lc` is on by default, `-lm` is on by default on Win64 )
 
 ## Compiler
