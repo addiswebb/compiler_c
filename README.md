@@ -1,4 +1,4 @@
-# Compiler C
+de# Compiler C
 ![GitHub release](https://img.shields.io/github/v/release/addiswebb/compiler_c)
 ![Build Status](https://github.com/addiswebb/compiler_c/actions/workflows/build-test.yml/badge.svg)
 
@@ -284,6 +284,12 @@ When a block is full, instead of reallocating the whole block somewhere else at 
 
 ## To be Implemented (Ordered from next to never...)
 * Self Compile
+* Custom printf implementation
+  * `print("type is %t", type_u8);` Support printing types
+* Multi variable declaration
+  * `int a, b;`
+* String concatination
+  * `"hello" " world"`
 * Use physical registers
     * Overflow to stack
 * Create IR index instruction 
