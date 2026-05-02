@@ -1,24 +1,20 @@
 #!/bin/bash
 set -e
-
 if [ -z "$1" ]; then
-    echo "Usage: $0 <input.c>"
+    echo "Usage: $0 <input.c> [input2.c ...]"
     exit 1
 fi
 
-INPUT_FILE="$1"
-BASENAME=$(basename "$INPUT_FILE" .c)
+cmake --build build
 
-gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 ./src/"$INPUT_FILE" -o ./tests/"$INPUT_FILE" -I./include/
-
-# cmake --build build
-
-compiler_c ./tests/"$INPUT_FILE" -o ./tests/"$INPUT_FILE".o -c || { echo "compiler_c failed"; exit 1; }
-
-mv ./tests/compiler.c.o ./build/CMakeFiles/compiler_c.dir/src/
+for INPUT_FILE in "$@"; do
+    BASENAME=$(basename "$INPUT_FILE" .c)
+    gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 ./src/"$INPUT_FILE" -o ./tests/"$INPUT_FILE" -I./include/
+    compiler_c ./tests/"$INPUT_FILE" -o ./tests/"$INPUT_FILE".o -c || { echo "compiler_c failed on $INPUT_FILE"; exit 1; }
+    mv ./tests/"$INPUT_FILE".o ./build/CMakeFiles/compiler_c.dir/src/"$BASENAME".c.o
+done
 
 cd ./build/CMakeFiles/compiler_c.dir/
-
 gcc \
     src/main.c.o \
     src/compiler.c.o \
@@ -41,5 +37,4 @@ gcc \
     src/abi/sysv.c.o \
     src/log/logger.c.o \
     -o ../../compiler_c -lm -lc
-
 cd ../../..
