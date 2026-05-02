@@ -1,65 +1,44 @@
-#include <stdarg.h>
 typedef int bool;
-typedef enum {
-    RAX,
-    RBX,
-    RCX,
-    RDX,
-    RSI,
-    RDI,
-    RBP,
-    RSP,
-    R8,
-    R9,
-    R10,
-    R11,
-    R12,
-    R13,
-    R14,
-    R15,
-} GP_Reg;
-typedef enum {
-    XMM0,
-    XMM1,
-    XMM2,
-    XMM3,
-    XMM4,
-    XMM5,
-    XMM6,
-    XMM7,
-    XMM8,
-    XMM9,
-    XMM10,
-    XMM11,
-    XMM12,
-    XMM13,
-    XMM14,
-    XMM15,
-} XMM_Reg;
-typedef enum {
+typedef enum{
+    RAX, RBX, RCX, RDX,
+    RSI, RDI,
+    RBP, RSP,
+    R8, R9, R10, R11, R12, R13, R14, R15,
+}GP_Reg;
+typedef enum{
+    XMM0, XMM1, XMM2, XMM3,
+    XMM4, XMM5, XMM6, XMM7,
+    XMM8, XMM9, XMM10, XMM11,
+    XMM12, XMM13, XMM14, XMM15,
+}XMM_Reg;
+typedef enum{
     REG_8,
     REG_16,
     REG_32,
     REG_64,
-} RegSize;
-typedef enum { REG_GP, REG_XMM, REG_IP } RegKind;
+}RegSize;
+typedef enum{
+    REG_GP,
+    REG_XMM,
+    REG_IP
+}RegKind;
 typedef enum {
     REG_DATA_LABEL,
     REG_DATA_OFFSET,
     REG_DATA_CONST_INDEX,
     REG_DATA_NONE,
-} RegDataKind;
-struct PhysReg {
+}RegDataKind;
+struct PhysReg{
     RegKind kind;
-    union {
+    union{
         GP_Reg gp_reg;
         XMM_Reg sse_reg;
     };
     RegSize size;
     RegDataKind data_kind;
-    union {
-        const char *label;
-        struct {
+    union{
+        const char* label;
+        struct{
             int offset;
             int scale;
         };
@@ -82,12 +61,12 @@ void pop(Array *arr);
 void array_str_cpy(Array *arr, const char *str);
 void *get(const Array *arr, int index);
 void set(const Array *arr, const void *element, int index);
-typedef struct {
+typedef struct{
     Array blocks;
     int element_size;
     int block_capacity;
     int count;
-} Arena;
+}Arena;
 void arena_init(Arena *arena, int block_size, int element_size);
 static void arena_add_block(Arena *arena);
 void arena_free(Arena *arena);
@@ -99,29 +78,6 @@ typedef long int64_t;
 typedef unsigned long size_t;
 typedef short int8_t;
 typedef unsigned short uint8_t;
-typedef struct FILE FILE;
-extern FILE *stdin;
-extern FILE *stdout;
-extern FILE *stderr;
-FILE *fopen(const char *, const char *);
-FILE *fdopen(int, const char *);
-int fclose(FILE *);
-int fflush(FILE *);
-int fputc(int, FILE *);
-int putc(int, FILE *);
-int putchar(int);
-char *fgets(char *, int, FILE *);
-char fgetc(FILE *);
-char *gets(char *);
-int fputs(const char *, FILE *);
-int puts(const char *);
-int printf(const char *, ...);
-int fprintf(FILE *, const char *, ...);
-int sprintf(char *, const char *, ...);
-int snprintf(char *, size_t, const char *, ...);
-extern int vfprintf(FILE *, const char *, va_list);
-FILE *popen(const char *, const char *);
-int pclose(FILE *);
 typedef enum {
     T_VOID,
     T_INT,
@@ -297,7 +253,8 @@ Type union_type();
 Type struct_type();
 Type enum_type();
 StructMember *get_member(Type *struct_t, const char *name, bool is_root);
-bool is_func_ptr(Type *t);
+bool is_func_ptr(const Type *t);
+bool is_scalar_type(const Type *t);
 void print_type(Type *type);
 void print_struct_type(Type *s);
 void print_param_decl(ParamDecl *decl);
@@ -1133,8 +1090,7 @@ int bitset_add_defined(const BitSet *defined, const IR_Value *v);
 void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v);
 int reg_bitset(const IR_Function *f);
 void lower_ir_for_asm(IR_Function *f);
-void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
-                              const Array *symbol_map);
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots, const Array *symbol_map);
 void add_successor(IR_Function *func, IR_Block *from, IR_Block *to);
 Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *rpo);
 void compute_reverse_postorder(IR_Function *func, int *rpo);
@@ -1156,15 +1112,44 @@ void print_cfg(const IR_Function *func);
 IR_CMP_OP ir_cmp_op(const TokenType type);
 IR_UNARY_OP ir_unary_op(const TokenType type);
 IR_BINOP_OP ir_binary_op(const TokenType type);
-void print_ir_module(const IR_Context *ctx, const IR_Module *module);
+void print_ir_module(const IR_Context *ctx,const IR_Module *module);
 void print_ir_value(const IR_Value *v);
 void print_ir_phys_reg(const PhysReg *r);
 static void print_ir_block(const IR_Context *ctx, const IR_Block *block);
 void print_ir_function(const IR_Context *ctx, const IR_Function *func);
-void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr);
+void print_ir_instruction(const IR_Context *ctx,const IR_Instruction *instr);
 static void print_unary_op(IR_UNARY_OP op);
 static void print_binary_op(IR_BINOP_OP op);
 static void print_cmp_op(IR_CMP_OP op);
+typedef struct{
+    unsigned int gp_offset;
+    unsigned int fp_offset;
+    void *overflow_args;
+    void *reg_save_area;
+} va_list;
+typedef struct FILE FILE;
+extern FILE *stdin;
+extern FILE *stdout;
+extern FILE *stderr;
+FILE *fopen(const char *, const char *);
+FILE *fdopen(int, const char *);
+int fclose(FILE *);
+int fflush(FILE *);
+int fputc(int, FILE *);
+int putc(int, FILE *);
+int putchar(int);
+char *fgets(char *, int, FILE *);
+char fgetc(FILE *);
+char *gets(char *);
+int fputs(const char *, FILE *);
+int puts(const char *);
+int printf(const char *, ...);
+int fprintf(FILE *, const char *, ...);
+int sprintf(char *, const char *, ...);
+int snprintf(char *, size_t, const char *, ...);
+extern int vfprintf(FILE *, const char *, va_list);
+FILE *popen(const char *, const char *);
+int pclose(FILE *);
 void exit(int);
 void *malloc(size_t);
 void free(void *);
@@ -1254,16 +1239,16 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     if (lvl < logger.min_level) return;
     log_start(lvl);
     va_list args;
-    va_start(args, fmt);
+    __builtin_va_start(args,fmt);
     vfprintf(logger.file, fmt, args);
-    va_end(args);
+    __builtin_va_end(args);
     fflush(logger.file);
     if (lvl == LOG_PANIC) exit(1);
 }
 typedef struct {
-    Node *loop;
     Node *func;
-    Node *compound;
+    Array compound_stack;
+    Array loop_stack;
     Array i_array;
 } SemanticContext;
 bool is_lvalue(const Node *n);
@@ -1277,6 +1262,10 @@ void lower_nodes(NodeManager *nm);
 void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
 void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n);
 void pop_sema_scope(SemanticContext *sema_ctx, Parser *p);
+void push_sema_loop(SemanticContext *sema_ctx, const Node *loop);
+void pop_sema_loop(SemanticContext *sema_ctx);
+Node *sema_current_loop(const SemanticContext *sema_ctx);
+Node *sema_current_compound(const SemanticContext *sema_ctx);
 static inline int *get_i(SemanticContext *sema_ctx) { return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
 typedef struct {
     char *output;
@@ -1360,12 +1349,12 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
 static void x86_gen_block(FILE *fp, IR_Context *ctx);
 static void x86_gen_function(FILE *fp, IR_Context *ctx);
 unsigned int compiler_flags = 0u;
-const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",        [CF_STOP_AFTER_IR] = "ir",
-                                      [CF_STOP_AFTER_COMPILE] = "S",      [CF_STOP_AFTER_ASSEMBLE] = "c",
-                                      [CF_DEBUG_TYPEPOOL] = "gtypepool",  [CF_DEBUG_LIFETIMES] = "glifetimes",
-                                      [CF_DEBUG_ENUM] = "genum",          [CF_DEBUG_STRUCT] = "gstruct",
-                                      [CF_DEBUG_UNION] = "gunion",        [CF_DEBUG_LOWERED_IR] = "glowered-ir",
-                                      [CF_DEBUG_IR_INSTR] = "gir-instr",  [CF_DEBUG_PARSER] = "gparser",
+const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast", [CF_STOP_AFTER_IR] = "ir",
+                                      [CF_STOP_AFTER_COMPILE] = "S", [CF_STOP_AFTER_ASSEMBLE] = "c",
+                                      [CF_DEBUG_TYPEPOOL] = "gtypepool", [CF_DEBUG_LIFETIMES] = "glifetimes",
+                                      [CF_DEBUG_ENUM] = "genum", [CF_DEBUG_STRUCT] = "gstruct",
+                                      [CF_DEBUG_UNION] = "gunion", [CF_DEBUG_LOWERED_IR] = "glowered-ir",
+                                      [CF_DEBUG_IR_INSTR] = "gir-instr", [CF_DEBUG_PARSER] = "gparser",
                                       [CF_DEBUG_TOKENIZER] = "gtokenizer"};
 bool has_flag(CompilerFlag f) { return compiler_flags & (1u << f); }
 bool is_source_file(const char *arg) {
@@ -1381,21 +1370,12 @@ void read_args(Compiler *compiler, const int argc, char *argv[]) {
             arg++;
             if (strcmp(arg, "o") == 0) {
                 if (i + 1 < argc && argv[i + 1] != ((void *)0)) {
-                    if (!(argv[i + 1][0] != '-')) do {
-                            log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n");
-                            exit(1);
-                        } while (0);
+                    if (!(argv[i + 1][0] != '-')) do { log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n"); exit(1); } while (0);
                     compiler->output = argv[++i];
-                    if (!(compiler->output)) do {
-                            log_message(LOG_ERROR, "Failed to strdup output\n");
-                            exit(1);
-                        } while (0);
+                    if (!(compiler->output)) do { log_message(LOG_ERROR, "Failed to strdup output\n"); exit(1); } while (0);
                     continue;
                 }
-                do {
-                    log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n");
-                    exit(1);
-                } while (0);
+                do { log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n"); exit(1); } while (0);
             }
             bool consumed_flag = 0;
             for (int j = 0; j < CF_COUNT; j++) {
@@ -1412,18 +1392,12 @@ void read_args(Compiler *compiler, const int argc, char *argv[]) {
 }
 void assemble(Compiler *c) {
     set_log_stage(STAGE_ASSEMBLER);
-    if (!(c->current_source.count && c->current_output.count)) do {
-            log_message(LOG_ERROR, "Source or output is not set for assemble\n");
-            exit(1);
-        } while (0);
+    if (!(c->current_source.count && c->current_output.count)) do { log_message(LOG_ERROR, "Source or output is not set for assemble\n"); exit(1); } while (0);
     log_message(LOG_INFO, "Assembling %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "gcc -c %s -o %s", (char *)c->current_source.data, (char *)c->current_output.data);
     int ret = system(cmd);
-    if (!(ret == 0)) do {
-            log_message(LOG_ERROR, "Failed to assemble %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
-            exit(1);
-        } while (0);
+    if (!(ret == 0)) do { log_message(LOG_ERROR, "Failed to assemble %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data); exit(1); } while (0);
 }
 void link(Compiler *c, Array *objs) {
     set_log_stage(STAGE_LINKER);
@@ -1439,10 +1413,7 @@ void link(Compiler *c, Array *objs) {
     printf(" to %s\n", (char *)c->current_output.data);
     snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "-o %s ", (char *)c->current_output.data);
     int ret = system(cmd);
-    if (!(ret == 0)) do {
-            log_message(LOG_ERROR, "Failed to link %d objs to %s\n", objs->count, (char *)c->current_output.data);
-            exit(1);
-        } while (0);
+    if (!(ret == 0)) do { log_message(LOG_ERROR, "Failed to link %d objs to %s\n", objs->count, (char *)c->current_output.data); exit(1); } while (0);
 }
 void update_current_output(Compiler *c, bool cond, char *path, const char *ext) {
     if (cond && c->output) {
@@ -1451,19 +1422,18 @@ void update_current_output(Compiler *c, bool cond, char *path, const char *ext) 
         char *out = strdup(path);
         char *dot = strrchr(out, '.');
         if (dot) strcpy(dot, ext);
-        else do {
-                log_message(LOG_ERROR, "Failed to append '%s' to %s\n", ext, path);
-                exit(1);
-            } while (0);
+        else do { log_message(LOG_ERROR, "Failed to append '%s' to %s\n", ext, path); exit(1); } while (0);
         array_str_cpy(&c->current_output, out);
         free(out);
     }
 }
 void drive(Compiler *c) {
+    printf("2 %ld\n", sizeof(Compiler));
     if ((has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) && c->source_files.count > 1 && c->output) {
-        log_message(LOG_WARN, "-o ignored with multiple inputs %d\n");
+        log_message(LOG_WARN, "-o ignored with multiple inputs %d\n", c->source_files.count);
         c->output = ((void *)0);
     }
+    printf("3\n");
     Array objs;
     array_init(&objs, c->source_files.count, sizeof(char *));
     for (int i = 0; i < c->source_files.count; i++) {
@@ -1485,10 +1455,7 @@ void drive(Compiler *c) {
     }
     if (has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) return;
     array_str_cpy(&c->current_output, c->output ? c->output : "a.out");
-    if (!(objs.count > 0)) do {
-            log_message(LOG_ERROR, "No object files to link\n");
-            exit(1);
-        } while (0);
+    if (!(objs.count > 0)) do { log_message(LOG_ERROR, "No object files to link\n"); exit(1); } while (0);
     link(c, &objs);
     ptr_array_free(&objs);
     set_log_stage(STAGE_COMPILER);
@@ -1502,10 +1469,7 @@ void init_compiler(Compiler *compiler) {
 }
 Compiler begin_compiler(const int argc, char *argv[]) {
     if (argc < 2) {
-        do {
-            log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n");
-            exit(1);
-        } while (0);
+        do { log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n"); exit(1); } while (0);
     }
     if (argc == 2 && strcmp(argv[1], "-h") == 0) {
         printf("compiler [input]\n");
@@ -1544,10 +1508,7 @@ void free_compiler(Compiler *compiler) {
 }
 int compile(Compiler *compiler) {
     set_log_stage(STAGE_COMPILER);
-    if (!(compiler->current_source.count && compiler->current_output.count)) do {
-            log_message(LOG_ERROR, "Source or output is not set for compile\n");
-            exit(1);
-        } while (0);
+    if (!(compiler->current_source.count && compiler->current_output.count)) do { log_message(LOG_ERROR, "Source or output is not set for compile\n"); exit(1); } while (0);
     log_message(LOG_INFO, "Compiling %s to %s\n", (char *)compiler->current_source.data, (char *)compiler->current_output.data);
     set_log_stage(STAGE_TOKENIZING);
     t_tokenize(&compiler->tk);
@@ -1555,8 +1516,12 @@ int compile(Compiler *compiler) {
     init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
     p_parse_translation_unit(&compiler->p, &compiler->nm);
     set_log_stage(STAGE_SEMA_ANALYSIS);
-    SemanticContext sema_ctx = (SemanticContext){.func = ((void *)0), .loop = ((void *)0), .compound = ((void *)0)};
+    SemanticContext sema_ctx = (SemanticContext){
+        .func = ((void *)0),
+    };
     array_init(&sema_ctx.i_array, 4, sizeof(int));
+    array_init(&sema_ctx.compound_stack, 4, sizeof(Node *));
+    array_init(&sema_ctx.loop_stack, 4, sizeof(Node *));
     semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
     if (has_flag(CF_DEBUG_TYPEPOOL)) print_typepool();
     if (has_flag(CF_STOP_AFTER_AST)) {
@@ -1602,10 +1567,7 @@ static int load_src_file(Compiler *compiler, const char *file) {
     }
     printf("Running: %s\n", cmd);
     FILE *fp = popen(cmd, "r");
-    if (!(fp)) do {
-            log_message(LOG_ERROR, "Failed to open %s\n", file);
-            exit(1);
-        } while (0);
+    if (!(fp)) do { log_message(LOG_ERROR, "Failed to open %s\n", file); exit(1); } while (0);
     Array src;
     array_init(&src, 1024, sizeof(char));
     char c;

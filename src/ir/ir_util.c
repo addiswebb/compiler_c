@@ -1,6 +1,7 @@
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis_types.h"
+#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
@@ -209,23 +210,25 @@ static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
             c = get_const(ctx, instr->ops[1].phys_reg.const_index);
         } else PANIC("IR_CONST with non const IRVALUE\n");
         printf(", ");
-        switch (instr->_const.type->kind) {
-        case T_INT:
-            if (instr->_const.type->size == 8) printf("%" PRId64, c->i);
-            else if (instr->_const.type->size == 1) printf("%c", (char)c->i);
-            else printf("%d", (int)c->i);
-            break;
-        case T_FLOAT:
-            printf("%g", c->f);
-            break;
-        case T_ARRAY:
-            if (instr->_const.type->base == type_i8) {
-                printf("\"%s\"", c->s.data);
-                break;
-            }
-        default:
-            PANIC("Tried to print IR_CONST of unknown type\n");
-        }
+        print_const_literal(c);
+        // switch (instr->_const.type->kind) {
+        // case T_INT:
+        //     if (instr->_const.type->size == 8) printf("%" PRId64, c->i);
+        //     else if (instr->_const.type->size == 1) printf("%c", (char)c->i);
+        //     else printf("%d", (int)c->i);
+        //     break;
+        // case T_FLOAT:
+        //     printf("%g", c->f);
+        //     break;
+        // case T_POINTER:
+        // case T_ARRAY:
+        //     if (instr->_const.type->base == type_i8) {
+        //         printf("\"%s\"", c->s.data);
+        //         break;
+        //     }
+        // default:
+        //     PANIC("Tried to print IR_CONST of unknown type\n");
+        // }
     }
     printf("\n");
 }

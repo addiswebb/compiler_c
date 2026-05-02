@@ -1,4 +1,5 @@
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/compiler.h"
 #include "compiler_c/core/array.h"
 #include "compiler_c/core/node.h"

@@ -305,6 +305,8 @@ void print_const_literal(const ConstLiteral *l) {
         printf("&%s", l->ref.symbol->name);
         if (l->ref.offset) printf(" + %d", l->ref.offset);
         break;
+    default:
+        PANIC("Tried to print invalid const literal\n");
     }
 }
 

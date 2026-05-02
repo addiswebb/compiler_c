@@ -120,6 +120,7 @@ bool is_va_list_type(Type *type) { return type->kind == T_STRUCT && type->size =
 
 void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     if (instr->store.type->kind == T_STRUCT) {
+        ASSERT(instr->store.type->size <= MAX_STRUCT_SIZE, "[SysV] Cannot IR_STORE structs of 16 bytes or more\n");
         ASSERT(instr->store.type->size <= 8, "[SysV] Not handling tuple sized struct");
         instr->store.type = get_integer_type(instr->store.type->size);
     }

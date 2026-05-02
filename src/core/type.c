@@ -275,12 +275,7 @@ Type *get_qualified_type(Type *type, unsigned int qualifiers) {
     for (int i = 0; i < typepool.count; i++) {
         Type *t = arena_get(&typepool, i);
         if (t->base == type->base && t->kind == type->kind && t->size == type->size && t->qualifiers == qualifiers &&
-            t->is_signed == type->is_signed) {
-            // if (!t->is_resolved) {
-            //     WARN("Skipped qualified type unresolved\n");
-            //     print_type(t);
-            //     continue;
-            // }
+            t->is_signed == type->is_signed && t->is_resolved) {
             return t;
         }
     }
@@ -426,7 +421,9 @@ AggrMember *get_member(Type *struct_t, const char *name, bool is_root) {
     else return NULL;
 }
 
-bool is_func_ptr(Type *t) { return t->kind == T_POINTER && t->base->kind == T_FUNCTION; }
+bool is_func_ptr(const Type *t) { return t->kind == T_POINTER && t->base->kind == T_FUNCTION; }
+
+bool is_scalar_type(const Type *t) { return t->kind == T_INT || t->kind == T_FLOAT || t->kind == T_ENUM || t->kind == T_POINTER; }
 
 void print_type(Type *type) {
     if (!type) {

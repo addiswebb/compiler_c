@@ -949,6 +949,7 @@ void p_pop_scope(Parser *p) {
     pop(&p->scopes_array);
 }
 
+
 /*
     Consumes
     `{[statement]*}`

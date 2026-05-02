@@ -1,5 +1,6 @@
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis_types.h"
+#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
@@ -510,8 +511,8 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
 
-    switch (t->kind) {
-    case T_INT:
+    switch (c->kind) {
+    case CONST_INTEGER:
         switch (t->size) {
         case 1:
         case 2:
@@ -525,7 +526,7 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *
             PANIC("Tried to emit const int of unsupported size\n");
         }
         break;
-    case T_FLOAT:
+    case CONST_FLOAT:
         switch (t->size) {
         case 4:
         case 8:
@@ -535,20 +536,16 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *
             PANIC("Tried to emit const float of unsupported size\n");
         }
         break;
-    case T_ARRAY:
-        if (t->base == type_i8) return;
-    case T_POINTER:
-    default:
-        printf("Tried to emit const of unsupported type\n");
+    case CONST_STRING:
+        return;
+    case CONST_ARRAY:
+    case CONST_LABEL:
+    case CONST_REFERENCE:
+        PANIC("Tried to emit const of unsupported type\n");
     }
     x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
 }
 void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t) {
-    // const char *reg = x86_rax_reg(t);
-    // const char *op_suffix = x86_op_suffix(t);
-    // x86_emit_xr(fp, "mov", op_suffix, "", src, reg);
-    // x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
-
     const char *v = x86_rcx_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     x86_emit_xr(fp, "mov", "q", "", dst, "%rax");

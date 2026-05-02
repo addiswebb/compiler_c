@@ -103,7 +103,7 @@ void update_current_output(Compiler *c, bool cond, char *path, const char *ext) 
 
 void drive(Compiler *c) {
     if ((has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) && c->source_files.count > 1 && c->output) {
-        WARN("-o ignored with multiple inputs %d\n");
+        WARN("-o ignored with multiple inputs %d\n", c->source_files.count);
         c->output = NULL;
     }
     Array objs;
@@ -206,8 +206,12 @@ int compile(Compiler *compiler) {
     p_parse_translation_unit(&compiler->p, &compiler->nm);
 
     set_log_stage(STAGE_SEMA_ANALYSIS);
-    SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL};
+    SemanticContext sema_ctx = (SemanticContext){
+        .func = NULL,
+    };
     array_init(&sema_ctx.i_array, 4, sizeof(int));
+    array_init(&sema_ctx.compound_stack, 4, sizeof(Node *));
+    array_init(&sema_ctx.loop_stack, 4, sizeof(Node *));
 
     semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
 

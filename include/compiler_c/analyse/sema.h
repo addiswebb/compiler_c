@@ -5,9 +5,9 @@
 #include "compiler_c/parse/parser.h"
 
 typedef struct {
-    Node *loop;
     Node *func;
-    Node *compound;
+    Array compound_stack;
+    Array loop_stack;
     Array i_array;
 } SemanticContext;
 
@@ -69,6 +69,11 @@ void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n);
     Handles poping the symbol table and compound + index tracker off the top of the stack.
 */
 void pop_sema_scope(SemanticContext *sema_ctx, Parser *p);
+
+void push_sema_loop(SemanticContext *sema_ctx, const Node *loop);
+void pop_sema_loop(SemanticContext *sema_ctx);
+Node *sema_current_loop(const SemanticContext *sema_ctx);
+Node *sema_current_compound(const SemanticContext *sema_ctx);
 
 static inline int *get_i(SemanticContext *sema_ctx) { return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
 

@@ -27,7 +27,7 @@ Type *check_unary_op(NodeManager *nm, Node *unary_op) {
         break;
     // [Int, Float] => Int
     case TK_L_NOT:
-        if (kind == T_INT || kind == T_FLOAT) return type_i32;
+        if (kind == T_INT || kind == T_FLOAT || kind == T_POINTER) return type_i32;
         break;
     // Int => Int
     case TK_BW_NOT:
@@ -55,7 +55,7 @@ Type *check_unary_op(NodeManager *nm, Node *unary_op) {
     }
     printf("Invalid operand type ");
     print_type(expr->type);
-    printf("for the given unary operator ");
+    printf(" for the given unary operator ");
     print_token_type(unary_op->unary.op);
     printf("\n");
 
@@ -65,6 +65,7 @@ Type *check_unary_op(NodeManager *nm, Node *unary_op) {
 bool is_valid_binary_op(TokenType op, const Node *lhs, const Node *rhs) {
     if (op == TK_EQ) return true;
     if (is_assignment_op(op)) op = get_underlying_op(op);
+    if (op == TK_AND_AND || op == TK_OR_OR) return is_scalar_type(lhs->type) && is_scalar_type(rhs->type);
     bool is_lhs_ptr = lhs->type->kind == T_POINTER || lhs->type->kind == T_ARRAY;
     bool is_rhs_ptr = rhs->type->kind == T_POINTER || rhs->type->kind == T_ARRAY;
     if ((is_lhs_ptr || is_rhs_ptr) && is_bitwise_op(op)) return false;
@@ -110,7 +111,7 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
 
     // Review this to ensure correctness
     if (is_bitwise_op(op)) {
-        if (lhs->type->kind != T_INT || rhs->type->kind != T_INT) {
+        if (!(lhs->type->kind == T_INT || lhs->type->kind == T_ENUM) || !(rhs->type->kind == T_INT || rhs->type->kind == T_ENUM)) {
             PANIC("Bitwise operation requires integers\n");
         }
         return type_i32;
@@ -174,21 +175,20 @@ void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *n
     // TODO track compound literals and name accordingly.
     ident->identifier.name = "__tmp_cl";
     ident->identifier.len = 9;
+    ident->type = node->type;
     Node *d = new_node(nm, N_VAR_DECL);
-    d->var_decl.identifier = ident;
     d->type = node->type;
-
     d->var_decl.expr = node->compound_literal.value;
     d->var_decl.is_defined = true;
     d->var_decl.storage_class = STATIC;
     d->var_decl.is_global = false;
-    d->var_decl.symbol = NULL;
+    d->var_decl.identifier = ident;
+    ident->identifier.symbol = p_append_var_decl_symbol(p, d);
+    d->var_decl.symbol = ident->identifier.symbol;
 
-    node->kind = N_IDENTIFIER;
-    node->identifier.name = ident->identifier.name;
-    node->identifier.len = ident->identifier.len;
+    *node = *ident;
 
-    insert_node(&sema_ctx->compound->compound.items_array, &d, *get_i(sema_ctx));
+    insert_node(&sema_current_compound(sema_ctx)->compound.items_array, &d, *get_i(sema_ctx));
     // Insert shifted all nodes over by one, so increment tracker too.
     (*get_i(sema_ctx))++;
 }
@@ -511,17 +511,18 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_WHILE:
         p_push_scope(p);
-        sema_ctx->loop = node;
+        push_sema_loop(sema_ctx, node);
         semantic_analysis(sema_ctx, p, nm, node->_while.cond);
         if (node->_while.cond->type != type_i32) {
             node->_while.cond = cast_node(nm, node->_while.cond, type_i32);
         }
         semantic_analysis(sema_ctx, p, nm, node->_while.block);
+        pop_sema_loop(sema_ctx);
         p_pop_scope(p);
         break;
     case N_FOR:
         p_push_scope(p);
-        sema_ctx->loop = node;
+        push_sema_loop(sema_ctx, node);
         semantic_analysis(sema_ctx, p, nm, node->_for.init);
         semantic_analysis(sema_ctx, p, nm, node->_for.cond);
         if (node->_for.cond && node->_for.cond->type != type_i32) {
@@ -529,6 +530,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
         semantic_analysis(sema_ctx, p, nm, node->_for.iter);
         semantic_analysis(sema_ctx, p, nm, node->_for.block);
+        pop_sema_loop(sema_ctx);
         p_pop_scope(p);
         break;
     case N_RETURN:
@@ -593,16 +595,12 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         node->type = node->index.identifier->type->base;
         break;
     case N_CONTINUE:
-        if (!sema_ctx->loop) {
-            PANIC("Cannot call continue outside of a loop\n");
-        }
-        node->_continue.loop = sema_ctx->loop;
+        ASSERT(sema_ctx->loop_stack.count > 0, "Cannot call continue outside of loop scope\n");
+        node->_continue.loop = sema_current_loop(sema_ctx);
         break;
     case N_BREAK:
-        if (!sema_ctx->loop) {
-            PANIC("Cannot call break outside of a loop or switch statement\n");
-        }
-        node->_break.loop = sema_ctx->loop;
+        ASSERT(sema_ctx->loop_stack.count > 0, "Cannot call break outside of loop scope\n");
+        node->_break.loop = sema_current_loop(sema_ctx);
         break;
     case N_INIT_LIST:
         if (node->type == type_invalid) {
@@ -741,11 +739,12 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_SWITCH:
         p_push_scope(p);
-        sema_ctx->loop = node;
+        push_sema_loop(sema_ctx, node);
         semantic_analysis(sema_ctx, p, nm, node->_switch.test);
         if (node->_switch.test->type != type_i32) node->_switch.test = cast_node(nm, node->_switch.test, type_i32);
         semantic_analysis(sema_ctx, p, nm, node->_switch.block);
         node->type = node->_switch.test->type;
+        pop_sema_loop(sema_ctx);
         p_pop_scope(p);
         break;
     case N_CASE:
@@ -764,9 +763,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_TYPEDEF:
     case N_TYPE:
         // Add enum consts to symbol table
-        if (node->type->kind == T_STRUCT && node->type->_struct.name && strcmp(node->type->_struct.name, "Arena") == 0) {
-            printf("here\n");
-        }
         if (!node->type->is_resolved) node->type = resolve_type(sema_ctx, p, nm, node->type);
         break;
     case N_BUILTIN:
@@ -824,15 +820,28 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         PANIC("Unreachable\n");
     }
 }
+
+void push_sema_loop(SemanticContext *sema_ctx, const Node *loop) { append(&sema_ctx->loop_stack, &loop); }
+void pop_sema_loop(SemanticContext *sema_ctx) { pop(&sema_ctx->loop_stack); }
+
+Node *sema_current_loop(const SemanticContext *sema_ctx) {
+    ASSERT(sema_ctx->loop_stack.count > 0, "Tried to retrieve current loop outside of loop scope\n");
+    return *(Node **)get(&sema_ctx->loop_stack, sema_ctx->loop_stack.count - 1);
+}
+Node *sema_current_compound(const SemanticContext *sema_ctx) {
+    ASSERT(sema_ctx->compound_stack.count > 0, "Tried to retrieve current compound outside of compound scope\n");
+    return *(Node **)get(&sema_ctx->compound_stack, sema_ctx->compound_stack.count - 1);
+}
+
 void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n) {
     p_push_scope(p);
-    sema_ctx->compound = n;
+    append(&sema_ctx->compound_stack, &n);
     int tmp = 0;
     append(&sema_ctx->i_array, &tmp);
 }
 void pop_sema_scope(SemanticContext *sema_ctx, Parser *p) {
     pop(&sema_ctx->i_array);
-    sema_ctx->compound = NULL;
+    pop(&sema_ctx->compound_stack);
     p_pop_scope(p);
 }
 

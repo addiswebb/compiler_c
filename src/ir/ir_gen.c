@@ -161,10 +161,13 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             c.type = expr->type;
             switch (expr->type->kind) {
             case T_INT:
+            case T_POINTER:
                 c.i = 1;
+                c.kind = CONST_INTEGER;
                 break;
             case T_FLOAT:
                 c.f = 1.0;
+                c.kind = CONST_FLOAT;
                 break;
             default:
                 PANIC("Tried to increment a value which is neither float or int\n");
@@ -395,7 +398,10 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
                 type = member->type;
                 member_offset = member->offset + offset;
             }
-
+            if (type->size > 8) {
+                WARN("Not zeroing structs yet, need builtin memset\n");
+                continue;
+            }
             // If the corresponding value was found in the init list, use that, otherwise use a zero,
             if (value) {
                 if (value->kind == N_INIT_LIST) ir_gen_init_list(ctx, dst, member_offset, type, value);
@@ -405,6 +411,7 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
             IR_Value final_dst = dst;
             if (member_offset)
                 final_dst = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), dst, ir_integer_literal(member_offset), type_u64);
+
             ir_store(ctx, final_dst, ir_v, type);
         }
         break;
