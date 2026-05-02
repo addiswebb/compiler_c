@@ -9,6 +9,7 @@ With the goal of eventual self compilation.
 * [Compiler C](#compiler-c)
 * [Grammar](#grammar)
 * [Architecture](#architecture)
+  * [Compiler] (#compiler)
   * [The Tokenizer](#the-tokenizer)
   * [The Parser](#the-parser)
   * [Semantic Analysis Pass](#semantic-analysis-pass)
