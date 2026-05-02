@@ -6,17 +6,17 @@
 #include "compiler_c/ir/ir_module.h"
 #include <stdio.h>
 
-typedef enum{
+typedef enum {
     ABI_NO_CLASS,
     ABI_MEMORY,
     ABI_INTEGER,
     ABI_SSE,
-}ABI_TypeClass;
+} ABI_TypeClass;
 
-typedef struct{
+typedef struct {
     ABI_TypeClass class[2];
     bool memory;
-}ABI_Result;
+} ABI_Result;
 
 ABI_Result abi_classify(Type *type);
 
@@ -34,9 +34,9 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f);
 
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
 
-extern Symbol *_sret;
 extern Symbol *_hidden_sret_ptr;
 
+Symbol *current_sret();
 void set_sret(Type *return_type);
 void set_hidden_sret_ptr(Type *return_type);
 
@@ -51,9 +51,9 @@ void set_hidden_sret_ptr(Type *return_type);
 
 extern const GP_Reg int_param_regs[PARAM_REGISTERS];
 extern const XMM_Reg float_param_regs[PARAM_REGISTERS];
-#define strdup  _strdup
-#define popen   _popen
-#define pclose  _pclose
+#define strdup _strdup
+#define popen _popen
+#define pclose _pclose
 #else
 
 #define MAX_STRUCT_SIZE 16
@@ -72,10 +72,9 @@ extern const GP_Reg int_param_regs[INTEGER_PARAM_REGISTERS];
 extern const XMM_Reg float_param_regs[FLOAT_PARAM_REGISTERS];
 #endif
 
-
 extern const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS];
 extern const GP_Reg callee_saved_regs[CALLEE_SAVED_REGISTERS];
-extern const char * gp_register_str[16][4];
-extern const char * sse_register_str[16];
+extern const char *gp_register_str[16][4];
+extern const char *sse_register_str[16];
 
 #endif

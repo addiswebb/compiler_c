@@ -1276,9 +1276,9 @@ typedef struct {
     Array passthrough_args;
     char *src;
     int src_size;
-    Tokenizer tk;
     NodeManager nm;
     Parser p;
+    Tokenizer tk;
 } Compiler;
 typedef enum {
     CF_STOP_AFTER_AST,
@@ -1461,19 +1461,14 @@ void drive(Compiler *c) {
     log_message(LOG_INFO, "Done.\n");
 }
 void init_compiler(Compiler *compiler) {
-    printf("1\n");
     compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
-    printf("2\n");
-    NodeManager nm = new_node_manager();
-    printf("3\n");
-    compiler->nm = nm;
-    printf("4\n");
+    compiler->nm = new_node_manager();
     compiler->p = new_parser();
-    printf("5\n");
     init_typepool();
-    printf("6\n");
+    return;
 }
 Compiler begin_compiler(const int argc, char *argv[]) {
+    printf("[Compiler_C]\n");
     if (argc < 2) {
         do { log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n"); exit(1); } while (0);
     }
@@ -1483,7 +1478,7 @@ Compiler begin_compiler(const int argc, char *argv[]) {
         printf("\t-S          : Compile to Assembly File\n");
         printf("\t-c          : Compile to Object File\n");
         printf("\t-ir         : Compile and print IR\n");
-        printf("\t-ast          : Print parse tree\n");
+        printf("\t-ast        : Print parse tree\n");
         printf("\t-h          : Get help\n");
         exit(0);
     }

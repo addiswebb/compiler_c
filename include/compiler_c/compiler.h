@@ -21,9 +21,9 @@ typedef struct {
     Array passthrough_args;
     char *src;
     int src_size;
-    Tokenizer tk;
     NodeManager nm;
     Parser p;
+    Tokenizer tk;
 } Compiler;
 
 #define FLAG(f) (1u << f)

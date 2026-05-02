@@ -399,7 +399,7 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
                 member_offset = member->offset + offset;
             }
             if (type->size > 8) {
-                WARN("Not zeroing structs yet, need builtin memset\n");
+                // WARN("Not zeroing structs yet, need builtin memset\n");
                 continue;
             }
             // If the corresponding value was found in the init list, use that, otherwise use a zero,

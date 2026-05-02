@@ -1,4 +1,7 @@
 #include "compiler_c/analyse/analysis_types.h"
+#include "compiler_c/core/arena.h"
+#include "compiler_c/core/array.h"
+#include <stdio.h>
 #ifdef __linux__
 
 #include <compiler_c/abi/abi.h>
@@ -11,7 +14,7 @@
 #include <compiler_c/x86/x86.h>
 #include <stdbool.h>
 
-Symbol *_sret = NULL;
+Arena _sret = {.count = 0};
 Symbol *_hidden_sret_ptr = NULL;
 
 void set_hidden_sret_ptr(Type *return_type) {
@@ -28,19 +31,23 @@ void set_hidden_sret_ptr(Type *return_type) {
                                  .type = get_pointer_type(return_type),
                                  .scope_depth = 0};
 }
+
+Symbol *current_sret() { return arena_get(&_sret, _sret.count - 1); }
+
 void set_sret(Type *return_type) {
-    if (_sret && _sret->type == return_type) return;
-    if (!_sret) {
-        _sret = malloc(sizeof(Symbol));
-        ASSERT(_sret, "Failed to allocate _sret symbol\n");
-    }
-    *_sret = (Symbol){.name = "_sret",
-                      .kind = VAR,
-                      .linkage = LINK_NONE,
-                      .storage = STORAGE_NONE,
-                      .var_decl = NULL,
-                      .type = return_type,
-                      .scope_depth = 0};
+    if (_sret.count == 0) arena_init(&_sret, 4, sizeof(Symbol));
+    if (_sret.count > 0 && current_sret()->type == return_type) return;
+
+    char *name = malloc(sizeof(char) * 32);
+    ASSERT(name, "Failed to malloc _sret name\n");
+    snprintf(name, sizeof(name), "_sret%d", _sret.count);
+    arena_append(&_sret, &(Symbol){.name = name,
+                                   .kind = VAR,
+                                   .linkage = LINK_NONE,
+                                   .storage = STORAGE_NONE,
+                                   .var_decl = NULL,
+                                   .type = return_type,
+                                   .scope_depth = 0});
 }
 
 const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS] = {RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11};
@@ -410,8 +417,9 @@ void abi_func_type_gen(Type *type) {
         ABI_Result res = abi_classify(type->_func.return_type);
         if (res.memory) {
             set_sret(type->_func.return_type);
+            Symbol *_sret = current_sret();
             insert(&abi_type->_func.params,
-                   &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret", .symbol = _sret}, 0);
+                   &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = _sret->name, .symbol = _sret}, 0);
             abi_type->_func.return_type = type_void;
         } else {
             abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;

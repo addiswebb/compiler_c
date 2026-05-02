@@ -11,7 +11,7 @@ BASENAME=$(basename "$INPUT_FILE" .c)
 
 gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 ./src/"$INPUT_FILE" -o ./tests/test.c -I./include/
 
-cmake --build build
+# cmake --build build
 
 compiler_c ./tests/test.c -o ./tests/"$INPUT_FILE".o -c || { echo "compiler_c failed"; exit 1; }
 

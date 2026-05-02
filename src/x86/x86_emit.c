@@ -1,6 +1,5 @@
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis_types.h"
-#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"

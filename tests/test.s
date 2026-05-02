@@ -122,60 +122,50 @@
 .LC53:
     .byte 'D', 'o', 'n', 'e', '.', 0x0A, 0
 .LC54:
-    .byte '1', 0x0A, 0
+    .byte '[', 'C', 'o', 'm', 'p', 'i', 'l', 'e', 'r', '_', 'C', ']', 0x0A, 0
 .LC55:
-    .byte '2', 0x0A, 0
-.LC56:
-    .byte '3', 0x0A, 0
-.LC57:
-    .byte '4', 0x0A, 0
-.LC58:
-    .byte '5', 0x0A, 0
-.LC59:
-    .byte '6', 0x0A, 0
-.LC60:
     .byte 'I', 'm', 'p', 'r', 'o', 'p', 'e', 'r', ' ', 'U', 's', 'a', 'g', 'e', ',', 0x0A, ' ', ' ', 'c', 'o', 'm', 'p', 'i', 'l', 'e', 'r', '_', 'c', ' ', '[', 'i', 'n', 'p', 'u', 't', ']', ' ', '-', 'o', ' ', '[', 'o', 'u', 't', 'p', 'u', 't', ']', 0x0A, 0
-.LC61:
+.LC56:
     .byte '-', 'h', 0
-.LC62:
+.LC57:
     .byte 'c', 'o', 'm', 'p', 'i', 'l', 'e', 'r', ' ', '[', 'i', 'n', 'p', 'u', 't', ']', 0x0A, 0
-.LC63:
+.LC58:
     .byte 0x09, '-', 'o', ' ', '[', 'o', 'u', 't', 'p', 'u', 't', ']', ' ', ':', ' ', 'S', 'e', 't', ' ', 'o', 'u', 't', 'p', 'u', 't', ' ', 'f', 'i', 'l', 'e', ' ', 'p', 'a', 't', 'h', 0x0A, 0
-.LC64:
+.LC59:
     .byte 0x09, '-', 'S', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 't', 'o', ' ', 'A', 's', 's', 'e', 'm', 'b', 'l', 'y', ' ', 'F', 'i', 'l', 'e', 0x0A, 0
-.LC65:
+.LC60:
     .byte 0x09, '-', 'c', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 't', 'o', ' ', 'O', 'b', 'j', 'e', 'c', 't', ' ', 'F', 'i', 'l', 'e', 0x0A, 0
-.LC66:
+.LC61:
     .byte 0x09, '-', 'i', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 'a', 'n', 'd', ' ', 'p', 'r', 'i', 'n', 't', ' ', 'I', 'R', 0x0A, 0
-.LC67:
-    .byte 0x09, '-', 'a', 's', 't', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'P', 'r', 'i', 'n', 't', ' ', 'p', 'a', 'r', 's', 'e', ' ', 't', 'r', 'e', 'e', 0x0A, 0
-.LC68:
+.LC62:
+    .byte 0x09, '-', 'a', 's', 't', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'P', 'r', 'i', 'n', 't', ' ', 'p', 'a', 'r', 's', 'e', ' ', 't', 'r', 'e', 'e', 0x0A, 0
+.LC63:
     .byte 0x09, '-', 'h', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'G', 'e', 't', ' ', 'h', 'e', 'l', 'p', 0x0A, 0
-.LC69:
+.LC64:
     .byte 'S', 'o', 'u', 'r', 'c', 'e', ' ', 'o', 'r', ' ', 'o', 'u', 't', 'p', 'u', 't', ' ', 'i', 's', ' ', 'n', 'o', 't', ' ', 's', 'e', 't', ' ', 'f', 'o', 'r', ' ', 'c', 'o', 'm', 'p', 'i', 'l', 'e', 0x0A, 0
-.LC70:
+.LC65:
     .byte 'C', 'o', 'm', 'p', 'i', 'l', 'i', 'n', 'g', ' ', '%', 's', ' ', 't', 'o', ' ', '%', 's', 0x0A, 0
-.LC71:
+.LC66:
     .byte '-', '-', '-', '-', ' ', 'I', 'R', ' ', '-', '-', '-', '-', 0x0A, 0
-.LC72:
+.LC67:
     .byte 0x0A, 0
-.LC73:
+.LC68:
     .byte '-', '-', '-', '-', ' ', 'L', 'o', 'w', 'e', 'r', 'e', 'd', ' ', 'I', 'R', ' ', '-', '-', '-', '-', 0x0A, 0
-.LC74:
+.LC69:
     .byte 0x0A, 0
-.LC75:
+.LC70:
     .byte 'w', 0
-.LC76:
+.LC71:
     .byte 'g', 'c', 'c', ' ', '-', 'E', ' ', '-', 'P', ' ', '-', 'n', 'o', 's', 't', 'd', 'i', 'n', 'c', ' ', '-', 'D', '_', '_', 'C', 'O', 'M', 'P', 'I', 'L', 'E', 'R', '_', 'C', '_', '_', ' ', '-', 'I', '.', '/', 'l', 'i', 'b', 'c', ' ', '-', 's', 't', 'd', '=', 'c', '1', '1', ' ', '%', 's', ' ', 0
-.LC77:
+.LC72:
     .byte '%', 's', ' ', 0
-.LC78:
+.LC73:
     .byte 'R', 'u', 'n', 'n', 'i', 'n', 'g', ':', ' ', '%', 's', 0x0A, 0
-.LC79:
+.LC74:
     .byte 'r', 0
-.LC80:
+.LC75:
     .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 'o', 'p', 'e', 'n', ' ', '%', 's', 0x0A, 0
-.LC81:
+.LC76:
     .byte 'L', 'o', 'a', 'd', 'e', 'd', ' ', 'a', 'n', ' ', 'e', 'm', 'p', 't', 'y', ' ', 's', 'o', 'u', 'r', 'c', 'e', ' ', 'f', 'i', 'l', 'e', 0x0A, 0
 .global compiler_flags
 .data
@@ -6735,140 +6725,93 @@ drive_21:
 init_compiler:
     push %rbp
     mov %rsp, %rbp
-    subq $320, %rsp
+    subq $1248, %rsp
 init_compiler_0:
     movq %rdi, -8(%rbp)
-    leaq .LC54(%rip), %rax
-    movq %rax, -296(%rbp)
-    subq $176, %rsp
-    movq -296(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -296(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -296(%rbp)
-    movq -296(%rbp), %rax
+    movq %rax, -1224(%rbp)
+    movq -1224(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -296(%rbp)
-    movq -296(%rbp), %rax
-    addq $120, %rax
-    movq %rax, -296(%rbp)
-    leaq -88(%rbp), %rax
-    movq %rax, -304(%rbp)
+    movq %rax, -1224(%rbp)
+    movq -1224(%rbp), %rax
+    addq $256, %rax
+    movq %rax, -1224(%rbp)
+    leaq -1080(%rbp), %rax
+    movq %rax, -1232(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -312(%rbp)
-    movq -312(%rbp), %rax
+    movq %rax, -1240(%rbp)
+    movq -1240(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -312(%rbp)
-    movq -312(%rbp), %rax
+    movq %rax, -1240(%rbp)
+    movq -1240(%rbp), %rax
     addq $104, %rax
-    movq %rax, -312(%rbp)
-    movq -312(%rbp), %rax
+    movq %rax, -1240(%rbp)
+    movq -1240(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -312(%rbp)
-    movq -312(%rbp), %rax
-    movq %rax, -312(%rbp)
+    movq %rax, -1240(%rbp)
+    movq -1240(%rbp), %rax
+    movq %rax, -1240(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -320(%rbp)
-    movq -320(%rbp), %rax
+    movq %rax, -1248(%rbp)
+    movq -1248(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -320(%rbp)
-    movq -320(%rbp), %rax
+    movq %rax, -1248(%rbp)
+    movq -1248(%rbp), %rax
     addq $112, %rax
-    movq %rax, -320(%rbp)
-    movq -320(%rbp), %rax
+    movq %rax, -1248(%rbp)
+    movq -1248(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -320(%rbp)
-    movq -304(%rbp), %rdi
-    movq -312(%rbp), %rsi
-    movl -320(%rbp), %edx
+    movl %eax, -1248(%rbp)
+    movq -1232(%rbp), %rdi
+    movq -1240(%rbp), %rsi
+    movl -1248(%rbp), %edx
     call t_new_tokenizer
-    movq -304(%rbp), %rsi
-    movq -296(%rbp), %rdi
+    movq -1232(%rbp), %rax
+    movq %rax, -1240(%rbp)
+    movq -1240(%rbp), %rsi
+    movq -1224(%rbp), %rdi
     mov $1072, %rdx
     call memcpy
-    leaq .LC55(%rip), %rax
-    movq %rax, -296(%rbp)
-    subq $176, %rsp
-    movq -296(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -296(%rbp)
-    leaq -128(%rbp), %rax
-    movq %rax, -296(%rbp)
-    leaq -88(%rbp), %rax
-    movq %rax, -304(%rbp)
-    movq -304(%rbp), %rdi
+    leaq -8(%rbp), %rax
+    movq %rax, -1224(%rbp)
+    movq -1224(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1224(%rbp)
+    movq -1224(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -1224(%rbp)
+    leaq -1120(%rbp), %rax
+    movq %rax, -1232(%rbp)
+    movq -1232(%rbp), %rdi
     call new_node_manager
-    movq -304(%rbp), %rsi
-    movq -296(%rbp), %rdi
+    movq -1232(%rbp), %rax
+    movq %rax, -1240(%rbp)
+    movq -1240(%rbp), %rsi
+    movq -1224(%rbp), %rdi
     mov $40, %rdx
     call memcpy
-    leaq .LC56(%rip), %rax
-    movq %rax, -296(%rbp)
-    subq $176, %rsp
-    movq -296(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -296(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -296(%rbp)
-    movq -296(%rbp), %rax
+    movq %rax, -1224(%rbp)
+    movq -1224(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -296(%rbp)
-    movq -296(%rbp), %rax
-    addq $1192, %rax
-    movq %rax, -296(%rbp)
-    leaq -128(%rbp), %rax
-    movq %rax, -304(%rbp)
-    movq -304(%rbp), %rsi
-    movq -296(%rbp), %rdi
-    mov $40, %rdx
-    call memcpy
-    leaq .LC57(%rip), %rax
-    movq %rax, -296(%rbp)
-    subq $176, %rsp
-    movq -296(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -296(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -296(%rbp)
-    movq -296(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -296(%rbp)
-    movq -296(%rbp), %rax
-    addq $1232, %rax
-    movq %rax, -296(%rbp)
-    leaq -88(%rbp), %rax
-    movq %rax, -304(%rbp)
-    movq -304(%rbp), %rdi
+    movq %rax, -1224(%rbp)
+    movq -1224(%rbp), %rax
+    addq $160, %rax
+    movq %rax, -1224(%rbp)
+    leaq -1216(%rbp), %rax
+    movq %rax, -1232(%rbp)
+    movq -1232(%rbp), %rdi
     call new_parser
-    movq -304(%rbp), %rsi
-    movq -296(%rbp), %rdi
+    movq -1232(%rbp), %rax
+    movq %rax, -1240(%rbp)
+    movq -1240(%rbp), %rsi
+    movq -1224(%rbp), %rdi
     mov $96, %rdx
     call memcpy
-    leaq .LC58(%rip), %rax
-    movq %rax, -296(%rbp)
-    subq $176, %rsp
-    movq -296(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -296(%rbp)
     call init_typepool
-    leaq .LC59(%rip), %rax
-    movq %rax, -296(%rbp)
-    subq $176, %rsp
-    movq -296(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -296(%rbp)
+    mov %rbp, %rsp
+    pop %rbp
+    ret
     mov %rbp, %rsp
     pop %rbp
     ret
@@ -6881,6 +6824,14 @@ begin_compiler_0:
     movq %rdi, -8(%rbp)
     movl %esi, -16(%rbp)
     movq %rdx, -24(%rbp)
+    leaq .LC54(%rip), %rax
+    movq %rax, -1360(%rbp)
+    subq $176, %rsp
+    movq -1360(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -1360(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -1360(%rbp)
     movq -1360(%rbp), %rax
@@ -6901,7 +6852,7 @@ begin_compiler_2:
     testl %eax, %eax
     jz begin_compiler_4
 begin_compiler_3:
-    leaq .LC60(%rip), %rax
+    leaq .LC55(%rip), %rax
     movq %rax, -1360(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -6944,7 +6895,7 @@ begin_compiler_5:
     movq %rax, -1360(%rbp)
     movq -1360(%rbp), %rax
     movq %rax, -1360(%rbp)
-    leaq .LC61(%rip), %rax
+    leaq .LC56(%rip), %rax
     movq %rax, -1368(%rbp)
     movq -1360(%rbp), %rdi
     movq -1368(%rbp), %rsi
@@ -6959,6 +6910,46 @@ begin_compiler_5:
     testl %eax, %eax
     jz begin_compiler_7
 begin_compiler_6:
+    leaq .LC57(%rip), %rax
+    movq %rax, -1360(%rbp)
+    subq $176, %rsp
+    movq -1360(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -1360(%rbp)
+    leaq .LC58(%rip), %rax
+    movq %rax, -1360(%rbp)
+    subq $176, %rsp
+    movq -1360(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -1360(%rbp)
+    leaq .LC59(%rip), %rax
+    movq %rax, -1360(%rbp)
+    subq $176, %rsp
+    movq -1360(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -1360(%rbp)
+    leaq .LC60(%rip), %rax
+    movq %rax, -1360(%rbp)
+    subq $176, %rsp
+    movq -1360(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -1360(%rbp)
+    leaq .LC61(%rip), %rax
+    movq %rax, -1360(%rbp)
+    subq $176, %rsp
+    movq -1360(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -1360(%rbp)
     leaq .LC62(%rip), %rax
     movq %rax, -1360(%rbp)
     subq $176, %rsp
@@ -6968,46 +6959,6 @@ begin_compiler_6:
     addq $176, %rsp
     movl %eax, -1360(%rbp)
     leaq .LC63(%rip), %rax
-    movq %rax, -1360(%rbp)
-    subq $176, %rsp
-    movq -1360(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -1360(%rbp)
-    leaq .LC64(%rip), %rax
-    movq %rax, -1360(%rbp)
-    subq $176, %rsp
-    movq -1360(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -1360(%rbp)
-    leaq .LC65(%rip), %rax
-    movq %rax, -1360(%rbp)
-    subq $176, %rsp
-    movq -1360(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -1360(%rbp)
-    leaq .LC66(%rip), %rax
-    movq %rax, -1360(%rbp)
-    subq $176, %rsp
-    movq -1360(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -1360(%rbp)
-    leaq .LC67(%rip), %rax
-    movq %rax, -1360(%rbp)
-    subq $176, %rsp
-    movq -1360(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -1360(%rbp)
-    leaq .LC68(%rip), %rax
     movq %rax, -1360(%rbp)
     subq $176, %rsp
     movq -1360(%rbp), %rdi
@@ -7121,7 +7072,7 @@ clear_compiler_0:
     movq (%rax), %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rax
-    addq $1192, %rax
+    addq $120, %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rax
     movq %rax, -16(%rbp)
@@ -7139,7 +7090,7 @@ clear_compiler_0:
     movq (%rax), %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rax
-    addq $1192, %rax
+    addq $120, %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rdi
     call arena_free
@@ -7149,7 +7100,7 @@ clear_compiler_0:
     movq (%rax), %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rax
-    addq $1232, %rax
+    addq $160, %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rdi
     call free_parser
@@ -7159,7 +7110,7 @@ clear_compiler_0:
     movq (%rax), %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rax
-    addq $120, %rax
+    addq $256, %rax
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rdi
     call t_free
@@ -7293,7 +7244,7 @@ compile_2:
     testl %eax, %eax
     jz compile_4
 compile_3:
-    leaq .LC69(%rip), %rax
+    leaq .LC64(%rip), %rax
     movq %rax, -360(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -7307,7 +7258,7 @@ compile_3:
 compile_4:
     jmp compile_5
 compile_5:
-    leaq .LC70(%rip), %rax
+    leaq .LC65(%rip), %rax
     movq %rax, -360(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -368(%rbp)
@@ -7359,7 +7310,7 @@ compile_5:
     movq (%rax), %rax
     movq %rax, -360(%rbp)
     movq -360(%rbp), %rax
-    addq $120, %rax
+    addq $256, %rax
     movq %rax, -360(%rbp)
     movq -360(%rbp), %rdi
     call t_tokenize
@@ -7373,7 +7324,7 @@ compile_5:
     movq (%rax), %rax
     movq %rax, -360(%rbp)
     movq -360(%rbp), %rax
-    addq $1232, %rax
+    addq $160, %rax
     movq %rax, -360(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -368(%rbp)
@@ -7381,7 +7332,7 @@ compile_5:
     movq (%rax), %rax
     movq %rax, -368(%rbp)
     movq -368(%rbp), %rax
-    addq $120, %rax
+    addq $256, %rax
     movq %rax, -368(%rbp)
     movq -368(%rbp), %rax
     addq $16, %rax
@@ -7392,7 +7343,7 @@ compile_5:
     movq (%rax), %rax
     movq %rax, -376(%rbp)
     movq -376(%rbp), %rax
-    addq $120, %rax
+    addq $256, %rax
     movq %rax, -376(%rbp)
     movq -376(%rbp), %rax
     addq $16, %rax
@@ -7410,7 +7361,7 @@ compile_5:
     movq (%rax), %rax
     movq %rax, -360(%rbp)
     movq -360(%rbp), %rax
-    addq $1232, %rax
+    addq $160, %rax
     movq %rax, -360(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -368(%rbp)
@@ -7418,7 +7369,7 @@ compile_5:
     movq (%rax), %rax
     movq %rax, -368(%rbp)
     movq -368(%rbp), %rax
-    addq $1192, %rax
+    addq $120, %rax
     movq %rax, -368(%rbp)
     movq -360(%rbp), %rdi
     movq -368(%rbp), %rsi
@@ -7476,7 +7427,7 @@ compile_5:
     movq (%rax), %rax
     movq %rax, -368(%rbp)
     movq -368(%rbp), %rax
-    addq $1232, %rax
+    addq $160, %rax
     movq %rax, -368(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -376(%rbp)
@@ -7484,7 +7435,7 @@ compile_5:
     movq (%rax), %rax
     movq %rax, -376(%rbp)
     movq -376(%rbp), %rax
-    addq $1192, %rax
+    addq $120, %rax
     movq %rax, -376(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -384(%rbp)
@@ -7492,7 +7443,7 @@ compile_5:
     movq (%rax), %rax
     movq %rax, -384(%rbp)
     movq -384(%rbp), %rax
-    addq $1192, %rax
+    addq $120, %rax
     movq %rax, -384(%rbp)
     movq -384(%rbp), %rax
     movq %rax, -384(%rbp)
@@ -7534,7 +7485,7 @@ compile_8:
     movq (%rax), %rax
     movq %rax, -360(%rbp)
     movq -360(%rbp), %rax
-    addq $1192, %rax
+    addq $120, %rax
     movq %rax, -360(%rbp)
     movq -360(%rbp), %rax
     movq %rax, -360(%rbp)
@@ -7564,7 +7515,7 @@ compile_9:
     movq (%rax), %rax
     movq %rax, -360(%rbp)
     movq -360(%rbp), %rax
-    addq $1192, %rax
+    addq $120, %rax
     movq %rax, -360(%rbp)
     movq -360(%rbp), %rdi
     call lower_nodes
@@ -7578,12 +7529,14 @@ compile_9:
     movq (%rax), %rax
     movq %rax, -376(%rbp)
     movq -376(%rbp), %rax
-    addq $1232, %rax
+    addq $160, %rax
     movq %rax, -376(%rbp)
     movq -368(%rbp), %rdi
     movq -376(%rbp), %rsi
     call ir_init_ctx
-    movq -368(%rbp), %rsi
+    movq -368(%rbp), %rax
+    movq %rax, -376(%rbp)
+    movq -376(%rbp), %rsi
     movq -360(%rbp), %rdi
     mov $80, %rdx
     call memcpy
@@ -7597,7 +7550,7 @@ compile_9:
     movq (%rax), %rax
     movq %rax, -376(%rbp)
     movq -376(%rbp), %rax
-    addq $1192, %rax
+    addq $120, %rax
     movq %rax, -376(%rbp)
     movq -376(%rbp), %rax
     movq %rax, -376(%rbp)
@@ -7623,7 +7576,7 @@ compile_9:
     testl %eax, %eax
     jz compile_11
 compile_10:
-    leaq .LC71(%rip), %rax
+    leaq .LC66(%rip), %rax
     movq %rax, -360(%rbp)
     subq $176, %rsp
     movq -360(%rbp), %rdi
@@ -7645,7 +7598,7 @@ compile_10:
     movq -360(%rbp), %rdi
     movq -368(%rbp), %rsi
     call print_ir_module
-    leaq .LC72(%rip), %rax
+    leaq .LC67(%rip), %rax
     movq %rax, -360(%rbp)
     subq $176, %rsp
     movq -360(%rbp), %rdi
@@ -7753,7 +7706,7 @@ compile_18:
     testl %eax, %eax
     jz compile_20
 compile_19:
-    leaq .LC73(%rip), %rax
+    leaq .LC68(%rip), %rax
     movq %rax, -360(%rbp)
     subq $176, %rsp
     movq -360(%rbp), %rdi
@@ -7775,7 +7728,7 @@ compile_19:
     movq -360(%rbp), %rdi
     movq -368(%rbp), %rsi
     call print_ir_module
-    leaq .LC74(%rip), %rax
+    leaq .LC69(%rip), %rax
     movq %rax, -360(%rbp)
     subq $176, %rsp
     movq -360(%rbp), %rdi
@@ -7815,7 +7768,7 @@ compile_21:
     movq %rax, -368(%rbp)
     movq -368(%rbp), %rax
     movq %rax, -368(%rbp)
-    leaq .LC75(%rip), %rax
+    leaq .LC70(%rip), %rax
     movq %rax, -376(%rbp)
     movq -368(%rbp), %rdi
     movq -376(%rbp), %rsi
@@ -7868,7 +7821,7 @@ load_src_file_0:
     movq %rax, -600(%rbp)
     leaq -528(%rbp), %rax
     movq %rax, -608(%rbp)
-    leaq .LC76(%rip), %rax
+    leaq .LC71(%rip), %rax
     movq %rax, -616(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -624(%rbp)
@@ -7945,7 +7898,7 @@ load_src_file_2:
     movl %eax, -616(%rbp)
     movslq -616(%rbp), %rax
     movq %rax, -616(%rbp)
-    leaq .LC77(%rip), %rax
+    leaq .LC72(%rip), %rax
     movq %rax, -624(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -632(%rbp)
@@ -8004,7 +7957,7 @@ load_src_file_3:
     movl %ecx, (%rax)
     jmp load_src_file_1
 load_src_file_4:
-    leaq .LC78(%rip), %rax
+    leaq .LC73(%rip), %rax
     movq %rax, -600(%rbp)
     leaq -528(%rbp), %rax
     movq %rax, -608(%rbp)
@@ -8019,7 +7972,7 @@ load_src_file_4:
     movq %rax, -600(%rbp)
     leaq -528(%rbp), %rax
     movq %rax, -608(%rbp)
-    leaq .LC79(%rip), %rax
+    leaq .LC74(%rip), %rax
     movq %rax, -616(%rbp)
     movq -608(%rbp), %rdi
     movq -616(%rbp), %rsi
@@ -8048,7 +8001,7 @@ load_src_file_6:
     testl %eax, %eax
     jz load_src_file_8
 load_src_file_7:
-    leaq .LC80(%rip), %rax
+    leaq .LC75(%rip), %rax
     movq %rax, -600(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -608(%rbp)
@@ -8205,7 +8158,7 @@ load_src_file_15:
     testl %eax, %eax
     jz load_src_file_17
 load_src_file_16:
-    leaq .LC81(%rip), %rax
+    leaq .LC76(%rip), %rax
     movq %rax, -600(%rbp)
     subq $184, %rsp
     movl $2, %edi

@@ -143,12 +143,15 @@ void drive(Compiler *c) {
 
 void init_compiler(Compiler *compiler) {
     compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
-    // TODO compiler_c segfaults here, 40byte struct assignment on struct member using ->
     compiler->nm = new_node_manager();
     compiler->p = new_parser();
     init_typepool();
+    return;
 }
 Compiler begin_compiler(const int argc, char *argv[]) {
+#ifdef __COMPILER_C__
+    printf("[Compiler_C]\n");
+#endif
     if (argc < 2) {
         PANIC(IMPROPER_USAGE);
     }
@@ -158,7 +161,7 @@ Compiler begin_compiler(const int argc, char *argv[]) {
         printf("\t-S          : Compile to Assembly File\n");
         printf("\t-c          : Compile to Object File\n");
         printf("\t-ir         : Compile and print IR\n");
-        printf("\t-ast          : Print parse tree\n");
+        printf("\t-ast        : Print parse tree\n");
         printf("\t-h          : Get help\n");
         exit(0);
     }

@@ -109,6 +109,8 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     array_init(&i.call.arg_array, expr->func_call.params_array.count ? expr->func_call.params_array.count : 1, sizeof(IR_CallArg));
     int hidden_ptr_offset = 0;
     Type *return_type = i.call.type->_func.return_type;
+    IR_Value sret;
+    bool use_sret = false;
     // TODO Abstract the condition to ABI, so it works for both SysV and Win64
     if (return_type != type_void) {
 
@@ -116,10 +118,14 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
         if (res.memory) {
             // Pass hidden pointer as first arg
             set_sret(return_type);
-            append(&ctx->func->locals_array, &_sret);
+            Symbol *current_sret_symbol = current_sret();
+
+            append(&ctx->func->locals_array, &current_sret_symbol);
             hidden_ptr_offset++;
-            append(&i.call.arg_array,
-                   &(IR_CallArg){.v = ir_address(ctx, ir_symbol_value(_sret), 0), .type = get_pointer_type(return_type)});
+            sret = ((IR_CallArg *)append(&i.call.arg_array, &(IR_CallArg){.v = ir_address(ctx, ir_symbol_value(current_sret_symbol), 0),
+                                                                          .type = get_pointer_type(return_type)}))
+                       ->v;
+            use_sret = true;
         }
     }
 
@@ -127,8 +133,10 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
         Node *param = get_node(&expr->func_call.params_array, j);
         Type *arg_type = param->type;
 
-        if (j < i.call.type->abi.type->_func.params.count)
-            arg_type = ((ParamDecl *)get(&i.call.type->abi.type->_func.params, j + hidden_ptr_offset))->type;
+        if (j < i.call.type->abi.type->_func.params.count) {
+            ParamDecl *d = (ParamDecl *)get(&i.call.type->abi.type->_func.params, j + hidden_ptr_offset);
+            arg_type = d->type;
+        }
 
         IR_Value val;
         ABI_Result res = abi_classify(arg_type);
@@ -139,8 +147,10 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
         append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg_type});
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
+    // Used because ir_call redefines i.ops[0]
     i.op_count = 2;
     ir_append_instruction(ctx->block, &i);
+    if (use_sret) ir_move(ctx, i.ops[0], sret);
     return i.ops[0];
 }
 IR_Value ir_return(IR_Context *ctx, IR_Value reg, Type *type) {
@@ -203,9 +213,6 @@ IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
     return i.ops[0];
 }
 IR_Value ir_address(IR_Context *ctx, IR_Value src, int offset) {
-    if (src.kind == IR_VREG) {
-        printf("HERE");
-    }
     IR_Instruction i;
     i.op = IR_ADDR;
     i.ops[1] = src;
