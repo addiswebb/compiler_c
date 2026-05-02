@@ -150,7 +150,7 @@ void init_compiler(Compiler *compiler) {
 }
 Compiler begin_compiler(const int argc, char *argv[]) {
 #ifdef __COMPILER_C__
-    printf("[Compiler_C]\n");
+    printf("[\x1b[34mCompiler_C\x1b[0m]\n");
 #endif
     if (argc < 2) {
         PANIC(IMPROPER_USAGE);
@@ -272,7 +272,6 @@ static int load_src_file(Compiler *compiler, const char *file) {
     for (int i = 0; i < compiler->passthrough_args.count; i++) {
         cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }
-    printf("Running: %s\n", cmd);
 
     FILE *fp = popen(cmd, "r");
     ASSERT(fp, "Failed to open %s\n", file);

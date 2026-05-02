@@ -9,11 +9,11 @@ fi
 INPUT_FILE="$1"
 BASENAME=$(basename "$INPUT_FILE" .c)
 
-gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 ./src/"$INPUT_FILE" -o ./tests/test.c -I./include/
+gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 ./src/"$INPUT_FILE" -o ./tests/"$INPUT_FILE" -I./include/
 
 # cmake --build build
 
-compiler_c ./tests/test.c -o ./tests/"$INPUT_FILE".o -c || { echo "compiler_c failed"; exit 1; }
+compiler_c ./tests/"$INPUT_FILE" -o ./tests/"$INPUT_FILE".o -c || { echo "compiler_c failed"; exit 1; }
 
 mv ./tests/compiler.c.o ./build/CMakeFiles/compiler_c.dir/src/
 
