@@ -110,75 +110,95 @@
 .LC47:
     .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 'a', 'p', 'p', 'e', 'n', 'd', ' ', 0x27, '%', 's', 0x27, ' ', 't', 'o', ' ', '%', 's', 0x0A, 0
 .LC48:
-    .byte '2', ' ', '%', 'l', 'd', 0x0A, 0
-.LC49:
     .byte '-', 'o', ' ', 'i', 'g', 'n', 'o', 'r', 'e', 'd', ' ', 'w', 'i', 't', 'h', ' ', 'm', 'u', 'l', 't', 'i', 'p', 'l', 'e', ' ', 'i', 'n', 'p', 'u', 't', 's', ' ', '%', 'd', 0x0A, 0
-.LC50:
-    .byte '3', 0x0A, 0
-.LC51:
+.LC49:
     .byte '.', 's', 0
-.LC52:
+.LC50:
     .byte '.', 'o', 0
-.LC53:
+.LC51:
     .byte 'a', '.', 'o', 'u', 't', 0
-.LC54:
+.LC52:
     .byte 'N', 'o', ' ', 'o', 'b', 'j', 'e', 'c', 't', ' ', 'f', 'i', 'l', 'e', 's', ' ', 't', 'o', ' ', 'l', 'i', 'n', 'k', 0x0A, 0
-.LC55:
+.LC53:
     .byte 'D', 'o', 'n', 'e', '.', 0x0A, 0
+.LC54:
+    .byte '1', 0x0A, 0
+.LC55:
+    .byte '2', 0x0A, 0
 .LC56:
-    .byte 'I', 'm', 'p', 'r', 'o', 'p', 'e', 'r', ' ', 'U', 's', 'a', 'g', 'e', ',', 0x0A, ' ', ' ', 'c', 'o', 'm', 'p', 'i', 'l', 'e', 'r', '_', 'c', ' ', '[', 'i', 'n', 'p', 'u', 't', ']', ' ', '-', 'o', ' ', '[', 'o', 'u', 't', 'p', 'u', 't', ']', 0x0A, 0
+    .byte '3', 0x0A, 0
 .LC57:
-    .byte '-', 'h', 0
+    .byte '4', 0x0A, 0
 .LC58:
-    .byte 'c', 'o', 'm', 'p', 'i', 'l', 'e', 'r', ' ', '[', 'i', 'n', 'p', 'u', 't', ']', 0x0A, 0
+    .byte '5', 0x0A, 0
 .LC59:
-    .byte 0x09, '-', 'o', ' ', '[', 'o', 'u', 't', 'p', 'u', 't', ']', ' ', ':', ' ', 'S', 'e', 't', ' ', 'o', 'u', 't', 'p', 'u', 't', ' ', 'f', 'i', 'l', 'e', ' ', 'p', 'a', 't', 'h', 0x0A, 0
+    .byte '6', 0x0A, 0
 .LC60:
-    .byte 0x09, '-', 'S', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 't', 'o', ' ', 'A', 's', 's', 'e', 'm', 'b', 'l', 'y', ' ', 'F', 'i', 'l', 'e', 0x0A, 0
+    .byte 'I', 'm', 'p', 'r', 'o', 'p', 'e', 'r', ' ', 'U', 's', 'a', 'g', 'e', ',', 0x0A, ' ', ' ', 'c', 'o', 'm', 'p', 'i', 'l', 'e', 'r', '_', 'c', ' ', '[', 'i', 'n', 'p', 'u', 't', ']', ' ', '-', 'o', ' ', '[', 'o', 'u', 't', 'p', 'u', 't', ']', 0x0A, 0
 .LC61:
-    .byte 0x09, '-', 'c', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 't', 'o', ' ', 'O', 'b', 'j', 'e', 'c', 't', ' ', 'F', 'i', 'l', 'e', 0x0A, 0
+    .byte '-', 'h', 0
 .LC62:
-    .byte 0x09, '-', 'i', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 'a', 'n', 'd', ' ', 'p', 'r', 'i', 'n', 't', ' ', 'I', 'R', 0x0A, 0
+    .byte 'c', 'o', 'm', 'p', 'i', 'l', 'e', 'r', ' ', '[', 'i', 'n', 'p', 'u', 't', ']', 0x0A, 0
 .LC63:
-    .byte 0x09, '-', 'a', 's', 't', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'P', 'r', 'i', 'n', 't', ' ', 'p', 'a', 'r', 's', 'e', ' ', 't', 'r', 'e', 'e', 0x0A, 0
+    .byte 0x09, '-', 'o', ' ', '[', 'o', 'u', 't', 'p', 'u', 't', ']', ' ', ':', ' ', 'S', 'e', 't', ' ', 'o', 'u', 't', 'p', 'u', 't', ' ', 'f', 'i', 'l', 'e', ' ', 'p', 'a', 't', 'h', 0x0A, 0
 .LC64:
-    .byte 0x09, '-', 'h', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'G', 'e', 't', ' ', 'h', 'e', 'l', 'p', 0x0A, 0
+    .byte 0x09, '-', 'S', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 't', 'o', ' ', 'A', 's', 's', 'e', 'm', 'b', 'l', 'y', ' ', 'F', 'i', 'l', 'e', 0x0A, 0
 .LC65:
-    .byte 'S', 'o', 'u', 'r', 'c', 'e', ' ', 'o', 'r', ' ', 'o', 'u', 't', 'p', 'u', 't', ' ', 'i', 's', ' ', 'n', 'o', 't', ' ', 's', 'e', 't', ' ', 'f', 'o', 'r', ' ', 'c', 'o', 'm', 'p', 'i', 'l', 'e', 0x0A, 0
+    .byte 0x09, '-', 'c', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 't', 'o', ' ', 'O', 'b', 'j', 'e', 'c', 't', ' ', 'F', 'i', 'l', 'e', 0x0A, 0
 .LC66:
-    .byte 'C', 'o', 'm', 'p', 'i', 'l', 'i', 'n', 'g', ' ', '%', 's', ' ', 't', 'o', ' ', '%', 's', 0x0A, 0
+    .byte 0x09, '-', 'i', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 'a', 'n', 'd', ' ', 'p', 'r', 'i', 'n', 't', ' ', 'I', 'R', 0x0A, 0
 .LC67:
-    .byte '-', '-', '-', '-', ' ', 'I', 'R', ' ', '-', '-', '-', '-', 0x0A, 0
+    .byte 0x09, '-', 'a', 's', 't', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'P', 'r', 'i', 'n', 't', ' ', 'p', 'a', 'r', 's', 'e', ' ', 't', 'r', 'e', 'e', 0x0A, 0
 .LC68:
-    .byte 0x0A, 0
+    .byte 0x09, '-', 'h', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'G', 'e', 't', ' ', 'h', 'e', 'l', 'p', 0x0A, 0
 .LC69:
-    .byte '-', '-', '-', '-', ' ', 'L', 'o', 'w', 'e', 'r', 'e', 'd', ' ', 'I', 'R', ' ', '-', '-', '-', '-', 0x0A, 0
+    .byte 'S', 'o', 'u', 'r', 'c', 'e', ' ', 'o', 'r', ' ', 'o', 'u', 't', 'p', 'u', 't', ' ', 'i', 's', ' ', 'n', 'o', 't', ' ', 's', 'e', 't', ' ', 'f', 'o', 'r', ' ', 'c', 'o', 'm', 'p', 'i', 'l', 'e', 0x0A, 0
 .LC70:
-    .byte 0x0A, 0
+    .byte 'C', 'o', 'm', 'p', 'i', 'l', 'i', 'n', 'g', ' ', '%', 's', ' ', 't', 'o', ' ', '%', 's', 0x0A, 0
 .LC71:
-    .byte 'w', 0
+    .byte '-', '-', '-', '-', ' ', 'I', 'R', ' ', '-', '-', '-', '-', 0x0A, 0
 .LC72:
-    .byte 'g', 'c', 'c', ' ', '-', 'E', ' ', '-', 'P', ' ', '-', 'n', 'o', 's', 't', 'd', 'i', 'n', 'c', ' ', '-', 'D', '_', '_', 'C', 'O', 'M', 'P', 'I', 'L', 'E', 'R', '_', 'C', '_', '_', ' ', '-', 'I', '.', '/', 'l', 'i', 'b', 'c', ' ', '-', 's', 't', 'd', '=', 'c', '1', '1', ' ', '%', 's', ' ', 0
+    .byte 0x0A, 0
 .LC73:
-    .byte '%', 's', ' ', 0
+    .byte '-', '-', '-', '-', ' ', 'L', 'o', 'w', 'e', 'r', 'e', 'd', ' ', 'I', 'R', ' ', '-', '-', '-', '-', 0x0A, 0
 .LC74:
-    .byte 'R', 'u', 'n', 'n', 'i', 'n', 'g', ':', ' ', '%', 's', 0x0A, 0
+    .byte 0x0A, 0
 .LC75:
-    .byte 'r', 0
+    .byte 'w', 0
 .LC76:
-    .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 'o', 'p', 'e', 'n', ' ', '%', 's', 0x0A, 0
+    .byte 'g', 'c', 'c', ' ', '-', 'E', ' ', '-', 'P', ' ', '-', 'n', 'o', 's', 't', 'd', 'i', 'n', 'c', ' ', '-', 'D', '_', '_', 'C', 'O', 'M', 'P', 'I', 'L', 'E', 'R', '_', 'C', '_', '_', ' ', '-', 'I', '.', '/', 'l', 'i', 'b', 'c', ' ', '-', 's', 't', 'd', '=', 'c', '1', '1', ' ', '%', 's', ' ', 0
 .LC77:
+    .byte '%', 's', ' ', 0
+.LC78:
+    .byte 'R', 'u', 'n', 'n', 'i', 'n', 'g', ':', ' ', '%', 's', 0x0A, 0
+.LC79:
+    .byte 'r', 0
+.LC80:
+    .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 'o', 'p', 'e', 'n', ' ', '%', 's', 0x0A, 0
+.LC81:
     .byte 'L', 'o', 'a', 'd', 'e', 'd', ' ', 'a', 'n', ' ', 'e', 'm', 'p', 't', 'y', ' ', 's', 'o', 'u', 'r', 'c', 'e', ' ', 'f', 'i', 'l', 'e', 0x0A, 0
 .global compiler_flags
-.bss
+.data
 .align 4
 compiler_flags:
-    .zero 4
+    .long 0
 .global flag_strings
-.bss
+.data
 .align 8
 flag_strings:
-    .zero 104
+    .quad .LC15
+    .quad .LC16
+    .quad .LC17
+    .quad .LC18
+    .quad .LC19
+    .quad .LC20
+    .quad .LC21
+    .quad .LC22
+    .quad .LC23
+    .quad .LC24
+    .quad .LC25
+    .quad .LC26
+    .quad .LC27
 
 .text
 align:
@@ -6177,15 +6197,6 @@ drive:
     subq $96, %rsp
 drive_0:
     movq %rdi, -8(%rbp)
-    leaq .LC48(%rip), %rax
-    movq %rax, -64(%rbp)
-    subq $176, %rsp
-    movq -64(%rbp), %rdi
-    movl $1328, %esi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -64(%rbp)
     subq $8, %rsp
     movl $2, %edi
     call has_flag
@@ -6235,7 +6246,7 @@ drive_0:
     testl %eax, %eax
     jz drive_2
 drive_1:
-    leaq .LC49(%rip), %rax
+    leaq .LC48(%rip), %rax
     movq %rax, -64(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -72(%rbp)
@@ -6265,14 +6276,6 @@ drive_1:
     movq %rcx, (%rax)
     jmp drive_2
 drive_2:
-    leaq .LC50(%rip), %rax
-    movq %rax, -64(%rbp)
-    subq $176, %rsp
-    movq -64(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -64(%rbp)
     leaq -32(%rbp), %rax
     movq %rax, -64(%rbp)
     leaq -8(%rbp), %rax
@@ -6383,7 +6386,7 @@ drive_4:
     movq -80(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -80(%rbp)
-    leaq .LC51(%rip), %rax
+    leaq .LC49(%rip), %rax
     movq %rax, -88(%rbp)
     movq -64(%rbp), %rdi
     movl -72(%rbp), %esi
@@ -6515,7 +6518,7 @@ drive_8:
     movq -80(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -80(%rbp)
-    leaq .LC52(%rip), %rax
+    leaq .LC50(%rip), %rax
     movq %rax, -88(%rbp)
     movq -64(%rbp), %rdi
     movl -72(%rbp), %esi
@@ -6650,7 +6653,7 @@ drive_14:
     movq %rax, -80(%rbp)
     jmp drive_16
 drive_15:
-    leaq .LC53(%rip), %rax
+    leaq .LC51(%rip), %rax
     movq %rax, -72(%rbp)
     movq -72(%rbp), %rax
     movq %rax, -80(%rbp)
@@ -6685,7 +6688,7 @@ drive_18:
     testl %eax, %eax
     jz drive_20
 drive_19:
-    leaq .LC54(%rip), %rax
+    leaq .LC52(%rip), %rax
     movq %rax, -64(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -6717,7 +6720,7 @@ drive_21:
     movl $0, %edi
     call set_log_stage
     addq $8, %rsp
-    leaq .LC55(%rip), %rax
+    leaq .LC53(%rip), %rax
     movq %rax, -64(%rbp)
     subq $184, %rsp
     movl $1, %edi
@@ -6732,84 +6735,140 @@ drive_21:
 init_compiler:
     push %rbp
     mov %rsp, %rbp
-    subq $288, %rsp
+    subq $320, %rsp
 init_compiler_0:
     movq %rdi, -8(%rbp)
+    leaq .LC54(%rip), %rax
+    movq %rax, -296(%rbp)
+    subq $176, %rsp
+    movq -296(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -296(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -256(%rbp)
-    movq -256(%rbp), %rax
+    movq %rax, -296(%rbp)
+    movq -296(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -256(%rbp)
-    movq -256(%rbp), %rax
+    movq %rax, -296(%rbp)
+    movq -296(%rbp), %rax
     addq $120, %rax
-    movq %rax, -256(%rbp)
+    movq %rax, -296(%rbp)
     leaq -88(%rbp), %rax
-    movq %rax, -264(%rbp)
+    movq %rax, -304(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -272(%rbp)
-    movq -272(%rbp), %rax
+    movq %rax, -312(%rbp)
+    movq -312(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -272(%rbp)
-    movq -272(%rbp), %rax
+    movq %rax, -312(%rbp)
+    movq -312(%rbp), %rax
     addq $104, %rax
-    movq %rax, -272(%rbp)
-    movq -272(%rbp), %rax
+    movq %rax, -312(%rbp)
+    movq -312(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -272(%rbp)
-    movq -272(%rbp), %rax
-    movq %rax, -272(%rbp)
+    movq %rax, -312(%rbp)
+    movq -312(%rbp), %rax
+    movq %rax, -312(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -280(%rbp)
-    movq -280(%rbp), %rax
+    movq %rax, -320(%rbp)
+    movq -320(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -280(%rbp)
-    movq -280(%rbp), %rax
+    movq %rax, -320(%rbp)
+    movq -320(%rbp), %rax
     addq $112, %rax
-    movq %rax, -280(%rbp)
-    movq -280(%rbp), %rax
+    movq %rax, -320(%rbp)
+    movq -320(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -280(%rbp)
-    movq -264(%rbp), %rdi
-    movq -272(%rbp), %rsi
-    movl -280(%rbp), %edx
+    movl %eax, -320(%rbp)
+    movq -304(%rbp), %rdi
+    movq -312(%rbp), %rsi
+    movl -320(%rbp), %edx
     call t_new_tokenizer
-    movq -264(%rbp), %rsi
-    movq -256(%rbp), %rdi
+    movq -304(%rbp), %rsi
+    movq -296(%rbp), %rdi
     mov $1072, %rdx
     call memcpy
-    leaq -8(%rbp), %rax
-    movq %rax, -256(%rbp)
-    movq -256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -256(%rbp)
-    movq -256(%rbp), %rax
-    addq $1192, %rax
-    movq %rax, -256(%rbp)
+    leaq .LC55(%rip), %rax
+    movq %rax, -296(%rbp)
+    subq $176, %rsp
+    movq -296(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -296(%rbp)
+    leaq -128(%rbp), %rax
+    movq %rax, -296(%rbp)
     leaq -88(%rbp), %rax
-    movq %rax, -264(%rbp)
-    movq -264(%rbp), %rdi
+    movq %rax, -304(%rbp)
+    movq -304(%rbp), %rdi
     call new_node_manager
-    movq -264(%rbp), %rsi
-    movq -256(%rbp), %rdi
+    movq -304(%rbp), %rsi
+    movq -296(%rbp), %rdi
     mov $40, %rdx
     call memcpy
+    leaq .LC56(%rip), %rax
+    movq %rax, -296(%rbp)
+    subq $176, %rsp
+    movq -296(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -296(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -256(%rbp)
-    movq -256(%rbp), %rax
+    movq %rax, -296(%rbp)
+    movq -296(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -256(%rbp)
-    movq -256(%rbp), %rax
+    movq %rax, -296(%rbp)
+    movq -296(%rbp), %rax
+    addq $1192, %rax
+    movq %rax, -296(%rbp)
+    leaq -128(%rbp), %rax
+    movq %rax, -304(%rbp)
+    movq -304(%rbp), %rsi
+    movq -296(%rbp), %rdi
+    mov $40, %rdx
+    call memcpy
+    leaq .LC57(%rip), %rax
+    movq %rax, -296(%rbp)
+    subq $176, %rsp
+    movq -296(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -296(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -296(%rbp)
+    movq -296(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -296(%rbp)
+    movq -296(%rbp), %rax
     addq $1232, %rax
-    movq %rax, -256(%rbp)
+    movq %rax, -296(%rbp)
     leaq -88(%rbp), %rax
-    movq %rax, -264(%rbp)
-    movq -264(%rbp), %rdi
+    movq %rax, -304(%rbp)
+    movq -304(%rbp), %rdi
     call new_parser
-    movq -264(%rbp), %rsi
-    movq -256(%rbp), %rdi
+    movq -304(%rbp), %rsi
+    movq -296(%rbp), %rdi
     mov $96, %rdx
     call memcpy
+    leaq .LC58(%rip), %rax
+    movq %rax, -296(%rbp)
+    subq $176, %rsp
+    movq -296(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -296(%rbp)
     call init_typepool
+    leaq .LC59(%rip), %rax
+    movq %rax, -296(%rbp)
+    subq $176, %rsp
+    movq -296(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -296(%rbp)
     mov %rbp, %rsp
     pop %rbp
     ret
@@ -6842,7 +6901,7 @@ begin_compiler_2:
     testl %eax, %eax
     jz begin_compiler_4
 begin_compiler_3:
-    leaq .LC56(%rip), %rax
+    leaq .LC60(%rip), %rax
     movq %rax, -1360(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -6885,7 +6944,7 @@ begin_compiler_5:
     movq %rax, -1360(%rbp)
     movq -1360(%rbp), %rax
     movq %rax, -1360(%rbp)
-    leaq .LC57(%rip), %rax
+    leaq .LC61(%rip), %rax
     movq %rax, -1368(%rbp)
     movq -1360(%rbp), %rdi
     movq -1368(%rbp), %rsi
@@ -6900,38 +6959,6 @@ begin_compiler_5:
     testl %eax, %eax
     jz begin_compiler_7
 begin_compiler_6:
-    leaq .LC58(%rip), %rax
-    movq %rax, -1360(%rbp)
-    subq $176, %rsp
-    movq -1360(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -1360(%rbp)
-    leaq .LC59(%rip), %rax
-    movq %rax, -1360(%rbp)
-    subq $176, %rsp
-    movq -1360(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -1360(%rbp)
-    leaq .LC60(%rip), %rax
-    movq %rax, -1360(%rbp)
-    subq $176, %rsp
-    movq -1360(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -1360(%rbp)
-    leaq .LC61(%rip), %rax
-    movq %rax, -1360(%rbp)
-    subq $176, %rsp
-    movq -1360(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $176, %rsp
-    movl %eax, -1360(%rbp)
     leaq .LC62(%rip), %rax
     movq %rax, -1360(%rbp)
     subq $176, %rsp
@@ -6949,6 +6976,38 @@ begin_compiler_6:
     addq $176, %rsp
     movl %eax, -1360(%rbp)
     leaq .LC64(%rip), %rax
+    movq %rax, -1360(%rbp)
+    subq $176, %rsp
+    movq -1360(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -1360(%rbp)
+    leaq .LC65(%rip), %rax
+    movq %rax, -1360(%rbp)
+    subq $176, %rsp
+    movq -1360(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -1360(%rbp)
+    leaq .LC66(%rip), %rax
+    movq %rax, -1360(%rbp)
+    subq $176, %rsp
+    movq -1360(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -1360(%rbp)
+    leaq .LC67(%rip), %rax
+    movq %rax, -1360(%rbp)
+    subq $176, %rsp
+    movq -1360(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -1360(%rbp)
+    leaq .LC68(%rip), %rax
     movq %rax, -1360(%rbp)
     subq $176, %rsp
     movq -1360(%rbp), %rdi
@@ -7234,7 +7293,7 @@ compile_2:
     testl %eax, %eax
     jz compile_4
 compile_3:
-    leaq .LC65(%rip), %rax
+    leaq .LC69(%rip), %rax
     movq %rax, -360(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -7248,7 +7307,7 @@ compile_3:
 compile_4:
     jmp compile_5
 compile_5:
-    leaq .LC66(%rip), %rax
+    leaq .LC70(%rip), %rax
     movq %rax, -360(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -368(%rbp)
@@ -7564,7 +7623,7 @@ compile_9:
     testl %eax, %eax
     jz compile_11
 compile_10:
-    leaq .LC67(%rip), %rax
+    leaq .LC71(%rip), %rax
     movq %rax, -360(%rbp)
     subq $176, %rsp
     movq -360(%rbp), %rdi
@@ -7586,7 +7645,7 @@ compile_10:
     movq -360(%rbp), %rdi
     movq -368(%rbp), %rsi
     call print_ir_module
-    leaq .LC68(%rip), %rax
+    leaq .LC72(%rip), %rax
     movq %rax, -360(%rbp)
     subq $176, %rsp
     movq -360(%rbp), %rdi
@@ -7694,7 +7753,7 @@ compile_18:
     testl %eax, %eax
     jz compile_20
 compile_19:
-    leaq .LC69(%rip), %rax
+    leaq .LC73(%rip), %rax
     movq %rax, -360(%rbp)
     subq $176, %rsp
     movq -360(%rbp), %rdi
@@ -7716,7 +7775,7 @@ compile_19:
     movq -360(%rbp), %rdi
     movq -368(%rbp), %rsi
     call print_ir_module
-    leaq .LC70(%rip), %rax
+    leaq .LC74(%rip), %rax
     movq %rax, -360(%rbp)
     subq $176, %rsp
     movq -360(%rbp), %rdi
@@ -7756,7 +7815,7 @@ compile_21:
     movq %rax, -368(%rbp)
     movq -368(%rbp), %rax
     movq %rax, -368(%rbp)
-    leaq .LC71(%rip), %rax
+    leaq .LC75(%rip), %rax
     movq %rax, -376(%rbp)
     movq -368(%rbp), %rdi
     movq -376(%rbp), %rsi
@@ -7809,7 +7868,7 @@ load_src_file_0:
     movq %rax, -600(%rbp)
     leaq -528(%rbp), %rax
     movq %rax, -608(%rbp)
-    leaq .LC72(%rip), %rax
+    leaq .LC76(%rip), %rax
     movq %rax, -616(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -624(%rbp)
@@ -7886,7 +7945,7 @@ load_src_file_2:
     movl %eax, -616(%rbp)
     movslq -616(%rbp), %rax
     movq %rax, -616(%rbp)
-    leaq .LC73(%rip), %rax
+    leaq .LC77(%rip), %rax
     movq %rax, -624(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -632(%rbp)
@@ -7945,7 +8004,7 @@ load_src_file_3:
     movl %ecx, (%rax)
     jmp load_src_file_1
 load_src_file_4:
-    leaq .LC74(%rip), %rax
+    leaq .LC78(%rip), %rax
     movq %rax, -600(%rbp)
     leaq -528(%rbp), %rax
     movq %rax, -608(%rbp)
@@ -7960,7 +8019,7 @@ load_src_file_4:
     movq %rax, -600(%rbp)
     leaq -528(%rbp), %rax
     movq %rax, -608(%rbp)
-    leaq .LC75(%rip), %rax
+    leaq .LC79(%rip), %rax
     movq %rax, -616(%rbp)
     movq -608(%rbp), %rdi
     movq -616(%rbp), %rsi
@@ -7989,7 +8048,7 @@ load_src_file_6:
     testl %eax, %eax
     jz load_src_file_8
 load_src_file_7:
-    leaq .LC76(%rip), %rax
+    leaq .LC80(%rip), %rax
     movq %rax, -600(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -608(%rbp)
@@ -8146,7 +8205,7 @@ load_src_file_15:
     testl %eax, %eax
     jz load_src_file_17
 load_src_file_16:
-    leaq .LC77(%rip), %rax
+    leaq .LC81(%rip), %rax
     movq %rax, -600(%rbp)
     subq $184, %rsp
     movl $2, %edi

@@ -757,6 +757,7 @@ void p_append_call_param(Node *func_call, Node *param);
 void p_append_param(Node *func, Node *param);
 void p_append_enum_const(Parser *p, const EnumField *e);
 Symbol *p_append_var_decl_symbol(Parser *p, Node *v);
+void update_linkage_storage(Symbol *s, Node *v);
 Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param);
 void p_append_element(Node *init_list, Node *element);
 void p_append_symbol_table(Parser *p);
@@ -1428,12 +1429,10 @@ void update_current_output(Compiler *c, bool cond, char *path, const char *ext) 
     }
 }
 void drive(Compiler *c) {
-    printf("2 %ld\n", sizeof(Compiler));
     if ((has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) && c->source_files.count > 1 && c->output) {
         log_message(LOG_WARN, "-o ignored with multiple inputs %d\n", c->source_files.count);
         c->output = ((void *)0);
     }
-    printf("3\n");
     Array objs;
     array_init(&objs, c->source_files.count, sizeof(char *));
     for (int i = 0; i < c->source_files.count; i++) {
@@ -1462,10 +1461,17 @@ void drive(Compiler *c) {
     log_message(LOG_INFO, "Done.\n");
 }
 void init_compiler(Compiler *compiler) {
+    printf("1\n");
     compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
-    compiler->nm = new_node_manager();
+    printf("2\n");
+    NodeManager nm = new_node_manager();
+    printf("3\n");
+    compiler->nm = nm;
+    printf("4\n");
     compiler->p = new_parser();
+    printf("5\n");
     init_typepool();
+    printf("6\n");
 }
 Compiler begin_compiler(const int argc, char *argv[]) {
     if (argc < 2) {

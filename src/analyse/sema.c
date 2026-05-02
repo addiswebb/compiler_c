@@ -325,6 +325,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR, true);
         // TODO consider if symbol management can happen after symantic analysis
         if (var_symbol) {
+
+            if (node->var_decl.is_defined && var_symbol->linkage == LINK_EXTERNAL) update_linkage_storage(var_symbol, node);
             // If we are within a function and var_symbol is a also a local variable
             if (p->scopes_array.count > 1) {
                 if (var_symbol->scope_depth == p->current_scope_depth) {

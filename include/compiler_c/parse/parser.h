@@ -386,6 +386,7 @@ void p_append_call_param(Node *func_call, Node *param);
 void p_append_param(Node *func, Node *param);
 void p_append_enum_const(Parser *p, const EnumField *e);
 Symbol *p_append_var_decl_symbol(Parser *p, Node *v);
+void update_linkage_storage(Symbol *s, Node *v);
 
 Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param);
 void p_append_element(Node *init_list, Node *element);

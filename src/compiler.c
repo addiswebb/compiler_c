@@ -1,6 +1,7 @@
 #include "compiler_c/analyse/analysis.h"
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
+#include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
@@ -142,6 +143,7 @@ void drive(Compiler *c) {
 
 void init_compiler(Compiler *compiler) {
     compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
+    // TODO compiler_c segfaults here, 40byte struct assignment on struct member using ->
     compiler->nm = new_node_manager();
     compiler->p = new_parser();
     init_typepool();

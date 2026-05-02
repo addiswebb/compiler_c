@@ -680,7 +680,10 @@ Symbol *p_append_func_def(Parser *p, Node *f) {
                                                                                   .type = f->type,
                                                                                   .scope_depth = p->current_scope_depth}));
 }
-Symbol *p_append_var_decl_symbol(Parser *p, Node *v) {
+
+void update_linkage_storage(Symbol *s, Node *v) {
+    ASSERT(v->kind == N_VAR_DECL, "Expected Var decl node to update symbol linkage and storage\n");
+    
     Linkage linkage = LINK_NONE;
     Storage storage = STORAGE_NONE;
     if (v->var_decl.is_global) {
@@ -693,13 +696,17 @@ Symbol *p_append_var_decl_symbol(Parser *p, Node *v) {
         if (v->var_decl.storage_class == EXTERN) linkage = LINK_EXTERNAL;
         if (v->var_decl.storage_class == STATIC) linkage = LINK_INTERNAL;
     }
-    return p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = v->var_decl.identifier->identifier.name,
-                                                                                  .kind = VAR,
-                                                                                  .linkage = linkage,
-                                                                                  .storage = storage,
-                                                                                  .var_decl = v,
-                                                                                  .type = v->type,
-                                                                                  .scope_depth = p->current_scope_depth}));
+    s->linkage = linkage;
+    s->storage = storage;
+}
+Symbol *p_append_var_decl_symbol(Parser *p, Node *v) {
+    Symbol *s = p_new_symbol(p, &(Symbol){.name = v->var_decl.identifier->identifier.name,
+                                          .kind = VAR,
+                                          .var_decl = v,
+                                          .type = v->type,
+                                          .scope_depth = p->current_scope_depth});
+    update_linkage_storage(s, v);
+    return p_append_symbol(get_current_symbol_table(p), s);
 }
 
 Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param) {
@@ -948,7 +955,6 @@ void p_pop_scope(Parser *p) {
     array_free(get_current_symbol_table(p));
     pop(&p->scopes_array);
 }
-
 
 /*
     Consumes
