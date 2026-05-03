@@ -69,7 +69,7 @@ The structure of the compiler will be explained in detail later, for now it take
 
 Finally when all source files have been compiled to objects, the driver has `gcc` link them together. It is important to include `-lc` and `-lm` to link against libc and math libraries which allows for the use of functions like `printf`. ( `-lc` is on by default, `-lm` is on by default on Win64 )
 
-## The Compiler
+### The Compiler
 The compiler itself is comprised of 6 major sections. Each one has a clear task. 
 The compiler manages all sections and hands the work of one onto the next. It also handles loading the file from disc into memory and parsing compile flags given at runtime which change the compiler`s behaviour.
 
