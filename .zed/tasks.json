@@ -10,7 +10,7 @@
     },
     {
         "label": "Full Run Test.c",
-        "command": "cmake --build build;./build/compiler_c ./tests/test.c  -o ./tests/test.exe -glowered-ir; ./tests/test.exe; echo \"Exit Code: $LASTEXITCODE - $?\"",
+        "command": "cmake --build build;./build/compiler_c ./tests/test.c  -o ./tests/test.exe;./tests/test.exe; echo \"Exit Code: $LASTEXITCODE - $?\"",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,

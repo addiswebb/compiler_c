@@ -252,6 +252,18 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
         primary->literal.kind = literal_kind(tk->type);
         primary->literal.raw_rata = tk->value;
         primary->literal.len = tk->size;
+        if (primary->literal.kind == L_STRING) {
+            Array cat_str;
+            array_init(&cat_str, primary->literal.len + tk->size + 1, sizeof(char));
+            memcpy(cat_str.data, primary->literal.raw_rata, primary->literal.len);
+            cat_str.count += primary->literal.len;
+            while (p_peek(p)->type == TK_STRING_LITERAL) {
+                tk = p_consume(p);
+                array_str_catn(&cat_str, tk->value, tk->size);
+            }
+            primary->literal.raw_rata = cat_str.data;
+            primary->literal.len = cat_str.count;
+        }
         return primary;
     case TK_IDENTIFIER:
         primary = new_node(nm, N_IDENTIFIER);
@@ -683,7 +695,7 @@ Symbol *p_append_func_def(Parser *p, Node *f) {
 
 void update_linkage_storage(Symbol *s, Node *v) {
     ASSERT(v->kind == N_VAR_DECL, "Expected Var decl node to update symbol linkage and storage\n");
-    
+
     Linkage linkage = LINK_NONE;
     Storage storage = STORAGE_NONE;
     if (v->var_decl.is_global) {

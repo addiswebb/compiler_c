@@ -18,6 +18,7 @@ void *insert(Array *arr, const void *element, int index);
 void pop(Array *arr);
 
 void array_str_cpy(Array *arr, const char *str);
+void array_str_catn(Array *arr, const char *str, int n);
 
 void *get(const Array *arr, int index);
 void set(const Array *arr, const void *element, int index);
