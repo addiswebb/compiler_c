@@ -203,18 +203,23 @@ ConstLiteral evaluate_const_cast(const Node *node) {
 }
 ConstLiteral evaluate_const_init_list(const Node *node) {
     ASSERT(node->kind == N_INIT_LIST, "Expected N_INIT_LIST node.\n");
-    ConstLiteral l = {.type = node->type, .kind = CONST_ARRAY};
-    array_init(&l.arr, node->type->_array.array_len, sizeof(ConstLiteral));
-    // Fill with zeros
-    for (int i = 0; i < l.arr.capacity; i++) append(&l.arr, &(ConstLiteral){.type = l.type->base, .kind = CONST_INTEGER, .i = 0});
-    // TODO dont forget to free this shi
-    ConstLiteral *arr = l.arr.data;
-    for (int i = 0; i < node->init_list.elements_array.count; i++) {
-        Node *designated_initializer = get_node(&node->init_list.elements_array, i);
-        ConstLiteral e = evaluate_const_expression(designated_initializer->designated_init.value);
-        set(&l.arr, &e, designated_initializer->designated_init._array.index);
+    if (node->type->kind == T_ARRAY) {
+        ConstLiteral l = {.type = node->type, .kind = CONST_ARRAY};
+        array_init(&l.arr, node->type->_array.array_len, sizeof(ConstLiteral));
+        // Fill with zeros
+        for (int i = 0; i < l.arr.capacity; i++) append(&l.arr, &(ConstLiteral){.type = l.type->base, .kind = CONST_INTEGER, .i = 0});
+        // TODO dont forget to free this shi
+        ConstLiteral *arr = l.arr.data;
+        for (int i = 0; i < node->init_list.elements_array.count; i++) {
+            Node *designated_initializer = get_node(&node->init_list.elements_array, i);
+            ConstLiteral e = evaluate_const_expression(designated_initializer->designated_init.value);
+            set(&l.arr, &e, designated_initializer->designated_init._array.index);
+        }
+        return l;
+    } else if (node->type->kind == T_STRUCT) {
+        return (ConstLiteral){.kind = CONST_INTEGER, .type = node->type, .i = 0};
     }
-    return l;
+    PANIC("Invalid init_list node given to ConstLiteral evaluation\n");
 }
 
 ConstLiteral evaluate_const_literal(const Node *node) {

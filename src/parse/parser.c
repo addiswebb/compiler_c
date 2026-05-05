@@ -840,11 +840,19 @@ StructMember *get_struct_member_named(Type *struct_t, const char *name, int *ind
     bool found_member = false;
     for (int j = 0; j < struct_t->_struct.members_array.count; j++) {
         StructMember *member = get_struct_member(struct_t, j);
-        if (strcmp(member->name, name) == 0) {
-            found_member = true;
-            // Continue from after the named initializer.
-            *index = j;
-            return member;
+        if (member->name) {
+            if (strcmp(member->name, name) == 0) {
+                found_member = true;
+                // Continue from after the named initializer.
+                *index = j;
+                return member;
+            }
+        } else {
+            StructMember *m = get_member(member->type, name, 0);
+            if (m) {
+                *index = j;
+                return m;
+            }
         }
     }
     if (!found_member) {

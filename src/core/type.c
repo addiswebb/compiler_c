@@ -155,14 +155,17 @@ Type *new_qualified_type(Type *type, unsigned int qualifiers) {
         array_init(&qual_type->_struct.members_array, type->_struct.members_array.count, sizeof(StructMember));
         memcpy(qual_type->_struct.members_array.data, type->_struct.members_array.data,
                type->_struct.members_array.count * sizeof(StructMember));
+        qual_type->_struct.members_array.count = type->_struct.members_array.count;
         break;
     case T_UNION:
         array_init(&qual_type->_enum.fields_array, type->_enum.fields_array.count, sizeof(EnumField));
         memcpy(qual_type->_enum.fields_array.data, type->_enum.fields_array.data, type->_enum.fields_array.count * sizeof(EnumField));
+        qual_type->_enum.fields_array.count = type->_enum.fields_array.count;
         break;
     case T_FUNCTION:
         array_init(&qual_type->_func.params, type->_func.params.count, sizeof(ParamDecl));
         memcpy(qual_type->_func.params.data, type->_func.params.data, type->_func.params.count * sizeof(ParamDecl));
+        qual_type->_func.params.count = type->_func.params.count;
         break;
     default:
         break;

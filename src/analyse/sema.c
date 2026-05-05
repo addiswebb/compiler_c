@@ -268,6 +268,23 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_FUNCTION:
         ASSERT(!(node->func.is_defined && node->func.storage_class == EXTERN), "External Function cannot have a definition\n");
         // Simulate a function params in symbol table
+
+        Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC, false);
+        if (func_symbol) {
+            if (func_symbol->func_def->func.storage_class == STATIC && node->func.storage_class != STATIC) {
+                PANIC("Linkage conflict between function declarations of %s\n", node->func.name);
+            }
+            // If previous declaration was prototype, and current has {}
+            if (!func_symbol->func_def->func.is_defined && node->func.is_defined) {
+                // Update func symbol to defined node
+                func_symbol->func_def = node;
+            } else if (node->func.is_defined && func_symbol->func_def->func.is_defined) {
+                // If symbol and current both have {}
+                PANIC("Redefinition of function %s\n", node->func.name);
+            }
+            node->func.symbol = func_symbol;
+        } else node->func.symbol = p_append_func_def(p, node);
+
         if (node->func.is_defined) {
             p_push_scope(p);
             sema_ctx->func = node;
@@ -288,22 +305,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             semantic_analysis(sema_ctx, p, nm, node->func.body);
             p_pop_scope(p);
         }
-
-        Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC, false);
-        if (func_symbol) {
-            if (func_symbol->func_def->func.storage_class == STATIC && node->func.storage_class != STATIC) {
-                PANIC("Linkage conflict between function declarations of %s\n", node->func.name);
-            }
-            // If previous declaration was prototype, and current has {}
-            if (!func_symbol->func_def->func.is_defined && node->func.is_defined) {
-                // Update func symbol to defined node
-                func_symbol->func_def = node;
-            } else if (node->func.is_defined && func_symbol->func_def->func.is_defined) {
-                // If symbol and current both have {}
-                PANIC("Redefinition of function %s\n", node->func.name);
-            }
-            node->func.symbol = func_symbol;
-        } else node->func.symbol = p_append_func_def(p, node);
         break;
     case N_COMPOUND:
         push_sema_scope(sema_ctx, p, node);

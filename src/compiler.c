@@ -114,6 +114,7 @@ void drive(Compiler *c) {
         array_str_cpy(&c->current_source, src_path);
         update_current_output(c, has_flag(CF_STOP_AFTER_COMPILE), src_path, ".s");
 
+        // Todo early out if empty
         load_src_file(c, (char *)c->current_source.data);
         init_compiler(c);
         compile(c);

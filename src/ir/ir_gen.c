@@ -154,7 +154,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         return lhs;
     case N_UNARY:
         if (expr->unary.op == TK_INCR || expr->unary.op == TK_DECR) {
-            ASSERT(expr->unary.expr->kind == N_IDENTIFIER || expr->unary.expr->kind == N_MEMBER_ACCESS,
+            ASSERT(expr->unary.expr->kind == N_IDENTIFIER || expr->unary.expr->kind == N_MEMBER_ACCESS || expr->unary.expr->kind == N_UNARY,
                    "Can only increment on a identifieir/variable\n");
             ConstLiteral c;
             c.type = expr->type;
@@ -453,6 +453,7 @@ ConstLiteral lower_const_literal(IR_Context *ctx, ConstLiteral *l) {
         DEBUG("Lower const literal from enum\n");
     case T_INT:
     case T_FLOAT:
+    case T_STRUCT:
         return *l;
     case T_POINTER:
         if (l->type->base == type_i8) {

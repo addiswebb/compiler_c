@@ -413,7 +413,6 @@ void abi_func_type_gen(Type *type) {
     abi_type->_func.params.count = type->_func.params.count;
 
     if (abi_type->_func.return_type->kind == T_STRUCT) {
-
         ABI_Result res = abi_classify(type->_func.return_type);
         if (res.memory) {
             set_sret(type->_func.return_type);
@@ -422,8 +421,8 @@ void abi_func_type_gen(Type *type) {
                    &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = _sret->name, .symbol = _sret}, 0);
             abi_type->_func.return_type = type_void;
         } else {
+            ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Not handling tuple return type %t\n", abi_type);
             abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
-            ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Not handling tuple return type\n");
         }
     }
     type->abi.fp_count = 0;

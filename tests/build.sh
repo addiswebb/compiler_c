@@ -1,17 +1,43 @@
 #!/bin/bash
 set -e
 if [ -z "$1" ]; then
-    echo "Usage: $0 <input.c> [input2.c ...]"
+    echo "Usage: $0 <input.c> [input2.c ...] OR $0 ./src/ OR $0 ./src/*.c"
     exit 1
 fi
 
+# Expand directory to .c files recursively
+INPUTS=()
+for ARG in "$@"; do
+    if [ -d "$ARG" ]; then
+        while IFS= read -r FILE; do
+            INPUTS+=("$FILE")
+        done < <(find "$ARG" -name "*.c" -type f)
+        if [ ${#INPUTS[@]} -eq 0 ]; then
+            echo "No .c files found in directory: $ARG"
+            exit 1
+        fi
+    else
+        INPUTS+=("$ARG")
+    fi
+done
+
 cmake --build build
 
-for INPUT_FILE in "$@"; do
+# IGNORE=("win64" "sysv" "analysis" "const_expr" "sema" "ir_util" "ir_builder" "ir_module" "ir_gen" "parser" "tokenizer" "x86_emit" "x86_gen")
+IGNORE=("win64")
+
+for INPUT_FILE in "${INPUTS[@]}"; do
     BASENAME=$(basename "$INPUT_FILE" .c)
-    gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 ./src/"$INPUT_FILE" -o ./tests/test.c -I./include/
-    compiler_c ./tests/test.c -o ./tests/"$INPUT_FILE".o -c || { echo "compiler_c failed on $INPUT_FILE"; exit 1; }
-    mv ./tests/"$INPUT_FILE".o ./build/CMakeFiles/compiler_c.dir/src/"$BASENAME".c.o
+
+    # Skip ignored files
+    if [[ " ${IGNORE[*]} " == *" $BASENAME "* ]]; then
+        echo "Skipping $INPUT_FILE"
+        continue
+    fi
+
+    gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 "$INPUT_FILE" -o ./tests/test.c -I./include/
+    compiler_c ./tests/test.c -o ./tests/"$BASENAME".o -c || { echo "compiler_c failed on $INPUT_FILE"; exit 1; }
+    mv ./tests/"$BASENAME".o ./build/CMakeFiles/compiler_c.dir/src/"$BASENAME".c.o
 done
 
 cd ./build/CMakeFiles/compiler_c.dir/

@@ -497,7 +497,8 @@ void lower_ir_for_asm(IR_Function *f) {
                 abi_lower_param(f, b, instr, &instrs_added, param_index++, &param_cursor);
             } else if (instr->op == IR_LOAD) {
                 // Will fail if size > 8 bytes
-                ASSERT(instr->load.type->size <= 8, "ir_load of type sized larger than 8 bytes\n");
+                print_type(instr->load.type);
+                ASSERT(instr->load.type->size <= 8, " : ir_load of type sized larger than 8 bytes\n");
                 if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
             } else if (instr->op == IR_STORE) {
                 abi_lower_store(f, b, instr, &j);
