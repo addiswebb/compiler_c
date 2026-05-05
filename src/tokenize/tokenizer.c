@@ -27,13 +27,12 @@ static void t_buffer_reset(Tokenizer *tk) {
 }
 
 Tokenizer t_new_tokenizer(const char *src, const int src_size) {
-    Tokenizer tokenizer;
-    tokenizer.index = 0;
+    Tokenizer tokenizer = {};
     tokenizer.size = src_size;
     tokenizer.src = src;
+    tokenizer.line_n = 1;
 
     t_buffer_reset(&tokenizer);
-    tokenizer.buf.size = 0;
     array_init(&tokenizer.tokens_array, 16, sizeof(Token));
     return tokenizer;
 }
@@ -78,36 +77,39 @@ static char t_peek_n(const Tokenizer *tk, const int n) {
 
 static char t_peek_next(const Tokenizer *tk) { return t_peek_n(tk, 1); }
 
-static void t_consume_n(Tokenizer *tk, const int n) {
-    if (tk->index + n > tk->size) {
-        PANIC("T_Consume Reached the end of the file");
-    } else {
-        for (int i = 0; i < n; i++) {
-            if (has_flag(CF_DEBUG_TOKENIZER)) {
-                printf("%c", tk->src[tk->index]);
-            }
-            tk->buf.buf[tk->buf.size++] = tk->src[tk->index++];
-        }
+static void t_skip(Tokenizer *tk) {
+    ASSERT(tk->index + 1 <= tk->size, "T_Skip Reached end of file\n");
+    if (t_peek(tk) == '\n') {
+        tk->line_n++;
+        tk->char_n = 0;
     }
+    tk->index += 1;
+    tk->char_n += 1;
 }
 /*
     Append the current char to buffer and step forward
 */
-static void t_consume(Tokenizer *tk) { t_consume_n(tk, 1); }
+static void t_consume(Tokenizer *tk) {
+    tk->buf.buf[tk->buf.size++] = t_peek(tk);
+    if (has_flag(CF_DEBUG_TOKENIZER)) {
+        printf("%c", tk->src[tk->index]);
+    }
+    t_skip(tk);
+}
 
+static void t_consume_n(Tokenizer *tk, const int n) {
+    for (int i = 0; i < n; i++) {
+        t_consume(tk);
+    }
+}
 static void t_consume_a(Tokenizer *tk, const char c) { tk->buf.buf[tk->buf.size++] = c; }
 
 static void t_skip_n(Tokenizer *tk, int n) {
-    if (tk->index + n > tk->size) {
-        PANIC("T_Skip Reached end of the file");
-    } else {
-        tk->index += n;
-    }
+    for (int i = 0; i < n; i++) t_skip(tk);
 }
-static void t_skip(Tokenizer *tk) { t_skip_n(tk, 1); }
 
 static void t_push_buffer(Tokenizer *tk, const TokenType type) {
-    if (tk->buf.size == 0) {
+    if (tk->buf.size == 0 && type != TK_STRING_LITERAL) {
         WARN("Tried to push an empty buffer to TokenArray, skipping.\n");
         return;
     }
@@ -116,14 +118,14 @@ static void t_push_buffer(Tokenizer *tk, const TokenType type) {
         PANIC("Failed to allocate for buffer duplicate\n");
     }
     memcpy(buf_dupe, tk->buf.buf, sizeof(char) * tk->buf.size);
-    append(&tk->tokens_array, &(Token){.type = type, .value = buf_dupe, .size = tk->buf.size});
+    append(&tk->tokens_array, &(Token){.type = type, .value = buf_dupe, .size = tk->buf.size, .line_n = tk->line_n, .char_n = tk->char_n});
     t_buffer_reset(tk);
 }
 
 static void t_parse_and_push_buffer(Tokenizer *tk) {
     if (tk->buf.size == 0) return;
 
-    Token token = {.type = TK_VOID, .value = NULL, .size = 0};
+    Token token = {.type = TK_VOID, .value = NULL, .size = 0, .line_n = tk->line_n, .char_n = tk->char_n};
 
     bool is_keyword = false;
     for (int i = 0; i < KEYWORDS_N; i++) {
@@ -282,13 +284,18 @@ static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
     t_skip(tk); // '\\'
     char c = t_peek(tk);
     *length = 1;
+
     switch (c) {
     case 'n':
         return '\n';
     case 't':
         return '\t';
+    case 'f':
+        return '\f';
     case 'r':
         return '\r';
+    case 'v':
+        return '\v';
     case '\\':
         return '\\';
     case '"':
@@ -874,18 +881,15 @@ const char *token_type_str(const TokenType type) {
 void print_token_type(const TokenType type) { printf("%s", token_type_str(type)); }
 
 void print_token(const Token *token) {
-    printf("Token { Type: ");
-    if (token->type == TK_SIZEOF) {
-        printf("heere");
-    }
     print_token_type(token->type);
+    printf(":[%d:%d] ", token->line_n, token->char_n);
     if (token->value != NULL) {
-        printf(", value: ");
+        printf(": ");
         if (token->value[0] == '\0') {
             printf("\\0");
         } else if (token->value[0] == '\n') {
             printf("\\n");
         } else printf("%.*s", token->size, token->value);
     }
-    printf("}\n");
+    printf("\n");
 }

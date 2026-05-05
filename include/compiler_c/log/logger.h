@@ -32,6 +32,12 @@ typedef struct {
 
 extern Logger logger;
 
+#ifdef __COMPILER_C__
+static inline void exit_bp() { exit(1); }
+#else
+static inline void exit_bp() { exit(1); }
+#endif
+
 static inline void init_logger(FILE *fp, LogLevel level) {
     logger.file = fp ? fp : stderr;
     logger.stage = STAGE_COMPILER;
@@ -100,8 +106,9 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     vfprintf(logger.file, fmt, args);
     va_end(args);
     fflush(logger.file);
-    if (lvl == LOG_PANIC) exit(1);
+    if (lvl == LOG_PANIC) exit_bp();
 }
+
 #define DEBUG(fmt, ...) log_message(LOG_DEBUG, fmt, ##__VA_ARGS__)
 #define INFO(fmt, ...) log_message(LOG_INFO, fmt, ##__VA_ARGS__)
 #define WARN(fmt, ...) log_message(LOG_WARN, fmt, ##__VA_ARGS__)
@@ -109,7 +116,7 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
 #define PANIC(fmt, ...)                                                                                                                    \
     do {                                                                                                                                   \
         log_message(LOG_ERROR, fmt, ##__VA_ARGS__);                                                                                        \
-        exit(1);                                                                                                                           \
+        exit_bp();                                                                                                                         \
     } while (0)
 
 #ifdef __COMPILER_C__

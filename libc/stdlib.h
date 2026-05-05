@@ -5,6 +5,7 @@
 void exit(int);
 
 void *malloc(size_t);
+void *realloc(void *, size_t);
 void free(void *);
 int system(const char *);
 

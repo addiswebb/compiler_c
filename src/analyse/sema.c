@@ -430,10 +430,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         semantic_analysis(sema_ctx, p, nm, node->func_call.callee);
         Type *callee_type = node->func_call.callee->type;
 
-        // if (callee_type->kind == T_FUNCTION) {
-        //     callee_type = get_pointer_type(callee_type);
-        //     node->func_call.callee->type = callee_type;
-        // }
         ASSERT(callee_type->kind == T_FUNCTION || (callee_type->kind == T_POINTER && callee_type->base->kind == T_FUNCTION),
                "Cannot call non function type\n");
 
@@ -477,7 +473,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_IDENTIFIER:
         Symbol *ident_symbol = p_get_symbol(p, node->identifier.name, ANY, false);
         if (!ident_symbol) {
-            PANIC("Failed to find symbol %s\n", node->identifier.name);
+            PANIC("Failed to find symbol \"%s\"\n", node->identifier.name);
         }
         node->identifier.symbol = ident_symbol;
         switch (ident_symbol->kind) {

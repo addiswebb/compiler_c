@@ -130,6 +130,8 @@ typedef struct {
     TokenType type;
     char *value;
     int size;
+    int line_n;
+    int char_n;
 } Token;
 
 /* Dynamic array of tokens used by tokenizer to store tokens */
@@ -144,6 +146,8 @@ typedef struct {
     const char *src;
     int index;
     int size;
+    int line_n;
+    int char_n;
     // TokenArray tokens;
     Array tokens_array;
     Buffer buf;

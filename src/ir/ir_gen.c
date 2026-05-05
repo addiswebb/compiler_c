@@ -98,10 +98,10 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             if (val.kind == IR_SYMBOL && val.symbol->kind == FUNC) {
                 val = ir_address(ctx, val, 0);
             }
-            bool dereference = expr->binary.lhs->kind == N_INDEX || expr->binary.lhs->kind == N_MEMBER_ACCESS || is_deref(expr->binary.lhs);
             // If it is assignment & binary op
             if (expr->binary.op != TK_EQ) {
-                IR_Value binop_val = ir_load(ctx, addr, dereference ? expr->binary.lhs->unary.expr->type : expr->binary.lhs->type);
+                IR_Value binop_val =
+                    ir_load(ctx, addr, is_deref(expr->binary.lhs) ? expr->binary.lhs->unary.expr->type : expr->binary.lhs->type);
                 val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
                                 expr->type);
             }
@@ -154,9 +154,8 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         return lhs;
     case N_UNARY:
         if (expr->unary.op == TK_INCR || expr->unary.op == TK_DECR) {
-            if (expr->unary.expr->kind != N_IDENTIFIER) {
-                PANIC("Can only increment on a identifieir/variable\n");
-            }
+            ASSERT(expr->unary.expr->kind == N_IDENTIFIER || expr->unary.expr->kind == N_MEMBER_ACCESS,
+                   "Can only increment on a identifieir/variable\n");
             ConstLiteral c;
             c.type = expr->type;
             switch (expr->type->kind) {
@@ -375,35 +374,61 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
         ir_store(ctx, dst, ir_v, type);
         break;
     case T_ARRAY:
-    case T_STRUCT:
-        bool is_array = node_type->kind == T_ARRAY;
-        int len = is_array ? node_type->_array.array_len : node_type->_struct.members_array.count;
+        int a_len = node_type->_array.array_len;
 
-        if (is_array) {
-            type = node_type->base;
-        }
+        type = node_type->base;
 
-        for (int i = 0; i < len; i++) {
+        for (int i = 0; i < a_len; i++) {
             Node *value = NULL;
-            StructMember *member = is_array ? NULL : get_struct_member(node_type, i);
             for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
                 Node *e = get_node(&l->init_list.elements_array, j);
-                if (is_array ? e->designated_init._array.index == i : strcmp(member->name, e->designated_init._struct.name) == 0) {
+                if (e->designated_init._array.index == i) {
                     value = e->designated_init.value;
                     break;
                 }
             }
-            if (is_array) member_offset = type->align * i + offset;
-            else {
-                type = member->type;
-                member_offset = member->offset + offset;
-            }
+            member_offset = type->align * i + offset;
+
+            // |vvvvvvvvvvvvvvvvvvvvvvvvvvvv| is same for both
             if (type->size > 8) {
                 // WARN("Not zeroing structs yet, need builtin memset\n");
                 continue;
             }
             // If the corresponding value was found in the init list, use that, otherwise use a zero,
             if (value) {
+                if (value->kind == N_INIT_LIST) ir_gen_init_list(ctx, dst, member_offset, type, value);
+                else ir_v = ir_gen_rvalue(ctx, value);
+            } else ir_v = zero;
+
+            IR_Value final_dst = dst;
+            if (member_offset)
+                final_dst = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), dst, ir_integer_literal(member_offset), type_u64);
+
+            ir_store(ctx, final_dst, ir_v, type);
+        }
+        break;
+    case T_STRUCT:
+        int s_len = node_type->_struct.members_array.count;
+
+        for (int i = 0; i < s_len; i++) {
+            Node *value = NULL;
+            StructMember *member = get_struct_member(node_type, i);
+            for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
+                Node *e = get_node(&l->init_list.elements_array, j);
+                if (member->name && strcmp(member->name, e->designated_init._struct.name) == 0) {
+                    value = e->designated_init.value;
+                    break;
+                }
+            }
+            type = member->type;
+            member_offset = member->offset + offset;
+            // |vvvvvvvvvvvvvvvvvvvvvvvvvvv|
+            if (type->size > 8) {
+                // WARN("Not zeroing structs yet, need builtin memset\n");
+                continue;
+            }
+            if (value) {
+                // If the corresponding value was found in the init list, use that, otherwise use a zero,
                 if (value->kind == N_INIT_LIST) ir_gen_init_list(ctx, dst, member_offset, type, value);
                 else ir_v = ir_gen_rvalue(ctx, value);
             } else ir_v = zero;

@@ -38,7 +38,7 @@ static void reserve_capacity(Array *arr, int size) {
 }
 static void ensure_index(const Array *arr, int index) {
 #ifdef __COMPILER_C__
-    if (index >= arena->count || index < 0) {
+    if (index >= arr->count || index < 0) {
 #else
     if (__builtin_expect(index >= arr->count || index < 0, 0)) {
 #endif

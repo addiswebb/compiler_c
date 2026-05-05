@@ -3,12 +3,12 @@
 
 #include "compiler_c/core/array.h"
 
-typedef struct{
+typedef struct {
     Array blocks;
     int element_size;
     int block_capacity;
     int count;
-}Arena;
+} Arena;
 
 void arena_init(Arena *arena, int block_size, int element_size);
 
