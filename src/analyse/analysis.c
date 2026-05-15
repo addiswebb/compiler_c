@@ -369,12 +369,12 @@ void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count) {
 
 void ir_lower_const_value(IR_Value *v) {
     return;
-    IR_Value old = *v;
-    v->kind = IR_PHYS_REG;
-    v->phys_reg.kind = REG_IP;
-    v->phys_reg.size = REG_64;
-    v->phys_reg.data_kind = REG_DATA_CONST_INDEX;
-    v->phys_reg.const_index = old.const_index;
+    // IR_Value old = *v;
+    // v->kind = IR_PHYS_REG;
+    // v->phys_reg.kind = REG_IP;
+    // v->phys_reg.size = REG_64;
+    // v->phys_reg.data_kind = REG_DATA_CONST_INDEX;
+    // v->phys_reg.const_index = old.const_index;
 }
 
 void verify_completion(const IR_Function *f) {
@@ -385,7 +385,7 @@ void verify_completion(const IR_Function *f) {
             const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
                 const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
-                if (a->kind == IR_CONSTANT) continue; // TMP
+                if (a->kind == IR_CONSTANT) continue; // TODO: Figure out why this is 'TMP'
                 if (a->kind == IR_CONSTANT && instr->op != IR_CALL) continue;
                 if (a->kind == IR_PHYS_REG || a->kind == IR_INT_LITERAL) continue;
                 // Allow undefined IR Values for the following:
@@ -497,8 +497,8 @@ void lower_ir_for_asm(IR_Function *f) {
                 abi_lower_param(f, b, instr, &instrs_added, param_index++, &param_cursor);
             } else if (instr->op == IR_LOAD) {
                 // Will fail if size > 8 bytes
-                print_type(instr->load.type);
-                ASSERT(instr->load.type->size <= 8, " : ir_load of type sized larger than 8 bytes\n");
+                ASSERT(instr->load.type->size <= 8, " : ir_load of type sized %d is larger than 8 bytes %t\n", instr->load.type->size,
+                       instr->load.type);
                 if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
             } else if (instr->op == IR_STORE) {
                 abi_lower_store(f, b, instr, &j);

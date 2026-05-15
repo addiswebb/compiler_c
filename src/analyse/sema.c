@@ -86,17 +86,10 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
         PANIC("Invalid arithmetic operands\n");
     }
     if (is_assignment_op(op)) {
-        if (!is_lvalue(lhs)) {
-            PANIC("Analysis: Binary op lhs is not assignable\n");
-        }
-        const TokenType underlying = get_underlying_op(op);
-        if (is_arithmetic_op(underlying) || is_bitwise_op(underlying)) {
-            promote_binary_operands(nm, binop);
-        }
+        ASSERT(is_lvalue(lhs), "Binary op lhs is not assignable\n");
 
-        if (lhs->type->kind != rhs->type->kind) {
-            binop->binary.rhs = cast_node(nm, rhs, lhs->type);
-        }
+        if (lhs->type != rhs->type) binop->binary.rhs = cast_node(nm, rhs, lhs->type);
+
         return lhs->type;
     }
 
@@ -245,7 +238,7 @@ Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *
         t->is_resolved = true;
         return t;
     case T_FUNCTION:
-        WARN("Functions not resolved yet, params might be cooked\n");
+        // WARN("Functions not resolved yet, params might be cooked\n");
     case T_VOID:
     case T_INT:
     case T_FLOAT:
@@ -309,8 +302,10 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_COMPOUND:
         push_sema_scope(sema_ctx, p, node);
         int n_nodes = node->compound.items_array.count;
-        for (int i = 0; i < n_nodes; i++, (*get_i(sema_ctx))++) {
+        // for (int i = 0; i < n_nodes; i++, (*get_i(sema_ctx))++) {
+        for (int i = 0; i < n_nodes; i++) {
             semantic_analysis(sema_ctx, p, nm, get_node(&node->compound.items_array, *get_i(sema_ctx)));
+            (*get_i(sema_ctx))++;
         }
         pop_sema_scope(sema_ctx, p);
         break;
@@ -644,28 +639,23 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
             break;
         case T_ARRAY:
-            // Infer the size from the initializer list
-            if (node->type->_array.array_len == -1) {
-                if (!node || node->init_list.elements_array.count < 1) {
-                    PANIC("Inferred array must be initialized, and cannot be empty.\n");
-                }
-                node->type = infer_array_length(node->type, node->init_list.elements_array.count);
-            }
-            // Intentional passthrough in switch to handle T_ARRAY and T_STRUCT similarily
         case T_STRUCT:
             int index = 0;
             bool is_array = node->type->kind == T_ARRAY;
-            int count = is_array ? node->type->_array.array_len : node->type->_struct.members_array.count;
+            int max_count = 0;
+            int infered_length = 0;
+            if (is_array) {
+                if (node->type->_array.array_len == -1) {
+                    if (!node || node->init_list.elements_array.count < 1) {
+                        PANIC("Inferred array must be initialized, and cannot be empty.\n");
+                    }
+                } else max_count = node->type->_array.array_len;
+            } else max_count = node->type->_struct.members_array.count;
+
             for (int i = 0; i < node->init_list.elements_array.count; i++) {
                 Node *e = get_node(&node->init_list.elements_array, i);
                 bool is_designator = e->kind == N_DESIGNATED_INITIALIZER;
-                if (index >= count && !is_designator) {
-                    log_start(LOG_ERROR);
-                    printf("Too many initializers for ");
-                    print_type(node->type);
-                    printf("\n");
-                    exit(1);
-                }
+                if (max_count && index >= max_count && !is_designator) PANIC("Too many initializers for %d\n", node->type);
 
                 StructMember *member = NULL;
                 if (is_array) {
@@ -675,6 +665,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                             e->designated_init._array.index = evaluate_const_expression(e->designated_init._array.const_expr).i;
                         }
                         index = e->designated_init._array.index;
+                        if (node->type->_array.array_len == -1) {
+                            infered_length = infered_length > index + 1 ? infered_length : index + 1;
+                        }
                     }
                 } else
                     member = is_designator ? get_struct_member_named(node->type, e->designated_init._struct.name, &index)
@@ -689,8 +682,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 if (!is_designator) {
                     Node *de = new_node(nm, N_DESIGNATED_INITIALIZER);
 
-                    if (is_array) de->designated_init._array.index = index;
-                    else de->designated_init._struct.name = member->name;
+                    if (is_array) {
+                        de->designated_init._array.index = index;
+                    } else de->designated_init._struct.name = member->name;
 
                     de->designated_init.value = e;
                     set_node(&node->init_list.elements_array, &de, i);
@@ -705,6 +699,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
 
                 index++;
             }
+            if (is_array && node->type->_array.array_len == -1)
+                node->type = infer_array_length(node->type, infered_length ? infered_length : node->init_list.elements_array.count);
+
             break;
         default:
             log_start(LOG_ERROR);

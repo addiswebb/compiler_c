@@ -1,5 +1,6 @@
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis_types.h"
+#include "compiler_c/compiler.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
@@ -114,11 +115,7 @@ const char *x86_rax_reg(Type *t) {
         }
     }
     if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "%rax";
-    log_start(LOG_ERROR);
-    printf("Tried to get %%rax register of unsupported type ");
-    print_type(t);
-    printf("\n");
-    exit(1);
+    PANIC("Tried to get %%rax, register of unsupported type %t\n", t);
 }
 
 const char *x86_rbx_reg(const Type *t) {

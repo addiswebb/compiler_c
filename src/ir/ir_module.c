@@ -33,7 +33,11 @@ IR_OpInfo op_info[] = {
     [IR_BUILTIN_VA_START] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_BUILTIN_VA_ARG] = {.def_mask = 0b001, .use_mask = 0b010},
 };
+#ifdef __COMPILER_C__
+const IR_Value ir_no_value;
+#else
 const IR_Value ir_no_value = (IR_Value){IR_UNDEFINED, 0, 0, 0};
+#endif
 
 IR_Context ir_init_ctx(Parser *p) {
     IR_Context ctx = {0};

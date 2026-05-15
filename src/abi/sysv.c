@@ -1,4 +1,5 @@
 #include "compiler_c/analyse/analysis_types.h"
+#include "compiler_c/compiler.h"
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
 #include <stdio.h>
@@ -107,8 +108,13 @@ ABI_Result abi_classify(Type *type) {
     }
 }
 IR_Value abi_lower_param_register(Type *type, int i) {
+#ifdef __COMPILER_C__
+    IR_Value v = (IR_Value){.kind = IR_PHYS_REG};
+    v.phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0};
+#else
     IR_Value v = (IR_Value){.kind = IR_PHYS_REG,
                             .phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0}};
+#endif
     if (type->kind == T_FLOAT) {
         ASSERT(i >= 0 && i < FLOAT_PARAM_REGISTERS, "SysV ABI Invalid param arg index %d\n", i);
         v.phys_reg.kind = REG_XMM;
@@ -293,7 +299,9 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
                                                             .ops = {[0] = ir_symbol_value(d->symbol)},
                                                             .param = {.param_index = param_index, .type = d->type}});
     }
-    ASSERT(integers_emitted == f->type->abi.gp_count && floats_emitted == f->type->abi.fp_count, "Emission failed\n");
+    // TODO give more robust way of ensuring correct emission
+    // integers_emitted includes all non-float, but gp_count is only non-float registers used.
+    // ASSERT(integers_emitted == f->type->abi.gp_count && floats_emitted == f->type->abi.fp_count, "Emission failed\n");
     if (f->type->_func.is_variadic) {
         // Space for this will be allocated later in x86 gen +176 bytes if variadic
         for (int i = integers_emitted; i < INTEGER_PARAM_REGISTERS; i++) {
@@ -412,6 +420,8 @@ void abi_func_type_gen(Type *type) {
     memcpy(abi_type->_func.params.data, type->_func.params.data, type->_func.params.count * type->_func.params.element_size);
     abi_type->_func.params.count = type->_func.params.count;
 
+    type->abi.fp_count = 0;
+    type->abi.gp_count = 0;
     if (abi_type->_func.return_type->kind == T_STRUCT) {
         ABI_Result res = abi_classify(type->_func.return_type);
         if (res.memory) {
@@ -421,12 +431,12 @@ void abi_func_type_gen(Type *type) {
                    &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = _sret->name, .symbol = _sret}, 0);
             abi_type->_func.return_type = type_void;
         } else {
-            ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Not handling tuple return type %t\n", abi_type);
+            compiler_flags |= FLAG(CF_DEBUG_STRUCT);
+            ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Not handling tuple return type %t\n", type->_func.return_type);
             abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
         }
     }
-    type->abi.fp_count = 0;
-    type->abi.gp_count = 0;
+    if (abi_type->_func.return_type->kind == T_ENUM) abi_type->_func.return_type = type_i32;
     for (int i = 0; i < abi_type->_func.params.count; i++) {
         ParamDecl *d = get(&abi_type->_func.params, i);
         if (d->type->kind == T_FLOAT && type->abi.fp_count < FLOAT_PARAM_REGISTERS) type->abi.fp_count++;

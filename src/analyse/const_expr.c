@@ -191,6 +191,7 @@ ConstLiteral evaluate_const_cast(const Node *node) {
         break;
     case T_POINTER:
         if (node->cast.from->kind == T_ARRAY && node->cast.from->base == type_i8) break;
+        if (node->cast.from->kind == T_INT || node->cast.from->kind == T_POINTER) break;
     default:
         log_start(LOG_ERROR);
         printf("Unsupported const expr cast from ");
@@ -198,6 +199,7 @@ ConstLiteral evaluate_const_cast(const Node *node) {
         printf(" to ");
         print_type(node->type);
         printf("\n");
+        exit_bp();
     }
     return e;
 }

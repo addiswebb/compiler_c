@@ -33,7 +33,9 @@ typedef struct {
 extern Logger logger;
 
 #ifdef __COMPILER_C__
-static inline void exit_bp();
+#define exit_bp()                                                                                                                          \
+    ;                                                                                                                                      \
+    exit(1);
 #else
 // extern void exit_bp() __THROW __attribute__((__noreturn__));
 static inline void exit_bp() { exit(1); }

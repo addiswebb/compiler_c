@@ -27,8 +27,9 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         return ir_address(ctx, v, 0);
     case N_UNARY:
         ASSERT(expr->unary.op == TK_MULTIPLY, "Can only generate *expr lvalue\n");
-        return ir_gen_rvalue(ctx, expr->unary.expr);
     case N_BINARY:
+    case N_TERNARY:
+        return ir_gen_rvalue(ctx, expr->unary.expr);
         return ir_gen_rvalue(ctx, expr);
     case N_INDEX:
         // Uses more complex lowering for ptr -integer arithmetic in ir_gen_rvalue,
@@ -52,6 +53,7 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
             expr->cast.expr->type->kind == T_FUNCTION) {
             return ir_gen_lvalue(ctx, expr->cast.expr);
         }
+        print_node(expr, 0);
         PANIC("bad Lvalue of N_CAST\n");
     default:
         break;
@@ -391,7 +393,10 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
 
             // |vvvvvvvvvvvvvvvvvvvvvvvvvvvv| is same for both
             if (type->size > 8) {
-                // WARN("Not zeroing structs yet, need builtin memset\n");
+                continue;
+            }
+            if (type->kind == T_UNION) {
+                WARN("Skipping union in gen initlist\n");
                 continue;
             }
             // If the corresponding value was found in the init list, use that, otherwise use a zero,
@@ -421,16 +426,22 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
                 }
             }
             type = member->type;
+
             member_offset = member->offset + offset;
             // |vvvvvvvvvvvvvvvvvvvvvvvvvvv|
             if (type->size > 8) {
-                // WARN("Not zeroing structs yet, need builtin memset\n");
+                continue;
+            }
+            if (type->kind == T_UNION) {
+                WARN("Skipping union in gen initlist\n");
                 continue;
             }
             if (value) {
                 // If the corresponding value was found in the init list, use that, otherwise use a zero,
-                if (value->kind == N_INIT_LIST) ir_gen_init_list(ctx, dst, member_offset, type, value);
-                else ir_v = ir_gen_rvalue(ctx, value);
+                if (value->kind == N_INIT_LIST) {
+                    ir_gen_init_list(ctx, dst, member_offset, type, value);
+                    continue;
+                } else ir_v = ir_gen_rvalue(ctx, value);
             } else ir_v = zero;
 
             IR_Value final_dst = dst;
@@ -450,16 +461,14 @@ ConstLiteral lower_const_literal(IR_Context *ctx, ConstLiteral *l) {
     ConstLiteral e;
     switch (l->type->kind) {
     case T_ENUM:
-        DEBUG("Lower const literal from enum\n");
     case T_INT:
     case T_FLOAT:
     case T_STRUCT:
         return *l;
     case T_POINTER:
-        if (l->type->base == type_i8) {
+        if (l->type->base == type_i8)
             return (ConstLiteral){.const_index = ir_append_const(ctx->module, l), .kind = CONST_LABEL, .type = l->type};
-        }
-        ASSERT(l->kind == CONST_REFERENCE, "Cannot assign pointer with given const expr type\n");
+        ASSERT(l->kind == CONST_REFERENCE || (l->kind == CONST_INTEGER && l->i == 0), "Cannot assign pointer with given const expr type\n");
         return *l;
     case T_ARRAY:
         array_init(&e.arr, l->arr.count, sizeof(ConstLiteral));
@@ -493,14 +502,14 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
 
     if (var_decl->var_decl.expr->kind == N_INIT_LIST) return ir_gen_init_list(ctx, dst, 0, var_decl->type, var_decl->var_decl.expr);
 
-    IR_Value rhs = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
-    if (rhs.kind == IR_SYMBOL && rhs.symbol->kind == FUNC) rhs = ir_address(ctx, rhs, 0);
     ABI_Result res = abi_classify(var_decl->type);
     if (var_decl->type->kind == T_ARRAY || res.memory) {
-        // ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
-        // dst = ir_address(ctx, dst, 0);
+        IR_Value rhs = ir_gen_lvalue(ctx, var_decl->var_decl.expr);
         ir_memcpy(ctx, rhs, dst, var_decl->type->size);
-    } else ir_store(ctx, dst, rhs, var_decl->type);
+    } else {
+        IR_Value rhs = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
+        ir_store(ctx, dst, rhs, var_decl->type);
+    }
 }
 
 static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {

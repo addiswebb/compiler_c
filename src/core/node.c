@@ -102,7 +102,7 @@ LiteralKind literal_kind(const TokenType type) {
     case TK_STRING_LITERAL:
         return L_STRING;
     default:
-    PANIC("Given a non literal token\n");
+        PANIC("Given a non literal token\n");
     }
 }
 void print_node_type(const NodeKind type) {

@@ -17,6 +17,9 @@ void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src) {
 }
 
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
+    if (type->kind == T_STRUCT && type->size > 8) {
+        printf("heere\n");
+    }
     IR_Instruction i;
     i.op = IR_LOAD;
     i.ops[1] = addr;
@@ -27,6 +30,9 @@ IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
     return i.ops[0];
 }
 IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
+    if (type->kind == T_UNION) {
+        printf("union\n");
+    }
     IR_Instruction i;
     i.op = IR_STORE;
     i.ops[1] = src;
@@ -199,6 +205,10 @@ IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, I
     return ir_no_value;
 }
 IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
+    if (from->kind == T_STRUCT && from->qualifiers & QUAL_CONST) {
+        if (to == get_qualified_type(from, 0)) return src;
+        PANIC("\n%t\n%t\n", from, to);
+    }
     if (src.kind == IR_INT_LITERAL && (to->kind == T_INT || to->kind == T_POINTER)) return src;
     // if (from->kind == T_POINTER && from->kind == T_POINTER) return src;
     if (from->kind == T_ARRAY && to->kind == T_POINTER && from->base->kind == to->base->kind) PANIC("HOW");

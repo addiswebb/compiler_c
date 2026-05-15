@@ -87,7 +87,12 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         x86_gen_cmp_instruction(fp, instr);
         break;
     case IR_RET:
-        if (instr->ops[0].kind != IR_UNDEFINED)
+        // TODO: fix so instr->ret.type != type_void check works full
+        /*
+            I think it is related to struct return type handling,
+            possibly converted to void return type, but still holds a value
+         */
+        if (instr->ops[0].kind != IR_UNDEFINED && instr->ret.type != type_void)
             x86_emit_xr(fp, "mov", x86_op_suffix(instr->ret.type), "", &instr->ops[0], x86_rax_reg(instr->ret.type));
         fprintf(fp, "    mov %%rbp, %%rsp\n");
         fprintf(fp, "    pop %%rbp\n");
