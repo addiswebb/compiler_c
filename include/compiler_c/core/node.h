@@ -254,8 +254,6 @@ typedef Arena NodeManager;
 
 #define NODE_ARENA_SIZE 1024
 
-void init_typepool();
-
 NodeManager new_node_manager();
 void free_node_manager(NodeManager *nm);
 

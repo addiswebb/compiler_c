@@ -219,14 +219,13 @@ int compile(Compiler *compiler) {
     array_init(&sema_ctx.compound_stack, 4, sizeof(Node *));
     array_init(&sema_ctx.loop_stack, 4, sizeof(Node *));
 
-    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
-
     if (has_flag(CF_DEBUG_TYPEPOOL)) print_typepool();
 
     if (has_flag(CF_STOP_AFTER_AST)) {
         print_ast(&compiler->nm);
         return 1;
     }
+    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
 
     array_free(&sema_ctx.i_array);
 

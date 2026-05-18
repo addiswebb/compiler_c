@@ -209,12 +209,27 @@ Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *
         Type *new_at = get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
         new_at->is_resolved = true;
         return new_at;
-    case T_STRUCT:
     case T_UNION:
         t->size = 0;
         t->align = 0;
+        for (int i = 0; i < t->_union.members_array.count; i++) {
+            UnionMember *m = get_union_member(t, i);
+            m->type = resolve_type(sema_ctx, p, nm, m->type);
+            if (m->type->size > t->size) {
+                t->size = m->type->size;
+                t->align = m->type->align;
+            }
+        }
+        ASSERT(t->size > 0, "Union size resolve failed\n");
+        return t;
+    case T_STRUCT:
+        if (t->_struct.name && strcmp(t->_struct.name, "Type") == 0) {
+            printf("Here\n");
+        }
+        t->size = 0;
+        t->align = 0;
         for (int i = 0; i < t->_struct.members_array.count; i++) {
-            AggrMember *m = get_struct_member(t, i);
+            StructMember *m = get_struct_member(t, i);
             m->type = resolve_type(sema_ctx, p, nm, m->type);
             if (m->type->align > t->align) t->align = m->type->align;
             t->size = align(t->size, m->type->align);
@@ -298,11 +313,11 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             semantic_analysis(sema_ctx, p, nm, node->func.body);
             p_pop_scope(p);
         }
+
         break;
     case N_COMPOUND:
         push_sema_scope(sema_ctx, p, node);
         int n_nodes = node->compound.items_array.count;
-        // for (int i = 0; i < n_nodes; i++, (*get_i(sema_ctx))++) {
         for (int i = 0; i < n_nodes; i++) {
             semantic_analysis(sema_ctx, p, nm, get_node(&node->compound.items_array, *get_i(sema_ctx)));
             (*get_i(sema_ctx))++;
