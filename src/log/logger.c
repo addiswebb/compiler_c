@@ -32,8 +32,12 @@ void vprint(const char *fmt, va_list ap) {
             case 's':
                 printf("%s", va_arg(ap, char *));
                 break;
+            case 'c':
+                char c = va_arg(ap, int);
+                putchar(c);
+                break;
             default:
-                WARN("Logger print doesnt handle '%c' in \" \"\n", *fmt, fmt);
+                WARN("Logger print doesnt handle '%c' in '%s'\n", *fmt, fmt);
                 break;
             }
             fmt++;

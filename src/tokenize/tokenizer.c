@@ -79,6 +79,9 @@ static char t_peek_next(const Tokenizer *tk) { return t_peek_n(tk, 1); }
 
 static void t_skip(Tokenizer *tk) {
     ASSERT(tk->index + 1 <= tk->size, "T_Skip Reached end of file\n");
+    if (has_flag(CF_DEBUG_TOKENIZER)) {
+        printf("%c", tk->src[tk->index]);
+    }
     if (t_peek(tk) == '\n') {
         tk->line_n++;
         tk->char_n = 0;
@@ -91,9 +94,6 @@ static void t_skip(Tokenizer *tk) {
 */
 static void t_consume(Tokenizer *tk) {
     tk->buf.buf[tk->buf.size++] = t_peek(tk);
-    if (has_flag(CF_DEBUG_TOKENIZER)) {
-        printf("%c", tk->src[tk->index]);
-    }
     t_skip(tk);
 }
 
@@ -274,7 +274,7 @@ static void t_consume_special_char(Tokenizer *tk) {
         type = TK_TERNARY;
         break;
     default:
-        PANIC("Unexpected '%c'\n", t_peek(tk));
+        PANIC("[%d:%d]: Unexpected '%c'\n", tk->line_n, tk->char_n, t_peek(tk));
     }
     t_consume(tk);
     t_consume_a(tk, '\0');

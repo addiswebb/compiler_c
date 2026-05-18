@@ -33,18 +33,39 @@ typedef struct {
 extern Logger logger;
 
 #ifdef __COMPILER_C__
-#define exit_bp()                                                                                                                          \
-    ;                                                                                                                                      \
-    exit(1);
+#define PRINTCC(s) printf("[CC] " s "\n");
+#define exit_bp() exit(1)
 #else
 // extern void exit_bp() __THROW __attribute__((__noreturn__));
 static inline void exit_bp() { exit(1); }
+#define PRINTCC(s) ((void)0)
 #endif
 
 static inline void init_logger(FILE *fp, LogLevel level) {
     logger.file = fp ? fp : stderr;
     logger.stage = STAGE_COMPILER;
     logger.min_level = level;
+}
+
+static inline char *stage_str(LogStage stage) {
+    switch (logger.stage) {
+    case STAGE_COMPILER:
+        return "Compiler";
+    case STAGE_TOKENIZING:
+        return "Tokenizer";
+    case STAGE_PARSING:
+        return "Parser";
+    case STAGE_IR:
+        return "IR";
+    case STAGE_X86_GEN:
+        return "x86 Gen";
+    case STAGE_SEMA_ANALYSIS:
+        return "Semantic Analysis";
+    case STAGE_ASSEMBLER:
+        return "Assembler";
+    case STAGE_LINKER:
+        return "Linker";
+    }
 }
 static inline void set_log_stage(LogStage stage) { logger.stage = stage; }
 
@@ -71,34 +92,8 @@ static inline void log_start(LogLevel lvl) {
         level_str = "LOG";
         break;
     }
-    const char *stage_str;
-    switch (logger.stage) {
-    case STAGE_COMPILER:
-        stage_str = "Compiler";
-        break;
-    case STAGE_TOKENIZING:
-        stage_str = "Tokenizer";
-        break;
-    case STAGE_PARSING:
-        stage_str = "Parser";
-        break;
-    case STAGE_IR:
-        stage_str = "IR";
-        break;
-    case STAGE_X86_GEN:
-        stage_str = "x86 Gen";
-        break;
-    case STAGE_SEMA_ANALYSIS:
-        stage_str = "Semantic Analysis";
-        break;
-    case STAGE_ASSEMBLER:
-        stage_str = "Assembler";
-        break;
-    case STAGE_LINKER:
-        stage_str = "Linker";
-        break;
-    }
-    fprintf(logger.file, "[%s] %s: ", level_str, stage_str);
+    const char *stage = stage_str(logger.stage);
+    fprintf(logger.file, "[%s] %s: ", level_str, stage);
 }
 void print(const char *fmt, ...);
 void vprint(const char *fmt, va_list ap);

@@ -319,6 +319,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     if (_for->_for.iter) ir_gen_statement(ctx, _for->_for.iter);
 
     if (_for->_for.cond) ir_branch(ctx, cond_block);
+    else ir_branch(ctx, block_block);
 
     ir_append_block(ctx, end_block);
     // Reset ctx for continue/break statements
@@ -465,12 +466,22 @@ ConstLiteral lower_const_literal(IR_Context *ctx, ConstLiteral *l) {
     case T_INT:
     case T_FLOAT:
     case T_STRUCT:
+#ifdef __COMPILER_C__
+        ConstLiteral tmps = *l;
+        return tmps;
+#else
         return *l;
+#endif
     case T_POINTER:
         if (l->type->base == type_i8)
             return (ConstLiteral){.const_index = ir_append_const(ctx->module, l), .kind = CONST_LABEL, .type = l->type};
         ASSERT(l->kind == CONST_REFERENCE || (l->kind == CONST_INTEGER && l->i == 0), "Cannot assign pointer with given const expr type\n");
+#ifdef __COMPILER_C__
+        ConstLiteral tmpp = *l;
+        return tmpp;
+#else
         return *l;
+#endif
     case T_ARRAY:
         array_init(&e.arr, l->arr.count, sizeof(ConstLiteral));
         for (int i = 0; i < l->arr.count; i++) {

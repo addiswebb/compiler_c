@@ -210,7 +210,6 @@ IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
     //     PANIC("\n%t\n%t\n", from, to);
     // }
     if (src.kind == IR_INT_LITERAL && (to->kind == T_INT || to->kind == T_POINTER)) return src;
-    // if (from->kind == T_POINTER && from->kind == T_POINTER) return src;
     if (from->kind == T_ARRAY && to->kind == T_POINTER && from->base->kind == to->base->kind) PANIC("HOW");
     IR_Instruction i;
     i.op = IR_CAST;
