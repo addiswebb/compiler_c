@@ -24,7 +24,7 @@ done
 cmake --build build
 
 # IGNORE=("win64" "sysv" "analysis" "const_expr" "sema" "ir_util" "ir_builder" "ir_module" "ir_gen" "parser" "tokenizer" "x86_emit" "x86_gen")
-IGNORE=("win64" "ir_gen" "tokenizer" "x86_emit" "x86_gen")
+IGNORE=("win64" "ir_gen" "x86_emit" "x86_gen")
 
 for INPUT_FILE in "${INPUTS[@]}"; do
     BASENAME=$(basename "$INPUT_FILE" .c)

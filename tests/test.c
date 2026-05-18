@@ -14,6 +14,142 @@ void array_str_cpy(Array *arr, const char *str);
 void array_str_catn(Array *arr, const char *str, int n);
 void *get(const Array *arr, int index);
 void set(const Array *arr, const void *element, int index);
+typedef int bool;
+typedef struct {
+    char buf[1024];
+    int size;
+} Buffer;
+extern const char *KEYWORDS[33];
+typedef enum {
+    TK_AUTO,
+    TK_BREAK,
+    TK_CASE,
+    TK_CHAR,
+    TK_CONST,
+    TK_CONTINUE,
+    TK_DEFAULT,
+    TK_DO,
+    TK_DOUBLE,
+    TK_ELSE,
+    TK_ENUM,
+    TK_EXTERN,
+    TK_FLOAT,
+    TK_FOR,
+    TK_GOTO,
+    TK_IF,
+    TK_INLINE,
+    TK_INT,
+    TK_LONG,
+    TK_REGISTER,
+    TK_RETURN,
+    TK_SHORT,
+    TK_SIGNED,
+    TK_SIZEOF,
+    TK_STATIC,
+    TK_STRUCT,
+    TK_SWITCH,
+    TK_TYPEDEF,
+    TK_UNION,
+    TK_UNSIGNED,
+    TK_VOID,
+    TK_VOLATILE,
+    TK_WHILE,
+    TK_L_NOT,
+    TK_BW_NOT,
+    TK_INCR,
+    TK_DECR,
+    TK_EQ,
+    TK_PLUS,
+    TK_MINUS,
+    TK_MULTIPLY,
+    TK_DIVIDE,
+    TK_MOD,
+    TK_EQ_EQ,
+    TK_PLUS_EQ,
+    TK_MINUS_EQ,
+    TK_MULTIPLY_EQ,
+    TK_DIVIDE_EQ,
+    TK_MOD_EQ,
+    TK_NEQ,
+    TK_LT,
+    TK_LE,
+    TK_GT,
+    TK_GE,
+    TK_SHL,
+    TK_SHR,
+    TK_SHL_EQ,
+    TK_SHR_EQ,
+    TK_AND,
+    TK_AND_AND,
+    TK_AND_EQ,
+    TK_OR,
+    TK_OR_OR,
+    TK_OR_EQ,
+    TK_XOR,
+    TK_XOR_EQ,
+    TK_TERNARY,
+    TK_DOT,
+    TK_ARROW,
+    TK_OPEN_PAREN,
+    TK_CLOSE_PAREN,
+    TK_OPEN_CURLY,
+    TK_CLOSE_CURLY,
+    TK_OPEN_SQUARE,
+    TK_CLOSE_SQUARE,
+    TK_COMMA,
+    TK_SEMI,
+    TK_COLON,
+    TK_INT_LITERAL,
+    TK_FLT_LITERAL,
+    TK_CHAR_LITERAL,
+    TK_STRING_LITERAL,
+    TK_EXPR,
+    TK_IDENTIFIER,
+    TK_ELLIPSES,
+} TokenType;
+typedef struct {
+    TokenType type;
+    char *value;
+    int size;
+    int line_n;
+    int char_n;
+} Token;
+typedef struct {
+    Token *data;
+    int size;
+    int capacity;
+} TokenArray;
+typedef struct {
+    const char *src;
+    int index;
+    int size;
+    int line_n;
+    int char_n;
+    Array tokens_array;
+    Buffer buf;
+} Tokenizer;
+typedef struct {
+    TokenType type;
+    int n_chars;
+} TokenMatch;
+Tokenizer t_new_tokenizer(const char *src, int src_size);
+void t_free(Tokenizer *tokenizer);
+void t_tokenize(Tokenizer *tk);
+bool is_postfix_operator(const TokenType type);
+bool is_unary_operator(const TokenType type);
+bool is_binary_operator(const TokenType type);
+bool is_assignment_op(const TokenType type);
+bool is_arithmetic_op(const TokenType type);
+bool is_bitwise_op(const TokenType type);
+bool is_comparison_op(const TokenType type);
+bool is_logical_op(const TokenType type);
+TokenType get_underlying_op(TokenType type);
+int op_associativity(TokenType type);
+int op_precedence(TokenType type);
+const char *token_type_str(const TokenType type);
+void print_token_type(TokenType type);
+void print_token(const Token *token);
+static inline Token *get_token(Array *arr, int index) { return (Token *)get(arr, index); }
 typedef struct {
     Array blocks;
     int element_size;
@@ -31,7 +167,6 @@ typedef long int64_t;
 typedef unsigned long size_t;
 typedef short int8_t;
 typedef unsigned short uint8_t;
-typedef int bool;
 typedef enum {
     T_VOID,
     T_INT,
@@ -213,141 +348,6 @@ void print_type(Type *type);
 void print_struct_type(Type *s);
 void print_param_decl(ParamDecl *decl);
 void print_typepool();
-typedef struct {
-    char buf[1024];
-    int size;
-} Buffer;
-extern const char *KEYWORDS[33];
-typedef enum {
-    TK_AUTO,
-    TK_BREAK,
-    TK_CASE,
-    TK_CHAR,
-    TK_CONST,
-    TK_CONTINUE,
-    TK_DEFAULT,
-    TK_DO,
-    TK_DOUBLE,
-    TK_ELSE,
-    TK_ENUM,
-    TK_EXTERN,
-    TK_FLOAT,
-    TK_FOR,
-    TK_GOTO,
-    TK_IF,
-    TK_INLINE,
-    TK_INT,
-    TK_LONG,
-    TK_REGISTER,
-    TK_RETURN,
-    TK_SHORT,
-    TK_SIGNED,
-    TK_SIZEOF,
-    TK_STATIC,
-    TK_STRUCT,
-    TK_SWITCH,
-    TK_TYPEDEF,
-    TK_UNION,
-    TK_UNSIGNED,
-    TK_VOID,
-    TK_VOLATILE,
-    TK_WHILE,
-    TK_L_NOT,
-    TK_BW_NOT,
-    TK_INCR,
-    TK_DECR,
-    TK_EQ,
-    TK_PLUS,
-    TK_MINUS,
-    TK_MULTIPLY,
-    TK_DIVIDE,
-    TK_MOD,
-    TK_EQ_EQ,
-    TK_PLUS_EQ,
-    TK_MINUS_EQ,
-    TK_MULTIPLY_EQ,
-    TK_DIVIDE_EQ,
-    TK_MOD_EQ,
-    TK_NEQ,
-    TK_LT,
-    TK_LE,
-    TK_GT,
-    TK_GE,
-    TK_SHL,
-    TK_SHR,
-    TK_SHL_EQ,
-    TK_SHR_EQ,
-    TK_AND,
-    TK_AND_AND,
-    TK_AND_EQ,
-    TK_OR,
-    TK_OR_OR,
-    TK_OR_EQ,
-    TK_XOR,
-    TK_XOR_EQ,
-    TK_TERNARY,
-    TK_DOT,
-    TK_ARROW,
-    TK_OPEN_PAREN,
-    TK_CLOSE_PAREN,
-    TK_OPEN_CURLY,
-    TK_CLOSE_CURLY,
-    TK_OPEN_SQUARE,
-    TK_CLOSE_SQUARE,
-    TK_COMMA,
-    TK_SEMI,
-    TK_COLON,
-    TK_INT_LITERAL,
-    TK_FLT_LITERAL,
-    TK_CHAR_LITERAL,
-    TK_STRING_LITERAL,
-    TK_EXPR,
-    TK_IDENTIFIER,
-    TK_ELLIPSES,
-} TokenType;
-typedef struct {
-    TokenType type;
-    char *value;
-    int size;
-    int line_n;
-    int char_n;
-} Token;
-typedef struct {
-    Token *data;
-    int size;
-    int capacity;
-} TokenArray;
-typedef struct {
-    const char *src;
-    int index;
-    int size;
-    int line_n;
-    int char_n;
-    Array tokens_array;
-    Buffer buf;
-} Tokenizer;
-typedef struct {
-    TokenType type;
-    int n_chars;
-} TokenMatch;
-Tokenizer t_new_tokenizer(const char *src, int src_size);
-void t_free(Tokenizer *tokenizer);
-void t_tokenize(Tokenizer *tk);
-bool is_postfix_operator(const TokenType type);
-bool is_unary_operator(const TokenType type);
-bool is_binary_operator(const TokenType type);
-bool is_assignment_op(const TokenType type);
-bool is_arithmetic_op(const TokenType type);
-bool is_bitwise_op(const TokenType type);
-bool is_comparison_op(const TokenType type);
-bool is_logical_op(const TokenType type);
-TokenType get_underlying_op(TokenType type);
-int op_associativity(TokenType type);
-int op_precedence(TokenType type);
-const char *token_type_str(const TokenType type);
-void print_token_type(TokenType type);
-void print_token(const Token *token);
-static inline Token *get_token(Array *arr, int index) { return (Token *)get(arr, index); }
 void *memcpy(void *, const void *, size_t);
 void *memmove(void *, const void *, size_t);
 void *memset(void *, int, size_t);
@@ -737,28 +737,6 @@ static inline UnionMember *get_union_member(const Type *union_t, int index) {
 UnionMember *get_union_member_named(Type *union_t, const char *name);
 StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index);
 typedef struct {
-    Node *func;
-    Array compound_stack;
-    Array loop_stack;
-    Array i_array;
-} SemanticContext;
-bool is_lvalue(const Node *n);
-bool is_deref(const Node *n);
-Type *check_unary_op(NodeManager *nm, Node *unary_op);
-Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop);
-Type *promote_binary_operands(NodeManager *nm, Node *binop);
-void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
-void handle_builtin_call(BuiltinKind kind, Node *node);
-void lower_nodes(NodeManager *nm);
-void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
-void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n);
-void pop_sema_scope(SemanticContext *sema_ctx, Parser *p);
-void push_sema_loop(SemanticContext *sema_ctx, const Node *loop);
-void pop_sema_loop(SemanticContext *sema_ctx);
-Node *sema_current_loop(const SemanticContext *sema_ctx);
-Node *sema_current_compound(const SemanticContext *sema_ctx);
-static inline int *get_i(SemanticContext *sema_ctx) { return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
-typedef struct {
     char *output;
     Array current_source;
     Array current_output;
@@ -939,1193 +917,833 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     fflush(logger.file);
     if (lvl == LOG_PANIC) ; exit(1);;
 }
-Parser new_parser() { return (Parser){0}; }
-void init_parser(Parser *p, Array *src, const int size) {
-    p->size = size;
-    p->src = src;
-    p->index = 0;
-    p->expect_semi = 1;
-    array_init(&p->scopes_array, 4, sizeof(Array));
-    arena_init(&p->symbols_arena, 64, sizeof(Symbol));
-    p_append_symbol_table(p);
+const char *KEYWORDS[33] = {
+    [TK_AUTO] = "auto", [TK_BREAK] = "break", [TK_CASE] = "case", [TK_CHAR] = "char",
+    [TK_CONST] = "const", [TK_CONTINUE] = "continue", [TK_DEFAULT] = "default", [TK_DO] = "do",
+    [TK_DOUBLE] = "double", [TK_ELSE] = "else", [TK_ENUM] = "enum", [TK_EXTERN] = "extern",
+    [TK_FLOAT] = "float", [TK_FOR] = "for", [TK_GOTO] = "goto", [TK_IF] = "if",
+    [TK_INLINE] = "inline", [TK_INT] = "int", [TK_LONG] = "long", [TK_REGISTER] = "register",
+    [TK_RETURN] = "return", [TK_SHORT] = "short", [TK_SIGNED] = "signed", [TK_SIZEOF] = "sizeof",
+    [TK_STATIC] = "static", [TK_STRUCT] = "struct", [TK_SWITCH] = "switch", [TK_TYPEDEF] = "typedef",
+    [TK_UNION] = "union", [TK_UNSIGNED] = "unsigned", [TK_VOID] = "void", [TK_VOLATILE] = "volatile",
+    [TK_WHILE] = "while",
+};
+static void t_buffer_reset(Tokenizer *tk) {
+    tk->buf.size = 0;
+    memset(tk->buf.buf, 0, sizeof(tk->buf.buf));
 }
-void free_parser(Parser *p) {
-    for (int i = 0; i < p->scopes_array.count; i++) {
-        array_free(get_symbol_table(p, i));
+Tokenizer t_new_tokenizer(const char *src, const int src_size) {
+    Tokenizer tokenizer = {};
+    tokenizer.size = src_size;
+    tokenizer.src = src;
+    tokenizer.line_n = 1;
+    t_buffer_reset(&tokenizer);
+    array_init(&tokenizer.tokens_array, 16, sizeof(Token));
+    return tokenizer;
+}
+void free_token(Token *token) {
+    free(token->value);
+    token->value = ((void *)0);
+}
+void t_free(Tokenizer *tokenizer) {
+    for (int i = 0; i < tokenizer->tokens_array.count; i++) {
+        free_token(get_token(&tokenizer->tokens_array, i));
     }
-    array_free(&p->scopes_array);
-    arena_free(&p->symbols_arena);
+    tokenizer->src = ((void *)0);
+    tokenizer->index = 0;
+    tokenizer->size = 0;
+    array_free(&tokenizer->tokens_array);
 }
-void p_append_symbol_table(Parser *p) {
-    Array symbol_table;
-    array_init(&symbol_table, 4, sizeof(Symbol *));
-    append(&p->scopes_array, &symbol_table);
-}
-int current_scope_depth;
-bool p_is_last_token(const Parser *p) { return p->index >= p->size; }
-Token *p_peek_n(const Parser *p, const int n) {
-    if (p->index + n > p->src->count) {
-        printf("P_peek_n Tried peeking past eof\n");
-        return ((void *)0);
+static bool t_is_eof(const Tokenizer *tk) { return tk->index >= tk->size; }
+static char t_peek(const Tokenizer *tk) {
+    if (!t_is_eof(tk)) {
+        return tk->src[tk->index];
     }
-    return get_token(p->src, p->index + n);
+    printf("T_peek Tried peeking past eof\n");
+    return '\0';
 }
-Token *p_peek(const Parser *p) { return p_peek_n(p, 0); }
-Token *p_peek_next(const Parser *p) { return p_peek_n(p, 1); }
-Token *p_consume_n(Parser *p, const int n) {
-    if (n == 0) return ((void *)0);
-    if (p->index + n > p->src->count) {
-        printf("P_consume_n %d Reached the end of the token list %d/%d\n", n, p->index, p->src->count);
-        return ((void *)0);
+static char t_peek_n(const Tokenizer *tk, const int n) {
+    if (tk->index + n > tk->size) {
+        printf("t_peek_n Tried peeking past eof\n");
+        return '\0';
     }
-    Token *token = get_token(p->src, p->index);
-    p->index += n;
-    if (has_flag(CF_DEBUG_PARSER)) print_token(token);
-    return token;
+    return tk->src[tk->index + n];
 }
-Token *p_consume(Parser *p) { return p_consume_n(p, 1); }
-void p_skip_n(Parser *p, const int n) { p_consume_n(p, n); }
-void p_skip(Parser *p) { p_consume_n(p, 1); }
-void p_expect(const Parser *p, const TokenType expected_type) {
-    if (!p_is_last_token(p)) {
-        const Token *token = get_token(p->src, p->index);
-        if (token->type != expected_type) {
-            log_start(LOG_ERROR);
-            printf("[%d:%d]: ", token->line_n, token->char_n);
-            printf("Expected ");
-            print_token_type(expected_type);
-            printf(" got ");
-            print_token_type(token->type);
-            printf("\n");
-            exit(1);
+static char t_peek_next(const Tokenizer *tk) { return t_peek_n(tk, 1); }
+static void t_skip(Tokenizer *tk) {
+    if (!(tk->index + 1 <= tk->size)) do { log_message(LOG_ERROR, "T_Skip Reached end of file\n"); ; exit(1);; } while (0);
+    if (t_peek(tk) == '\n') {
+        tk->line_n++;
+        tk->char_n = 0;
+    }
+    tk->index += 1;
+    tk->char_n += 1;
+}
+static void t_consume(Tokenizer *tk) {
+    tk->buf.buf[tk->buf.size++] = t_peek(tk);
+    if (has_flag(CF_DEBUG_TOKENIZER)) {
+        printf("%c", tk->src[tk->index]);
+    }
+    t_skip(tk);
+}
+static void t_consume_n(Tokenizer *tk, const int n) {
+    for (int i = 0; i < n; i++) {
+        t_consume(tk);
+    }
+}
+static void t_consume_a(Tokenizer *tk, const char c) { tk->buf.buf[tk->buf.size++] = c; }
+static void t_skip_n(Tokenizer *tk, int n) {
+    for (int i = 0; i < n; i++) t_skip(tk);
+}
+static void t_push_buffer(Tokenizer *tk, const TokenType type) {
+    if (tk->buf.size == 0 && type != TK_STRING_LITERAL) {
+        log_message(LOG_WARN, "Tried to push an empty buffer to TokenArray, skipping.\n");
+        return;
+    }
+    char *buf_dupe = malloc(sizeof(char) * tk->buf.size);
+    if (!buf_dupe) {
+        do { log_message(LOG_ERROR, "Failed to allocate for buffer duplicate\n"); ; exit(1);; } while (0);
+    }
+    memcpy(buf_dupe, tk->buf.buf, sizeof(char) * tk->buf.size);
+    append(&tk->tokens_array, &(Token){.type = type, .value = buf_dupe, .size = tk->buf.size, .line_n = tk->line_n, .char_n = tk->char_n});
+    t_buffer_reset(tk);
+}
+static void t_parse_and_push_buffer(Tokenizer *tk) {
+    if (tk->buf.size == 0) return;
+    Token token = {.type = TK_VOID, .value = ((void *)0), .size = 0, .line_n = tk->line_n, .char_n = tk->char_n};
+    bool is_keyword = 0;
+    for (int i = 0; i < 33; i++) {
+        if (strcmp(tk->buf.buf, KEYWORDS[i]) == 0) {
+            token.type = (TokenType)i;
+            is_keyword = 1;
+            break;
         }
     }
-}
-Token *p_consume_a(Parser *p, const TokenType type) {
-    p_expect(p, type);
-    return p_consume(p);
-}
-Token *p_consume_semi(Parser *p) {
-    if (p->expect_semi) {
-        return p_consume_a(p, TK_SEMI);
+    if (!is_keyword) {
+        token.type = TK_IDENTIFIER;
+        token.value = strndup(tk->buf.buf, tk->buf.size);
+        token.size = tk->buf.size;
     }
-    return ((void *)0);
+    append(&tk->tokens_array, &token);
 }
-Node *init_translation_unit(NodeManager *nm) {
-    Node *node = new_node(nm, N_TRANSLATION_UNIT);
-    array_init(&node->translation_unit.declarations_array, 8, sizeof(Node **));
-    return node;
-}
-Node *new_compound_node(NodeManager *nm) {
-    Node *node = new_node(nm, N_COMPOUND);
-    array_init(&node->compound.items_array, 8, sizeof(Node **));
-    return node;
-}
-Node *p_parse_builtin(Parser *p, NodeManager *nm, BuiltinKind kind) {
-    Node *b = new_node(nm, N_BUILTIN);
-    b->_builtin.kind = kind;
-    p_consume_a(p, TK_OPEN_PAREN);
-    switch (kind) {
-    case BUILTIN_MEMCPY:
-        array_init(&b->_builtin.params, 3, sizeof(Node *));
-        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
-        p_consume_a(p, TK_COMMA);
-        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
-        p_consume_a(p, TK_COMMA);
-        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
-        break;
-    case BUILTIN_VA_START:
-        array_init(&b->_builtin.params, 2, sizeof(Node *));
-        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
-        p_consume_a(p, TK_COMMA);
-        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
-        break;
-    case BUILTIN_VA_ARG:
-        array_init(&b->_builtin.params, 2, sizeof(Node *));
-        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
-        p_consume_a(p, TK_COMMA);
-        Node *va_arg_type = new_node(nm, N_TYPE);
-        va_arg_type->type = p_parse_abstract_type(p, nm);
-        append(&b->_builtin.params, &va_arg_type);
-        break;
-    case BUILTIN_VA_END:
-        array_init(&b->_builtin.params, 1, sizeof(Node *));
-        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
-        break;
-    case BUILTIN_NONE:
-        do { log_message(LOG_ERROR, "builtin reached but not builtin\n"); ; exit(1);; } while (0);
-        break;
+static void t_skip_comments(Tokenizer *tk) {
+    t_skip(tk);
+    if (t_peek(tk) == '/') {
+        t_skip(tk);
+        while (t_peek(tk) != '\n') {
+            t_skip(tk);
+        }
+        t_skip(tk);
+    } else if (t_peek(tk) == '*') {
+        t_skip(tk);
+        while (t_peek(tk) != '*' && t_peek_next(tk) != '/') {
+            t_skip(tk);
+        }
+        t_skip(tk);
+        t_skip(tk);
     }
-    p_consume_a(p, TK_CLOSE_PAREN);
-    return b;
 }
-Node *p_parse_postfix_expression(Parser *p, NodeManager *nm) {
-    Node *expr = p_parse_primary_expression(p, nm);
+static int is_op_start(const char c) {
+    switch (c) {
+    case '+':
+    case '-':
+    case '*':
+    case '/':
+    case '%':
+    case '=':
+    case '!':
+    case '~':
+    case '<':
+    case '>':
+    case '|':
+    case '&':
+    case '^':
+    case '.':
+        return 1;
+    default:
+        return 0;
+    }
+}
+static TokenMatch t_match_operator(const Tokenizer *tk) {
+    const char next = t_peek_next(tk);
+    const int eq = next == '=';
+    switch (t_peek(tk)) {
+    case '+':
+        if (next == '+') return (TokenMatch){TK_INCR, 2};
+        return eq ? (TokenMatch){TK_PLUS_EQ, 2} : (TokenMatch){TK_PLUS, 1};
+    case '-':
+        if (next == '-') return (TokenMatch){TK_DECR, 2};
+        if (next == '>') return (TokenMatch){TK_ARROW, 2};
+        return eq ? (TokenMatch){TK_MINUS_EQ, 2} : (TokenMatch){TK_MINUS, 1};
+    case '*':
+        return eq ? (TokenMatch){TK_MULTIPLY_EQ, 2} : (TokenMatch){TK_MULTIPLY, 1};
+    case '/':
+        return eq ? (TokenMatch){TK_DIVIDE_EQ, 2} : (TokenMatch){TK_DIVIDE, 1};
+    case '=':
+        return eq ? (TokenMatch){TK_EQ_EQ, 2} : (TokenMatch){TK_EQ, 1};
+    case '^':
+        return eq ? (TokenMatch){TK_XOR_EQ, 2} : (TokenMatch){TK_XOR, 1};
+    case '%':
+        return eq ? (TokenMatch){TK_MOD_EQ, 2} : (TokenMatch){TK_MOD, 1};
+    case '!':
+        return eq ? (TokenMatch){TK_NEQ, 2} : (TokenMatch){TK_L_NOT, 1};
+    case '~':
+        return (TokenMatch){TK_BW_NOT, 1};
+    case '&':
+        return next == '&' ? (TokenMatch){TK_AND_AND, 2} : (eq) ? (TokenMatch){TK_AND_EQ, 2} : (TokenMatch){TK_AND, 1};
+    case '|':
+        return next == '|' ? (TokenMatch){TK_OR_OR, 2} : (eq) ? (TokenMatch){TK_OR_EQ, 2} : (TokenMatch){TK_OR, 1};
+    case '<':
+        if (next == '<') {
+            return t_peek_n(tk, 2) == '=' ? (TokenMatch){TK_SHL_EQ, 3} : (TokenMatch){TK_SHL, 2};
+        }
+        return eq ? (TokenMatch){TK_LE, 2} : (TokenMatch){TK_LT, 1};
+    case '>':
+        if (next == '>') {
+            return t_peek_n(tk, 2) == '=' ? (TokenMatch){TK_SHR_EQ, 3} : (TokenMatch){TK_SHR, 2};
+        }
+        return eq ? (TokenMatch){TK_GE, 2} : (TokenMatch){TK_GT, 1};
+    case '.':
+        return (TokenMatch){TK_DOT, 1};
+    default:
+        do { log_message(LOG_ERROR, "Unknown operator"); ; exit(1);; } while (0);
+    }
+}
+static void t_consume_operator(Tokenizer *tk) {
+    const TokenMatch m = t_match_operator(tk);
+    t_consume_n(tk, m.n_chars);
+    t_push_buffer(tk, m.type);
+}
+static void t_consume_special_char(Tokenizer *tk) {
+    TokenType type;
+    switch (t_peek(tk)) {
+    case '(':
+        type = TK_OPEN_PAREN;
+        break;
+    case ')':
+        type = TK_CLOSE_PAREN;
+        break;
+    case '{':
+        type = TK_OPEN_CURLY;
+        break;
+    case '}':
+        type = TK_CLOSE_CURLY;
+        break;
+    case '[':
+        type = TK_OPEN_SQUARE;
+        break;
+    case ']':
+        type = TK_CLOSE_SQUARE;
+        break;
+    case ';':
+        type = TK_SEMI;
+        break;
+    case ',':
+        type = TK_COMMA;
+        break;
+    case ':':
+        type = TK_COLON;
+        break;
+    case '?':
+        type = TK_TERNARY;
+        break;
+    default:
+        do { log_message(LOG_ERROR, "Unexpected '%c'\n", t_peek(tk)); ; exit(1);; } while (0);
+    }
+    t_consume(tk);
+    t_consume_a(tk, '\0');
+    t_push_buffer(tk, type);
+}
+static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
+    t_skip(tk);
+    char c = t_peek(tk);
+    *length = 1;
+    switch (c) {
+    case 'n':
+        return '\n';
+    case 't':
+        return '\t';
+    case 'f':
+        return '\f';
+    case 'r':
+        return '\r';
+    case 'v':
+        return '\v';
+    case '\\':
+        return '\\';
+    case '"':
+        return '\"';
+    case '\'':
+        return '\'';
+    case 'x':
+        t_skip(tk);
+        Array hexal;
+        array_init(&hexal, 4, sizeof(char));
+        for (;;) {
+            char x = t_peek(tk);
+            if (is_hex(x)) {
+                append(&hexal, &x);
+                t_skip(tk);
+            } else break;
+        }
+        *length = 0;
+        int64_t res = parse_hex(hexal.data, hexal.count);
+        array_free(&hexal);
+        return res;
+    default:
+        if (is_oct(t_peek(tk))) {
+            char octal[3] = {};
+            int o_i = 0;
+            while (o_i < 3) {
+                char o = t_peek(tk);
+                if (is_oct(o)) {
+                    octal[o_i++] = o;
+                    t_skip(tk);
+                } else break;
+            }
+            *length = 0;
+            return parse_oct(octal, o_i);
+        }
+        do { log_message(LOG_ERROR, "Invalid escape sequence\n"); ; exit(1);; } while (0);
+    }
+}
+static void t_consume_char_literal(Tokenizer *tk) {
+    t_skip(tk);
+    for (int i = 0; i < 4; i++) {
+        if (t_peek(tk) == '\'') break;
+        if (t_peek(tk) == '\\') {
+            int n = 0;
+            t_consume_a(tk, t_parse_escape_sequence(tk, &n));
+            t_skip_n(tk, n);
+        } else t_consume(tk);
+    }
+    while (t_peek(tk) != '\'') t_skip(tk);
+    t_skip(tk);
+    t_push_buffer(tk, TK_CHAR_LITERAL);
+}
+static void t_consume_string_literal(Tokenizer *tk) {
+    t_skip(tk);
     for (;;) {
-        switch (p_peek(p)->type) {
-        case TK_OPEN_PAREN:
-            if (expr->kind == N_IDENTIFIER) {
-                BuiltinKind kind = get_builtin_kind(expr->identifier.name);
-                if (kind != BUILTIN_NONE) {
-                    expr = p_parse_builtin(p, nm, kind);
+        char c = t_peek(tk);
+        if (c == '\n') {
+            do { log_message(LOG_ERROR, "Found '\\n' in string literal."); ; exit(1);; } while (0);
+        }
+        if (c == '\"') {
+            t_skip(tk);
+            break;
+        }
+        if (c == '\\') {
+            int n = 0;
+            t_consume_a(tk, t_parse_escape_sequence(tk, &n));
+            t_skip_n(tk, n);
+        } else t_consume(tk);
+    }
+    t_push_buffer(tk, TK_STRING_LITERAL);
+}
+void t_tokenize(Tokenizer *tk) {
+    while (!t_is_eof(tk)) {
+        const char c = t_peek(tk);
+        if (c == '.' && !is_num(t_peek_next(tk))) {
+            t_consume(tk);
+            if (t_peek(tk) == '.' && t_peek_next(tk) == '.') {
+                t_consume_n(tk, 2);
+                t_push_buffer(tk, TK_ELLIPSES);
+            } else t_push_buffer(tk, TK_DOT);
+        } else if (is_num(c) || c == '.' || c == '-' && is_num(t_peek_next(tk))) {
+            int is_float = 0;
+            t_consume(tk);
+            if (c == '0') {
+                switch (t_peek(tk)) {
+                case 'x':
+                    t_consume(tk);
+                    while (is_hex(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    break;
+                case 'b':
+                    t_consume(tk);
+                    while (is_binary(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    break;
+                case '.':
+                    is_float = 1;
+                    t_consume(tk);
+                    while (is_num(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    break;
+                default:
+                    while (is_oct(t_peek(tk))) {
+                        t_consume(tk);
+                    }
                     break;
                 }
+            } else {
+                while (is_num(t_peek(tk))) {
+                    t_consume(tk);
+                }
+                if (t_peek(tk) == '.') {
+                    t_consume(tk);
+                    is_float = 1;
+                    while (is_num(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                }
             }
-            p_consume(p);
-            Node *func_call = new_function_call_node(nm, expr);
-            while (p_peek(p)->type != TK_CLOSE_PAREN) {
-                p_append_call_param(func_call, p_parse_expression(p, nm, 0));
-                if (p_peek(p)->type == TK_COMMA) p_consume(p);
-                else break;
+            int l_count = 0;
+            int u_count = 0;
+            int f_count = 0;
+            for (;;) {
+                char c = t_peek(tk);
+                if (c == 'u' || c == 'U') {
+                    if (u_count >= 1) break;
+                    u_count++;
+                    t_consume(tk);
+                } else if (c == 'l' || c == 'L') {
+                    if (l_count >= 2) break;
+                    l_count++;
+                    t_consume(tk);
+                } else if (c == 'f' || c == 'F') {
+                    if (f_count >= 1) break;
+                    f_count++;
+                    is_float = 1;
+                    t_consume(tk);
+                } else break;
             }
-            p_consume_a(p, TK_CLOSE_PAREN);
-            expr = func_call;
-            break;
-        case TK_OPEN_SQUARE:
-            p_consume(p);
-            if (!is_lvalue(expr)) {
-                log_start(LOG_ERROR);
-                print_node_type(expr->kind);
-                printf(" is not a an lvalue, needed for indexing\n");
-                exit(1);
+            t_push_buffer(tk, is_float ? TK_FLT_LITERAL : TK_INT_LITERAL);
+        } else if (is_alpha(c) || c == '_') {
+            t_consume(tk);
+            while (is_alpha_num(t_peek(tk))) {
+                t_consume(tk);
             }
-            Node *node = new_node(nm, N_INDEX);
-            node->index.index = p_parse_expression(p, nm, 0);
-            node->index.identifier = expr;
-            expr = node;
-            p_consume_a(p, TK_CLOSE_SQUARE);
-            break;
-        case TK_DOT:
-        case TK_ARROW:
-            TokenType op = p_consume(p)->type;
-            Token *t = p_consume_a(p, TK_IDENTIFIER);
-            Node *member = new_node(nm, N_IDENTIFIER);
-            member->identifier.name = t->value;
-            member->identifier.len = t->size;
-            Node *access = new_node(nm, N_MEMBER_ACCESS);
-            access->member_access.op = op;
-            access->member_access.identifier = expr;
-            access->member_access.member = member;
-            expr = access;
-            break;
-        case TK_INCR:
-        case TK_DECR:
-            Node *unary = new_node(nm, N_UNARY);
-            unary->unary.op = p_consume(p)->type;
-            unary->unary.associativity = 1;
-            unary->unary.expr = expr;
-            expr = unary;
-            break;
-        default:
-            return expr;
-        }
+            t_parse_and_push_buffer(tk);
+            t_buffer_reset(tk);
+        } else if (is_whitespace(c)) t_skip(tk);
+        else if (t_peek(tk) == '/' && (t_peek_next(tk) == '/' || t_peek_next(tk) == '*')) t_skip_comments(tk);
+        else if (t_peek(tk) == '\'') t_consume_char_literal(tk);
+        else if (t_peek(tk) == '\"') t_consume_string_literal(tk);
+        else if (is_op_start(c)) t_consume_operator(tk);
+        else t_consume_special_char(tk);
     }
 }
-Node *p_parse_prefix(Parser *p, NodeManager *nm) {
-    if (is_unary_operator(p_peek(p)->type)) {
-        Node *node = new_node(nm, N_UNARY);
-        node->unary.op = p_consume(p)->type;
-        node->unary.associativity = 0;
-        if (node->unary.op == TK_SIZEOF && p_peek(p)->type == TK_OPEN_PAREN && is_start_of_type(p, p_peek_next(p))) {
-            node->unary.expr = new_node(nm, N_TYPE);
-            p_consume(p);
-            node->unary.expr->type = p_parse_abstract_type(p, nm);
-            p_consume_a(p, TK_CLOSE_PAREN);
-        } else node->unary.expr = p_parse_cast(p, nm);
-        return node;
-    }
-    return p_parse_postfix_expression(p, nm);
-}
-Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
-    Node *primary = ((void *)0);
-    Token *tk;
-    switch (p_peek(p)->type) {
-    case TK_INT_LITERAL:
-    case TK_FLT_LITERAL:
-    case TK_CHAR_LITERAL:
-    case TK_STRING_LITERAL:
-        primary = new_node(nm, N_LITERAL);
-        tk = p_consume(p);
-        primary->literal.kind = literal_kind(tk->type);
-        primary->literal.raw_rata = tk->value;
-        primary->literal.len = tk->size;
-        if (primary->literal.kind == L_STRING) {
-            Array cat_str;
-            array_init(&cat_str, primary->literal.len + tk->size + 1, sizeof(char));
-            memcpy(cat_str.data, primary->literal.raw_rata, primary->literal.len);
-            cat_str.count += primary->literal.len;
-            while (p_peek(p)->type == TK_STRING_LITERAL) {
-                tk = p_consume(p);
-                array_str_catn(&cat_str, tk->value, tk->size);
-            }
-            primary->literal.raw_rata = cat_str.data;
-            primary->literal.len = cat_str.count;
-        }
-        return primary;
-    case TK_IDENTIFIER:
-        primary = new_node(nm, N_IDENTIFIER);
-        tk = p_consume(p);
-        primary->identifier.name = tk->value;
-        primary->identifier.len = tk->size;
-        break;
-    case TK_OPEN_PAREN:
-        p_consume_a(p, TK_OPEN_PAREN);
-        primary = p_parse_expression(p, nm, 0);
-        p_consume_a(p, TK_CLOSE_PAREN);
-        return primary;
-    case TK_OPEN_CURLY:
-        return p_parse_init_list(p, nm);
-    default:
-        tk = p_consume(p);
-        do { log_message(LOG_ERROR, "[%d:%d]: Expected primary expression got %tk\n", tk->line_n, tk->char_n, tk->type); ; exit(1);; } while (0);
-    }
-    return primary;
-}
-Node *p_parse_init_list(Parser *p, NodeManager *nm) {
-    Node *node = new_init_list_node(nm);
-    p_consume(p);
-    while (p_peek(p)->type != TK_CLOSE_CURLY) {
-        if (p_peek(p)->type == TK_DOT) {
-            p_consume(p);
-            Token *token = p_consume_a(p, TK_IDENTIFIER);
-            p_consume_a(p, TK_EQ);
-            Node *member_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
-            member_assign->designated_init.kind = T_STRUCT;
-            member_assign->designated_init._struct.name = token->value;
-            member_assign->designated_init.value = p_parse_expression(p, nm, 0);
-            p_append_element(node, member_assign);
-        } else if (p_peek(p)->type == TK_OPEN_SQUARE) {
-            p_consume(p);
-            Node *index_expr = p_parse_expression(p, nm, 0);
-            p_consume_a(p, TK_CLOSE_SQUARE);
-            p_consume_a(p, TK_EQ);
-            Node *element_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
-            element_assign->designated_init._array.const_expr = index_expr;
-            element_assign->designated_init.value = p_parse_expression(p, nm, 0);
-            p_append_element(node, element_assign);
-        } else p_append_element(node, p_parse_expression(p, nm, 0));
-        if (p_peek(p)->type == TK_COMMA) p_consume(p);
-        else break;
-    }
-    p_consume_a(p, TK_CLOSE_CURLY);
-    return node;
-}
-Node *new_init_list_node(NodeManager *nm) {
-    Node *node = new_node(nm, N_INIT_LIST);
-    array_init(&node->init_list.elements_array, 4, sizeof(Node *));
-    return node;
-}
-Node *new_function_node(NodeManager *nm) { return new_node(nm, N_FUNCTION); }
-Node *new_function_call_node(NodeManager *nm, Node *identifier) {
-    Node *node = new_node(nm, N_FUNCTION_CALL);
-    node->func_call.callee = identifier;
-    array_init(&node->func_call.params_array, 4, sizeof(Node *));
-    return node;
-}
-Node *p_parse_goto_statement(Parser *p, NodeManager *nm) {
-    p_consume(p);
-    Node *identifier = new_node(nm, N_IDENTIFIER);
-    const Token *t = p_consume_a(p, TK_IDENTIFIER);
-    identifier->identifier.name = t->value;
-    identifier->identifier.len = t->size;
-    Node *node = new_node(nm, N_GOTO);
-    node->_goto.identifier = identifier;
-    p_consume_semi(p);
-    return node;
-}
-Node *p_parse_label(Parser *p, NodeManager *nm) {
-    Node *identifier = new_node(nm, N_IDENTIFIER);
-    const Token *t = p_consume_a(p, TK_IDENTIFIER);
-    identifier->identifier.name = t->value;
-    identifier->identifier.len = t->size;
-    Node *node = new_node(nm, N_LABEL);
-    node->_goto.identifier = identifier;
-    p_consume_a(p, TK_COLON);
-    return node;
-}
-Node *p_parse_cast(Parser *p, NodeManager *nm) {
-    if (p_peek(p)->type == TK_OPEN_PAREN && is_start_of_type(p, p_peek_next(p))) {
-        p_consume_a(p, TK_OPEN_PAREN);
-        Type *type = p_parse_abstract_type(p, nm);
-        p_consume_a(p, TK_CLOSE_PAREN);
-        if (p_peek(p)->type == TK_OPEN_CURLY) {
-            Node *comp_node = new_node(nm, N_COMPOUND_LITERAL);
-            comp_node->type = type;
-            comp_node->compound_literal.value = p_parse_init_list(p, nm);
-            return comp_node;
-        }
-        Node *cast_node = new_node(nm, N_CAST);
-        cast_node->type = type;
-        cast_node->cast.to = type;
-        cast_node->cast.expr = p_parse_cast(p, nm);
-        return cast_node;
-    }
-    return p_parse_prefix(p, nm);
-}
-Node *p_parse_binary(Parser *p, NodeManager *nm, Node *lhs, const int min_prec) {
-    Node *b = new_node(nm, N_BINARY);
-    b->binary.op = p_consume(p)->type;
-    b->binary.rhs = p_parse_expression(p, nm, op_precedence(b->binary.op) + op_associativity(b->binary.op));
-    b->binary.lhs = lhs;
-    return b;
-}
-Node *p_parse_ternary(Parser *p, NodeManager *nm, Node *cond) {
-    p_consume(p);
-    Node *t = new_node(nm, N_TERNARY);
-    t->ternary.cond = cond;
-    t->ternary.if_true = p_parse_expression(p, nm, 0);
-    p_consume_a(p, TK_COLON);
-    t->ternary.if_false = p_parse_expression(p, nm, op_precedence(TK_TERNARY));
-    return t;
-}
-Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
-    if (p_peek(p)->type == TK_SEMI) {
-        if (p->expect_semi) p_consume(p);
-        return new_node(nm, N_NULL);
-    }
-    Node *primary = p_parse_cast(p, nm);
-    while (is_postfix_operator(p_peek(p)->type)) primary = p_parse_postfix_expression(p, nm);
-    for (;;) {
-        if (is_binary_operator(p_peek(p)->type) && op_precedence(p_peek(p)->type) >= min_prec) {
-            primary = p_parse_binary(p, nm, primary, min_prec);
-        } else if (p_peek(p)->type == TK_TERNARY && op_precedence(TK_TERNARY) >= min_prec) {
-            primary = p_parse_ternary(p, nm, primary);
-        } else break;
-    }
-    return primary;
-}
-Node *p_parse_block_item(Parser *p, NodeManager *nm) {
-    if (is_start_of_type(p, p_peek(p))) return p_parse_block_declaration(p, nm);
-    else return p_parse_statement(p, nm);
-}
-Type *p_parse_abstract_type(Parser *p, NodeManager *nm) {
-    const char *name = ((void *)0);
-    Type *type = p_parse_type(p, nm, &name);
-    if (!(name == ((void *)0))) do { log_message(LOG_ERROR, "Unexpected identifier in parsing abstract type.\n"); ; exit(1);; } while (0);
-    return type;
-}
-void free_declarator(Declarator *decl) {
-    for (int i = 0; i < decl->modifiers.count; i++) {
-        Modifier *mod = get(&decl->modifiers, i);
-        if (mod->kind == MOD_FUNCTION) array_free(&mod->function.params);
-    }
-    array_free(&decl->modifiers);
-}
-Type *p_parse_type(Parser *p, NodeManager *nm, const char **name) {
-    Type *type;
-    unsigned int qualifiers = QUAL_NONE;
-    bool is_signed = 1;
-    for (;;) {
-        if (p_peek(p)->type == TK_CONST) qualifiers |= QUAL_CONST;
-        else if (p_peek(p)->type == TK_VOLATILE) qualifiers |= QUAL_VOLATILE;
-        else if (p_peek(p)->type == TK_UNSIGNED) is_signed = 0;
-        else if (p_peek(p)->type == TK_SIGNED) is_signed = 1;
-        else break;
-        p_consume(p);
-    }
-    if (p_peek(p)->type == TK_STRUCT) type = p_parse_struct(p, nm);
-    else if (p_peek(p)->type == TK_ENUM) type = p_parse_enum(p, nm);
-    else if (p_peek(p)->type == TK_UNION) type = p_parse_union(p, nm);
-    else type = token_to_type(p, p_consume(p));
-    if (!(type != type_invalid)) do { log_message(LOG_ERROR, "Got type_invalid in p_parse_base_type\n"); ; exit(1);; } while (0);
-    if (type->kind == T_INT && !is_signed && is_signed != type->is_signed) type = get_unsigned_type(type);
-    Declarator decl = p_parse_declarator(p, nm);
-    *name = decl.name;
-    type = get_modified_type(type, &decl);
-    if (qualifiers != QUAL_NONE) type = get_qualified_type(type, qualifiers);
-    free_declarator(&decl);
-    return type;
-}
-Declarator p_parse_declarator(Parser *p, NodeManager *nm) {
-    Declarator d = {.name = ((void *)0)};
-    array_init(&d.modifiers, 4, sizeof(Modifier));
-    int ptrs = 0;
-    while (p_peek(p)->type == TK_MULTIPLY) {
-        p_consume(p);
-        ptrs++;
-    }
-    if (p_peek(p)->type == TK_OPEN_PAREN) {
-        p_consume(p);
-        free_declarator(&d);
-        d = p_parse_declarator(p, nm);
-        p_consume_a(p, TK_CLOSE_PAREN);
-    } else if (p_peek(p)->type == TK_IDENTIFIER) d.name = p_consume_a(p, TK_IDENTIFIER)->value;
-    for (;;) {
-        if (p_peek(p)->type == TK_OPEN_SQUARE) {
-            p_consume(p);
-            Node *expr = ((void *)0);
-            if (p_peek(p)->type != TK_CLOSE_SQUARE) expr = p_parse_expression(p, nm, 0);
-            p_consume_a(p, TK_CLOSE_SQUARE);
-            append(&d.modifiers, &(Modifier){.kind = MOD_ARRAY, .array_bounds = expr});
-        } else if (p_peek(p)->type == TK_OPEN_PAREN) {
-            Modifier func_modifier = p_parse_parameter_list(p, nm);
-            append(&d.modifiers, &func_modifier);
-        } else break;
-    }
-    for (int i = 0; i < ptrs; i++) {
-        append(&d.modifiers, &(Modifier){.kind = MOD_POINTER});
-    }
-    return d;
-}
-Type *p_parse_enum(Parser *p, NodeManager *nm) {
-    Type enum_t = enum_type();
-    p_consume_a(p, TK_ENUM);
-    if (p_peek(p)->type == TK_IDENTIFIER) {
-        enum_t._enum.name = p_consume(p)->value;
-    }
-    if (p_peek(p)->type == TK_OPEN_CURLY) {
-        array_init(&enum_t._enum.fields_array, 4, sizeof(EnumField));
-        p_consume(p);
-        int val = 0;
-        while (p_peek(p)->type != TK_CLOSE_CURLY) {
-            EnumField f = {};
-            f.name = p_consume_a(p, TK_IDENTIFIER)->value;
-            if (p_peek(p)->type == TK_EQ) {
-                p_consume(p);
-                f.const_expr = p_parse_expression(p, nm, 0);
-            }
-            f._enum_t = ((void *)0);
-            append_enum_field(&enum_t, &f);
-            if (p_peek(p)->type == TK_COMMA) p_consume(p);
-            else break;
-        }
-        p_consume(p);
-        enum_t._enum.complete = 1;
-    }
-    Type *s = get_enum_type(enum_t._enum.name);
-    if (s) {
-        if (enum_t._enum.complete) {
-            if (s->_enum.complete) {
-                do { log_message(LOG_ERROR, "Redefinition of enum %s\n", enum_t._enum.name); ; exit(1);; } while (0);
-            } else *s = enum_t;
-        }
-        return s;
-    } else {
-        Type *t = new_type();
-        for (int i = 0; i < enum_t._enum.fields_array.count; i++) {
-            EnumField *f = get_enum_field(&enum_t, i);
-            f->_enum_t = t;
-        }
-        *t = enum_t;
-        t->is_resolved = 0;
-        return t;
-    }
-}
-Type *p_parse_union(Parser *p, NodeManager *nm) {
-    Type union_t = union_type();
-    p_consume_a(p, TK_UNION);
-    if (p_peek(p)->type == TK_IDENTIFIER) {
-        union_t._union.name = p_consume(p)->value;
-    }
-    if (p_peek(p)->type == TK_OPEN_CURLY) {
-        array_init(&union_t._union.members_array, 4, sizeof(UnionMember));
-        p_consume(p);
-        while (p_peek(p)->type != TK_CLOSE_CURLY) {
-            UnionMember m;
-            m.name = ((void *)0);
-            Type *t = p_parse_type(p, nm, &m.name);
-            if (!(t->kind == T_STRUCT || t->kind == T_UNION)) if (!(m.name)) do { log_message(LOG_ERROR, "Scalar Union member must be named\n"); ; exit(1);; } while (0);
-            m.type = t;
-            m.offset = 0;
-            append_union_member(&union_t, &m);
-            p_consume_semi(p);
-        }
-        p_consume(p);
-        union_t._union.complete = 1;
-    }
-    Type *u = get_union_type(union_t._union.name);
-    if (u) {
-        if (union_t._union.complete) {
-            if (u->_union.complete) {
-                do { log_message(LOG_ERROR, "Redefinition of union %s\n", union_t._union.name); ; exit(1);; } while (0);
-            } else *u = union_t;
-        }
-        return u;
-    } else {
-        Type *t = new_type();
-        *t = union_t;
-        return t;
-    }
-}
-Type *p_parse_struct(Parser *p, NodeManager *nm) {
-    Type struct_t = struct_type();
-    p_consume_a(p, TK_STRUCT);
-    if (p_peek(p)->type == TK_IDENTIFIER) {
-        struct_t._struct.name = p_consume(p)->value;
-    }
-    if (p_peek(p)->type == TK_OPEN_CURLY) {
-        array_init(&struct_t._struct.members_array, 4, sizeof(StructMember));
-        p_consume(p);
-        while (p_peek(p)->type != TK_CLOSE_CURLY) {
-            StructMember f;
-            f.name = ((void *)0);
-            Type *t = p_parse_type(p, nm, &f.name);
-            if (!(t->kind == T_STRUCT || t->kind == T_UNION)) if (!(f.name)) do { log_message(LOG_ERROR, "Scalar Struct member must be named\n"); ; exit(1);; } while (0);
-            f.type = t;
-            append_struct_member(&struct_t, &f);
-            p_consume_semi(p);
-        }
-        p_consume(p);
-        struct_t.size = align(struct_t.size, struct_t.align);
-        struct_t._struct.complete = 1;
-    }
-    Type *s = get_struct_type(struct_t._struct.name);
-    if (s) {
-        if (struct_t._struct.complete) {
-            if (s->_struct.complete) {
-                do { log_message(LOG_ERROR, "Redefinition of struct %s\n", struct_t._struct.name); ; exit(1);; } while (0);
-            } else *s = struct_t;
-        }
-        return s;
-    } else {
-        Type *t = new_type();
-        *t = struct_t;
-        return t;
-    }
-}
-void p_append_block_item(Node *root, Node *item) {
-    if (item != ((void *)0)) append(&root->compound.items_array, &item);
-    else printf("Skipping empty node\n");
-}
-void p_append_param(Node *func, Node *param) {
-    if (param != ((void *)0)) {
-        append(&func->type->_func.params, &param);
-    } else {
-        do { log_message(LOG_ERROR, "Recieved a NULL param node to append\n"); ; exit(1);; } while (0);
-    }
-}
-void p_append_call_param(Node *func_call, Node *param) { append(&func_call->func_call.params_array, &param); }
-Symbol *p_append_symbol(Array *st, const Symbol *s) { return *(Symbol **)append(st, &s); }
-Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind, const bool same_depth) {
-    for (int i = p->scopes_array.count - 1; i >= 0; i--) {
-        Array *st = get_symbol_table(p, i);
-        for (int j = 0; j < st->count; j++) {
-            Symbol *symbol = get_symbol(st, j);
-            if (same_depth && symbol->scope_depth != p->current_scope_depth) continue;
-            if (symbol->scope_depth <= p->current_scope_depth && (kind == ANY || symbol->kind == kind) && strcmp(symbol->name, name) == 0) {
-                return symbol;
-            }
-        }
-    }
-    return ((void *)0);
-}
-Typedef *p_get_typedef(const Parser *p, const char *name) {
-    Symbol *s = p_get_symbol(p, name, TYPEDEF, 0);
-    if (s) return &s->_typedef;
-    do { log_message(LOG_ERROR, "Tried to get the typedef of %s, which does not exist\n", name); ; exit(1);; } while (0);
-}
-Node *p_get_func_def(const Parser *p, const char *name) { do { log_message(LOG_ERROR, "Tried to get function definition for '%s' which does not exist\n", name); ; exit(1);; } while (0); }
-Symbol *p_new_symbol(Parser *p, const Symbol *s) { return arena_append(&p->symbols_arena, s); }
-void p_append_typedef(Parser *p, const Typedef *t) {
-    p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = t->new_def,
-                                                                           .kind = TYPEDEF,
-                                                                           .linkage = LINK_NONE,
-                                                                           .storage = STORAGE_NONE,
-                                                                           ._typedef = *t,
-                                                                           .type = t->type,
-                                                                           .scope_depth = p->current_scope_depth}));
-}
-Symbol *p_append_func_def(Parser *p, Node *f) {
-    if (p->scopes_array.count > 2) {
-        do { log_message(LOG_ERROR, "Declaring function inside a function???\n"); ; exit(1);; } while (0);
-    }
-    Linkage linkage = f->func.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
-    Storage storage = STORAGE_TEXT;
-    return p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = f->func.name,
-                                                                                  .kind = FUNC,
-                                                                                  .linkage = linkage,
-                                                                                  .storage = storage,
-                                                                                  .func_def = f,
-                                                                                  .type = f->type,
-                                                                                  .scope_depth = p->current_scope_depth}));
-}
-void update_linkage_storage(Symbol *s, Node *v) {
-    if (!(v->kind == N_VAR_DECL)) do { log_message(LOG_ERROR, "Expected Var decl node to update symbol linkage and storage\n"); ; exit(1);; } while (0);
-    Linkage linkage = LINK_NONE;
-    Storage storage = STORAGE_NONE;
-    if (v->var_decl.is_global) {
-        storage = v->var_decl.is_defined ? STORAGE_DATA : STORAGE_BSS;
-        linkage = v->var_decl.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
-    } else {
-        storage = STORAGE_NONE;
-        if (v->var_decl.storage_class == NONE) linkage = LINK_NONE;
-        if (v->var_decl.storage_class == EXTERN) linkage = LINK_EXTERNAL;
-        if (v->var_decl.storage_class == STATIC) linkage = LINK_INTERNAL;
-    }
-    s->linkage = linkage;
-    s->storage = storage;
-}
-Symbol *p_append_var_decl_symbol(Parser *p, Node *v) {
-    Symbol *s = p_new_symbol(p, &(Symbol){.name = v->var_decl.identifier->identifier.name,
-                                          .kind = VAR,
-                                          .var_decl = v,
-                                          .type = v->type,
-                                          .scope_depth = p->current_scope_depth});
-    update_linkage_storage(s, v);
-    return p_append_symbol(get_current_symbol_table(p), s);
-}
-Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param) {
-    if (!(param->name)) do { log_message(LOG_ERROR, "Function parameter must be named\n"); ; exit(1);; } while (0);
-    return p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = param->name,
-                                                                                  .kind = VAR,
-                                                                                  .linkage = LINK_NONE,
-                                                                                  .storage = STORAGE_NONE,
-                                                                                  .var_decl = ((void *)0),
-                                                                                  .type = param->type,
-                                                                                  .scope_depth = p->current_scope_depth}));
-}
-void p_append_enum_const(Parser *p, const EnumField *e) {
-    p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = e->name,
-                                                                           .kind = ENUM,
-                                                                           .linkage = LINK_NONE,
-                                                                           .storage = STORAGE_NONE,
-                                                                           .enum_field = e,
-                                                                           .type = type_i32,
-                                                                           .scope_depth = p->current_scope_depth}));
-}
-void p_append_element(Node *init_list, Node *element) { append(&init_list->init_list.elements_array, &element); }
-Node *p_get_var_decl(const Parser *p, const char *name) {
-    const Symbol *s = p_get_symbol(p, name, VAR, 0);
-    if (s) return s->var_decl;
-    do { log_message(LOG_ERROR, "Tried to find variable %s which does not exist\n", name); ; exit(1);; } while (0);
-}
-const EnumField *p_get_enum_const(const Parser *p, const char *name) {
-    Symbol *s = p_get_symbol(p, name, ENUM, 0);
-    if (s) return s->enum_field;
-    do { log_message(LOG_ERROR, "Tried to find enum constant %s which does not exist\n", name); ; exit(1);; } while (0);
-}
-Node *p_parse_if_statement(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_IF);
-    p_consume_a(p, TK_IF);
-    p_consume_a(p, TK_OPEN_PAREN);
-    node->_if.cond = p_parse_expression(p, nm, 0);
-    p_consume_a(p, TK_CLOSE_PAREN);
-    node->_if.if_true = p_parse_statement(p, nm);
-    if (p_peek(p)->type == TK_ELSE) {
-        p_consume(p);
-        if (p_peek(p)->type == TK_IF) {
-            node->_if.if_false = p_parse_if_statement(p, nm);
-        } else {
-            node->_if.if_false = p_parse_statement(p, nm);
-        }
-    } else {
-        node->_if.if_false = ((void *)0);
-    }
-    return node;
-}
-Node *p_parse_do_while_loop(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_WHILE);
-    node->_while.is_do_while = 1;
-    p_consume_a(p, TK_DO);
-    node->_while.block = p_parse_statement(p, nm);
-    p_consume_a(p, TK_WHILE);
-    p_consume_a(p, TK_OPEN_PAREN);
-    node->_while.cond = p_parse_expression(p, nm, 0);
-    p_consume_a(p, TK_CLOSE_PAREN);
-    p_consume_semi(p);
-    return node;
-}
-Node *p_parse_while_loop(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_WHILE);
-    node->_while.is_do_while = 0;
-    p_consume_a(p, TK_WHILE);
-    p_consume_a(p, TK_OPEN_PAREN);
-    node->_while.cond = p_parse_expression(p, nm, 0);
-    p_consume_a(p, TK_CLOSE_PAREN);
-    node->_while.block = p_parse_statement(p, nm);
-    return node;
-}
-Node *p_parse_case(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_CASE);
-    if (p_peek(p)->type == TK_CASE) {
-        p_consume_a(p, TK_CASE);
-        node->_case.const_expr = p_parse_expression(p, nm, 0);
-    } else {
-        p_consume_a(p, TK_DEFAULT);
-        node->_case.const_expr = ((void *)0);
-    }
-    p_consume_a(p, TK_COLON);
-    return node;
-}
-void p_append_case(Node *s, Node *c) {
-    c->_case.i = s->_switch.block->compound.items_array.count;
-    append(&s->_switch.cases_array, &c);
-}
-UnionMember *get_union_member_named(Type *union_t, const char *name) {
-    bool found_member = 0;
-    for (int j = 0; j < union_t->_union.members_array.count; j++) {
-        UnionMember *member = get_union_member(union_t, j);
-        if (strcmp(member->name, name) == 0) {
-            found_member = 1;
-            return member;
-        }
-    }
-    if (!found_member) {
-        log_start(LOG_ERROR);
-        printf("No such member '%s' on ", name);
-        print_type(union_t);
-        printf("\n");
-        exit(1);
-    }
-    return ((void *)0);
-}
-StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index) {
-    bool found_member = 0;
-    for (int j = 0; j < struct_t->_struct.members_array.count; j++) {
-        StructMember *member = get_struct_member(struct_t, j);
-        if (member->name) {
-            if (strcmp(member->name, name) == 0) {
-                found_member = 1;
-                *index = j;
-                return member;
-            }
-        } else {
-            StructMember *m = get_member(member->type, name, 0);
-            if (m) {
-                *index = j;
-                return m;
-            }
-        }
-    }
-    if (!found_member) {
-        log_start(LOG_ERROR);
-        printf("No such member '%s' on ", name);
-        print_type(struct_t);
-        printf("\n");
-        exit(1);
-    }
-    return ((void *)0);
-}
-Node *p_parse_switch_statement(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_SWITCH);
-    array_init(&node->_switch.cases_array, 4, sizeof(Node *));
-    p_consume_a(p, TK_SWITCH);
-    p_consume_a(p, TK_OPEN_PAREN);
-    node->_switch.test = p_parse_expression(p, nm, 0);
-    p_consume_a(p, TK_CLOSE_PAREN);
-    node->_switch.block = new_compound_node(nm);
-    p_consume_a(p, TK_OPEN_CURLY);
-    while (p_peek(p)->type != TK_CLOSE_CURLY) {
-        Node *item;
-        if (p_peek(p)->type == TK_CASE || p_peek(p)->type == TK_DEFAULT) {
-            item = p_parse_case(p, nm);
-            p_append_case(node, item);
-        } else {
-            item = p_parse_block_item(p, nm);
-        }
-        p_append_block_item(node->_switch.block, item);
-    }
-    p_consume_a(p, TK_CLOSE_CURLY);
-    return node;
-}
-Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_FOR);
-    p_consume_a(p, TK_FOR);
-    p_consume_a(p, TK_OPEN_PAREN);
-    p->expect_semi = 0;
-    if (p_peek(p)->type != TK_SEMI) node->_for.init = p_parse_block_item(p, nm);
-    p_consume_a(p, TK_SEMI);
-    if (p_peek(p)->type != TK_SEMI) node->_for.cond = p_parse_expression(p, nm, 0);
-    p_consume_a(p, TK_SEMI);
-    if (p_peek(p)->type != TK_CLOSE_PAREN) node->_for.iter = p_parse_expression(p, nm, 0);
-    p->expect_semi = 1;
-    p_consume_a(p, TK_CLOSE_PAREN);
-    node->_for.block = p_parse_statement(p, nm);
-    return node;
-}
-Node *p_parse_return(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_RETURN);
-    p_consume(p);
-    if (p_peek(p)->type != TK_SEMI) {
-        node->_return.expr = p_parse_expression(p, nm, 0);
-        node->type = type_invalid;
-    }
-    p_consume_semi(p);
-    return node;
-}
-Node *p_parse_continue(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_CONTINUE);
-    p_consume(p);
-    p_consume_semi(p);
-    return node;
-}
-Node *p_parse_break(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_BREAK);
-    p_consume(p);
-    p_consume_semi(p);
-    return node;
-}
-Node *p_parse_statement(Parser *p, NodeManager *nm) {
-    switch (p_peek(p)->type) {
-    case TK_IF:
-        return p_parse_if_statement(p, nm);
-    case TK_DO:
-        return p_parse_do_while_loop(p, nm);
-    case TK_WHILE:
-        return p_parse_while_loop(p, nm);
-    case TK_FOR:
-        return p_parse_for_loop(p, nm);
-    case TK_SWITCH:
-        return p_parse_switch_statement(p, nm);
-    case TK_CONTINUE:
-        return p_parse_continue(p, nm);
-    case TK_BREAK:
-        return p_parse_break(p, nm);
-    case TK_RETURN:
-        return p_parse_return(p, nm);
+bool is_unary_operator(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_INCR:
+    case TK_DECR:
+    case TK_L_NOT:
+    case TK_BW_NOT:
+    case TK_AND:
     case TK_MULTIPLY:
-    case TK_IDENTIFIER:
-        if (p_peek_next(p)->type == TK_COLON) return p_parse_label(p, nm);
-        Node *n = p_parse_expression(p, nm, 0);
-        p_consume_semi(p);
-        return n;
+    case TK_SIZEOF:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_postfix_operator(const TokenType type) {
+    switch (type) {
+    case TK_INCR:
+    case TK_DECR:
+    case TK_OPEN_PAREN:
+    case TK_OPEN_SQUARE:
+    case TK_DOT:
+    case TK_ARROW:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_binary_operator(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_MULTIPLY:
+    case TK_DIVIDE:
+    case TK_XOR:
+    case TK_EQ:
+    case TK_AND_AND:
+    case TK_AND_EQ:
+    case TK_EQ_EQ:
+    case TK_GE:
+    case TK_GT:
+    case TK_LE:
+    case TK_LT:
+    case TK_DIVIDE_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_OR_EQ:
+    case TK_OR_OR:
+    case TK_NEQ:
+    case TK_PLUS_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+    case TK_XOR_EQ:
+    case TK_SHL:
+    case TK_SHR:
+    case TK_OR:
+    case TK_AND:
+    case TK_MOD:
+    case TK_MOD_EQ:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_assignment_op(const TokenType type) {
+    switch (type) {
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+    case TK_OR_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_arithmetic_op(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_PLUS_EQ:
+    case TK_MINUS:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE:
+    case TK_DIVIDE_EQ:
+    case TK_MOD:
+    case TK_MOD_EQ:
+    case TK_INCR:
+    case TK_DECR:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_bitwise_op(const TokenType type) {
+    switch (type) {
+    case TK_OR:
+    case TK_AND:
+    case TK_SHL:
+    case TK_SHR:
+    case TK_XOR:
+    case TK_OR_EQ:
+    case TK_AND_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+    case TK_XOR_EQ:
+    case TK_BW_NOT:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_comparison_op(const TokenType type) {
+    switch (type) {
+    case TK_EQ_EQ:
+    case TK_NEQ:
+    case TK_GT:
+    case TK_GE:
+    case TK_LT:
+    case TK_LE:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_logical_op(const TokenType type) {
+    switch (type) {
+    case TK_AND_AND:
+    case TK_EQ_EQ:
+    case TK_OR_OR:
+    case TK_L_NOT:
+        return 1;
+    default:
+        return 0;
+    }
+}
+TokenType get_underlying_op(const TokenType type) {
+    switch (type) {
+    case TK_PLUS_EQ:
+        return TK_PLUS;
+    case TK_MINUS_EQ:
+        return TK_MINUS;
+    case TK_MULTIPLY_EQ:
+        return TK_MULTIPLY;
+    case TK_DIVIDE_EQ:
+        return TK_DIVIDE;
+    case TK_MOD_EQ:
+        return TK_MOD;
+    case TK_OR_EQ:
+        return TK_OR;
+    case TK_AND_EQ:
+        return TK_AND;
+    case TK_XOR_EQ:
+        return TK_XOR;
+    case TK_SHL_EQ:
+        return TK_SHL;
+    case TK_SHR_EQ:
+        return TK_SHR;
+    case TK_EQ:
+        return TK_EQ;
+    default:
+        log_start(LOG_ERROR);
+        printf("Tried to get the underlying operator of a non-eq operator\n");
+        print_token_type(type);
+        exit(1);
+    }
+}
+int op_associativity(const TokenType type) {
+    switch (type) {
+    case TK_MULTIPLY:
+    case TK_DIVIDE:
+    case TK_MOD:
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_SHR:
+    case TK_SHL:
+    case TK_LT:
+    case TK_LE:
+    case TK_GT:
+    case TK_GE:
+    case TK_EQ_EQ:
+    case TK_NEQ:
+    case TK_AND:
+    case TK_XOR:
+    case TK_OR:
+    case TK_AND_AND:
+    case TK_OR_OR:
+        return 1;
+    case TK_SHR_EQ:
+    case TK_SHL_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_OR_EQ:
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+        return 0;
+    default:
+        do { log_message(LOG_ERROR, "Tried to get the associativity of a token which is not a binary " "operator"); ; exit(1);; } while (0);
+    }
+}
+int op_precedence(const TokenType type) {
+    switch (type) {
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+        return 0;
+    case TK_TERNARY:
+        return 1;
+    case TK_SHR_EQ:
+    case TK_SHL_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_OR_EQ:
+        return 2;
+    case TK_OR_OR:
+        return 3;
+    case TK_AND_AND:
+        return 4;
+    case TK_OR:
+        return 5;
+    case TK_XOR:
+        return 6;
+    case TK_AND:
+        return 7;
+    case TK_EQ_EQ:
+    case TK_NEQ:
+        return 8;
+    case TK_LT:
+    case TK_LE:
+    case TK_GT:
+    case TK_GE:
+        return 9;
+    case TK_SHR:
+    case TK_SHL:
+        return 10;
+    case TK_PLUS:
+    case TK_MINUS:
+        return 11;
+    case TK_MULTIPLY:
+    case TK_DIVIDE:
+    case TK_MOD:
+        return 12;
+    default:
+        log_start(LOG_ERROR);
+        printf("Tried to get the precedence of a token which is not a binary operator");
+        print_token_type(type);
+        exit(1);
+    }
+}
+const char *token_type_str(const TokenType type) {
+    switch (type) {
+    case TK_INT_LITERAL:
+        return "Int Literal";
+    case TK_FLT_LITERAL:
+        return "Float Literal";
+    case TK_CHAR_LITERAL:
+        return "Char Literal";
+    case TK_STRING_LITERAL:
+        return "String Literal";
+    case TK_SEMI:
+        return "';'";
+    case TK_PLUS:
+        return "'+'";
+    case TK_MINUS:
+        return "'-'";
+    case TK_MULTIPLY:
+        return "'*'";
+    case TK_DIVIDE:
+        return "'/'";
+    case TK_XOR:
+        return "'^'";
+    case TK_EXPR:
+        return "Expr";
+    case TK_EQ:
+        return "'='";
+    case TK_OPEN_PAREN:
+        return "'('";
+    case TK_CLOSE_PAREN:
+        return "')'";
     case TK_OPEN_CURLY:
-        return p_parse_compound(p, nm);
-    case TK_GOTO:
-        return p_parse_goto_statement(p, nm);
-    default:
-        return p_parse_expression(p, nm, 0);
-    }
-}
-void p_push_scope(Parser *p) {
-    p->current_scope_depth++;
-    p_append_symbol_table(p);
-}
-void p_pop_scope(Parser *p) {
-    p->current_scope_depth--;
-    array_free(get_current_symbol_table(p));
-    pop(&p->scopes_array);
-}
-Node *p_parse_compound(Parser *p, NodeManager *nm) {
-    Node *node = new_compound_node(nm);
-    p_consume_a(p, TK_OPEN_CURLY);
-    while (p_peek(p)->type != TK_CLOSE_CURLY && !p_is_last_token(p)) {
-        p_append_block_item(node, p_parse_block_item(p, nm));
-    }
-    p_consume_a(p, TK_CLOSE_CURLY);
-    return node;
-}
-Type *decay_array_type(Type *t) {
-    if (t->kind == T_ARRAY) return get_pointer_type(decay_array_type(t->base));
-    return t;
-}
-Modifier p_parse_parameter_list(Parser *p, NodeManager *nm) {
-    Modifier mod = {.kind = MOD_FUNCTION, .function = {.is_variadic = 0}};
-    array_init(&mod.function.params, 4, sizeof(ParamDecl));
-    p_consume_a(p, TK_OPEN_PAREN);
-    while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
-        if (p_peek(p)->type == TK_ELLIPSES) {
-            p_consume(p);
-            mod.function.is_variadic = 1;
-            break;
-        }
-        const char *name = ((void *)0);
-        append(&mod.function.params, &(ParamDecl){.type = decay_array_type(p_parse_type(p, nm, &name)), .name = name});
-        if (p_peek(p)->type == TK_COMMA) p_consume(p);
-        else break;
-    }
-    p_consume_a(p, TK_CLOSE_PAREN);
-    return mod;
-}
-Node *p_parse_function(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, bool is_inline) {
-    Node *node = new_function_node(nm);
-    if (!(name != ((void *)0))) do { log_message(LOG_ERROR, "Expected nonnull name of function\n"); ; exit(1);; } while (0);
-    node->func.name = name;
-    node->func.is_inline = is_inline;
-    node->type = type;
-    if (p_peek(p)->type == TK_SEMI) {
-        p_consume(p);
-        node->func.is_defined = 0;
-    } else {
-        node->func.is_defined = 1;
-    }
-    node->func.storage_class = storage_class;
-    if (node->func.is_defined) node->func.body = p_parse_compound(p, nm);
-    return node;
-}
-Node *p_parse_decl_identifier(Parser *p, NodeManager *nm) {
-    Node *node = new_node(nm, N_IDENTIFIER);
-    const bool expect_closing_paren = p_peek(p)->type == TK_OPEN_PAREN;
-    if (expect_closing_paren) p_consume(p);
-    const Token *t = p_consume_a(p, TK_IDENTIFIER);
-    node->identifier.name = t->value;
-    node->identifier.len = t->size;
-    if (expect_closing_paren) p_consume_a(p, TK_CLOSE_PAREN);
-    return node;
-}
-Node *p_parse_declaration(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, const bool global) {
-    if (type->kind == T_STRUCT || type->kind == T_ENUM || type->kind == T_UNION) {
-        if (name == ((void *)0)) {
-            p_consume_semi(p);
-            Node *type_decl = new_node(nm, N_TYPE);
-            type_decl->type = type;
-            return type_decl;
-        }
-        if (!(type->_struct.complete)) do { log_message(LOG_ERROR, "Cannot instantiate an incomplete type\n"); ; exit(1);; } while (0);
-    }
-    if (!(name != ((void *)0))) do { log_message(LOG_ERROR, "Expected non null name of variable\n"); ; exit(1);; } while (0);
-    Node *ident = new_node(nm, N_IDENTIFIER);
-    ident->identifier.name = name;
-    Node *var_decl = new_node(nm, N_VAR_DECL);
-    var_decl->var_decl.identifier = ident;
-    var_decl->var_decl.is_global = global;
-    var_decl->type = type;
-    if (p_peek(p)->type == TK_EQ) {
-        p_consume(p);
-        var_decl->var_decl.expr = p_parse_expression(p, nm, 0);
-        var_decl->var_decl.is_defined = 1;
-    } else {
-        var_decl->var_decl.is_defined = 0;
-        var_decl->var_decl.expr = ((void *)0);
-    }
-    var_decl->var_decl.storage_class = storage_class;
-    p_consume_semi(p);
-    return var_decl;
-}
-Node *p_parse_external_declaration(Parser *p, NodeManager *nm) {
-    if (p_peek(p)->type == TK_TYPEDEF) return p_parse_typedef(p, nm);
-    StorageClass storage_class = NONE;
-    bool is_inline = 0;
-    for (;;) {
-        if (p_peek(p)->type == TK_STATIC) storage_class = STATIC;
-        else if (p_peek(p)->type == TK_EXTERN) storage_class = EXTERN;
-        else if (p_peek(p)->type == TK_INLINE) is_inline = 1;
-        else break;
-        p_consume(p);
-    }
-    const char *name = ((void *)0);
-    Type *type = p_parse_type(p, nm, &name);
-    if (type->kind == T_FUNCTION) return p_parse_function(p, nm, type, name, storage_class, is_inline);
-    else return p_parse_declaration(p, nm, type, name, storage_class, 1);
-}
-Node *p_parse_typedef(Parser *p, NodeManager *nm) {
-    p_consume_a(p, TK_TYPEDEF);
-    Node *node = new_node(nm, N_TYPEDEF);
-    node->_typedef.name = ((void *)0);
-    node->type = p_parse_type(p, nm, &node->_typedef.name);
-    if (!(node->_typedef.name)) do { log_message(LOG_ERROR, "Missing typedef name\n"); ; exit(1);; } while (0);
-    p_consume_semi(p);
-    p_append_typedef(p, &(Typedef){.type = node->type, .new_def = node->_typedef.name});
-    return node;
-}
-StorageClass p_parse_storage_classifier(Parser *p, NodeManager *nm) {
-    switch (p_peek(p)->type) {
-    case TK_EXTERN:
-        p_consume(p);
-        return EXTERN;
-    case TK_STATIC:
-        p_consume(p);
-        return STATIC;
-    default:
-        return NONE;
-    }
-}
-Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
-    if (p_peek(p)->type == TK_TYPEDEF) return p_parse_typedef(p, nm);
-    StorageClass storage_class = p_parse_storage_classifier(p, nm);
-    const char *name = ((void *)0);
-    Type *type = p_parse_type(p, nm, &name);
-    if (type->kind == T_FUNCTION) {
-        do { log_message(LOG_ERROR, "Function prototypes within block scope is unsupported\n"); ; exit(1);; } while (0);
-    } else return p_parse_declaration(p, nm, type, name, storage_class, 0);
-}
-Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
-    Node *root = init_translation_unit(nm);
-    if (p->size == 0) {
-        do { log_message(LOG_ERROR, "The token array is empty,\n Don't forget to initialize the parser after " "tokenization."); ; exit(1);; } while (0);
-    }
-    while (!p_is_last_token(p)) {
-        Node *decl = p_parse_external_declaration(p, nm);
-        append(&root->translation_unit.declarations_array, &decl);
-    }
-    return root;
-}
-bool is_storage_classifier(const TokenType type) {
-    switch (type) {
-    case TK_STATIC:
-    case TK_EXTERN:
-        return 1;
-    default:
-        return 0;
-    }
-}
-bool is_qualifier_token(const TokenType type) {
-    switch (type) {
+        return "'{'";
+    case TK_CLOSE_CURLY:
+        return "'}'";
+    case TK_COMMA:
+        return "','";
+    case TK_IDENTIFIER:
+        return "Identifier";
+    case TK_MOD:
+        return "'%'";
+    case TK_EQ_EQ:
+        return "'=='";
+    case TK_PLUS_EQ:
+        return "'+='";
+    case TK_MINUS_EQ:
+        return "'-='";
+    case TK_MULTIPLY_EQ:
+        return "'*='";
+    case TK_DIVIDE_EQ:
+        return "'/='";
+    case TK_MOD_EQ:
+        return "'%='";
+    case TK_NEQ:
+        return "'!='";
+    case TK_LT:
+        return "'<'";
+    case TK_LE:
+        return "'<='";
+    case TK_GT:
+        return "'>'";
+    case TK_GE:
+        return "'>='";
+    case TK_SHL:
+        return "'<<'";
+    case TK_SHR:
+        return "'>>'";
+    case TK_SHL_EQ:
+        return "'<<='";
+    case TK_SHR_EQ:
+        return "'>>='";
+    case TK_AND:
+        return "'&'";
+    case TK_AND_AND:
+        return "'&&'";
+    case TK_AND_EQ:
+        return "'&='";
+    case TK_OR:
+        return "'|'";
+    case TK_OR_OR:
+        return "'||'";
+    case TK_OR_EQ:
+        return "'|='";
+    case TK_XOR_EQ:
+        return "'^='";
+    case TK_TERNARY:
+        return "'?'";
+    case TK_L_NOT:
+        return "'!'";
+    case TK_BW_NOT:
+        return "'~'";
+    case TK_INCR:
+        return "'++'";
+    case TK_DECR:
+        return "'--'";
+    case TK_OPEN_SQUARE:
+        return "'['";
+    case TK_CLOSE_SQUARE:
+        return "']'";
+    case TK_DOT:
+        return "'.'";
+    case TK_ARROW:
+        return "'->'";
+    case TK_COLON:
+        return "':'";
+    case TK_ELLIPSES:
+        return "'...'";
+    case TK_AUTO:
+    case TK_BREAK:
+    case TK_CASE:
+    case TK_CHAR:
     case TK_CONST:
-    case TK_VOLATILE:
-        return 1;
-    default:
-        return 0;
-    }
-}
-bool is_start_of_type(const Parser *p, const Token *tk) {
-    return tk->type == TK_UNSIGNED || tk->type == TK_SIGNED || is_type_token(p, tk) || is_qualifier_token(tk->type);
-}
-bool is_type_token(const Parser *p, const Token *t) {
-    switch (t->type) {
-    case TK_CHAR:
-    case TK_SHORT:
-    case TK_INT:
-    case TK_LONG:
-    case TK_FLOAT:
+    case TK_CONTINUE:
+    case TK_DEFAULT:
+    case TK_DO:
     case TK_DOUBLE:
-    case TK_VOID:
-    case TK_STRUCT:
+    case TK_ELSE:
     case TK_ENUM:
-        return 1;
-    case TK_IDENTIFIER:
-        return p_get_symbol(p, t->value, TYPEDEF, 0) != ((void *)0);
-    default:
-        return 0;
-    }
-}
-Type *token_to_type(Parser *p, const Token *t) {
-    switch (t->type) {
-    case TK_CHAR:
-        return type_i8;
-    case TK_SHORT:
-        return type_i16;
-    case TK_INT:
-        return type_i32;
-    case TK_LONG:
-        return type_i64;
+    case TK_EXTERN:
     case TK_FLOAT:
-        return type_f32;
-    case TK_DOUBLE:
-        return type_f64;
+    case TK_FOR:
+    case TK_GOTO:
+    case TK_IF:
+    case TK_INLINE:
+    case TK_INT:
+    case TK_LONG:
+    case TK_REGISTER:
+    case TK_RETURN:
+    case TK_SHORT:
+    case TK_SIGNED:
+    case TK_SIZEOF:
+    case TK_STATIC:
+    case TK_STRUCT:
+    case TK_SWITCH:
+    case TK_TYPEDEF:
+    case TK_UNION:
+    case TK_UNSIGNED:
     case TK_VOID:
-        return type_void;
-    case TK_IDENTIFIER:
-        return p_get_typedef(p, t->value)->type;
-    default:
-        return type_invalid;
+    case TK_VOLATILE:
+    case TK_WHILE:
+        return KEYWORDS[type];
     }
 }
-Type *parse_int_suffix(const char *raw, int *len) {
-    int i = *len - 1;
-    int l_count = 0;
-    bool is_unsigned = 0;
-    for (;;) {
-        if (i <= 0) break;
-        char c = raw[i];
-        if (c == 'u' || c == 'U') is_unsigned = 1;
-        else if (c == 'l' || c == 'L') l_count++;
-        else break;
-        i--;
+void print_token_type(const TokenType type) { printf("%s", token_type_str(type)); }
+void print_token(const Token *token) {
+    print_token_type(token->type);
+    printf(":[%d:%d] ", token->line_n, token->char_n);
+    if (token->value != ((void *)0)) {
+        printf(": ");
+        if (token->value[0] == '\0') {
+            printf("\\0");
+        } else if (token->value[0] == '\n') {
+            printf("\\n");
+        } else printf("%.*s", token->size, token->value);
     }
-    Type *type = type_i32;
-    *len -= *len - i - 1;
-    if (l_count > 0) type = type_i64;
-    if (is_unsigned) return get_unsigned_type(type);
-    return type;
-}
-Type *parse_float_suffix(const char *raw, int *len) {
-    Type *type = type_f64;
-    switch (raw[*len - 1]) {
-    case 'f':
-    case 'F':
-        type = type_f32;
-    case 'l':
-    case 'L':
-        *len -= 1;
-    default:
-        return type;
-    }
-}
-int64_t parse_int(const char *raw, int len) {
-    if (len > 20) {
-        do { log_message(LOG_ERROR, "Cannot parse an integer larger than 64 bytes\n"); ; exit(1);; } while (0);
-    }
-    if (raw[0] == '-') return -parse_int(raw + 1, len - 1);
-    if (raw[0] == '0' && len > 1) {
-        switch (raw[1]) {
-        case 'x':
-        case 'X':
-            return parse_hex(raw + 2, len - 2);
-        case 'b':
-        case 'B':
-            return parse_binary(raw + 2, len - 2);
-        default:
-            return parse_oct(raw + 1, len - 1);
-        }
-    }
-    return parse_dec(raw, len);
-}
-int64_t parse_dec(const char *raw, int len) {
-    int64_t res = 0;
-    const char *start = raw;
-    while (raw < start + len) {
-        res = res * 10 + (*raw - '0');
-        raw++;
-    }
-    return res;
-}
-int64_t parse_binary(const char *raw, int len) {
-    int64_t res = 0;
-    const char *start = raw;
-    while (raw < start + len) {
-        int value = (*raw - '0');
-        if (value > 1) {
-            do { log_message(LOG_ERROR, "Parse Binary Failed: digit cannot be larger than 1\n"); ; exit(1);; } while (0);
-        }
-        res = res * 2 + value;
-        raw++;
-    }
-    return res;
-}
-int64_t parse_oct(const char *raw, int len) {
-    int64_t res = 0;
-    const char *start = raw;
-    while (raw < start + len) {
-        int value = (*raw - '0');
-        if (value > 7) {
-            do { log_message(LOG_ERROR, "Parse Octal Failed: digit cannot be larger than 7\n"); ; exit(1);; } while (0);
-        }
-        res = res * 8 + value;
-        raw++;
-    }
-    return res;
-}
-int64_t parse_hex(const char *raw, int len) {
-    int64_t res = 0;
-    const char *start = raw;
-    while (raw < start + len) {
-        int value;
-        if (is_num(*raw)) value = *raw - '0';
-        char c = *raw | 0x20;
-        if (c <= 'f' && c >= 'a') value = c - 'a' + 10;
-        if (c <= 'F' && c >= 'A') value = c - 'A' + 10;
-        res = res * 16 + value;
-        raw++;
-    }
-    return res;
-}
-int parse_multi_character(const char *raw, int len) {
-    int c = 0;
-    for (int i = 0; i < len && i < 4; i++) {
-        c |= (unsigned char)raw[i] << (i * 8);
-    }
-    return c;
-}
-double parse_float(const char *raw, int len) {
-    if (raw[0] == '-') return -parse_float(raw + 1, len - 1);
-    double res = 0;
-    const char *end = raw + len;
-    double m = 0;
-    while (raw < end) {
-        if (*raw == '.') {
-            m = 0.1;
-            raw++;
-            continue;
-        }
-        int digit = *raw - '0';
-        if (m) {
-            res += digit * m;
-            m *= 0.1;
-        } else {
-            res = res * 10.0 + digit;
-        }
-        raw++;
-    }
-    return res;
+    printf("\n");
 }
