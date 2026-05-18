@@ -93,7 +93,7 @@ Token *p_consume_semi(Parser *p);
 bool is_type_token(const Parser *p, const Token *t);
 bool is_storage_classifier(const TokenType type);
 bool is_qualifier_token(const TokenType type);
-bool is_start_of_type(const Parser *p, const Token *t);
+bool is_start_of_type(const Parser *p, const Token *tk);
 /*
     Converts token using C standard types, and typedef table.
 */

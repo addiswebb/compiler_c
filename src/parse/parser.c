@@ -280,11 +280,8 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
     case TK_OPEN_CURLY:
         return p_parse_init_list(p, nm);
     default:
-        log_start(LOG_ERROR);
-        printf("Expected primary expression got ");
-        print_token_type(p_peek(p)->type);
-        printf("\n");
-        exit(1);
+        tk = p_consume(p);
+        PANIC("[%d:%d]: Expected primary expression got %tk\n", tk->line_n, tk->char_n, tk->type);
     }
 
     return primary;
@@ -1141,9 +1138,7 @@ Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
     if (type->kind == T_FUNCTION) {
         // return p_parse_function(p, nm, type_decl);
         PANIC("Function prototypes within block scope is unsupported\n");
-    } else {
-        return p_parse_declaration(p, nm, type, name, storage_class, false);
-    }
+    } else return p_parse_declaration(p, nm, type, name, storage_class, false);
 }
 
 Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
@@ -1177,8 +1172,8 @@ bool is_qualifier_token(const TokenType type) {
         return false;
     }
 }
-bool is_start_of_type(const Parser *p, const Token *t) {
-    return p_peek(p)->type == TK_UNSIGNED || p_peek(p)->type == TK_SIGNED || is_type_token(p, t) || is_qualifier_token(t->type);
+bool is_start_of_type(const Parser *p, const Token *tk) {
+    return tk->type == TK_UNSIGNED || tk->type == TK_SIGNED || is_type_token(p, tk) || is_qualifier_token(tk->type);
 }
 bool is_type_token(const Parser *p, const Token *t) {
     switch (t->type) {

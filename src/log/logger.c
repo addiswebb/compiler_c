@@ -1,5 +1,6 @@
 #include "compiler_c/log/logger.h"
 #include "compiler_c/core/type.h"
+#include "compiler_c/tokenize/tokenizer.h"
 #include <stdio.h>
 
 Logger logger = {};
@@ -19,6 +20,12 @@ void vprint(const char *fmt, va_list ap) {
                 printf("%f", va_arg(ap, double));
                 break;
             case 't':
+                if (*(fmt + 1) == 'k') {
+                    fmt++;
+                    TokenType token_type = va_arg(ap, TokenType);
+                    print_token_type(token_type);
+                    break;
+                }
                 Type *t = va_arg(ap, Type *);
                 print_type(t);
                 break;

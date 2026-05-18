@@ -294,7 +294,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_begin_scope(ctx->func);
     if (_for->_for.init) ir_gen_block_item(ctx, _for->_for.init);
 
-    IR_Block *cond_block = ir_add_block(ctx);
+    IR_Block *cond_block = ir_new_block(); // IR_Block *cond_block = ir_add_block(ctx);
     IR_Block *block_block = ir_new_block();
     IR_Block *iter_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
@@ -303,6 +303,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_push_loop_ctx(ctx, iter_block, end_block);
 
     if (_for->_for.cond) {
+        ir_append_block(ctx, cond_block);
         ir_set_cond_block(ctx, block_block, end_block);
         const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
         ir_reset_cond_block(ctx);
@@ -317,7 +318,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_append_block(ctx, iter_block);
     if (_for->_for.iter) ir_gen_statement(ctx, _for->_for.iter);
 
-    ir_branch(ctx, cond_block);
+    if (_for->_for.cond) ir_branch(ctx, cond_block);
 
     ir_append_block(ctx, end_block);
     // Reset ctx for continue/break statements
