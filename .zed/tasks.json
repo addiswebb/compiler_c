@@ -28,7 +28,7 @@
     },
     {
         "label": "Run Tests",
-        "command": "cmake --build build;lit -vv ./tests/basic ./tests/complex",
+        "command": "lit -vv ./tests/basic ./tests/complex",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,
