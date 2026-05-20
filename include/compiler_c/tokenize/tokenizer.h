@@ -2,7 +2,7 @@
 #define COMPILER_C_TOKENIZER_H
 
 #include "compiler_c/core/array.h"
-#include <stdbool.h>
+#include "../libc/stdbool.h"
 
 #define MIN_BINARY_OP_PRECEDENCE 0
 

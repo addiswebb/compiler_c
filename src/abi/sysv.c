@@ -13,7 +13,7 @@
 #include <compiler_c/ir/ir_module.h>
 #include <compiler_c/log/logger.h>
 #include <compiler_c/x86/x86.h>
-#include <stdbool.h>
+#include "../libc/stdbool.h"
 
 Arena _sret = {.count = 0};
 Symbol *_hidden_sret_ptr = NULL;

@@ -7,7 +7,7 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
 
-#include <stdbool.h>
+#include "../libc/stdbool.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

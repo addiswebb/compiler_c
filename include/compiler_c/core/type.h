@@ -4,7 +4,7 @@
 /* Include enum fields when printing an enum type */
 #include "compiler_c/core/arena.h"
 
-#include <stdbool.h>
+#include "../libc/stdbool.h"
 #include <stdint.h>
 
 #define SIGNED 1

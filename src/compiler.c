@@ -164,6 +164,7 @@ Compiler begin_compiler(const int argc, char *argv[]) {
         printf("\t-ir         : Compile and print IR\n");
         printf("\t-ast        : Print parse tree\n");
         printf("\t-h          : Get help\n");
+        printf("sizeof%d", sizeof(Type));
         exit(0);
     }
 

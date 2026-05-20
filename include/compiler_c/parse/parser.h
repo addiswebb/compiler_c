@@ -4,7 +4,7 @@
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/tokenize/tokenizer.h"
-#include <stdbool.h>
+#include "../libc/stdbool.h"
 
 typedef struct {
     const char *new_def;

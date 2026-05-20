@@ -1,6 +1,6 @@
 #ifndef COMPILER_C_UTIL_H
 #define COMPILER_C_UTIL_H
-#include <stdbool.h>
+#include "../libc/stdbool.h"
 
 /* Is any character `a-z`, or `A-Z` */
 bool is_alpha(char c);

@@ -1,7 +1,7 @@
 #ifndef COMPILER_C_ANALYSIS_TYPES_H
 #define COMPILER_C_ANALYSIS_TYPES_H
 
-#include <stdbool.h>
+#include "../libc/stdbool.h"
 typedef enum{
     RAX, RBX, RCX, RDX,
     RSI, RDI,

@@ -60,11 +60,11 @@ static bool t_is_eof(const Tokenizer *tk) { return tk->index >= tk->size; }
     peek at the current char
 */
 static char t_peek(const Tokenizer *tk) {
+    int cond = t_is_eof(tk);
     if (!t_is_eof(tk)) {
         return tk->src[tk->index];
     }
-    printf("T_peek Tried peeking past eof\n");
-    return '\0';
+    PANIC("T_peek Tried peeking past eof\n");
 }
 
 static char t_peek_n(const Tokenizer *tk, const int n) {
@@ -373,7 +373,8 @@ static void t_consume_string_literal(Tokenizer *tk) {
 }
 
 void t_tokenize(Tokenizer *tk) {
-    while (!t_is_eof(tk)) {
+    for (;;) {
+        if (t_is_eof(tk)) break;
         const char c = t_peek(tk);
         if (c == '.' && !is_num(t_peek_next(tk))) {
             t_consume(tk);
