@@ -221,12 +221,12 @@ int compile(Compiler *compiler) {
 
     if (has_flag(CF_DEBUG_TYPEPOOL)) print_typepool();
 
+    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
+
     if (has_flag(CF_STOP_AFTER_AST)) {
         print_ast(&compiler->nm);
         return 1;
     }
-    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
-
     array_free(&sema_ctx.i_array);
 
     set_log_stage(STAGE_IR);

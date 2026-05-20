@@ -1143,10 +1143,7 @@ Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
 
 Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
     Node *root = init_translation_unit(nm);
-    if (p->size == 0) {
-        PANIC("The token array is empty,\n Don't forget to initialize the parser after "
-              "tokenization.");
-    }
+    ASSERT(p->size > 0, "Tried to generate AST with empty token array.");
 
     while (!p_is_last_token(p)) {
         Node *decl = p_parse_external_declaration(p, nm);

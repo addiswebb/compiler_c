@@ -14,6 +14,142 @@ void array_str_cpy(Array *arr, const char *str);
 void array_str_catn(Array *arr, const char *str, int n);
 void *get(const Array *arr, int index);
 void set(const Array *arr, const void *element, int index);
+typedef char bool;
+typedef struct {
+    char buf[1024];
+    int size;
+} Buffer;
+extern const char *KEYWORDS[33];
+typedef enum {
+    TK_AUTO,
+    TK_BREAK,
+    TK_CASE,
+    TK_CHAR,
+    TK_CONST,
+    TK_CONTINUE,
+    TK_DEFAULT,
+    TK_DO,
+    TK_DOUBLE,
+    TK_ELSE,
+    TK_ENUM,
+    TK_EXTERN,
+    TK_FLOAT,
+    TK_FOR,
+    TK_GOTO,
+    TK_IF,
+    TK_INLINE,
+    TK_INT,
+    TK_LONG,
+    TK_REGISTER,
+    TK_RETURN,
+    TK_SHORT,
+    TK_SIGNED,
+    TK_SIZEOF,
+    TK_STATIC,
+    TK_STRUCT,
+    TK_SWITCH,
+    TK_TYPEDEF,
+    TK_UNION,
+    TK_UNSIGNED,
+    TK_VOID,
+    TK_VOLATILE,
+    TK_WHILE,
+    TK_L_NOT,
+    TK_BW_NOT,
+    TK_INCR,
+    TK_DECR,
+    TK_EQ,
+    TK_PLUS,
+    TK_MINUS,
+    TK_MULTIPLY,
+    TK_DIVIDE,
+    TK_MOD,
+    TK_EQ_EQ,
+    TK_PLUS_EQ,
+    TK_MINUS_EQ,
+    TK_MULTIPLY_EQ,
+    TK_DIVIDE_EQ,
+    TK_MOD_EQ,
+    TK_NEQ,
+    TK_LT,
+    TK_LE,
+    TK_GT,
+    TK_GE,
+    TK_SHL,
+    TK_SHR,
+    TK_SHL_EQ,
+    TK_SHR_EQ,
+    TK_AND,
+    TK_AND_AND,
+    TK_AND_EQ,
+    TK_OR,
+    TK_OR_OR,
+    TK_OR_EQ,
+    TK_XOR,
+    TK_XOR_EQ,
+    TK_TERNARY,
+    TK_DOT,
+    TK_ARROW,
+    TK_OPEN_PAREN,
+    TK_CLOSE_PAREN,
+    TK_OPEN_CURLY,
+    TK_CLOSE_CURLY,
+    TK_OPEN_SQUARE,
+    TK_CLOSE_SQUARE,
+    TK_COMMA,
+    TK_SEMI,
+    TK_COLON,
+    TK_INT_LITERAL,
+    TK_FLT_LITERAL,
+    TK_CHAR_LITERAL,
+    TK_STRING_LITERAL,
+    TK_EXPR,
+    TK_IDENTIFIER,
+    TK_ELLIPSES,
+} TokenType;
+typedef struct {
+    TokenType type;
+    char *value;
+    int size;
+    int line_n;
+    int char_n;
+} Token;
+typedef struct {
+    Token *data;
+    int size;
+    int capacity;
+} TokenArray;
+typedef struct {
+    const char *src;
+    int index;
+    int size;
+    int line_n;
+    int char_n;
+    Array tokens_array;
+    Buffer buf;
+} Tokenizer;
+typedef struct {
+    TokenType type;
+    int n_chars;
+} TokenMatch;
+Tokenizer t_new_tokenizer(const char *src, int src_size);
+void t_free(Tokenizer *tokenizer);
+void t_tokenize(Tokenizer *tk);
+bool is_postfix_operator(const TokenType type);
+bool is_unary_operator(const TokenType type);
+bool is_binary_operator(const TokenType type);
+bool is_assignment_op(const TokenType type);
+bool is_arithmetic_op(const TokenType type);
+bool is_bitwise_op(const TokenType type);
+bool is_comparison_op(const TokenType type);
+bool is_logical_op(const TokenType type);
+TokenType get_underlying_op(TokenType type);
+int op_associativity(TokenType type);
+int op_precedence(TokenType type);
+const char *token_type_str(const TokenType type);
+void print_token_type(TokenType type);
+void print_token(const Token *token);
+static inline Token *get_token(Array *arr, int index) { return (Token *)get(arr, index); }
 typedef struct {
     Array blocks;
     int element_size;
@@ -27,7 +163,6 @@ void *arena_append(Arena *arena, const void *element);
 Array *arena_get_block(const Arena *arena, int index);
 void *arena_get(const Arena *arena, int index);
 void arena_set(Arena *arena, const void *element, int index);
-typedef int bool;
 typedef char int8_t;
 typedef short int16_t;
 typedef int int32_t;
@@ -218,141 +353,6 @@ void print_type(Type *type);
 void print_struct_type(Type *s);
 void print_param_decl(ParamDecl *decl);
 void print_typepool();
-typedef struct {
-    char buf[1024];
-    int size;
-} Buffer;
-extern const char *KEYWORDS[33];
-typedef enum {
-    TK_AUTO,
-    TK_BREAK,
-    TK_CASE,
-    TK_CHAR,
-    TK_CONST,
-    TK_CONTINUE,
-    TK_DEFAULT,
-    TK_DO,
-    TK_DOUBLE,
-    TK_ELSE,
-    TK_ENUM,
-    TK_EXTERN,
-    TK_FLOAT,
-    TK_FOR,
-    TK_GOTO,
-    TK_IF,
-    TK_INLINE,
-    TK_INT,
-    TK_LONG,
-    TK_REGISTER,
-    TK_RETURN,
-    TK_SHORT,
-    TK_SIGNED,
-    TK_SIZEOF,
-    TK_STATIC,
-    TK_STRUCT,
-    TK_SWITCH,
-    TK_TYPEDEF,
-    TK_UNION,
-    TK_UNSIGNED,
-    TK_VOID,
-    TK_VOLATILE,
-    TK_WHILE,
-    TK_L_NOT,
-    TK_BW_NOT,
-    TK_INCR,
-    TK_DECR,
-    TK_EQ,
-    TK_PLUS,
-    TK_MINUS,
-    TK_MULTIPLY,
-    TK_DIVIDE,
-    TK_MOD,
-    TK_EQ_EQ,
-    TK_PLUS_EQ,
-    TK_MINUS_EQ,
-    TK_MULTIPLY_EQ,
-    TK_DIVIDE_EQ,
-    TK_MOD_EQ,
-    TK_NEQ,
-    TK_LT,
-    TK_LE,
-    TK_GT,
-    TK_GE,
-    TK_SHL,
-    TK_SHR,
-    TK_SHL_EQ,
-    TK_SHR_EQ,
-    TK_AND,
-    TK_AND_AND,
-    TK_AND_EQ,
-    TK_OR,
-    TK_OR_OR,
-    TK_OR_EQ,
-    TK_XOR,
-    TK_XOR_EQ,
-    TK_TERNARY,
-    TK_DOT,
-    TK_ARROW,
-    TK_OPEN_PAREN,
-    TK_CLOSE_PAREN,
-    TK_OPEN_CURLY,
-    TK_CLOSE_CURLY,
-    TK_OPEN_SQUARE,
-    TK_CLOSE_SQUARE,
-    TK_COMMA,
-    TK_SEMI,
-    TK_COLON,
-    TK_INT_LITERAL,
-    TK_FLT_LITERAL,
-    TK_CHAR_LITERAL,
-    TK_STRING_LITERAL,
-    TK_EXPR,
-    TK_IDENTIFIER,
-    TK_ELLIPSES,
-} TokenType;
-typedef struct {
-    TokenType type;
-    char *value;
-    int size;
-    int line_n;
-    int char_n;
-} Token;
-typedef struct {
-    Token *data;
-    int size;
-    int capacity;
-} TokenArray;
-typedef struct {
-    const char *src;
-    int index;
-    int size;
-    int line_n;
-    int char_n;
-    Array tokens_array;
-    Buffer buf;
-} Tokenizer;
-typedef struct {
-    TokenType type;
-    int n_chars;
-} TokenMatch;
-Tokenizer t_new_tokenizer(const char *src, int src_size);
-void t_free(Tokenizer *tokenizer);
-void t_tokenize(Tokenizer *tk);
-bool is_postfix_operator(const TokenType type);
-bool is_unary_operator(const TokenType type);
-bool is_binary_operator(const TokenType type);
-bool is_assignment_op(const TokenType type);
-bool is_arithmetic_op(const TokenType type);
-bool is_bitwise_op(const TokenType type);
-bool is_comparison_op(const TokenType type);
-bool is_logical_op(const TokenType type);
-TokenType get_underlying_op(TokenType type);
-int op_associativity(TokenType type);
-int op_precedence(TokenType type);
-const char *token_type_str(const TokenType type);
-void print_token_type(TokenType type);
-void print_token(const Token *token);
-static inline Token *get_token(Array *arr, int index) { return (Token *)get(arr, index); }
 void *memcpy(void *, const void *, size_t);
 void *memmove(void *, const void *, size_t);
 void *memset(void *, int, size_t);
@@ -783,6 +783,15 @@ int compile(Compiler *compiler);
 void free_compiler(Compiler *compiler);
 static int load_src_file(Compiler *compiler, const char *file);
 char *replace_extension(const char *path, const char *ext);
+bool is_alpha(char c);
+bool is_num(char c);
+bool is_alpha_num(char c);
+bool is_alpha_numeric_str(const char *c);
+char to_lower_case(const char c);
+bool is_hex(const char c);
+bool is_oct(const char c);
+bool is_binary(const char c);
+bool is_whitespace(char c);
 typedef struct{
     unsigned int gp_offset;
     unsigned int fp_offset;
@@ -907,525 +916,833 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     fflush(logger.file);
     if (lvl == LOG_PANIC) exit(1);
 }
-Type *type_i8;
-Type *type_i16;
-Type *type_i32;
-Type *type_i64;
-Type *type_u8;
-Type *type_u16;
-Type *type_u32;
-Type *type_u64;
-Type *type_f32;
-Type *type_f64;
-Type *type_void;
-Type *type_void_ptr;
-Type *type_invalid;
-Arena typepool;
-void init_typepool() {
-    arena_init(&typepool, 2, sizeof(Type));
-    type_i8 = init_global_type(T_INT, sizeof(char), QUAL_NONE, 1);
-    type_i16 = init_global_type(T_INT, sizeof(short), QUAL_NONE, 1);
-    type_i32 = init_global_type(T_INT, sizeof(int), QUAL_NONE, 1);
-    type_i64 = init_global_type(T_INT, sizeof(int64_t), QUAL_NONE, 1);
-    type_u8 = init_global_type(T_INT, sizeof(char), QUAL_NONE, 0);
-    type_u16 = init_global_type(T_INT, sizeof(short), QUAL_NONE, 0);
-    type_u32 = init_global_type(T_INT, sizeof(int), QUAL_NONE, 0);
-    type_u64 = init_global_type(T_INT, sizeof(int64_t), QUAL_NONE, 0);
-    type_f32 = init_global_type(T_FLOAT, sizeof(float), QUAL_NONE, 1);
-    type_f64 = init_global_type(T_FLOAT, sizeof(double), QUAL_NONE, 1);
-    type_void = init_global_type(T_VOID, sizeof(void), QUAL_NONE, 1);
-    type_void_ptr = get_pointer_type(type_void);
-    type_invalid = init_global_type(T_INVALID, -1, QUAL_NONE, 1);
-    print_typepool();
+const char *KEYWORDS[33] = {
+    [TK_AUTO] = "auto", [TK_BREAK] = "break", [TK_CASE] = "case", [TK_CHAR] = "char",
+    [TK_CONST] = "const", [TK_CONTINUE] = "continue", [TK_DEFAULT] = "default", [TK_DO] = "do",
+    [TK_DOUBLE] = "double", [TK_ELSE] = "else", [TK_ENUM] = "enum", [TK_EXTERN] = "extern",
+    [TK_FLOAT] = "float", [TK_FOR] = "for", [TK_GOTO] = "goto", [TK_IF] = "if",
+    [TK_INLINE] = "inline", [TK_INT] = "int", [TK_LONG] = "long", [TK_REGISTER] = "register",
+    [TK_RETURN] = "return", [TK_SHORT] = "short", [TK_SIGNED] = "signed", [TK_SIZEOF] = "sizeof",
+    [TK_STATIC] = "static", [TK_STRUCT] = "struct", [TK_SWITCH] = "switch", [TK_TYPEDEF] = "typedef",
+    [TK_UNION] = "union", [TK_UNSIGNED] = "unsigned", [TK_VOID] = "void", [TK_VOLATILE] = "volatile",
+    [TK_WHILE] = "while",
+};
+static void t_buffer_reset(Tokenizer *tk) {
+    tk->buf.size = 0;
+    memset(tk->buf.buf, 0, sizeof(tk->buf.buf));
 }
-void free_typepool() {
-    for (int i = 0; i < typepool.count; i++) {
-        Type *t = arena_get(&typepool, i);
-        switch (t->kind) {
-        case T_STRUCT:
-            array_free(&t->_struct.members_array);
-            break;
-        case T_ENUM:
-            array_free(&t->_enum.fields_array);
-            break;
-        case T_UNION:
-            array_free(&t->_union.members_array);
-            break;
-        case T_FUNCTION:
-            array_free(&t->_func.params);
-            break;
-        default:
-            break;
-        }
+Tokenizer t_new_tokenizer(const char *src, const int src_size) {
+    Tokenizer tokenizer = {};
+    tokenizer.size = src_size;
+    tokenizer.src = src;
+    tokenizer.line_n = 1;
+    t_buffer_reset(&tokenizer);
+    array_init(&tokenizer.tokens_array, 16, sizeof(Token));
+    return tokenizer;
+}
+void free_token(Token *token) {
+    free(token->value);
+    token->value = ((void *)0);
+}
+void t_free(Tokenizer *tokenizer) {
+    for (int i = 0; i < tokenizer->tokens_array.count; i++) {
+        free_token(get_token(&tokenizer->tokens_array, i));
     }
-    arena_free(&typepool);
+    tokenizer->src = ((void *)0);
+    tokenizer->index = 0;
+    tokenizer->size = 0;
+    array_free(&tokenizer->tokens_array);
 }
-Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is_signed) {
-    Type *t = new_type();
-    t->kind = type;
-    t->size = size;
-    t->align = size;
-    t->base = ((void *)0);
-    t->qualifiers = qualifiers;
-    t->is_signed = is_signed;
-    t->is_resolved = 1;
-    return t;
-}
-Type *new_type() { return arena_append(&typepool, &(Type){0}); }
-Type *new_incomplete_array_type(Type *type, Node *const_expr) {
-    Type *arr_type = new_type();
-    arr_type->kind = T_ARRAY;
-    arr_type->size = type->size;
-    arr_type->align = type->align;
-    arr_type->base = type;
-    arr_type->_array.const_expr = const_expr;
-    arr_type->is_signed = 1;
-    arr_type->qualifiers = QUAL_NONE;
-    arr_type->is_resolved = 0;
-    return arr_type;
-}
-Type *new_array_type(Type *type, int len) {
-    Type *arr_type = new_type();
-    arr_type->kind = T_ARRAY;
-    arr_type->size = type->size * len;
-    arr_type->align = type->align;
-    arr_type->base = type;
-    arr_type->_array.array_len = len;
-    arr_type->is_signed = 1;
-    arr_type->qualifiers = QUAL_NONE;
-    arr_type->is_resolved = 1;
-    return arr_type;
-}
-Type *infer_array_length(Type *arr_type, int len) {
-    arr_type->_array.array_len = len;
-    arr_type->size = len * arr_type->base->size;
-    arr_type->is_resolved = 1;
-    return arr_type;
-}
-Type *new_function_type(Type *type, Array params, bool is_variadic) {
-    Type *fn_type = new_type();
-    fn_type->kind = T_FUNCTION;
-    fn_type->size = sizeof(void);
-    fn_type->align = sizeof(void);
-    fn_type->abi.type = ((void *)0);
-    fn_type->abi.gp_count = 0;
-    fn_type->abi.fp_count = 0;
-    fn_type->_func.return_type = type;
-    array_init(&fn_type->_func.params, params.capacity, params.element_size);
-    memcpy(fn_type->_func.params.data, params.data, params.count * params.element_size);
-    fn_type->_func.params.count = params.count;
-    fn_type->_func.is_variadic = is_variadic;
-    return fn_type;
-}
-Type *new_pointer_type(Type *type) {
-    Type *ptr_type = new_type();
-    ptr_type->kind = T_POINTER;
-    ptr_type->size = sizeof(void *);
-    ptr_type->align = ptr_type->size;
-    ptr_type->base = type;
-    ptr_type->is_signed = 1;
-    ptr_type->qualifiers = QUAL_NONE;
-    ptr_type->is_resolved = type->is_resolved;
-    return ptr_type;
-}
-Type *new_qualified_type(Type *type, unsigned int qualifiers) {
-    Type *qual_type = new_type();
-    *qual_type = *type;
-    switch (type->kind) {
-    case T_ENUM:
-    case T_STRUCT:
-        array_init(&qual_type->_struct.members_array, type->_struct.members_array.count, sizeof(StructMember));
-        memcpy(qual_type->_struct.members_array.data, type->_struct.members_array.data,
-               type->_struct.members_array.count * sizeof(StructMember));
-        qual_type->_struct.members_array.count = type->_struct.members_array.count;
-        break;
-    case T_UNION:
-        array_init(&qual_type->_enum.fields_array, type->_enum.fields_array.count, sizeof(EnumField));
-        memcpy(qual_type->_enum.fields_array.data, type->_enum.fields_array.data, type->_enum.fields_array.count * sizeof(EnumField));
-        qual_type->_enum.fields_array.count = type->_enum.fields_array.count;
-        break;
-    case T_FUNCTION:
-        array_init(&qual_type->_func.params, type->_func.params.count, sizeof(ParamDecl));
-        memcpy(qual_type->_func.params.data, type->_func.params.data, type->_func.params.count * sizeof(ParamDecl));
-        qual_type->_func.params.count = type->_func.params.count;
-        break;
-    default:
-        break;
+static bool t_is_eof(const Tokenizer *tk) { return tk->index >= tk->size; }
+static char t_peek(const Tokenizer *tk) {
+    if (!t_is_eof(tk)) {
+        return tk->src[tk->index];
     }
-    qual_type->qualifiers = qualifiers;
-    qual_type->is_resolved = type->is_resolved;
-    return qual_type;
+    printf("T_peek Tried peeking past eof\n");
+    return '\0';
 }
-Type *new_unsigned_type(Type *type) {
-    log_message(LOG_WARN, "Creating new unsigned type\n");
-    Type *unsigned_type = new_type();
-    unsigned_type->kind = type->kind;
-    unsigned_type->size = type->size;
-    unsigned_type->align = type->align;
-    unsigned_type->is_signed = 0;
-    unsigned_type->qualifiers = type->qualifiers;
-    unsigned_type->base = type;
-    unsigned_type->is_resolved = type->is_resolved;
-    return unsigned_type;
+static char t_peek_n(const Tokenizer *tk, const int n) {
+    if (tk->index + n > tk->size) {
+        printf("t_peek_n Tried peeking past eof\n");
+        return '\0';
+    }
+    return tk->src[tk->index + n];
 }
-Type *get_float_type(int size) {
-    if (!(size > 0 && size > 8)) do { log_message(LOG_ERROR, "Size must be between [1-8]"); exit(1); } while (0);
-    if (size <= 4) return type_f32;
-    else return type_f64;
+static char t_peek_next(const Tokenizer *tk) { return t_peek_n(tk, 1); }
+static void t_skip(Tokenizer *tk) {
+    if (!(tk->index + 1 <= tk->size)) do { log_message(LOG_ERROR, "T_Skip Reached end of file\n"); exit(1); } while (0);
+    if (has_flag(CF_DEBUG_TOKENIZER)) {
+        printf("%c", tk->src[tk->index]);
+    }
+    if (t_peek(tk) == '\n') {
+        tk->line_n++;
+        tk->char_n = 0;
+    }
+    tk->index += 1;
+    tk->char_n += 1;
 }
-Type *get_integer_type(int size) {
-    switch (size) {
-    case 1:
-        return type_i8;
-    case 2:
-        return type_i16;
-    case 3:
-    case 4:
-        return type_i32;
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-        return type_i64;
-    default:
-        do { log_message(LOG_ERROR, "Invalid integer size\n"); exit(1); } while (0);
+static void t_consume(Tokenizer *tk) {
+    tk->buf.buf[tk->buf.size++] = t_peek(tk);
+    t_skip(tk);
+}
+static void t_consume_n(Tokenizer *tk, const int n) {
+    for (int i = 0; i < n; i++) {
+        t_consume(tk);
     }
 }
-Type *promote_integer(Type *from, Type *to) { return from->is_signed ? to : get_unsigned_type(to); }
-Type *get_pointer_type(Type *type) {
-    for (int i = 0; i < typepool.count; i++) {
-        Type *t = arena_get(&typepool, i);
-        if (t->kind == T_POINTER && t->base == type) return t;
-    }
-    return new_pointer_type(type);
+static void t_consume_a(Tokenizer *tk, const char c) { tk->buf.buf[tk->buf.size++] = c; }
+static void t_skip_n(Tokenizer *tk, int n) {
+    for (int i = 0; i < n; i++) t_skip(tk);
 }
-Type *get_array_type(Type *type, int len) {
-    for (int i = 0; i < typepool.count; i++) {
-        Type *t = arena_get(&typepool, i);
-        if (!t->is_resolved) continue;
-        if (t->base == type && t->kind == T_ARRAY && t->_array.array_len == len) return t;
-    }
-    return new_array_type(type, len);
-}
-Type *get_function_type(Type *type, Array params, bool is_variadic) {
-    if (!(type->kind != T_ARRAY)) do { log_message(LOG_ERROR, "Functions cannot return arrays\n"); exit(1); } while (0);
-    for (int i = 0; i < typepool.count; i++) {
-        Type *t = arena_get(&typepool, i);
-        if (t->kind == T_FUNCTION && t->_func.return_type == type && t->_func.is_variadic == is_variadic) {
-            if (t->_func.params.count != params.count) continue;
-            bool match = 1;
-            for (int j = 0; j < params.count; j++) {
-                ParamDecl *p_a = get(&params, j);
-                ParamDecl *p_b = get(&t->_func.params, j);
-                if (p_a->type != p_b->type) {
-                    match = 0;
-                    break;
-                }
-                if (p_a->name != p_b->name) {
-                    match = 0;
-                    break;
-                }
-            }
-            if (match) {
-                return t;
-            }
-        }
-    }
-    return new_function_type(type, params, is_variadic);
-}
-Type *get_modified_type(Type *type, Declarator *decl) {
-    if (decl->modifiers.count == 0) return type;
-    for (int i = decl->modifiers.count - 1; i >= 0; i--) {
-        Modifier *mod = (Modifier *)get(&decl->modifiers, i);
-        if (mod->kind == MOD_POINTER) {
-            type = get_pointer_type(type);
-        } else if (mod->kind == MOD_ARRAY) {
-            type = new_incomplete_array_type(type, mod->array_bounds);
-        } else if (mod->kind == MOD_FUNCTION) {
-            type = get_function_type(type, mod->function.params, mod->function.is_variadic);
-        }
-    }
-    return type;
-}
-Type *get_qualified_type(Type *type, unsigned int qualifiers) {
-    for (int i = 0; i < typepool.count; i++) {
-        Type *t = arena_get(&typepool, i);
-        if (t->base == type->base && t->kind == type->kind && t->size == type->size && t->qualifiers == qualifiers &&
-            t->is_signed == type->is_signed && t->is_resolved) {
-            return t;
-        }
-    }
-    return new_qualified_type(type, qualifiers);
-}
-bool cmp_func_types(const Type *a, const Type *b) {
-    if (!(a->kind == T_FUNCTION)) do { log_message(LOG_ERROR, "Can only compare function types\n"); exit(1); } while (0);
-    if (!(b->kind == T_FUNCTION)) do { log_message(LOG_ERROR, "Can only compare function types\n"); exit(1); } while (0);
-    if (a->_func.is_variadic != b->_func.is_variadic) return 0;
-    if (a->_func.return_type != b->_func.return_type) return 0;
-    if (a->_func.params.data != b->_func.params.data) {
-        if (a->_func.params.count != b->_func.params.count) return 0;
-        for (int i = 0; i < a->_func.params.count; i++) {
-            ParamDecl *a_p = get(&a->_func.params, i);
-            ParamDecl *b_p = get(&b->_func.params, i);
-            if (a_p->type != b_p->type) return 0;
-        }
-    }
-    return 1;
-}
-Type *get_unsigned_type(Type *type) {
-    if (type->kind != T_INT) {
-        do { log_message(LOG_ERROR, "Cannot retrieve signed/unsigned variant of non-integer type\n"); exit(1); } while (0);
-    }
-    if (type->is_signed == 0) return type;
-    for (int i = 0; i < typepool.count; i++) {
-        Type *t = arena_get(&typepool, i);
-        if (t->kind == type->kind && t->size == type->size && t->is_signed == 0 && t->qualifiers == type->qualifiers) {
-            return t;
-        }
-    }
-    return new_unsigned_type(type);
-}
-Type *get_enum_type(const char *name) {
-    if (name == ((void *)0)) return ((void *)0);
-    for (int i = 0; i < typepool.count; i++) {
-        Type *type = arena_get(&typepool, i);
-        if (type->kind == T_ENUM && type->_enum.name != ((void *)0) && strcmp(name, type->_enum.name) == 0) return type;
-    }
-    return ((void *)0);
-}
-Type *get_union_type(const char *name) {
-    if (name == ((void *)0)) return ((void *)0);
-    for (int i = 0; i < typepool.count; i++) {
-        Type *type = arena_get(&typepool, i);
-        if (type->kind == T_UNION && type->_union.name != ((void *)0) && strcmp(name, type->_union.name) == 0) return type;
-    }
-    return ((void *)0);
-}
-Type *get_struct_type(const char *name) {
-    if (name == ((void *)0)) return ((void *)0);
-    for (int i = 0; i < typepool.count; i++) {
-        Type *type = arena_get(&typepool, i);
-        if (type->kind == T_STRUCT && type->_struct.name != ((void *)0) && strcmp(name, type->_struct.name) == 0) return type;
-    }
-    return ((void *)0);
-}
-void append_enum_field(Type *e, EnumField *f) { append(&e->_enum.fields_array, f); }
-void append_union_member(Type *u, UnionMember *m) {
-    if (m->type->size > u->size) u->size = align(m->type->size, m->type->align);
-    append(&u->_union.members_array, m);
-}
-void append_struct_member(Type *s, StructMember *m) {
-    if (m->type->align > s->align) s->align = m->type->align;
-    s->size = align(s->size, m->type->align);
-    m->offset = s->size;
-    append(&s->_struct.members_array, m);
-    s->size += m->type->size;
-}
-Type union_type() {
-    Type u = {};
-    u.kind = T_UNION;
-    u.base = ((void *)0);
-    u.align = 0;
-    u.size = 0;
-    u.is_signed = 1;
-    u.qualifiers = QUAL_NONE;
-    u._union.complete = 0;
-    u._union.name = ((void *)0);
-    u._union.members_array.capacity = 0;
-    u._union.members_array.count = 0;
-    u._union.members_array.element_size = -1;
-    u._union.members_array.data = ((void *)0);
-    u.is_resolved = 0;
-    return u;
-}
-Type struct_type() {
-    Type s = {};
-    s.kind = T_STRUCT;
-    s.base = ((void *)0);
-    s.align = 0;
-    s.size = 0;
-    s.is_signed = 1;
-    s.qualifiers = QUAL_NONE;
-    s._struct.complete = 0;
-    s._struct.name = ((void *)0);
-    s._struct.members_array.capacity = 0;
-    s._struct.members_array.count = 0;
-    s._struct.members_array.element_size = -1;
-    s._struct.members_array.data = ((void *)0);
-    s.is_resolved = 0;
-    return s;
-}
-Type enum_type() {
-    Type e = {};
-    e.kind = T_ENUM;
-    e.base = type_i32;
-    e.align = 4;
-    e.size = 4;
-    e.is_signed = 1;
-    e.qualifiers = NONE;
-    e._enum.complete = 0;
-    e._enum.name = ((void *)0);
-    e._enum.fields_array.capacity = 0;
-    e._enum.fields_array.count = 0;
-    e._enum.fields_array.element_size = -1;
-    e._enum.fields_array.data = ((void *)0);
-    e.is_resolved = 0;
-    return e;
-}
-AggrMember *get_member(Type *struct_t, const char *name, bool is_root, int *offset) {
-    for (int i = 0; i < struct_t->_struct.members_array.count; i++) {
-        AggrMember *member = get_struct_member(struct_t, i);
-        if (member->name) {
-            if (strcmp(name, member->name) == 0) return member;
-        } else if (member->type->kind == T_STRUCT || member->type->kind == T_UNION) {
-            if (offset) *offset += member->offset;
-            AggrMember *x = get_member(member->type, name, 0, offset);
-            if (x) return x;
-        }
-    }
-    if (is_root) do { log_message(LOG_ERROR, "No member named \"%s\" in struct %s\n", name, struct_t->_struct.name); exit(1); } while (0);
-    else return ((void *)0);
-}
-bool is_func_ptr(const Type *t) { return t->kind == T_POINTER && t->base->kind == T_FUNCTION; }
-bool is_scalar_type(const Type *t) { return t->kind == T_INT || t->kind == T_FLOAT || t->kind == T_ENUM || t->kind == T_POINTER; }
-void print_type(Type *type) {
-    if (!type) {
-        printf("NULL");
+static void t_push_buffer(Tokenizer *tk, const TokenType type) {
+    if (tk->buf.size == 0 && type != TK_STRING_LITERAL) {
+        log_message(LOG_WARN, "Tried to push an empty buffer to TokenArray, skipping.\n");
         return;
     }
-    if (type->printing) {
-        printf("<recursive>\n");
-        return;
+    char *buf_dupe = malloc(sizeof(char) * tk->buf.size);
+    if (!buf_dupe) {
+        do { log_message(LOG_ERROR, "Failed to allocate for buffer duplicate\n"); exit(1); } while (0);
     }
-    type->printing = 1;
-    if (type->qualifiers & QUAL_CONST) printf("%s ", KEYWORDS[TK_CONST]);
-    if (type->qualifiers & QUAL_VOLATILE) printf("%s ", KEYWORDS[TK_VOLATILE]);
-    if (type->kind == T_INT && !type->is_signed) printf("%s ", KEYWORDS[TK_UNSIGNED]);
-    switch (type->kind) {
-    case T_INVALID:
-        printf("[#]");
-        break;
-    case T_ARRAY:
-        print_type(type->base);
-        if (type->is_resolved) printf("[%" "ld" "]", type->_array.array_len);
-        else printf("[!!!]");
-        break;
-    case T_INT:
-        switch (type->size) {
-        case 1:
-            print_token_type(TK_CHAR);
-            break;
-        case 2:
-            print_token_type(TK_SHORT);
-            break;
-        case 4:
-            print_token_type(TK_INT);
-            break;
-        case 8:
-            print_token_type(TK_LONG);
-            break;
-        default:
-            do { log_message(LOG_ERROR, "Tried to type of int, with invalid size\n"); exit(1); } while (0);
-        }
-        break;
-    case T_FLOAT:
-        switch (type->size) {
-        case 4:
-            print_token_type(TK_FLOAT);
-            break;
-        case 8:
-            print_token_type(TK_DOUBLE);
-            break;
-        default:
-            do { log_message(LOG_ERROR, "Tried to type of float, with invalid size\n"); exit(1); } while (0);
-        }
-        break;
-    case T_POINTER:
-        print_type(type->base);
-        printf("*");
-        break;
-    case T_STRUCT:
-        printf("struct %s ", type->_struct.name);
-        if (has_flag(CF_DEBUG_STRUCT)) {
-            printf("{");
-            for (int i = 0; i < type->_struct.members_array.count; i++) {
-                StructMember *member = get_struct_member(type, i);
-                print_type(member->type);
-                printf(" %s:[%d@%d], ", member->name, member->offset, member->type->size);
-            }
-            printf("}");
-        }
-        break;
-    case T_ENUM:
-        printf("enum %s ", type->_enum.name);
-        if (has_flag(CF_DEBUG_ENUM)) {
-            printf("{");
-            for (int i = 0; i < type->_enum.fields_array.count; i++) {
-                EnumField *field = get_enum_field(type, i);
-                printf(" %s = %d, ", field->name, field->value);
-            }
-            printf("}");
-        }
-        break;
-    case T_UNION:
-        printf("union %s ", type->_union.name);
-        if (has_flag(CF_DEBUG_UNION)) {
-            printf("{");
-            for (int i = 0; i < type->_union.members_array.count; i++) {
-                UnionMember *member = get_union_member(type, i);
-                print_type(member->type);
-                printf(" %s:[%d] ", member->name, member->type->size);
-                if (i < type->_union.members_array.count - 1) printf(", ");
-            }
-            printf("}");
-        }
-        break;
-    case T_VOID:
-        print_token_type(TK_VOID);
-        break;
-    case T_FUNCTION:
-        type->_func.is_variadic = 15;
-        type->_func.params.count = 0;
-        printf("IS VAR %d %d\n", type->_func.is_variadic, type->_func.params.count);
-        print_type(type->_func.return_type);
-        printf("(");
-        if (type->_func.params.count == 0) printf("void");
-        for (int i = 0; i < type->_func.params.count; i++) {
-            ParamDecl *param = (ParamDecl *)get(&type->_func.params, i);
-            print_param_decl(param);
-            if (i < type->_func.params.count - 1) printf(", ");
-        }
-        if (type->_func.is_variadic) printf(", ... ");
-        printf(")");
-        break;
-    }
-    type->printing = 0;
+    memcpy(buf_dupe, tk->buf.buf, sizeof(char) * tk->buf.size);
+    append(&tk->tokens_array, &(Token){.type = type, .value = buf_dupe, .size = tk->buf.size, .line_n = tk->line_n, .char_n = tk->char_n});
+    t_buffer_reset(tk);
 }
-void print_struct_type(Type *s) {
-    printf("struct");
-    if (s->_struct.name != ((void *)0)) {
-        printf("%s", s->_struct.name);
-    }
-    if (s->_struct.complete) {
-        printf(" {\n");
-        for (int i = 0; i < s->_struct.members_array.count; i++) {
-            StructMember *member = get_struct_member(s, i);
-            printf("    ");
-            print_type(member->type);
-            printf("; [%d]\n", member->offset);
+static void t_parse_and_push_buffer(Tokenizer *tk) {
+    if (tk->buf.size == 0) return;
+    Token token = {.type = TK_VOID, .value = ((void *)0), .size = 0, .line_n = tk->line_n, .char_n = tk->char_n};
+    bool is_keyword = 0;
+    for (int i = 0; i < 33; i++) {
+        if (strcmp(tk->buf.buf, KEYWORDS[i]) == 0) {
+            token.type = (TokenType)i;
+            is_keyword = 1;
+            break;
         }
-        printf("}\n");
+    }
+    if (!is_keyword) {
+        token.type = TK_IDENTIFIER;
+        token.value = strndup(tk->buf.buf, tk->buf.size);
+        token.size = tk->buf.size;
+    }
+    append(&tk->tokens_array, &token);
+}
+static void t_skip_comments(Tokenizer *tk) {
+    t_skip(tk);
+    if (t_peek(tk) == '/') {
+        t_skip(tk);
+        while (t_peek(tk) != '\n') {
+            t_skip(tk);
+        }
+        t_skip(tk);
+    } else if (t_peek(tk) == '*') {
+        t_skip(tk);
+        while (t_peek(tk) != '*' && t_peek_next(tk) != '/') {
+            t_skip(tk);
+        }
+        t_skip(tk);
+        t_skip(tk);
     }
 }
-void print_typepool() {
-    printf("---- Type Pool -----\n");
-    for (int i = 0; i < typepool.count; i++) {
-        print_type(arena_get(&typepool, i));
-        printf("\n");
+static int is_op_start(const char c) {
+    switch (c) {
+    case '+':
+    case '-':
+    case '*':
+    case '/':
+    case '%':
+    case '=':
+    case '!':
+    case '~':
+    case '<':
+    case '>':
+    case '|':
+    case '&':
+    case '^':
+    case '.':
+        return 1;
+    default:
+        return 0;
     }
 }
-void print_param_decl(ParamDecl *decl) {
-    print_type(decl->type);
-    printf(" ");
-    if (decl->name) printf("%s", decl->name);
+static TokenMatch t_match_operator(const Tokenizer *tk) {
+    const char next = t_peek_next(tk);
+    const int eq = next == '=';
+    switch (t_peek(tk)) {
+    case '+':
+        if (next == '+') return (TokenMatch){TK_INCR, 2};
+        return eq ? (TokenMatch){TK_PLUS_EQ, 2} : (TokenMatch){TK_PLUS, 1};
+    case '-':
+        if (next == '-') return (TokenMatch){TK_DECR, 2};
+        if (next == '>') return (TokenMatch){TK_ARROW, 2};
+        return eq ? (TokenMatch){TK_MINUS_EQ, 2} : (TokenMatch){TK_MINUS, 1};
+    case '*':
+        return eq ? (TokenMatch){TK_MULTIPLY_EQ, 2} : (TokenMatch){TK_MULTIPLY, 1};
+    case '/':
+        return eq ? (TokenMatch){TK_DIVIDE_EQ, 2} : (TokenMatch){TK_DIVIDE, 1};
+    case '=':
+        return eq ? (TokenMatch){TK_EQ_EQ, 2} : (TokenMatch){TK_EQ, 1};
+    case '^':
+        return eq ? (TokenMatch){TK_XOR_EQ, 2} : (TokenMatch){TK_XOR, 1};
+    case '%':
+        return eq ? (TokenMatch){TK_MOD_EQ, 2} : (TokenMatch){TK_MOD, 1};
+    case '!':
+        return eq ? (TokenMatch){TK_NEQ, 2} : (TokenMatch){TK_L_NOT, 1};
+    case '~':
+        return (TokenMatch){TK_BW_NOT, 1};
+    case '&':
+        return next == '&' ? (TokenMatch){TK_AND_AND, 2} : (eq) ? (TokenMatch){TK_AND_EQ, 2} : (TokenMatch){TK_AND, 1};
+    case '|':
+        return next == '|' ? (TokenMatch){TK_OR_OR, 2} : (eq) ? (TokenMatch){TK_OR_EQ, 2} : (TokenMatch){TK_OR, 1};
+    case '<':
+        if (next == '<') {
+            return t_peek_n(tk, 2) == '=' ? (TokenMatch){TK_SHL_EQ, 3} : (TokenMatch){TK_SHL, 2};
+        }
+        return eq ? (TokenMatch){TK_LE, 2} : (TokenMatch){TK_LT, 1};
+    case '>':
+        if (next == '>') {
+            return t_peek_n(tk, 2) == '=' ? (TokenMatch){TK_SHR_EQ, 3} : (TokenMatch){TK_SHR, 2};
+        }
+        return eq ? (TokenMatch){TK_GE, 2} : (TokenMatch){TK_GT, 1};
+    case '.':
+        return (TokenMatch){TK_DOT, 1};
+    default:
+        do { log_message(LOG_ERROR, "Unknown operator"); exit(1); } while (0);
+    }
+}
+static void t_consume_operator(Tokenizer *tk) {
+    const TokenMatch m = t_match_operator(tk);
+    t_consume_n(tk, m.n_chars);
+    t_push_buffer(tk, m.type);
+}
+static void t_consume_special_char(Tokenizer *tk) {
+    TokenType type;
+    switch (t_peek(tk)) {
+    case '(':
+        type = TK_OPEN_PAREN;
+        break;
+    case ')':
+        type = TK_CLOSE_PAREN;
+        break;
+    case '{':
+        type = TK_OPEN_CURLY;
+        break;
+    case '}':
+        type = TK_CLOSE_CURLY;
+        break;
+    case '[':
+        type = TK_OPEN_SQUARE;
+        break;
+    case ']':
+        type = TK_CLOSE_SQUARE;
+        break;
+    case ';':
+        type = TK_SEMI;
+        break;
+    case ',':
+        type = TK_COMMA;
+        break;
+    case ':':
+        type = TK_COLON;
+        break;
+    case '?':
+        type = TK_TERNARY;
+        break;
+    default:
+        do { log_message(LOG_ERROR, "[%d:%d]: Unexpected '%c'\n", tk->line_n, tk->char_n, t_peek(tk)); exit(1); } while (0);
+    }
+    t_consume(tk);
+    t_consume_a(tk, '\0');
+    t_push_buffer(tk, type);
+}
+static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
+    t_skip(tk);
+    char c = t_peek(tk);
+    *length = 1;
+    switch (c) {
+    case 'n':
+        return '\n';
+    case 't':
+        return '\t';
+    case 'f':
+        return '\f';
+    case 'r':
+        return '\r';
+    case 'v':
+        return '\v';
+    case '\\':
+        return '\\';
+    case '"':
+        return '\"';
+    case '\'':
+        return '\'';
+    case 'x':
+        t_skip(tk);
+        Array hexal;
+        array_init(&hexal, 4, sizeof(char));
+        for (;;) {
+            char x = t_peek(tk);
+            if (is_hex(x)) {
+                append(&hexal, &x);
+                t_skip(tk);
+            } else break;
+        }
+        *length = 0;
+        int64_t res = parse_hex(hexal.data, hexal.count);
+        array_free(&hexal);
+        return res;
+    default:
+        if (is_oct(t_peek(tk))) {
+            char octal[3] = {};
+            int o_i = 0;
+            while (o_i < 3) {
+                char o = t_peek(tk);
+                if (is_oct(o)) {
+                    octal[o_i++] = o;
+                    t_skip(tk);
+                } else break;
+            }
+            *length = 0;
+            return parse_oct(octal, o_i);
+        }
+        do { log_message(LOG_ERROR, "Invalid escape sequence\n"); exit(1); } while (0);
+    }
+}
+static void t_consume_char_literal(Tokenizer *tk) {
+    t_skip(tk);
+    for (int i = 0; i < 4; i++) {
+        if (t_peek(tk) == '\'') break;
+        if (t_peek(tk) == '\\') {
+            int n = 0;
+            t_consume_a(tk, t_parse_escape_sequence(tk, &n));
+            t_skip_n(tk, n);
+        } else t_consume(tk);
+    }
+    while (t_peek(tk) != '\'') t_skip(tk);
+    t_skip(tk);
+    t_push_buffer(tk, TK_CHAR_LITERAL);
+}
+static void t_consume_string_literal(Tokenizer *tk) {
+    t_skip(tk);
+    for (;;) {
+        char c = t_peek(tk);
+        if (c == '\n') {
+            do { log_message(LOG_ERROR, "Found '\\n' in string literal."); exit(1); } while (0);
+        }
+        if (c == '\"') {
+            t_skip(tk);
+            break;
+        }
+        if (c == '\\') {
+            int n = 0;
+            t_consume_a(tk, t_parse_escape_sequence(tk, &n));
+            t_skip_n(tk, n);
+        } else t_consume(tk);
+    }
+    t_push_buffer(tk, TK_STRING_LITERAL);
+}
+void t_tokenize(Tokenizer *tk) {
+    while (!t_is_eof(tk)) {
+        const char c = t_peek(tk);
+        if (c == '.' && !is_num(t_peek_next(tk))) {
+            t_consume(tk);
+            if (t_peek(tk) == '.' && t_peek_next(tk) == '.') {
+                t_consume_n(tk, 2);
+                t_push_buffer(tk, TK_ELLIPSES);
+            } else t_push_buffer(tk, TK_DOT);
+        } else if (is_num(c) || c == '.' || c == '-' && is_num(t_peek_next(tk))) {
+            int is_float = 0;
+            t_consume(tk);
+            if (c == '0') {
+                switch (t_peek(tk)) {
+                case 'x':
+                    t_consume(tk);
+                    while (is_hex(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    break;
+                case 'b':
+                    t_consume(tk);
+                    while (is_binary(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    break;
+                case '.':
+                    is_float = 1;
+                    t_consume(tk);
+                    while (is_num(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    break;
+                default:
+                    while (is_oct(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                    break;
+                }
+            } else {
+                while (is_num(t_peek(tk))) {
+                    t_consume(tk);
+                }
+                if (t_peek(tk) == '.') {
+                    t_consume(tk);
+                    is_float = 1;
+                    while (is_num(t_peek(tk))) {
+                        t_consume(tk);
+                    }
+                }
+            }
+            int l_count = 0;
+            int u_count = 0;
+            int f_count = 0;
+            for (;;) {
+                char c = t_peek(tk);
+                if (c == 'u' || c == 'U') {
+                    if (u_count >= 1) break;
+                    u_count++;
+                    t_consume(tk);
+                } else if (c == 'l' || c == 'L') {
+                    if (l_count >= 2) break;
+                    l_count++;
+                    t_consume(tk);
+                } else if (c == 'f' || c == 'F') {
+                    if (f_count >= 1) break;
+                    f_count++;
+                    is_float = 1;
+                    t_consume(tk);
+                } else break;
+            }
+            t_push_buffer(tk, is_float ? TK_FLT_LITERAL : TK_INT_LITERAL);
+        } else if (is_alpha(c) || c == '_') {
+            t_consume(tk);
+            while (is_alpha_num(t_peek(tk))) {
+                t_consume(tk);
+            }
+            t_parse_and_push_buffer(tk);
+            t_buffer_reset(tk);
+        } else if (is_whitespace(c)) t_skip(tk);
+        else if (t_peek(tk) == '/' && (t_peek_next(tk) == '/' || t_peek_next(tk) == '*')) t_skip_comments(tk);
+        else if (t_peek(tk) == '\'') t_consume_char_literal(tk);
+        else if (t_peek(tk) == '\"') t_consume_string_literal(tk);
+        else if (is_op_start(c)) t_consume_operator(tk);
+        else t_consume_special_char(tk);
+    }
+}
+bool is_unary_operator(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_INCR:
+    case TK_DECR:
+    case TK_L_NOT:
+    case TK_BW_NOT:
+    case TK_AND:
+    case TK_MULTIPLY:
+    case TK_SIZEOF:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_postfix_operator(const TokenType type) {
+    switch (type) {
+    case TK_INCR:
+    case TK_DECR:
+    case TK_OPEN_PAREN:
+    case TK_OPEN_SQUARE:
+    case TK_DOT:
+    case TK_ARROW:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_binary_operator(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_MULTIPLY:
+    case TK_DIVIDE:
+    case TK_XOR:
+    case TK_EQ:
+    case TK_AND_AND:
+    case TK_AND_EQ:
+    case TK_EQ_EQ:
+    case TK_GE:
+    case TK_GT:
+    case TK_LE:
+    case TK_LT:
+    case TK_DIVIDE_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_OR_EQ:
+    case TK_OR_OR:
+    case TK_NEQ:
+    case TK_PLUS_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+    case TK_XOR_EQ:
+    case TK_SHL:
+    case TK_SHR:
+    case TK_OR:
+    case TK_AND:
+    case TK_MOD:
+    case TK_MOD_EQ:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_assignment_op(const TokenType type) {
+    switch (type) {
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+    case TK_OR_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_arithmetic_op(const TokenType type) {
+    switch (type) {
+    case TK_PLUS:
+    case TK_PLUS_EQ:
+    case TK_MINUS:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE:
+    case TK_DIVIDE_EQ:
+    case TK_MOD:
+    case TK_MOD_EQ:
+    case TK_INCR:
+    case TK_DECR:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_bitwise_op(const TokenType type) {
+    switch (type) {
+    case TK_OR:
+    case TK_AND:
+    case TK_SHL:
+    case TK_SHR:
+    case TK_XOR:
+    case TK_OR_EQ:
+    case TK_AND_EQ:
+    case TK_SHL_EQ:
+    case TK_SHR_EQ:
+    case TK_XOR_EQ:
+    case TK_BW_NOT:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_comparison_op(const TokenType type) {
+    switch (type) {
+    case TK_EQ_EQ:
+    case TK_NEQ:
+    case TK_GT:
+    case TK_GE:
+    case TK_LT:
+    case TK_LE:
+        return 1;
+    default:
+        return 0;
+    }
+}
+bool is_logical_op(const TokenType type) {
+    switch (type) {
+    case TK_AND_AND:
+    case TK_EQ_EQ:
+    case TK_OR_OR:
+    case TK_L_NOT:
+        return 1;
+    default:
+        return 0;
+    }
+}
+TokenType get_underlying_op(const TokenType type) {
+    switch (type) {
+    case TK_PLUS_EQ:
+        return TK_PLUS;
+    case TK_MINUS_EQ:
+        return TK_MINUS;
+    case TK_MULTIPLY_EQ:
+        return TK_MULTIPLY;
+    case TK_DIVIDE_EQ:
+        return TK_DIVIDE;
+    case TK_MOD_EQ:
+        return TK_MOD;
+    case TK_OR_EQ:
+        return TK_OR;
+    case TK_AND_EQ:
+        return TK_AND;
+    case TK_XOR_EQ:
+        return TK_XOR;
+    case TK_SHL_EQ:
+        return TK_SHL;
+    case TK_SHR_EQ:
+        return TK_SHR;
+    case TK_EQ:
+        return TK_EQ;
+    default:
+        log_start(LOG_ERROR);
+        printf("Tried to get the underlying operator of a non-eq operator\n");
+        print_token_type(type);
+        exit(1);
+    }
+}
+int op_associativity(const TokenType type) {
+    switch (type) {
+    case TK_MULTIPLY:
+    case TK_DIVIDE:
+    case TK_MOD:
+    case TK_PLUS:
+    case TK_MINUS:
+    case TK_SHR:
+    case TK_SHL:
+    case TK_LT:
+    case TK_LE:
+    case TK_GT:
+    case TK_GE:
+    case TK_EQ_EQ:
+    case TK_NEQ:
+    case TK_AND:
+    case TK_XOR:
+    case TK_OR:
+    case TK_AND_AND:
+    case TK_OR_OR:
+        return 1;
+    case TK_SHR_EQ:
+    case TK_SHL_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_OR_EQ:
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+        return 0;
+    default:
+        do { log_message(LOG_ERROR, "Tried to get the associativity of a token which is not a binary " "operator"); exit(1); } while (0);
+    }
+}
+int op_precedence(const TokenType type) {
+    switch (type) {
+    case TK_EQ:
+    case TK_PLUS_EQ:
+    case TK_MINUS_EQ:
+    case TK_MULTIPLY_EQ:
+    case TK_DIVIDE_EQ:
+    case TK_MOD_EQ:
+        return 0;
+    case TK_TERNARY:
+        return 1;
+    case TK_SHR_EQ:
+    case TK_SHL_EQ:
+    case TK_AND_EQ:
+    case TK_XOR_EQ:
+    case TK_OR_EQ:
+        return 2;
+    case TK_OR_OR:
+        return 3;
+    case TK_AND_AND:
+        return 4;
+    case TK_OR:
+        return 5;
+    case TK_XOR:
+        return 6;
+    case TK_AND:
+        return 7;
+    case TK_EQ_EQ:
+    case TK_NEQ:
+        return 8;
+    case TK_LT:
+    case TK_LE:
+    case TK_GT:
+    case TK_GE:
+        return 9;
+    case TK_SHR:
+    case TK_SHL:
+        return 10;
+    case TK_PLUS:
+    case TK_MINUS:
+        return 11;
+    case TK_MULTIPLY:
+    case TK_DIVIDE:
+    case TK_MOD:
+        return 12;
+    default:
+        log_start(LOG_ERROR);
+        printf("Tried to get the precedence of a token which is not a binary operator");
+        print_token_type(type);
+        exit(1);
+    }
+}
+const char *token_type_str(const TokenType type) {
+    switch (type) {
+    case TK_INT_LITERAL:
+        return "Int Literal";
+    case TK_FLT_LITERAL:
+        return "Float Literal";
+    case TK_CHAR_LITERAL:
+        return "Char Literal";
+    case TK_STRING_LITERAL:
+        return "String Literal";
+    case TK_SEMI:
+        return "';'";
+    case TK_PLUS:
+        return "'+'";
+    case TK_MINUS:
+        return "'-'";
+    case TK_MULTIPLY:
+        return "'*'";
+    case TK_DIVIDE:
+        return "'/'";
+    case TK_XOR:
+        return "'^'";
+    case TK_EXPR:
+        return "Expr";
+    case TK_EQ:
+        return "'='";
+    case TK_OPEN_PAREN:
+        return "'('";
+    case TK_CLOSE_PAREN:
+        return "')'";
+    case TK_OPEN_CURLY:
+        return "'{'";
+    case TK_CLOSE_CURLY:
+        return "'}'";
+    case TK_COMMA:
+        return "','";
+    case TK_IDENTIFIER:
+        return "Identifier";
+    case TK_MOD:
+        return "'%'";
+    case TK_EQ_EQ:
+        return "'=='";
+    case TK_PLUS_EQ:
+        return "'+='";
+    case TK_MINUS_EQ:
+        return "'-='";
+    case TK_MULTIPLY_EQ:
+        return "'*='";
+    case TK_DIVIDE_EQ:
+        return "'/='";
+    case TK_MOD_EQ:
+        return "'%='";
+    case TK_NEQ:
+        return "'!='";
+    case TK_LT:
+        return "'<'";
+    case TK_LE:
+        return "'<='";
+    case TK_GT:
+        return "'>'";
+    case TK_GE:
+        return "'>='";
+    case TK_SHL:
+        return "'<<'";
+    case TK_SHR:
+        return "'>>'";
+    case TK_SHL_EQ:
+        return "'<<='";
+    case TK_SHR_EQ:
+        return "'>>='";
+    case TK_AND:
+        return "'&'";
+    case TK_AND_AND:
+        return "'&&'";
+    case TK_AND_EQ:
+        return "'&='";
+    case TK_OR:
+        return "'|'";
+    case TK_OR_OR:
+        return "'||'";
+    case TK_OR_EQ:
+        return "'|='";
+    case TK_XOR_EQ:
+        return "'^='";
+    case TK_TERNARY:
+        return "'?'";
+    case TK_L_NOT:
+        return "'!'";
+    case TK_BW_NOT:
+        return "'~'";
+    case TK_INCR:
+        return "'++'";
+    case TK_DECR:
+        return "'--'";
+    case TK_OPEN_SQUARE:
+        return "'['";
+    case TK_CLOSE_SQUARE:
+        return "']'";
+    case TK_DOT:
+        return "'.'";
+    case TK_ARROW:
+        return "'->'";
+    case TK_COLON:
+        return "':'";
+    case TK_ELLIPSES:
+        return "'...'";
+    case TK_AUTO:
+    case TK_BREAK:
+    case TK_CASE:
+    case TK_CHAR:
+    case TK_CONST:
+    case TK_CONTINUE:
+    case TK_DEFAULT:
+    case TK_DO:
+    case TK_DOUBLE:
+    case TK_ELSE:
+    case TK_ENUM:
+    case TK_EXTERN:
+    case TK_FLOAT:
+    case TK_FOR:
+    case TK_GOTO:
+    case TK_IF:
+    case TK_INLINE:
+    case TK_INT:
+    case TK_LONG:
+    case TK_REGISTER:
+    case TK_RETURN:
+    case TK_SHORT:
+    case TK_SIGNED:
+    case TK_SIZEOF:
+    case TK_STATIC:
+    case TK_STRUCT:
+    case TK_SWITCH:
+    case TK_TYPEDEF:
+    case TK_UNION:
+    case TK_UNSIGNED:
+    case TK_VOID:
+    case TK_VOLATILE:
+    case TK_WHILE:
+        return KEYWORDS[type];
+    }
+}
+void print_token_type(const TokenType type) { printf("%s", token_type_str(type)); }
+void print_token(const Token *token) {
+    print_token_type(token->type);
+    printf(":[%d:%d] ", token->line_n, token->char_n);
+    if (token->value != ((void *)0)) {
+        printf(": ");
+        if (token->value[0] == '\0') {
+            printf("\\0");
+        } else if (token->value[0] == '\n') {
+            printf("\\n");
+        } else printf("%.*s", token->size, token->value);
+    }
+    printf("\n");
 }

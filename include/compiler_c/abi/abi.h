@@ -17,7 +17,7 @@ typedef struct {
     ABI_TypeClass class[2];
     bool memory;
     // TODO remove need for padding (without padding <16bytes -> tuple rax rdx return)
-    char p[5];
+    char p[8];
 } ABI_Result;
 
 ABI_Result abi_classify(Type *type);

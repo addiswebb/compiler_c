@@ -51,7 +51,6 @@ void init_typepool() {
     type_void = init_global_type(T_VOID, sizeof(void), QUAL_NONE, SIGNED);
     type_void_ptr = get_pointer_type(type_void);
     type_invalid = init_global_type(T_INVALID, -1, QUAL_NONE, SIGNED);
-    print_typepool();
 }
 
 void free_typepool() {
@@ -417,9 +416,11 @@ AggrMember *get_member(Type *struct_t, const char *name, bool is_root, int *offs
         if (member->name) {
             if (strcmp(name, member->name) == 0) return member;
         } else if (member->type->kind == T_STRUCT || member->type->kind == T_UNION) {
-            if (offset) *offset += member->offset;
             AggrMember *x = get_member(member->type, name, false, offset);
-            if (x) return x;
+            if (x) {
+                if (offset) *offset += member->offset;
+                return x;
+            }
         }
     }
     if (is_root) PANIC("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
@@ -526,6 +527,7 @@ void print_type(Type *type) {
         print_token_type(TK_VOID);
         break;
     case T_FUNCTION:
+        printf("[%d %d]\n", sizeof(Type), (char *)&type->_func.is_variadic - (char *)type);
         print_type(type->_func.return_type);
         printf("(");
         if (type->_func.params.count == 0) printf("void");

@@ -224,8 +224,8 @@ Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *
         ASSERT(t->size > 0, "Union size resolve failed\n");
         return t;
     case T_STRUCT:
-        if (t->_struct.name && strcmp(t->_struct.name, "A") == 0) {
-            // printf("Here\n");
+        if (t->_struct.name && strcmp(t->_struct.name, "Type") == 0) {
+            printf("Here\n");
         }
         t->size = 0;
         t->align = 0;
@@ -742,10 +742,10 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->member_access.identifier = deref;
             node->member_access.op = TK_DOT;
         }
-        int offset = 0;
-        AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, true, &offset);
+        int nested_offset = 0;
+        AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, true, &nested_offset);
         node->member_access.member->type = member_f->type;
-        node->member_access.offset = member_f->offset + offset;
+        node->member_access.offset = member_f->offset + nested_offset;
         node->type = member_f->type;
 
         break;
