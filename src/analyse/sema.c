@@ -215,6 +215,7 @@ Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *
         for (int i = 0; i < t->_union.members_array.count; i++) {
             UnionMember *m = get_union_member(t, i);
             m->type = resolve_type(sema_ctx, p, nm, m->type);
+            m->offset = 0;
             if (m->type->size > t->size) {
                 t->size = m->type->size;
                 t->align = m->type->align;
@@ -223,8 +224,8 @@ Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *
         ASSERT(t->size > 0, "Union size resolve failed\n");
         return t;
     case T_STRUCT:
-        if (t->_struct.name && strcmp(t->_struct.name, "Type") == 0) {
-            printf("Here\n");
+        if (t->_struct.name && strcmp(t->_struct.name, "A") == 0) {
+            // printf("Here\n");
         }
         t->size = 0;
         t->align = 0;
@@ -237,7 +238,6 @@ Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *
             t->size += m->type->size;
         }
         t->size = align(t->size, t->align);
-        t->is_resolved = true;
         return t;
     case T_ENUM:
         int64_t value = 0;
@@ -742,9 +742,10 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->member_access.identifier = deref;
             node->member_access.op = TK_DOT;
         }
-        AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, true);
+        int offset = 0;
+        AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, true, &offset);
         node->member_access.member->type = member_f->type;
-        node->member_access.offset = lhs_t->kind == T_UNION ? 0 : member_f->offset;
+        node->member_access.offset = member_f->offset + offset;
         node->type = member_f->type;
 
         break;

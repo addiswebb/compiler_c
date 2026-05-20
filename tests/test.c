@@ -27,6 +27,7 @@ void *arena_append(Arena *arena, const void *element);
 Array *arena_get_block(const Arena *arena, int index);
 void *arena_get(const Arena *arena, int index);
 void arena_set(Arena *arena, const void *element, int index);
+typedef int bool;
 typedef char int8_t;
 typedef short int16_t;
 typedef int int32_t;
@@ -36,7 +37,6 @@ typedef unsigned int uint32_t;
 typedef unsigned long size_t;
 typedef long int64_t;
 typedef unsigned long uint64_t;
-typedef int bool;
 typedef enum {
     T_VOID,
     T_INT,
@@ -211,7 +211,7 @@ void append_struct_member(Type *s, StructMember *f);
 Type union_type();
 Type struct_type();
 Type enum_type();
-StructMember *get_member(Type *struct_t, const char *name, bool is_root);
+AggrMember *get_member(Type *struct_t, const char *name, bool is_root, int *offset);
 bool is_func_ptr(const Type *t);
 bool is_scalar_type(const Type *t);
 void print_type(Type *type);
@@ -936,6 +936,7 @@ void init_typepool() {
     type_void = init_global_type(T_VOID, sizeof(void), QUAL_NONE, 1);
     type_void_ptr = get_pointer_type(type_void);
     type_invalid = init_global_type(T_INVALID, -1, QUAL_NONE, 1);
+    print_typepool();
 }
 void free_typepool() {
     for (int i = 0; i < typepool.count; i++) {
@@ -1271,13 +1272,14 @@ Type enum_type() {
     e.is_resolved = 0;
     return e;
 }
-AggrMember *get_member(Type *struct_t, const char *name, bool is_root) {
+AggrMember *get_member(Type *struct_t, const char *name, bool is_root, int *offset) {
     for (int i = 0; i < struct_t->_struct.members_array.count; i++) {
         AggrMember *member = get_struct_member(struct_t, i);
         if (member->name) {
             if (strcmp(name, member->name) == 0) return member;
         } else if (member->type->kind == T_STRUCT || member->type->kind == T_UNION) {
-            AggrMember *x = get_member(member->type, name, 0);
+            if (offset) *offset += member->offset;
+            AggrMember *x = get_member(member->type, name, 0, offset);
             if (x) return x;
         }
     }
@@ -1382,6 +1384,9 @@ void print_type(Type *type) {
         print_token_type(TK_VOID);
         break;
     case T_FUNCTION:
+        type->_func.is_variadic = 15;
+        type->_func.params.count = 0;
+        printf("IS VAR %d %d\n", type->_func.is_variadic, type->_func.params.count);
         print_type(type->_func.return_type);
         printf("(");
         if (type->_func.params.count == 0) printf("void");

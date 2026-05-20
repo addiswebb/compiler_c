@@ -95,34 +95,36 @@
 .LC46:
     .byte '}', 0
 .LC47:
-    .byte '(', 0
+    .byte 'I', 'S', ' ', 'V', 'A', 'R', ' ', '%', 'd', ' ', '%', 'd', 0x0A, 0
 .LC48:
-    .byte 'v', 'o', 'i', 'd', 0
+    .byte '(', 0
 .LC49:
-    .byte ',', ' ', 0
+    .byte 'v', 'o', 'i', 'd', 0
 .LC50:
-    .byte ',', ' ', '.', '.', '.', ' ', 0
+    .byte ',', ' ', 0
 .LC51:
-    .byte ')', 0
+    .byte ',', ' ', '.', '.', '.', ' ', 0
 .LC52:
-    .byte 's', 't', 'r', 'u', 'c', 't', 0
+    .byte ')', 0
 .LC53:
-    .byte '%', 's', 0
+    .byte 's', 't', 'r', 'u', 'c', 't', 0
 .LC54:
-    .byte ' ', '{', 0x0A, 0
+    .byte '%', 's', 0
 .LC55:
-    .byte ' ', ' ', ' ', ' ', 0
+    .byte ' ', '{', 0x0A, 0
 .LC56:
-    .byte ';', ' ', '[', '%', 'd', ']', 0x0A, 0
+    .byte ' ', ' ', ' ', ' ', 0
 .LC57:
-    .byte '}', 0x0A, 0
+    .byte ';', ' ', '[', '%', 'd', ']', 0x0A, 0
 .LC58:
-    .byte '-', '-', '-', '-', ' ', 'T', 'y', 'p', 'e', ' ', 'P', 'o', 'o', 'l', ' ', '-', '-', '-', '-', '-', 0x0A, 0
+    .byte '}', 0x0A, 0
 .LC59:
-    .byte 0x0A, 0
+    .byte '-', '-', '-', '-', ' ', 'T', 'y', 'p', 'e', ' ', 'P', 'o', 'o', 'l', ' ', '-', '-', '-', '-', '-', 0x0A, 0
 .LC60:
-    .byte ' ', 0
+    .byte 0x0A, 0
 .LC61:
+    .byte ' ', 0
+.LC62:
     .byte '%', 's', 0
 .global type_i8
 .bss
@@ -511,6 +513,9 @@ get_enum_field_0:
     movq (%rax), %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
     addq $16, %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
@@ -543,6 +548,9 @@ get_struct_member_0:
     movq (%rax), %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
     addq $16, %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
@@ -573,6 +581,9 @@ get_union_member_0:
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    addq $80, %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     addq $16, %rax
@@ -1312,6 +1323,7 @@ init_typepool_0:
     movq -8(%rbp), %rax
     movq -16(%rbp), %rcx
     movq %rcx, (%rax)
+    call print_typepool
     mov %rbp, %rsp
     pop %rbp
     ret
@@ -1417,6 +1429,9 @@ free_typepool_3:
     movq (%rax), %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
     addq $16, %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rdi
@@ -1427,6 +1442,9 @@ free_typepool_4:
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    addq $80, %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     addq $16, %rax
@@ -1441,6 +1459,9 @@ free_typepool_5:
     movq (%rax), %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
     addq $16, %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rdi
@@ -1451,6 +1472,9 @@ free_typepool_6:
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    addq $80, %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     addq $8, %rax
@@ -1549,6 +1573,9 @@ init_global_type_0:
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
+    addq $32, %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     movq $0, %rcx
@@ -1740,6 +1767,9 @@ new_incomplete_array_type_0:
     movq -32(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
@@ -1752,6 +1782,9 @@ new_incomplete_array_type_0:
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    addq $80, %rax
     movq %rax, -32(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -40(%rbp)
@@ -1883,6 +1916,9 @@ new_array_type_0:
     movq -32(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
@@ -1895,6 +1931,9 @@ new_array_type_0:
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    addq $80, %rax
     movq %rax, -32(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -40(%rbp)
@@ -1961,6 +2000,9 @@ infer_array_length_0:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -24(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
@@ -1988,6 +2030,9 @@ infer_array_length_0:
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $32, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
@@ -2083,12 +2128,18 @@ new_function_type_0:
     movq (%rax), %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
     movq $0, %rcx
     movq %rcx, (%rax)
     leaq -48(%rbp), %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $32, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     addq $8, %rax
@@ -2102,6 +2153,9 @@ new_function_type_0:
     movq (%rax), %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
     addq $12, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
@@ -2111,6 +2165,9 @@ new_function_type_0:
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $80, %rax
     movq %rax, -56(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -64(%rbp)
@@ -2124,6 +2181,9 @@ new_function_type_0:
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $80, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     addq $8, %rax
@@ -2152,6 +2212,9 @@ new_function_type_0:
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $80, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     addq $8, %rax
@@ -2199,6 +2262,9 @@ new_function_type_0:
     movq (%rax), %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
     addq $8, %rax
     movq %rax, -56(%rbp)
     leaq -32(%rbp), %rax
@@ -2213,6 +2279,9 @@ new_function_type_0:
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $80, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     addq $32, %rax
@@ -2293,6 +2362,9 @@ new_pointer_type_0:
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    addq $32, %rax
     movq %rax, -24(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -32(%rbp)
@@ -2433,12 +2505,18 @@ new_qualified_type_2:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $16, %rax
     movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $16, %rax
@@ -2456,6 +2534,9 @@ new_qualified_type_2:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $16, %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
@@ -2468,6 +2549,9 @@ new_qualified_type_2:
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $16, %rax
@@ -2482,6 +2566,9 @@ new_qualified_type_2:
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
+    addq $80, %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     addq $16, %rax
@@ -2505,12 +2592,18 @@ new_qualified_type_2:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $16, %rax
     movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $16, %rax
@@ -2529,12 +2622,18 @@ new_qualified_type_3:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $16, %rax
     movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $16, %rax
@@ -2552,6 +2651,9 @@ new_qualified_type_3:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $16, %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
@@ -2564,6 +2666,9 @@ new_qualified_type_3:
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $16, %rax
@@ -2578,6 +2683,9 @@ new_qualified_type_3:
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
+    addq $80, %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     addq $16, %rax
@@ -2601,12 +2709,18 @@ new_qualified_type_3:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $16, %rax
     movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $16, %rax
@@ -2625,12 +2739,18 @@ new_qualified_type_4:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $8, %rax
     movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $8, %rax
@@ -2648,6 +2768,9 @@ new_qualified_type_4:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $8, %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
@@ -2660,6 +2783,9 @@ new_qualified_type_4:
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $8, %rax
@@ -2674,6 +2800,9 @@ new_qualified_type_4:
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
+    addq $80, %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     addq $8, %rax
@@ -2697,12 +2826,18 @@ new_qualified_type_4:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $8, %rax
     movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $8, %rax
@@ -2883,6 +3018,9 @@ new_unsigned_type_0:
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    addq $32, %rax
     movq %rax, -24(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -32(%rbp)
@@ -3287,6 +3425,9 @@ get_pointer_type_2:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
@@ -3426,6 +3567,9 @@ get_array_type_4:
     movq (%rax), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -40(%rbp)
     leaq -8(%rbp), %rax
@@ -3461,6 +3605,9 @@ get_array_type_4:
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
@@ -3653,6 +3800,9 @@ get_function_type_7:
     movq (%rax), %rax
     movq %rax, -96(%rbp)
     movq -96(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -96(%rbp)
+    movq -96(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -96(%rbp)
     leaq -8(%rbp), %rax
@@ -3672,6 +3822,9 @@ get_function_type_7:
     movq %rax, -96(%rbp)
     movq -96(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -96(%rbp)
+    movq -96(%rbp), %rax
+    addq $80, %rax
     movq %rax, -96(%rbp)
     movq -96(%rbp), %rax
     addq $32, %rax
@@ -3697,6 +3850,9 @@ get_function_type_8:
     movq %rax, -96(%rbp)
     movq -96(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -96(%rbp)
+    movq -96(%rbp), %rax
+    addq $80, %rax
     movq %rax, -96(%rbp)
     movq -96(%rbp), %rax
     addq $8, %rax
@@ -3777,6 +3933,9 @@ get_function_type_12:
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $8, %rax
@@ -4103,6 +4262,9 @@ get_modified_type_7:
     movq (%rax), %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -56(%rbp)
     movq -48(%rbp), %rdi
@@ -4143,10 +4305,16 @@ get_modified_type_9:
     movq -56(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -56(%rbp)
     leaq -32(%rbp), %rax
     movq %rax, -64(%rbp)
     movq -64(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    addq $8, %rax
     movq %rax, -64(%rbp)
     movq -64(%rbp), %rax
     addq $24, %rax
@@ -4252,12 +4420,18 @@ get_qualified_type_2:
     movq (%rax), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -40(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
+    addq $32, %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     movq (%rax), %rax
@@ -4535,6 +4709,9 @@ cmp_func_types_10:
     movq (%rax), %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
     addq $32, %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
@@ -4544,6 +4721,9 @@ cmp_func_types_10:
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $80, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     addq $32, %rax
@@ -4572,12 +4752,18 @@ cmp_func_types_12:
     movq (%rax), %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -48(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $80, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
@@ -4603,6 +4789,9 @@ cmp_func_types_14:
     movq (%rax), %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
     addq $8, %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
@@ -4615,6 +4804,9 @@ cmp_func_types_14:
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $80, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     addq $8, %rax
@@ -4640,6 +4832,9 @@ cmp_func_types_15:
     movq (%rax), %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
     addq $8, %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
@@ -4649,6 +4844,9 @@ cmp_func_types_15:
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $80, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     addq $8, %rax
@@ -4688,6 +4886,9 @@ cmp_func_types_18:
     movq (%rax), %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
     addq $8, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
@@ -4708,6 +4909,9 @@ cmp_func_types_19:
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $80, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     addq $8, %rax
@@ -4734,6 +4938,9 @@ cmp_func_types_19:
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $80, %rax
     movq %rax, -56(%rbp)
     movq -56(%rbp), %rax
     addq $8, %rax
@@ -5168,6 +5375,9 @@ get_enum_type_4:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $8, %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
@@ -5190,6 +5400,9 @@ get_enum_type_4:
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $8, %rax
@@ -5337,6 +5550,9 @@ get_union_type_4:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $8, %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
@@ -5359,6 +5575,9 @@ get_union_type_4:
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $8, %rax
@@ -5506,6 +5725,9 @@ get_struct_type_4:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     addq $8, %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
@@ -5528,6 +5750,9 @@ get_struct_type_4:
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $8, %rax
@@ -5590,6 +5815,9 @@ append_enum_field_0:
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    addq $80, %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     addq $16, %rax
@@ -5708,6 +5936,9 @@ append_union_member_2:
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    addq $80, %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     addq $16, %rax
@@ -5872,6 +6103,9 @@ append_struct_member_2:
     movq (%rax), %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
     addq $16, %rax
     movq %rax, -24(%rbp)
     leaq -16(%rbp), %rax
@@ -5978,6 +6212,9 @@ union_type_0:
     leaq -96(%rbp), %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
     movq $0, %rcx
     movq %rcx, (%rax)
     leaq -96(%rbp), %rax
@@ -6015,9 +6252,15 @@ union_type_0:
     leaq -96(%rbp), %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $8, %rax
@@ -6026,6 +6269,9 @@ union_type_0:
     movq $0, %rcx
     movq %rcx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $16, %rax
@@ -6039,12 +6285,18 @@ union_type_0:
     leaq -96(%rbp), %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
     addq $16, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $16, %rax
@@ -6056,6 +6308,9 @@ union_type_0:
     movl $-1, %ecx
     movl %ecx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $16, %rax
@@ -6139,6 +6394,9 @@ struct_type_0:
     leaq -96(%rbp), %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
     movq $0, %rcx
     movq %rcx, (%rax)
     leaq -96(%rbp), %rax
@@ -6176,9 +6434,15 @@ struct_type_0:
     leaq -96(%rbp), %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $8, %rax
@@ -6187,6 +6451,9 @@ struct_type_0:
     movq $0, %rcx
     movq %rcx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $16, %rax
@@ -6200,12 +6467,18 @@ struct_type_0:
     leaq -96(%rbp), %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
     addq $16, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $16, %rax
@@ -6217,6 +6490,9 @@ struct_type_0:
     movl $-1, %ecx
     movl %ecx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $16, %rax
@@ -6299,6 +6575,9 @@ enum_type_0:
     movl %ecx, (%rax)
     leaq -96(%rbp), %rax
     movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -104(%rbp)
     leaq type_i32(%rip), %rax
     movq %rax, -112(%rbp)
     movq -112(%rbp), %rax
@@ -6342,9 +6621,15 @@ enum_type_0:
     leaq -96(%rbp), %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $8, %rax
@@ -6353,6 +6638,9 @@ enum_type_0:
     movq $0, %rcx
     movq %rcx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $16, %rax
@@ -6366,12 +6654,18 @@ enum_type_0:
     leaq -96(%rbp), %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
     addq $16, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $16, %rax
@@ -6383,6 +6677,9 @@ enum_type_0:
     movl $-1, %ecx
     movl %ecx, (%rax)
     leaq -96(%rbp), %rax
+    movq %rax, -104(%rbp)
+    movq -104(%rbp), %rax
+    addq $80, %rax
     movq %rax, -104(%rbp)
     movq -104(%rbp), %rax
     addq $16, %rax
@@ -6414,250 +6711,206 @@ enum_type_0:
 get_member:
     push %rbp
     mov %rsp, %rbp
-    subq $80, %rsp
+    subq $96, %rsp
 get_member_0:
     movq %rdi, -8(%rbp)
     movq %rsi, -16(%rbp)
     movl %edx, -24(%rbp)
-    leaq -32(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
+    movq %rcx, -32(%rbp)
+    leaq -40(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
 get_member_1:
-    leaq -32(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -56(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    addq $16, %rax
+    leaq -40(%rbp), %rax
     movq %rax, -64(%rbp)
     movq -64(%rbp), %rax
     movl (%rax), %eax
     movl %eax, -64(%rbp)
-    movl -56(%rbp), %eax
-    cmpl -64(%rbp), %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -56(%rbp)
-    movl -56(%rbp), %eax
-    testl %eax, %eax
-    jz get_member_13
-get_member_2:
-    leaq -40(%rbp), %rax
-    movq %rax, -56(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    movq %rax, -64(%rbp)
-    leaq -32(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $16, %rax
     movq %rax, -72(%rbp)
     movq -72(%rbp), %rax
     movl (%rax), %eax
     movl %eax, -72(%rbp)
-    movq -64(%rbp), %rdi
-    movl -72(%rbp), %esi
-    call get_struct_member
+    movl -64(%rbp), %eax
+    cmpl -72(%rbp), %eax
+    setl %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz get_member_15
+get_member_2:
+    leaq -48(%rbp), %rax
     movq %rax, -64(%rbp)
-    movq -56(%rbp), %rax
-    movq -64(%rbp), %rcx
-    movq %rcx, (%rax)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq %rax, -72(%rbp)
     leaq -40(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -80(%rbp)
+    movq -72(%rbp), %rdi
+    movl -80(%rbp), %esi
+    call get_struct_member
+    movq %rax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movq -72(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -48(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movl %eax, -56(%rbp)
-    movl -56(%rbp), %eax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
     testl %eax, %eax
     jz get_member_6
 get_member_3:
     leaq -16(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    leaq -40(%rbp), %rax
     movq %rax, -64(%rbp)
     movq -64(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -64(%rbp)
-    movq -56(%rbp), %rdi
-    movq -64(%rbp), %rsi
-    call strcmp
-    movl %eax, -56(%rbp)
-    movl -56(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -56(%rbp)
-    movl -56(%rbp), %eax
-    testl %eax, %eax
-    jz get_member_5
-get_member_4:
-    leaq -40(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-    jmp get_member_5
-get_member_5:
-    jmp get_member_11
-get_member_6:
-    leaq -40(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -56(%rbp)
-    movl -56(%rbp), %eax
-    cmpl $5, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -56(%rbp)
-    movl -56(%rbp), %eax
-    testl %eax, %eax
-    jnz get_member_7
-    leaq -40(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -56(%rbp)
-    movl -56(%rbp), %eax
-    cmpl $7, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -56(%rbp)
-    movl -56(%rbp), %eax
-    testl %eax, %eax
-    jz get_member_10
-get_member_7:
     leaq -48(%rbp), %rax
-    movq %rax, -56(%rbp)
-    leaq -40(%rbp), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -64(%rbp)
-    leaq -16(%rbp), %rax
     movq %rax, -72(%rbp)
     movq -72(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -72(%rbp)
     movq -64(%rbp), %rdi
     movq -72(%rbp), %rsi
-    movl $0, %edx
-    call get_member
-    movq %rax, -64(%rbp)
-    movq -56(%rbp), %rax
-    movq -64(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -48(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movl %eax, -56(%rbp)
-    movl -56(%rbp), %eax
-    testl %eax, %eax
-    jz get_member_9
-get_member_8:
-    leaq -48(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-    jmp get_member_9
-get_member_9:
-    jmp get_member_10
-get_member_10:
-get_member_11:
-    jmp get_member_12
-get_member_12:
-    leaq -32(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movl (%rax), %eax
+    call strcmp
     movl %eax, -64(%rbp)
     movl -64(%rbp), %eax
-    addl $1, %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
     movl %eax, -64(%rbp)
-    movq -56(%rbp), %rax
-    movl -64(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp get_member_1
-get_member_13:
-    leaq -24(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -56(%rbp)
-    movl -56(%rbp), %eax
+    movl -64(%rbp), %eax
     testl %eax, %eax
-    jz get_member_18
-get_member_14:
-    jmp get_member_16
-get_member_15:
-    movl $0, %eax
-    testl %eax, %eax
-    jz get_member_17
-get_member_16:
-    leaq .LC22(%rip), %rax
-    movq %rax, -56(%rbp)
-    leaq -16(%rbp), %rax
+    jz get_member_5
+get_member_4:
+    leaq -48(%rbp), %rax
     movq %rax, -64(%rbp)
     movq -64(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -64(%rbp)
-    leaq -8(%rbp), %rax
+    movq -64(%rbp), %rax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+    jmp get_member_5
+get_member_5:
+    jmp get_member_13
+get_member_6:
+    leaq -48(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    cmpl $5, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jnz get_member_7
+    leaq -48(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    cmpl $7, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz get_member_12
+get_member_7:
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz get_member_9
+get_member_8:
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    leaq -48(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -80(%rbp)
+    movl -80(%rbp), %eax
+    addl -72(%rbp), %eax
+    movl %eax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movl -72(%rbp), %ecx
+    movl %ecx, (%rax)
+    jmp get_member_9
+get_member_9:
+    leaq -56(%rbp), %rax
+    movq %rax, -64(%rbp)
+    leaq -48(%rbp), %rax
     movq %rax, -72(%rbp)
     movq -72(%rbp), %rax
     movq (%rax), %rax
@@ -6668,26 +6921,121 @@ get_member_16:
     movq -72(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -72(%rbp)
+    leaq -16(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -80(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -88(%rbp)
+    movq -72(%rbp), %rdi
+    movq -80(%rbp), %rsi
+    movl $0, %edx
+    movq -88(%rbp), %rcx
+    call get_member
+    movq %rax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movq -72(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -56(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz get_member_11
+get_member_10:
+    leaq -56(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+    jmp get_member_11
+get_member_11:
+    jmp get_member_12
+get_member_12:
+get_member_13:
+    jmp get_member_14
+get_member_14:
+    leaq -40(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -72(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movl -72(%rbp), %ecx
+    movl %ecx, (%rax)
+    jmp get_member_1
+get_member_15:
+    leaq -24(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz get_member_20
+get_member_16:
+    jmp get_member_18
+get_member_17:
+    movl $0, %eax
+    testl %eax, %eax
+    jz get_member_19
+get_member_18:
+    leaq .LC22(%rip), %rax
+    movq %rax, -64(%rbp)
+    leaq -16(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -80(%rbp)
     subq $184, %rsp
     movl $3, %edi
-    movq -56(%rbp), %rsi
-    movq -64(%rbp), %rdx
-    movq -72(%rbp), %rcx
+    movq -64(%rbp), %rsi
+    movq -72(%rbp), %rdx
+    movq -80(%rbp), %rcx
     xor %eax, %eax
     call log_message
     addq $184, %rsp
     movl $1, %edi
     call exit
-    jmp get_member_15
-get_member_17:
-    jmp get_member_19
-get_member_18:
+    jmp get_member_17
+get_member_19:
+    jmp get_member_21
+get_member_20:
     movq $0, %rax
     mov %rbp, %rsp
     pop %rbp
     ret
-    jmp get_member_19
-get_member_19:
+    jmp get_member_21
+get_member_21:
 .global is_func_ptr
 is_func_ptr:
     push %rbp
@@ -6712,6 +7060,9 @@ is_func_ptr_0:
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    addq $32, %rax
     movq %rax, -24(%rbp)
     movq -24(%rbp), %rax
     movq (%rax), %rax
@@ -7120,6 +7471,9 @@ print_type_12:
     movq (%rax), %rax
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rdi
@@ -7145,6 +7499,9 @@ print_type_13:
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    addq $80, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     movq (%rax), %rax
@@ -7328,6 +7685,9 @@ print_type_34:
     movq (%rax), %rax
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rdi
@@ -7348,6 +7708,9 @@ print_type_35:
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    addq $80, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     addq $8, %rax
@@ -7394,6 +7757,9 @@ print_type_37:
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    addq $80, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     addq $16, %rax
@@ -7526,6 +7892,9 @@ print_type_42:
     movq (%rax), %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
     addq $8, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
@@ -7570,6 +7939,9 @@ print_type_44:
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    addq $80, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     addq $16, %rax
@@ -7623,6 +7995,9 @@ print_type_45:
     movq (%rax), %rax
     movq %rax, -96(%rbp)
     movq -96(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -96(%rbp)
+    movq -96(%rbp), %rax
     movl (%rax), %eax
     movl %eax, -96(%rbp)
     subq $176, %rsp
@@ -7666,6 +8041,9 @@ print_type_49:
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    addq $80, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     addq $8, %rax
@@ -7712,6 +8090,9 @@ print_type_51:
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    addq $80, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     addq $16, %rax
@@ -7808,6 +8189,9 @@ print_type_52:
     movq (%rax), %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
     addq $16, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
@@ -7874,11 +8258,80 @@ print_type_59:
     movq (%rax), %rax
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movl $15, %ecx
+    movl %ecx, (%rax)
+    leaq -8(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movl $0, %ecx
+    movl %ecx, (%rax)
+    leaq .LC47(%rip), %rax
+    movq %rax, -80(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -88(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -96(%rbp)
+    movq -96(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -96(%rbp)
+    movq -96(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -96(%rbp)
+    movq -96(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -96(%rbp)
+    movq -96(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -96(%rbp)
+    subq $176, %rsp
+    movq -80(%rbp), %rdi
+    movl -88(%rbp), %esi
+    movl -96(%rbp), %edx
+    xor %eax, %eax
+    call printf
+    addq $176, %rsp
+    movl %eax, -80(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rdi
     call print_type
-    leaq .LC47(%rip), %rax
+    leaq .LC48(%rip), %rax
     movq %rax, -80(%rbp)
     subq $176, %rsp
     movq -80(%rbp), %rdi
@@ -7890,6 +8343,9 @@ print_type_59:
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    addq $80, %rax
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rax
     addq $8, %rax
@@ -7906,7 +8362,7 @@ print_type_59:
     testl %eax, %eax
     jz print_type_61
 print_type_60:
-    leaq .LC48(%rip), %rax
+    leaq .LC49(%rip), %rax
     movq %rax, -80(%rbp)
     subq $176, %rsp
     movq -80(%rbp), %rdi
@@ -7933,6 +8389,9 @@ print_type_62:
     movq (%rax), %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
     addq $8, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
@@ -7953,6 +8412,9 @@ print_type_63:
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
+    addq $80, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
     addq $8, %rax
@@ -7991,6 +8453,9 @@ print_type_63:
     movq (%rax), %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -88(%rbp)
+    movq -88(%rbp), %rax
     addq $8, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
@@ -8008,7 +8473,7 @@ print_type_63:
     testl %eax, %eax
     jz print_type_65
 print_type_64:
-    leaq .LC49(%rip), %rax
+    leaq .LC50(%rip), %rax
     movq %rax, -80(%rbp)
     subq $176, %rsp
     movq -80(%rbp), %rdi
@@ -8039,6 +8504,9 @@ print_type_67:
     movq (%rax), %rax
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
     addq $32, %rax
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rax
@@ -8048,7 +8516,7 @@ print_type_67:
     testl %eax, %eax
     jz print_type_69
 print_type_68:
-    leaq .LC50(%rip), %rax
+    leaq .LC51(%rip), %rax
     movq %rax, -80(%rbp)
     subq $176, %rsp
     movq -80(%rbp), %rdi
@@ -8058,7 +8526,7 @@ print_type_68:
     movl %eax, -80(%rbp)
     jmp print_type_69
 print_type_69:
-    leaq .LC51(%rip), %rax
+    leaq .LC52(%rip), %rax
     movq %rax, -80(%rbp)
     subq $176, %rsp
     movq -80(%rbp), %rdi
@@ -8089,7 +8557,7 @@ print_struct_type:
     subq $48, %rsp
 print_struct_type_0:
     movq %rdi, -8(%rbp)
-    leaq .LC52(%rip), %rax
+    leaq .LC53(%rip), %rax
     movq %rax, -32(%rbp)
     subq $176, %rsp
     movq -32(%rbp), %rdi
@@ -8101,6 +8569,9 @@ print_struct_type_0:
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    addq $80, %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
     addq $8, %rax
@@ -8117,12 +8588,15 @@ print_struct_type_0:
     testl %eax, %eax
     jz print_struct_type_2
 print_struct_type_1:
-    leaq .LC53(%rip), %rax
+    leaq .LC54(%rip), %rax
     movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $8, %rax
@@ -8145,13 +8619,16 @@ print_struct_type_2:
     movq (%rax), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
     movl (%rax), %eax
     movl %eax, -32(%rbp)
     movl -32(%rbp), %eax
     testl %eax, %eax
     jz print_struct_type_8
 print_struct_type_3:
-    leaq .LC54(%rip), %rax
+    leaq .LC55(%rip), %rax
     movq %rax, -32(%rbp)
     subq $176, %rsp
     movq -32(%rbp), %rdi
@@ -8174,6 +8651,9 @@ print_struct_type_4:
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     movq (%rax), %rax
+    movq %rax, -40(%rbp)
+    movq -40(%rbp), %rax
+    addq $80, %rax
     movq %rax, -40(%rbp)
     movq -40(%rbp), %rax
     addq $16, %rax
@@ -8211,7 +8691,7 @@ print_struct_type_5:
     movq -32(%rbp), %rax
     movq -40(%rbp), %rcx
     movq %rcx, (%rax)
-    leaq .LC55(%rip), %rax
+    leaq .LC56(%rip), %rax
     movq %rax, -32(%rbp)
     subq $176, %rsp
     movq -32(%rbp), %rdi
@@ -8232,7 +8712,7 @@ print_struct_type_5:
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rdi
     call print_type
-    leaq .LC56(%rip), %rax
+    leaq .LC57(%rip), %rax
     movq %rax, -32(%rbp)
     leaq -24(%rbp), %rax
     movq %rax, -40(%rbp)
@@ -8267,7 +8747,7 @@ print_struct_type_6:
     movl %ecx, (%rax)
     jmp print_struct_type_4
 print_struct_type_7:
-    leaq .LC57(%rip), %rax
+    leaq .LC58(%rip), %rax
     movq %rax, -32(%rbp)
     subq $176, %rsp
     movq -32(%rbp), %rdi
@@ -8286,7 +8766,7 @@ print_typepool:
     mov %rsp, %rbp
     subq $32, %rsp
 print_typepool_0:
-    leaq .LC58(%rip), %rax
+    leaq .LC59(%rip), %rax
     movq %rax, -16(%rbp)
     subq $176, %rsp
     movq -16(%rbp), %rdi
@@ -8339,7 +8819,7 @@ print_typepool_2:
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rdi
     call print_type
-    leaq .LC59(%rip), %rax
+    leaq .LC60(%rip), %rax
     movq %rax, -16(%rbp)
     subq $176, %rsp
     movq -16(%rbp), %rdi
@@ -8382,7 +8862,7 @@ print_param_decl_0:
     movq %rax, -16(%rbp)
     movq -16(%rbp), %rdi
     call print_type
-    leaq .LC60(%rip), %rax
+    leaq .LC61(%rip), %rax
     movq %rax, -16(%rbp)
     subq $176, %rsp
     movq -16(%rbp), %rdi
@@ -8407,7 +8887,7 @@ print_param_decl_0:
     testl %eax, %eax
     jz print_param_decl_2
 print_param_decl_1:
-    leaq .LC61(%rip), %rax
+    leaq .LC62(%rip), %rax
     movq %rax, -16(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -24(%rbp)

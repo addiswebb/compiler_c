@@ -51,6 +51,7 @@ void init_typepool() {
     type_void = init_global_type(T_VOID, sizeof(void), QUAL_NONE, SIGNED);
     type_void_ptr = get_pointer_type(type_void);
     type_invalid = init_global_type(T_INVALID, -1, QUAL_NONE, SIGNED);
+    print_typepool();
 }
 
 void free_typepool() {
@@ -410,13 +411,14 @@ Type enum_type() {
     return e;
 }
 
-AggrMember *get_member(Type *struct_t, const char *name, bool is_root) {
+AggrMember *get_member(Type *struct_t, const char *name, bool is_root, int *offset) {
     for (int i = 0; i < struct_t->_struct.members_array.count; i++) {
         AggrMember *member = get_struct_member(struct_t, i);
         if (member->name) {
             if (strcmp(name, member->name) == 0) return member;
         } else if (member->type->kind == T_STRUCT || member->type->kind == T_UNION) {
-            AggrMember *x = get_member(member->type, name, false);
+            if (offset) *offset += member->offset;
+            AggrMember *x = get_member(member->type, name, false, offset);
             if (x) return x;
         }
     }

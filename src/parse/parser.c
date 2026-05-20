@@ -846,7 +846,7 @@ StructMember *get_struct_member_named(Type *struct_t, const char *name, int *ind
                 return member;
             }
         } else {
-            StructMember *m = get_member(member->type, name, 0);
+            StructMember *m = get_member(member->type, name, 0, 0);
             if (m) {
                 *index = j;
                 return m;
