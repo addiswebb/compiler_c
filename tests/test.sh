@@ -5,8 +5,10 @@ PASSED_FILE=$(mktemp)
 FAILED_FILE=$(mktemp)
 
 # Files to skip (just the base name without extension)
-SKIP_FILES=()
-#SKIP_FILES=("sysv" "analysis" "const_expr" "sema" "type" "node" "ir_builder" "ir_module" "ir_gen" "parser" "x86_emit")
+# Working
+SKIP_FILES=("win64" "arena" "util" "type" "array" "ir_util" "logger" "tokenizer" "x86_gen" "main" "compiler")
+# Not working
+#SKIP_FILES=("sysv" "analysis" "const_expr" "sema" "node" "ir_builder" "ir_module" "ir_gen" "parser" "x86_emit")
 
 # Find all .c files recursively in ./src/
 find ./src/ -name "*.c" | while read -r src_file; do

@@ -1707,25 +1707,39 @@ is_source_file_4:
     sete %al
     movzbl %al, %eax
     movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    testl %eax, %eax
+    jnz is_source_file_5
     leaq -16(%rbp), %rax
-    movq %rax, -32(%rbp)
-    movq -32(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -32(%rbp)
+    movq %rax, -24(%rbp)
     leaq .LC29(%rip), %rax
     movq %rax, -40(%rbp)
-    movq -32(%rbp), %rdi
+    movq -24(%rbp), %rdi
     movq -40(%rbp), %rsi
     call strcmp
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
     cmpl $0, %eax
     sete %al
     movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -24(%rbp), %eax
-    orl -32(%rbp), %eax
     movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    testl %eax, %eax
+    jz is_source_file_6
+is_source_file_5:
+    movq $1, %rax
+    movq %rax, -32(%rbp)
+    jmp is_source_file_7
+is_source_file_6:
+    movq $0, %rax
+    movq %rax, -32(%rbp)
+is_source_file_7:
+    movl -32(%rbp), %eax
+    testl %eax, %eax
+    jnz is_source_file_8
     leaq -16(%rbp), %rax
     movq %rax, -32(%rbp)
     movq -32(%rbp), %rax
@@ -1742,9 +1756,17 @@ is_source_file_4:
     sete %al
     movzbl %al, %eax
     movl %eax, -32(%rbp)
-    movl -24(%rbp), %eax
-    orl -32(%rbp), %eax
-    movl %eax, -24(%rbp)
+    movl -32(%rbp), %eax
+    testl %eax, %eax
+    jz is_source_file_9
+is_source_file_8:
+    movq $1, %rax
+    movq %rax, -24(%rbp)
+    jmp is_source_file_10
+is_source_file_9:
+    movq $0, %rax
+    movq %rax, -24(%rbp)
+is_source_file_10:
     movl -24(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp

@@ -53,16 +53,10 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
             return node;
         }
     }
-    // if (node->type->kind == T_FUNCTION && type->kind == T_POINTER && type->base->kind == T_FUNCTION &&
-    //     cmp_func_types(node->type, type->base)) {
-
-    //     node->type = get_pointer_type(node->type);
-    //     return node;
-    // }
 
     if (!is_valid_cast(node->type, type)) {
         log_start(LOG_ERROR);
-        printf("Invalid conversion from ");
+        printf("Invalid cast from ");
         print_type(node->type);
         printf(" to ");
         print_type(type);
@@ -72,9 +66,9 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
 
     Node *cast = new_node(nm, N_CAST);
     cast->type = type;
-    // cast->cast.to = type;
     cast->cast.from = node->type;
     cast->cast.expr = node;
+
     return cast;
 }
 
