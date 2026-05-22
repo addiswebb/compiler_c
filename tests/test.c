@@ -1285,175 +1285,626 @@ static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
 static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 static void x86_gen_block(FILE *fp, IR_Context *ctx);
 static void x86_gen_function(FILE *fp, IR_Context *ctx);
-static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memcpy_instruction(fp, instr); }
-static void x86_gen_cmp_instruction(FILE *fp, const IR_Instruction *instr) {
-    x86_emit_cmp(fp, instr->cmp.op, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->cmp.type);
+const char *x86_reg(const IR_Value *v) {
+    if (v->phys_reg.kind == REG_GP) return gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size];
+    else return sse_register_str[v->phys_reg.sse_reg];
 }
-static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr) { x86_emit_addr(fp, &instr->ops[1], &instr->ops[0]); }
-static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
-    x86_emit_cast(fp, &instr->ops[1], &instr->ops[0], instr->cast.from, instr->cast.to);
+void x86_operand(const IR_Value *v, char *buf, const int n) {
+    int len = 0;
+    switch (v->kind) {
+    case IR_CONSTANT:
+        snprintf(buf, n, ".LC%d(%%rip)", v->const_index);
+        return;
+    case IR_PHYS_REG:
+        const PhysReg *r = &v->phys_reg;
+        switch (r->data_kind) {
+        case REG_DATA_LABEL:
+            len += snprintf(buf, n, "%s", r->label);
+            break;
+        case REG_DATA_OFFSET:
+            len += snprintf(buf, n, "%d", r->offset);
+            break;
+        case REG_DATA_CONST_INDEX:
+            len += snprintf(buf, n, ".LC%d", r->const_index);
+            break;
+        case REG_DATA_NONE:
+            break;
+        }
+        if (r->data_kind != REG_DATA_NONE) len += snprintf(buf + len, n - len, "(");
+        switch (r->kind) {
+        case REG_GP:
+            len += snprintf(buf + len, n - len, "%s", gp_register_str[r->gp_reg][r->size]);
+            break;
+        case REG_XMM:
+            len += snprintf(buf + len, n - len, "%s", sse_register_str[r->sse_reg]);
+            break;
+        case REG_IP:
+            len += snprintf(buf + len, n - len, "%%rip");
+            break;
+        }
+        if (r->data_kind != REG_DATA_NONE) snprintf(buf + len, n - len, ")");
+        return;
+    case IR_INT_LITERAL:
+        snprintf(buf, n, "$%" "ld", v->int_literal);
+        return;
+    case IR_SYMBOL:
+        if (!(v->symbol->storage != STORAGE_NONE)) do { log_message(LOG_ERROR, "Can only emit global symbols to x86\n"); exit(1); } while (0);
+        snprintf(buf, n, "%s", v->symbol->name);
+        return;
+    case IR_UNDEFINED:
+    case IR_VREG:
+        do { log_message(LOG_ERROR, "Undefined operand\n"); exit(1); } while (0);
+    }
 }
-static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
-    if (instr->ops[1].kind == IR_CONSTANT) {
-        ConstLiteral *c = get_const(ctx, instr->ops[1].const_index);
-        x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
+void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst) {
+    char dst_buf[64];
+    x86_operand(dst, dst_buf, sizeof(dst_buf));
+    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src, dst_buf);
+}
+void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst) {
+    char src_buf[64];
+    char dst_buf[64];
+    x86_operand(src, src_buf, sizeof(src_buf));
+    x86_operand(dst, dst_buf, sizeof(dst_buf));
+    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src_buf, dst_buf);
+}
+void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst) {
+    char src_buf[64];
+    x86_operand(src, src_buf, sizeof(src_buf));
+    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src_buf, dst);
+}
+void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst) {
+    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src, dst);
+}
+void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *operand) {
+    char operand_buf[64];
+    x86_operand(operand, operand_buf, sizeof(operand_buf));
+    fprintf(fp, "    %s%s%s %s\n", instr, s1, s2, operand_buf);
+}
+void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, const char *r) {
+    fprintf(fp, "    %s%s%s %s\n", instr, s1, s2, r);
+}
+const char *x86_rax_reg(Type *t) {
+    if (t->kind == T_FLOAT) return "%xmm0";
+    if (t->kind == T_INT) {
+        switch (t->size) {
+        case 1:
+            return "%al";
+        case 2:
+            return "%ax";
+        case 4:
+            return "%eax";
+        case 8:
+            return "%rax";
+        default:
+            do { log_message(LOG_ERROR, "Tried to get int register of unsupported size %d\n", t->size); exit(1); } while (0);
+        }
+    }
+    if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "%rax";
+    do { log_message(LOG_ERROR, "Tried to get %%rax, register of unsupported type %t\n", t); exit(1); } while (0);
+}
+const char *x86_rbx_reg(const Type *t) {
+    if (t->kind == T_FLOAT) return "%xmm1";
+    if (t->kind == T_INT) {
+        switch (t->size) {
+        case 1:
+            return "%bl";
+        case 2:
+            return "%bx";
+        case 4:
+            return "%ebx";
+        case 8:
+            return "%rbx";
+        default:
+            do { log_message(LOG_ERROR, "Tried to get int register of unsupported size\n"); exit(1); } while (0);
+        }
+    }
+    if (t->kind == T_POINTER) return "%rbx";
+    if (t->kind == T_ARRAY) return "%rbx";
+    do { log_message(LOG_ERROR, "Tried to get %%rbx register of unsupported type\n"); exit(1); } while (0);
+}
+const char *x86_rcx_reg(const Type *t) {
+    if (t->kind == T_FLOAT) return "%xmm2";
+    if (t->kind == T_INT) {
+        switch (t->size) {
+        case 1:
+            return "%cl";
+        case 2:
+            return "%cx";
+        case 4:
+            return "%ecx";
+        case 8:
+            return "%rcx";
+        default:
+            do { log_message(LOG_ERROR, "Tried to get int register of unsupported size\n"); exit(1); } while (0);
+        }
+    }
+    if (t->kind == T_POINTER) return "%rcx";
+    if (t->kind == T_ARRAY) return "%rcx";
+    do { log_message(LOG_ERROR, "Tried to get %%rcx register of unsupported type\n"); exit(1); } while (0);
+}
+const char *x86_rdx_reg(const Type *t) {
+    if (t->kind == T_FLOAT) return "%xmm3";
+    if (t->kind == T_INT) {
+        switch (t->size) {
+        case 1:
+            return "%dl";
+        case 2:
+            return "%dx";
+        case 4:
+            return "%edx";
+        case 8:
+            return "%rdx";
+        default:
+            do { log_message(LOG_ERROR, "Tried to get int register of unsupported size\n"); exit(1); } while (0);
+        }
+    }
+    if (t->kind == T_POINTER) return "%rdx";
+    if (t->kind == T_ARRAY) return "%rdx";
+    do { log_message(LOG_ERROR, "Tried to get %%rdx register of unsupported type\n"); exit(1); } while (0);
+}
+const char *x86_float_op_suffix(int size) {
+    switch (size) {
+    case 4:
+        return "ss";
+    case 8:
+        return "sd";
+    default:
+        do { log_message(LOG_ERROR, "Tried to get float suffix of unsupported size\n"); exit(1); } while (0);
+    }
+}
+const char *x86_integer_op_suffix(int size) {
+    switch (size) {
+    case 1:
+        return "b";
+    case 2:
+        return "w";
+    case 4:
+        return "l";
+    case 8:
+        return "q";
+    default:
+        do { log_message(LOG_ERROR, "Tried to get int suffix of unsupported size\n"); exit(1); } while (0);
+    }
+}
+const char *x86_op_suffix(const Type *t) {
+    if (t->kind == T_FLOAT) return x86_float_op_suffix(t->size);
+    if (t->kind == T_INT || t->kind == T_ENUM) return x86_integer_op_suffix(t->size);
+    if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "q";
+    do { log_message(LOG_ERROR, "Tried to op of unsupported type\n"); exit(1); } while (0);
+}
+void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { abi_emit_call(fp, ctx, instr); }
+void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, const IR_BINOP_OP op, Type *t) {
+    const char *rax_reg = x86_rax_reg(t);
+    const char *op_suffix = x86_op_suffix(t);
+    const int use_i = !(t->kind == T_INT && !t->is_signed);
+    const char *sign_prefix = use_i ? "i" : "";
+    switch (t->kind) {
+    case T_INT:
+        switch (op) {
+        case ADD:
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            x86_emit_xr(fp, "add", op_suffix, "", rhs, rax_reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
+            return;
+        case SUB:
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            x86_emit_xr(fp, "sub", op_suffix, "", rhs, rax_reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
+            return;
+        case MUL:
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            if (use_i) {
+                if (rhs->kind == IR_INT_LITERAL) x86_emit_xr(fp, "imul", op_suffix, "", rhs, rax_reg);
+                else x86_emit_x(fp, "imul", op_suffix, "", rhs);
+            } else {
+                x86_emit_x(fp, sign_prefix, "mul", op_suffix, rhs);
+            }
+            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
+            return;
+        case DIV:
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            switch (t->size) {
+            case 1:
+                fprintf(fp, "    cbw\n");
+                break;
+            case 2:
+                fprintf(fp, "    cwde\n");
+                break;
+            case 4:
+                fprintf(fp, "    cltd\n");
+                break;
+            case 8:
+                fprintf(fp, "    cqo\n");
+                break;
+            default:
+                do { log_message(LOG_ERROR, "Tried to divide int with unsupported size\n"); exit(1); } while (0);
+            }
+            if (rhs->kind == IR_INT_LITERAL) {
+                const char *rcx_reg = x86_rcx_reg(t);
+                x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg);
+                x86_emit_r(fp, sign_prefix, "div", op_suffix, rcx_reg);
+            } else x86_emit_x(fp, sign_prefix, "div", op_suffix, rhs);
+            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
+            return;
+        case MOD:
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            char *mod_suffix;
+            char *reg;
+            switch (t->size) {
+            case 1:
+                fprintf(fp, "    cbw\n");
+                mod_suffix = "b";
+                reg = "%ah";
+                break;
+            case 2:
+                fprintf(fp, "    cwde\n");
+                mod_suffix = "w";
+                reg = "%dx";
+                break;
+            case 4:
+                fprintf(fp, "    cltd\n");
+                mod_suffix = "l";
+                reg = "%edx";
+                break;
+            case 8:
+                fprintf(fp, "    cqo\n");
+                mod_suffix = "q";
+                reg = "%rdx";
+                break;
+            default:
+                do { log_message(LOG_ERROR, "Tried to modulo int with unsupported size\n"); exit(1); } while (0);
+            }
+            if (rhs->kind == IR_INT_LITERAL) {
+                const char *rcx_reg = x86_rcx_reg(t);
+                x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg);
+                x86_emit_r(fp, sign_prefix, "div", mod_suffix, rcx_reg);
+            } else x86_emit_x(fp, sign_prefix, "div", mod_suffix, rhs);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
+            return;
+        case BW_AND:
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            x86_emit_xr(fp, "and", op_suffix, "", rhs, rax_reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
+            return;
+        case BW_OR:
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            x86_emit_xr(fp, "or", op_suffix, "", rhs, rax_reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
+            return;
+        case XOR:
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            x86_emit_xr(fp, "xor", op_suffix, "", rhs, rax_reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
+            return;
+        case SHL:
+            const char *rcx_reg_l = x86_rcx_reg(t);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg_l);
+            x86_emit_rr(fp, "shl", op_suffix, "", "%cl", rax_reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
+            return;
+        case SHR:
+            const char *rcx_reg_r = x86_rcx_reg(t);
+            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
+            x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg_r);
+            x86_emit_rr(fp, "sar", op_suffix, "", "%cl", rax_reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
+            return;
+        case L_AND:
+        case L_OR:
+            do { log_message(LOG_ERROR, "Logical operators && and || should not reach x86 gen\n"); exit(1); } while (0);
+        }
+    case T_FLOAT:
+        x86_emit_xr(fp, "mov", op_suffix, "", lhs, "%xmm0");
+        switch (op) {
+        case ADD:
+            x86_emit_xr(fp, "add", op_suffix, "", rhs, "%xmm0");
+            break;
+        case SUB:
+            x86_emit_xr(fp, "sub", op_suffix, "", rhs, "%xmm0");
+            break;
+        case MUL:
+            x86_emit_xr(fp, "mul", op_suffix, "", rhs, "%xmm0");
+            break;
+        case DIV:
+            x86_emit_xr(fp, "div", op_suffix, "", rhs, "%xmm0");
+            break;
+        default:
+            do { log_message(LOG_ERROR, "Tried to perform unsupported binary operation on type float\n"); exit(1); } while (0);
+        }
+        x86_emit_rx(fp, "mov", op_suffix, "", "%xmm0", dst);
+        break;
+    case T_POINTER:
+        switch (op) {
+        case ADD:
+            x86_emit_xr(fp, "mov", "q", "", lhs, "%rax");
+            x86_emit_xr(fp, "add", "q", "", rhs, "%rax");
+            x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
+            return;
+        default:
+            do { log_message(LOG_ERROR, "Tried to perform unsupported binary op on pointer\n"); exit(1); } while (0);
+        }
+    default:
+        do { log_message(LOG_ERROR, "Tried to emit binary instruction of unsupported type\n"); exit(1); } while (0);
+    }
+}
+void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, const IR_UNARY_OP op, Type *t) {
+    const char *reg = x86_rax_reg(t);
+    const char *op_suffix = x86_op_suffix(t);
+    switch (t->kind) {
+    case T_INT:
+        switch (op) {
+        case POS:
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
+            return;
+        case NEG:
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
+            fprintf(fp, "    neg%s %s\n", op_suffix, reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
+            return;
+        case LNOT:
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
+            fprintf(fp, "    test%s %s, %s\n", op_suffix, reg, reg);
+            fprintf(fp, "    sete %%al\n");
+            fprintf(fp, "    movzb%s %%al, %s\n", op_suffix, reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
+            return;
+        case BNOT:
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
+            fprintf(fp, "    not%s %s\n", op_suffix, reg);
+            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
+            return;
+        default:
+            return;
+        }
+    case T_FLOAT:
+        switch (op) {
+        case POS:
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, "%xmm0");
+            x86_emit_rx(fp, "mov", op_suffix, "", "%xmm0", dst);
+            return;
+        case NEG:
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, "%xmm0");
+            if (t->size == 4) fprintf(fp, "    xorps %%xmm1, %%xmm1\n");
+            else fprintf(fp, "    xorpd %%xmm1, %%xmm1\n");
+            x86_emit_rr(fp, "sub", op_suffix, "", "%xmm0", "%xmm1");
+            x86_emit_rx(fp, "mov", op_suffix, "", "%xmm1", dst);
+            return;
+        case LNOT:
+            x86_emit_xr(fp, "mov", op_suffix, "", expr, "%xmm0");
+            if (t->size == 4) fprintf(fp, "    xorps %%xmm1, %%xmm1\n");
+            else fprintf(fp, "    xorpd %%xmm1, %%xmm1\n");
+            fprintf(fp, "    ucomi%s %%xmm1, %%xmm0\n", op_suffix);
+            fprintf(fp, "    sete %%al\n");
+            x86_emit_rr(fp, "movz", "b", "l", "%al", "%al");
+            x86_emit_rx(fp, "mov", "l", "", "%eax", dst);
+            return;
+        case BNOT:
+            do { log_message(LOG_ERROR, "Tried to perform Bitwise Not ~ on Type float\n"); exit(1); } while (0);
+        default:
+            return;
+        }
+    default:
+        do { log_message(LOG_ERROR, "Tried to emit unary of unsupported type\n"); exit(1); } while (0);
+    }
+}
+void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst) {
+    x86_emit_xr(fp, "leaq", "", "", src, "%rax");
+    x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
+}
+void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to) {
+    const char *from_reg = x86_rax_reg(from);
+    const char *from_op_suffix = x86_op_suffix(from);
+    const char *to_reg = x86_rax_reg(to);
+    const char *to_op_suffix = x86_op_suffix(to);
+    if (from == to) {
+        x86_emit_xr(fp, "mov", "", from_op_suffix, src, from_reg);
+        x86_emit_rx(fp, "mov", "", from_op_suffix, from_reg, dst);
         return;
     }
-    const char *reg = x86_rax_reg(instr->_const.type);
-    const char *op_suffix = x86_op_suffix(instr->_const.type);
-    x86_emit_xr(fp, "mov", op_suffix, "", &instr->ops[1], reg);
-    x86_emit_rx(fp, "mov", op_suffix, "", reg, &instr->ops[0]);
-}
-static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { x86_emit_call(fp, ctx, instr); }
-static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_store(fp, &instr->ops[1], &instr->ops[0], instr->store.type);
-}
-static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_load(fp, &instr->ops[1], &instr->ops[0], instr->load.type);
-}
-static void x86_gen_move_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_move(fp, &instr->ops[0], &instr->ops[1]);
-}
-static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_unary(fp, &instr->ops[0], &instr->ops[1], instr->unary.op, instr->unary.type);
-}
-static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_binary(fp, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->binop.op, instr->binop.type);
-}
-static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    switch (instr->op) {
-    case IR_UNOP:
-        x86_gen_unary_instruction(fp, ctx, instr);
+    if (from->kind == T_ARRAY && to->kind == T_POINTER) return;
+    if (from->kind == T_FUNCTION && to->kind == T_POINTER) {
+        x86_emit_xr(fp, "lea", "", "", src, from_reg);
+        x86_emit_rx(fp, "mov", "q", "", from_reg, dst);
         return;
-    case IR_BINOP:
-        x86_gen_binary_instruction(fp, ctx, instr);
-        return;
-    case IR_LOAD:
-        x86_gen_load_instruction(fp, ctx, instr);
-        return;
-    case IR_STORE:
-        x86_gen_store_instruction(fp, ctx, instr);
-        return;
-    case IR_MOVE:
-        x86_gen_move_instruction(fp, ctx, instr);
-        return;
-    case IR_CALL:
-        x86_gen_call_instruction(fp, ctx, instr);
-        return;
-    case IR_CONST:
-        x86_gen_const_instruction(fp, ctx, instr);
-        return;
-    case IR_CAST:
-        x86_gen_cast_instruction(fp, instr);
-        return;
-    case IR_ADDR:
-        x86_gen_addr_instruction(fp, instr);
-        break;
-    case IR_ALLOCA:
-        break;
-    case IR_MEMCPY:
-        x86_gen_memcpy_instruction(fp, instr);
-        break;
-    case IR_CMP:
-        x86_gen_cmp_instruction(fp, instr);
-        break;
-    case IR_RET:
-        if (instr->ops[0].kind != IR_UNDEFINED && instr->ret.type != type_void)
-            x86_emit_xr(fp, "mov", x86_op_suffix(instr->ret.type), "", &instr->ops[0], x86_rax_reg(instr->ret.type));
-        fprintf(fp, "    mov %%rbp, %%rsp\n");
-        fprintf(fp, "    pop %%rbp\n");
-        fprintf(fp, "    ret\n");
-        return;
-    case IR_BR:
-        fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.block->id);
-        return;
-    case IR_BR_COND:
-        x86_emit_xr(fp, "mov", "l", "", &instr->ops[0], "%eax");
-        fprintf(fp, "    testl %%eax, %%eax\n");
-        if (instr->br_cond.f_block) fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_block->id);
-        else if (instr->br_cond.t_block) fprintf(fp, "    jnz %s_%d\n", ctx->func->name, instr->br_cond.t_block->id);
-        break;
-    case IR_LABEL:
-        fprintf(fp, "%s:\n", instr->label.name);
-        break;
-    case IR_JMP:
-        fprintf(fp, "    jmp %s\n", instr->jmp.name);
-        break;
-    case IR_BUILTIN_VA_START:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rax");
-        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[1]);
-        break;
-    case IR_BUILTIN_VA_ARG:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
-        fprintf(fp, "    addq $%d, %%rax\n", instr->builtin_va_arg.type->size);
-        x86_emit_rr(fp, "mov", "q", "", "(%rax)", "%rcx");
-        x86_emit_rx(fp, "mov", "q", "", "%rcx", &instr->ops[0]);
-        break;
-    case IR_PARAM:
-        if (!(instr->op_count == 2)) do { log_message(LOG_ERROR, "Param instruction not correctly lowered\n"); exit(1); } while (0);
-        if (!memcmp(&instr->ops[0], &instr->ops[1], sizeof(IR_Value))) break;
-        const char *param_op_suffix = x86_op_suffix(instr->param.type);
-        if (instr->param.param_index < 6 && instr->param.param_index != -1) {
-            x86_emit_xx(fp, "mov", param_op_suffix, "", &instr->ops[1], &instr->ops[0]);
+    }
+    if (from->kind == T_INT || from->kind == T_POINTER) {
+        if (to->kind == T_INT || to->kind == T_POINTER) {
+            printf("1\n");
+            if (from->size < to->size) {
+                x86_emit_xr(fp, "movs", from_op_suffix, to_op_suffix, src, to_reg);
+            } else {
+                x86_emit_xr(fp, "mov", from_op_suffix, "", src, from_reg);
+            }
+            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
+            return;
+        }
+    }
+    if (from->kind == T_INT && to->kind == T_FLOAT) {
+        printf("2\n");
+        if (src->kind == IR_INT_LITERAL) {
+            x86_emit_xr(fp, "mov", from_op_suffix, "", src, from_reg);
+            x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", from_reg, to_reg);
+            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         } else {
-            const char *rax_reg = x86_rax_reg(instr->param.type);
-            x86_emit_xr(fp, "mov", param_op_suffix, "", &instr->ops[1], rax_reg);
-            x86_emit_rx(fp, "mov", param_op_suffix, "", rax_reg, &instr->ops[0]);
+            x86_emit_xr(fp, "movs", from_op_suffix, "q", src, "%rax");
+            x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
+        }
+        x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
+        return;
+    }
+    if (from->kind == T_FLOAT && to->kind == T_INT) {
+        if (to->size == 8) {
+            x86_emit_xr(fp, "cvtt", from_op_suffix, "2sq", src, "%rax");
+            x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
+        } else {
+            x86_emit_xr(fp, "cvtt", from_op_suffix, "2si", src, "%eax");
+            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
+        }
+        return;
+    }
+    if (from->kind == T_FLOAT && to->kind == T_FLOAT) {
+        x86_emit_xr(fp, "mov", from_op_suffix, "", src, "%xmm0");
+        fprintf(fp, "    cvt%s2%s %%xmm0, %%xmm1\n", from_op_suffix, to_op_suffix);
+        x86_emit_rx(fp, "mov", to_op_suffix, "", "%xmm1", dst);
+        return;
+    }
+    do { log_message(LOG_ERROR, "Cast node did literally nothing?\n"); exit(1); } while (0);
+}
+void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, const int pool_index) {
+    const char *reg = x86_rax_reg(t);
+    const char *op_suffix = x86_op_suffix(t);
+    switch (c->kind) {
+    case CONST_INTEGER:
+        switch (t->size) {
+        case 1:
+        case 2:
+        case 4:
+            fprintf(fp, "    movl $%d, %%eax\n", (int)c->i);
+            break;
+        case 8:
+            fprintf(fp, "    movl $%" "ld" ", %%eax\n", c->i);
+            break;
+        default:
+            do { log_message(LOG_ERROR, "Tried to emit const int of unsupported size\n"); exit(1); } while (0);
         }
         break;
-    }
-}
-static void x86_gen_block(FILE *fp, IR_Context *ctx) {
-    for (int i = 0; i < ctx->block->instruction_array.count; i++) {
-        x86_gen_instruction(fp, ctx, get_instruction(&ctx->block->instruction_array, i));
-    }
-}
-static void x86_gen_function(FILE *fp, IR_Context *ctx) {
-    const int stack_size = ctx->func->stack_size;
-    const int aligned_stack_size = stack_size + 15 & ~15;
-    if (ctx->func->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", ctx->func->name);
-    fprintf(fp, "%s:\n", ctx->func->name);
-    fprintf(fp, "    push %%rbp\n");
-    fprintf(fp, "    mov %%rsp, %%rbp\n");
-    fprintf(fp, "    subq $%d, %%rsp\n", aligned_stack_size);
-    for (int i = 0; i < ctx->func->blocks_array.count; i++) {
-        fprintf(fp, "%s_%d:\n", ctx->func->name, i);
-        ctx->block = get_block(ctx->func, i);
-        x86_gen_block(fp, ctx);
-    }
-}
-void x86_gen_module(FILE *fp, IR_Context *ctx) {
-    fprintf(fp, ".section .note.GNU-stack,\"\",@progbits\n");
-    if (ctx->module->const_array.count > 0) {
-        fprintf(fp, ".section .rodata\n");
-        for (int i = 0; i < ctx->module->const_array.count; i++) {
-            const ConstLiteral *c = get_const(ctx, i);
-            if (c->type->align > 1) fprintf(fp, ".align %d\n", c->type->align);
-            fprintf(fp, ".LC%d:\n", i);
-            x86_emit_literal(fp, c);
+    case CONST_FLOAT:
+        switch (t->size) {
+        case 4:
+        case 8:
+            fprintf(fp, "    mov%s .LC%d(%%rip), %s\n", op_suffix, pool_index, reg);
+            break;
+        default:
+            do { log_message(LOG_ERROR, "Tried to emit const float of unsupported size\n"); exit(1); } while (0);
         }
+        break;
+    case CONST_STRING:
+        return;
+    case CONST_ARRAY:
+    case CONST_LABEL:
+    case CONST_REFERENCE:
+        do { log_message(LOG_ERROR, "Tried to emit const of unsupported type\n"); exit(1); } while (0);
     }
-    for (int i = 0; i < ctx->module->global_array.count; i++) {
-        const IR_Global *g = get_global(ctx, i);
-        const ConstLiteral *c = &g->val;
-        if (g->symbol->storage == STORAGE_NONE) {
-            fprintf(fp, ".extern %s\n", g->symbol->name);
-            continue;
-        }
-        if (g->symbol->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", g->symbol->name);
-        if (g->symbol->storage == STORAGE_DATA) fprintf(fp, ".data\n");
-        if (g->symbol->storage == STORAGE_BSS) {
-            fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->symbol->type->align, g->symbol->name, g->symbol->type->size);
+    x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
+}
+void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t) {
+    const char *v = x86_rcx_reg(t);
+    const char *op_suffix = x86_op_suffix(t);
+    x86_emit_xr(fp, "mov", "q", "", dst, "%rax");
+    x86_emit_xr(fp, "mov", op_suffix, "", src, v);
+    x86_emit_rr(fp, "mov", op_suffix, "", v, "(%rax)");
+}
+void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t) {
+    const char *rax = x86_rax_reg(t);
+    const char *op_suffix = x86_op_suffix(t);
+    x86_emit_xr(fp, "mov", "q", "", addr, "%rax");
+    x86_emit_rr(fp, "mov", op_suffix, "", "(%rax)", rax);
+    x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
+}
+void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src) {
+    const char *rax = gp_register_str[RAX][REG_64];
+    const char *op_suffix = x86_integer_op_suffix(8);
+    if (dst->kind == IR_PHYS_REG && dst->phys_reg.data_kind == REG_DATA_NONE && src->kind == IR_PHYS_REG &&
+        src->phys_reg.data_kind == REG_DATA_NONE) {
+        x86_emit_xx(fp, "mov", op_suffix, "", src, dst);
+    }
+    x86_emit_xr(fp, "mov", op_suffix, "", src, rax);
+    x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
+}
+void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t) {
+    const char *reg = x86_rax_reg(t);
+    const char *op_suffix = x86_op_suffix(t);
+    x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
+    int use_unsigned;
+    if (t->kind == T_FLOAT) {
+        x86_emit_xr(fp, "ucomi", op_suffix, "", rhs, reg);
+        use_unsigned = 1;
+    } else {
+        x86_emit_xr(fp, "cmp", op_suffix, "", rhs, reg);
+        use_unsigned = t->kind == T_INT && !t->is_signed;
+    }
+    const char *al_reg = "%al";
+    switch (op) {
+    case LT:
+        x86_emit_r(fp, "set", use_unsigned ? "b" : "l", "", al_reg);
+        break;
+    case LE:
+        x86_emit_r(fp, "set", use_unsigned ? "be" : "le", "", al_reg);
+        break;
+    case GT:
+        x86_emit_r(fp, "set", use_unsigned ? "a" : "g", "", al_reg);
+        break;
+    case GE:
+        x86_emit_r(fp, "set", use_unsigned ? "ae" : "ge", "", al_reg);
+        break;
+    case EQ:
+        x86_emit_r(fp, "set", "e", "", al_reg);
+        break;
+    case NEQ:
+        x86_emit_r(fp, "set", "ne", "", al_reg);
+        break;
+    }
+    x86_emit_rr(fp, "mov", "zbl", "", "%al", "%eax");
+    x86_emit_rx(fp, "mov", "l", "", "%eax", dst);
+    return;
+}
+void x86_emit_string(FILE *fp, const char *str) {
+    fprintf(fp, "    .byte ");
+    while (*str) {
+        unsigned char c = *str;
+        if (c >= 0x20 && c <= 0x7E && c != '\'' && c != '\\' && c != '"') {
+            fprintf(fp, "'%c', ", c);
         } else {
-            if (!(c->type != type_invalid)) do { log_message(LOG_ERROR, "Received invalid type, probably an uninitialized global with incorrect storage specifier\n"); exit(1); } while (0);
-            if (g->symbol->type->align > 1) fprintf(fp, ".align %d\n", g->symbol->type->align);
-            fprintf(fp, "%s:\n", g->symbol->name);
-            x86_emit_literal(fp, &g->val);
+            fprintf(fp, "0x%02X, ", c);
         }
+        str++;
     }
-    fprintf(fp, "\n.text\n");
-    for (int i = 0; i < ctx->module->functions_array.count; i++) {
-        ctx->func = get_func(ctx->module, i);
-        x86_gen_function(fp, ctx);
+    fprintf(fp, "0\n");
+}
+void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
+    switch (c->kind) {
+    case CONST_INTEGER:
+        if (c->type == type_i8 || c->type == type_u8) {
+            fprintf(fp, "    .byte %d\n", (char)c->i);
+        } else if (c->type == type_i16 || c->type == type_u16) {
+            fprintf(fp, "    .word %d\n", (short)c->i);
+        } else if (c->type == type_i32 || c->type == type_u32) {
+            fprintf(fp, "    .long %d\n", (int)c->i);
+        } else if (c->type == type_i64 || c->type == type_u64) {
+            fprintf(fp, "    .quad %" "ld" "\n", c->i);
+        }
+        break;
+    case CONST_FLOAT:
+        if (c->type == type_f64) {
+            uint64_t bits;
+            memcpy(&bits, &c->f, sizeof(bits));
+            fprintf(fp, "    .quad 0x%016" "lx" "\n", bits);
+        } else if (c->type == type_f32) {
+            uint32_t bits;
+            float f = (float)c->f;
+            memcpy(&bits, &f, sizeof(bits));
+            fprintf(fp, "    .long 0x%08x\n", bits);
+        }
+        break;
+    case CONST_STRING:
+        x86_emit_string(fp, c->s.data);
+        break;
+    case CONST_ARRAY:
+        for (int i = 0; i < c->arr.count; i++) {
+            ConstLiteral *e = get(&c->arr, i);
+            x86_emit_literal(fp, e);
+        }
+        break;
+    case CONST_LABEL:
+        fprintf(fp, "    .quad .LC%d\n", c->const_index);
+        break;
+    case CONST_REFERENCE:
+        fprintf(fp, "    .quad %s", c->ref.symbol->name);
+        if (c->ref.offset) fprintf(fp, " + %d", c->ref.offset);
+        fprintf(fp, "\n");
+        break;
     }
 }

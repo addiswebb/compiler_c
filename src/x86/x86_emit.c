@@ -456,20 +456,30 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
         x86_emit_rx(fp, "mov", "q", "", from_reg, dst);
         return;
     }
-    // char/short/int/long/ -> char/short/int/long
-    // pointer <-> char/short/int/long
+// char/short/int/long/ -> char/short/int/long
+// pointer <-> char/short/int/long
+#ifdef __COMPILER_C__
+    if (from->kind == T_INT || from->kind == T_POINTER) {
+        if (to->kind == T_INT || to->kind == T_POINTER) {
+#else
     if ((from->kind == T_INT || from->kind == T_POINTER) && (to->kind == T_INT || to->kind == T_POINTER)) {
-        if (from->size < to->size) {
-            x86_emit_xr(fp, "movs", from_op_suffix, to_op_suffix, src, to_reg);
-        } else {
-            x86_emit_xr(fp, "mov", from_op_suffix, "", src, from_reg);
+#endif
+            printf("1\n");
+            if (from->size < to->size) {
+                x86_emit_xr(fp, "movs", from_op_suffix, to_op_suffix, src, to_reg);
+            } else {
+                x86_emit_xr(fp, "mov", from_op_suffix, "", src, from_reg);
+            }
+            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
+            return;
         }
-        x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
-        return;
+#ifdef __COMPILER_C__
     }
+#endif
 
     // char/short/int/long -> float/double
     if (from->kind == T_INT && to->kind == T_FLOAT) {
+        printf("2\n");
         if (src->kind == IR_INT_LITERAL) {
             x86_emit_xr(fp, "mov", from_op_suffix, "", src, from_reg);
             x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", from_reg, to_reg);
