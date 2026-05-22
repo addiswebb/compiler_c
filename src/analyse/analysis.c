@@ -314,15 +314,16 @@ void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *
     IR_Value old = *v;
     switch (old.symbol->kind) {
     case VAR:
-        // Handle global variables
+        // Handle local variables, replace with stack offset
         if (old.symbol->storage == STORAGE_NONE) {
             int index = get_symbol_index(symbol_map, v->symbol);
             ASSERT(index != -1, "Tried to find symbol index of %s\n", v->symbol->name);
             v->kind = IR_PHYS_REG;
             *v = ((RegisterSlot *)get(symbol_slots, index))->v;
-            break;
+            return;
         }
         // !!INTENTIONAL PASSTHROUGH!!
+        // Lower all global symbols to name(%rip)
     case FUNC:
         v->kind = IR_PHYS_REG;
         v->phys_reg.kind = REG_IP;

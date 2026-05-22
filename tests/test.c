@@ -1119,18 +1119,6 @@ void bitset_copy(const BitSet *dst, const BitSet *src);
 int bitset_equal(const BitSet *a, const BitSet *b);
 void print_bitset(const BitSet *bs);
 void print_cfg(const IR_Function *func);
-IR_CMP_OP ir_cmp_op(const TokenType type);
-IR_UNARY_OP ir_unary_op(const TokenType type);
-IR_BINOP_OP ir_binary_op(const TokenType type);
-void print_ir_module(const IR_Context *ctx,const IR_Module *module);
-void print_ir_value(const IR_Value *v);
-void print_ir_phys_reg(const PhysReg *r);
-static void print_ir_block(const IR_Context *ctx, const IR_Block *block);
-void print_ir_function(const IR_Context *ctx, const IR_Function *func);
-void print_ir_instruction(const IR_Context *ctx,const IR_Instruction *instr);
-static void print_unary_op(IR_UNARY_OP op);
-static void print_binary_op(IR_BINOP_OP op);
-static void print_cmp_op(IR_CMP_OP op);
 typedef struct{
     unsigned int gp_offset;
     unsigned int fp_offset;
@@ -1160,6 +1148,95 @@ int snprintf(char *, size_t, const char *, ...);
 extern int vfprintf(FILE *, const char *, va_list);
 FILE *popen(const char *, const char *);
 int pclose(FILE *);
+typedef enum {
+    ABI_NO_CLASS,
+    ABI_MEMORY,
+    ABI_INTEGER,
+    ABI_SSE,
+} ABI_TypeClass;
+typedef struct {
+    ABI_TypeClass class[2];
+    int memory;
+    char p[8];
+} ABI_Result;
+ABI_Result abi_classify(Type *type);
+IR_Value abi_lower_param_register(Type *type, int i);
+int is_va_list_type(Type *type);
+void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
+void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i, int param_index, int *param_cursor);
+void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
+void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+void abi_func_type_gen(Type *type);
+IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr);
+void abi_gen_params(IR_Context *ctx, IR_Function *f);
+void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
+extern Symbol *_hidden_sret_ptr;
+Symbol *current_sret();
+void set_sret(Type *return_type);
+void set_hidden_sret_ptr(Type *return_type);
+ABI_TypeClass merge(ABI_TypeClass chunk_class, ABI_TypeClass field_class);
+ABI_Result classify_struct(Type *type);
+extern const GP_Reg int_param_regs[6];
+extern const XMM_Reg float_param_regs[8];
+extern const GP_Reg caller_saved_regs[9];
+extern const GP_Reg callee_saved_regs[6];
+extern const char *gp_register_str[16][4];
+extern const char *sse_register_str[16];
+typedef struct {
+    char *output;
+    Array current_source;
+    Array current_output;
+    Array source_files;
+    Array passthrough_args;
+    char *src;
+    int src_size;
+    NodeManager nm;
+    Parser p;
+    Tokenizer tk;
+} Compiler;
+typedef enum {
+    CF_STOP_AFTER_AST,
+    CF_STOP_AFTER_IR,
+    CF_STOP_AFTER_COMPILE,
+    CF_STOP_AFTER_ASSEMBLE,
+    CF_DEBUG_TYPEPOOL,
+    CF_DEBUG_LIFETIMES,
+    CF_DEBUG_ENUM,
+    CF_DEBUG_STRUCT,
+    CF_DEBUG_UNION,
+    CF_DEBUG_LOWERED_IR,
+    CF_DEBUG_IR_INSTR,
+    CF_DEBUG_PARSER,
+    CF_DEBUG_TOKENIZER,
+    CF_DEBUG_SYMBOLS,
+    CF_COUNT,
+} CompilerFlag;
+extern unsigned int compiler_flags;
+extern const char *flag_strings[CF_COUNT];
+int has_flag(CompilerFlag f);
+Compiler begin_compiler(int argc, char *argv[]);
+void init_compiler(Compiler *compiler);
+void clear_compiler(Compiler *compiler);
+void free_compiler(Compiler *compiler);
+void drive(Compiler *c);
+void assemble(Compiler *c);
+void link(Compiler *c, Array *objs);
+int compile(Compiler *compiler);
+void free_compiler(Compiler *compiler);
+static int load_src_file(Compiler *compiler, const char *file);
+char *replace_extension(const char *path, const char *ext);
+IR_CMP_OP ir_cmp_op(const TokenType type);
+IR_UNARY_OP ir_unary_op(const TokenType type);
+IR_BINOP_OP ir_binary_op(const TokenType type);
+void print_ir_module(const IR_Context *ctx,const IR_Module *module);
+void print_ir_value(const IR_Value *v);
+void print_ir_phys_reg(const PhysReg *r);
+static void print_ir_block(const IR_Context *ctx, const IR_Block *block);
+void print_ir_function(const IR_Context *ctx, const IR_Function *func);
+void print_ir_instruction(const IR_Context *ctx,const IR_Instruction *instr);
+static void print_unary_op(IR_UNARY_OP op);
+static void print_binary_op(IR_BINOP_OP op);
+static void print_cmp_op(IR_CMP_OP op);
 void exit(int);
 void *malloc(size_t);
 void *realloc(void *, size_t);
@@ -1255,341 +1332,558 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     fflush(logger.file);
     if (lvl == LOG_PANIC) exit(1);
 }
-typedef struct {
-    Node *func;
-    Array compound_stack;
-    Array loop_stack;
-    Array i_array;
-} SemanticContext;
-int is_lvalue(const Node *n);
-int is_deref(const Node *n);
-Type *check_unary_op(NodeManager *nm, Node *unary_op);
-Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop);
-Type *promote_binary_operands(NodeManager *nm, Node *binop);
-void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
-void handle_builtin_call(BuiltinKind kind, Node *node);
-void lower_nodes(NodeManager *nm);
-void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
-void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n);
-void pop_sema_scope(SemanticContext *sema_ctx, Parser *p);
-void push_sema_loop(SemanticContext *sema_ctx, const Node *loop);
-void pop_sema_loop(SemanticContext *sema_ctx);
-Node *sema_current_loop(const SemanticContext *sema_ctx);
-Node *sema_current_compound(const SemanticContext *sema_ctx);
-static inline int *get_i(SemanticContext *sema_ctx) { return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
-typedef struct {
-    char *output;
-    Array current_source;
-    Array current_output;
-    Array source_files;
-    Array passthrough_args;
-    char *src;
-    int src_size;
-    NodeManager nm;
-    Parser p;
-    Tokenizer tk;
-} Compiler;
-typedef enum {
-    CF_STOP_AFTER_AST,
-    CF_STOP_AFTER_IR,
-    CF_STOP_AFTER_COMPILE,
-    CF_STOP_AFTER_ASSEMBLE,
-    CF_DEBUG_TYPEPOOL,
-    CF_DEBUG_LIFETIMES,
-    CF_DEBUG_ENUM,
-    CF_DEBUG_STRUCT,
-    CF_DEBUG_UNION,
-    CF_DEBUG_LOWERED_IR,
-    CF_DEBUG_IR_INSTR,
-    CF_DEBUG_PARSER,
-    CF_DEBUG_TOKENIZER,
-    CF_COUNT,
-} CompilerFlag;
-extern unsigned int compiler_flags;
-extern const char *flag_strings[CF_COUNT];
-int has_flag(CompilerFlag f);
-Compiler begin_compiler(int argc, char *argv[]);
-void init_compiler(Compiler *compiler);
-void clear_compiler(Compiler *compiler);
-void free_compiler(Compiler *compiler);
-void drive(Compiler *c);
-void assemble(Compiler *c);
-void link(Compiler *c, Array *objs);
-int compile(Compiler *compiler);
-void free_compiler(Compiler *compiler);
-static int load_src_file(Compiler *compiler, const char *file);
-char *replace_extension(const char *path, const char *ext);
-void x86_gen_module(FILE *fp, IR_Context *ctx);
-void x86_operand(const IR_Value *v, char *buf, int n);
-void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst);
-void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst);
-void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst);
-void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst);
-void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *operand);
-void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, const char *r);
-const char *x86_rax_reg(Type *t);
-const char *x86_rbx_reg(const Type *t);
-const char *x86_rcx_reg(const Type *t);
-const char *x86_rdx_reg(const Type *t);
-const char *x86_op_suffix(const Type *t);
-const char *x86_integer_op_suffix(int size);
-const char *x86_float_op_suffix(int size);
-void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, IR_BINOP_OP op, Type *t);
-void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNARY_OP op, Type *t);
-void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst);
-void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to);
-void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, int pool_index);
-void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
-void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
-void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src);
-void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t);
-void x86_emit_string(FILE *fp, const char *str);
-void x86_emit_literal(FILE *fp, const ConstLiteral *c);
-static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
-static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr);
-static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr);
-static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_block(FILE *fp, IR_Context *ctx);
-static void x86_gen_function(FILE *fp, IR_Context *ctx);
-unsigned int compiler_flags = 0u;
-const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast", [CF_STOP_AFTER_IR] = "ir",
-                                      [CF_STOP_AFTER_COMPILE] = "S", [CF_STOP_AFTER_ASSEMBLE] = "c",
-                                      [CF_DEBUG_TYPEPOOL] = "gtypepool", [CF_DEBUG_LIFETIMES] = "glifetimes",
-                                      [CF_DEBUG_ENUM] = "genum", [CF_DEBUG_STRUCT] = "gstruct",
-                                      [CF_DEBUG_UNION] = "gunion", [CF_DEBUG_LOWERED_IR] = "glowered-ir",
-                                      [CF_DEBUG_IR_INSTR] = "gir-instr", [CF_DEBUG_PARSER] = "gparser",
-                                      [CF_DEBUG_TOKENIZER] = "gtokenizer"};
-int has_flag(CompilerFlag f) { return compiler_flags & (1u << f); }
-int is_source_file(const char *arg) {
-    if (arg[0] == '-') return 0;
-    const char *dot = strrchr(arg, '.');
-    if (!dot) return 0;
-    return strcmp(dot, ".c") == 0 || strcmp(dot, ".s") == 0 || strcmp(dot, ".o") == 0;
+const char *gp_register_str[16][4] = {
+    [RAX] = {"%al", "%ax", "%eax", "%rax"}, [RBX] = {"%bl", "%bx", "%ebx", "%rbx"}, [RCX] = {"%cl", "%cx", "%ecx", "%rcx"},
+    [RDX] = {"%dl", "%dx", "%edx", "%rdx"}, [RSI] = {"%sil", "%si", "%esi", "%rsi"}, [RDI] = {"%dil", "%di", "%edi", "%rdi"},
+    [RBP] = {"%bpl", "%bp", "%ebp", "%rbp"}, [RSP] = {"%spl", "%sp", "%esp", "%rsp"}, [R8] = {"%r8b", "%r8w", "%r8d", "%r8"},
+    [R9] = {"%r9b", "%r9w", "%r9d", "%r9"}, [R10] = {"%r10b", "%r10w", "%r10d", "%r10"}, [R11] = {"%r11b", "%r11w", "%r11d", "%r11"},
+    [R12] = {"%r12b", "%r12w", "%r12d", "%r12"}, [R13] = {"%r13b", "%r13w", "%r13d", "%r13"}, [R14] = {"%r14b", "%r14w", "%r14d", "%r14"},
+    [R15] = {"%r15b", "%r15w", "%r15d", "%r15"},
+};
+const char *sse_register_str[16] = {
+    [XMM0] = "%xmm0", [XMM1] = "%xmm1", [XMM2] = "%xmm2", [XMM3] = "%xmm3", [XMM4] = "%xmm4", [XMM5] = "%xmm5",
+    [XMM6] = "%xmm6", [XMM7] = "%xmm7", [XMM8] = "%xmm8", [XMM9] = "%xmm9", [XMM10] = "%xmm10", [XMM11] = "%xmm11",
+    [XMM12] = "%xmm12", [XMM13] = "%xmm13", [XMM14] = "%xmm14", [XMM15] = "%xmm15",
+};
+void bitset_init(BitSet *s, const int reg_count) {
+    s->num_bits = reg_count;
+    s->capacity = (s->num_bits + 31) / 32;
+    if (reg_count) {
+        s->data = calloc(s->capacity, sizeof(int));
+        if (!(s->data)) do { log_message(LOG_ERROR, "Failed to alloc for bitset init\n"); exit(1); } while (0);
+    } else {
+        s->data = ((void *)0);
+    }
 }
-void read_args(Compiler *compiler, const int argc, char *argv[]) {
-    for (int i = 1; i < argc; i++) {
-        char *arg = argv[i];
-        if (arg[0] == '-') {
-            arg++;
-            if (strcmp(arg, "o") == 0) {
-                if (i + 1 < argc && argv[i + 1] != ((void *)0)) {
-                    if (!(argv[i + 1][0] != '-')) do { log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n"); exit(1); } while (0);
-                    compiler->output = argv[++i];
-                    if (!(compiler->output)) do { log_message(LOG_ERROR, "Failed to strdup output\n"); exit(1); } while (0);
-                    continue;
-                }
-                do { log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n"); exit(1); } while (0);
+void bitset_clear(const BitSet *s) {
+    for (int i = 0; i < s->capacity; i++) {
+        s->data[i] = 0;
+    }
+}
+void bitset_add(const BitSet *s, const int reg) {
+    if (reg >= s->num_bits) {
+        do { log_message(LOG_ERROR, "%d is too large a register for this bitset\n", reg); exit(1); } while (0);
+    }
+    if (!(reg >= 0)) do { log_message(LOG_ERROR, "Reg must be >= 0\n"); exit(1); } while (0);
+    const int word = reg / 32;
+    const unsigned int offset = reg % 32;
+    s->data[word] |= (1u << offset);
+}
+void bitset_remove(const BitSet *s, const int reg) {
+    if (!(reg >= 0)) do { log_message(LOG_ERROR, "Reg must be >= 0\n"); exit(1); } while (0);
+    const int word = reg / 32;
+    const unsigned int offset = reg % 32;
+    s->data[word] &= ~(1u << offset);
+}
+int bitset_has(const BitSet *s, const int reg) {
+    if (!(reg >= 0)) do { log_message(LOG_ERROR, "Reg must be >= 0\n"); exit(1); } while (0);
+    const int word = reg / 32;
+    const unsigned int offset = reg % 32;
+    return (s->data[word] & (1u << offset)) != 0;
+}
+void bitset_union(const BitSet *dst, const BitSet *src) {
+    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
+    for (int i = 0; i < dst->capacity; i++) dst->data[i] |= src->data[i];
+}
+void bitset_intersect(const BitSet *dst, const BitSet *src) {
+    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
+    for (int i = 0; i < dst->capacity; i++) dst->data[i] &= src->data[i];
+}
+void bitset_difference(const BitSet *dst, const BitSet *src) {
+    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
+    for (int i = 0; i < dst->capacity; i++) dst->data[i] &= ~src->data[i];
+}
+void bitset_copy(const BitSet *dst, const BitSet *src) {
+    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
+    for (int i = 0; i < dst->capacity; i++) dst->data[i] = src->data[i];
+}
+int bitset_equal(const BitSet *a, const BitSet *b) {
+    if (!(a->capacity == b->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
+    for (int i = 0; i < a->capacity; i++) {
+        if (a->data[i] != b->data[i]) return 0;
+    }
+    return 1;
+}
+static int contains(const int *arr, const int count, const int val) {
+    for (int i = 0; i < count; i++) {
+        if (arr[i] == val) return 1;
+    }
+    return 0;
+}
+void add_successor(IR_Function *func, IR_Block *from, IR_Block *to) {
+    if (!contains(from->cfg.succ, from->cfg.succ_count, to->id)) {
+        from->cfg.succ = realloc(from->cfg.succ, sizeof(int) * (from->cfg.succ_count + 1));
+        from->cfg.succ[from->cfg.succ_count++] = to->id;
+    }
+    if (!contains(to->cfg.pred, to->cfg.pred_count, from->id)) {
+        to->cfg.pred = realloc(to->cfg.pred, sizeof(int) * (to->cfg.pred_count + 1));
+        to->cfg.pred[to->cfg.pred_count++] = from->id;
+    }
+}
+void dfs_postorder(IR_Function *func, const int block_id, int *visited, int *postorder, int *count) {
+    if (visited[block_id]) return;
+    visited[block_id] = 1;
+    const IR_Block *b = get_block(func, block_id);
+    for (int i = 0; i < b->cfg.succ_count; i++) {
+        dfs_postorder(func, b->cfg.succ[i], visited, postorder, count);
+    }
+    postorder[(*count)++] = block_id;
+}
+void compute_reverse_postorder(IR_Function *func, int *rpo) {
+    int *visited = calloc(func->blocks_array.count, sizeof(int));
+    if (!visited) {
+        do { log_message(LOG_ERROR, "Failed to calloc for visited\n"); exit(1); } while (0);
+    }
+    int *postorder = malloc(func->blocks_array.count * sizeof(int));
+    if (!postorder) {
+        free(visited);
+        do { log_message(LOG_ERROR, "Failed to calloc for postorder\n"); exit(1); } while (0);
+    }
+    int count = 0;
+    dfs_postorder(func, 0, visited, postorder, &count);
+    for (int i = 0; i < count; i++) {
+        rpo[i] = postorder[count - 1 - i];
+    }
+    free(postorder);
+    free(visited);
+}
+int bitset_add_defined(const BitSet *defined, const IR_Value *v) {
+    if (v->kind == IR_VREG) {
+        if (!bitset_has(defined, v->vreg)) {
+            bitset_add(defined, v->vreg);
+            return 1;
+        }
+    }
+    return 0;
+}
+void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v) {
+    if (v->kind == IR_VREG) {
+        if (!bitset_has(defined, v->vreg)) {
+            bitset_add(used, v->vreg);
+        }
+    }
+}
+void ir_init_func_cfg(const IR_Function *f) {
+    for (int j = 0; j < f->blocks_array.count; j++) {
+        IR_Block *b = get_block(f, j);
+        b->cfg.succ = ((void *)0);
+        b->cfg.succ_count = 0;
+        b->cfg.pred = ((void *)0);
+        b->cfg.pred_count = 0;
+        bitset_init(&b->live.live_in, f->max_reg);
+        bitset_init(&b->live.live_out, f->max_reg);
+        bitset_init(&b->live.def, f->max_reg);
+        bitset_init(&b->live.use, f->max_reg);
+    }
+}
+void ir_compute_func_io(IR_Function *f) {
+    for (int j = 0; j < f->blocks_array.count; j++) {
+        IR_Block *b = get_block(f, j);
+        int found = 0;
+        for (int i = 0; i < b->instruction_array.count; i++) {
+            const IR_Instruction *instr = get_instruction(&b->instruction_array, i);
+            switch (instr->op) {
+            case IR_BR:
+                add_successor(f, b, instr->br.block);
+                found = 1;
+                break;
+            case IR_BR_COND:
+                if (instr->br_cond.f_block) add_successor(f, b, instr->br_cond.f_block);
+                if (instr->br_cond.t_block) add_successor(f, b, instr->br_cond.t_block);
+                found = instr->br_cond.f_block && instr->br_cond.t_block;
+                break;
+            case IR_RET:
+            default:
+                break;
             }
-            int consumed_flag = 0;
-            for (int j = 0; j < CF_COUNT; j++) {
-                if (strcmp(arg, flag_strings[j]) == 0) {
-                    compiler_flags |= (1u << j);
-                    consumed_flag = 1;
+        }
+        if (!found && j < f->blocks_array.count - 1) add_successor(f, b, get_block(f, j + 1));
+    }
+}
+int reg_bitset(const IR_Function *f) {
+    int defined = 0;
+    for (int j = 0; j < f->blocks_array.count; j++) {
+        const IR_Block *b = get_block(f, j);
+        for (int k = 0; k < b->instruction_array.count; k++) {
+            const IR_Instruction *instr = get_instruction(&b->instruction_array, k);
+            for (int i = 0; i < instr->op_count; i++) {
+                if (instr->ops[i].kind != IR_VREG) continue;
+                if (op_info[instr->op].def_mask & (1 << i)) {
+                    if (bitset_add_defined(&b->live.def, &instr->ops[i])) defined++;
+                }
+                if (op_info[instr->op].use_mask & (1 << i)) {
+                    bitset_add_used(&b->live.def, &b->live.use, &instr->ops[i]);
+                }
+            }
+        }
+    }
+    return defined;
+}
+void compute_bitset(const IR_Function *f, const int *rpo) {
+    BitSet old_live_out;
+    BitSet old_live_in;
+    BitSet tmp;
+    bitset_init(&old_live_out, f->max_reg);
+    bitset_init(&old_live_in, f->max_reg);
+    bitset_init(&tmp, f->max_reg);
+    int changed = 1;
+    while (changed) {
+        changed = 0;
+        for (int i = 0; i < f->blocks_array.count; i++) {
+            const IR_Block *b = get_block(f, rpo[i]);
+            bitset_clear(&old_live_out);
+            bitset_clear(&old_live_in);
+            bitset_clear(&tmp);
+            bitset_copy(&old_live_out, &b->live.live_out);
+            bitset_copy(&old_live_in, &b->live.live_in);
+            bitset_clear(&b->live.live_out);
+            for (int j = 0; j < b->cfg.succ_count; j++) bitset_union(&b->live.live_out, &get_block(f, b->cfg.succ[j])->live.live_in);
+            bitset_copy(&tmp, &b->live.live_out);
+            bitset_difference(&tmp, &b->live.def);
+            bitset_copy(&b->live.live_in, &b->live.use);
+            bitset_union(&b->live.live_in, &tmp);
+            if (!bitset_equal(&b->live.live_out, &old_live_out) || !bitset_equal(&b->live.live_in, &old_live_in)) changed = 1;
+        }
+    }
+    free(old_live_out.data);
+    free(old_live_in.data);
+    free(tmp.data);
+}
+int cmp_lifetime(const void *a, const void *b) { return ((Lifetime *)a)->start - ((Lifetime *)b)->start; }
+void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size) {
+    RegisterSlot *slots = ((void *)0);
+    int slot_count = 0;
+    for (int i = 0; i < count; i++) {
+        Lifetime *l = &lts[i];
+        int found_slot = 0;
+        for (int j = 0; j < slot_count; j++) {
+            RegisterSlot *s = &slots[j];
+            if (s->free_at <= l->start) {
+                s->free_at = l->end;
+                l->stack_slot = j;
+                l->stack_offset = s->v.phys_reg.offset;
+                found_slot = 1;
+                break;
+            }
+        }
+        if (!found_slot) {
+            RegisterSlot *new_slots = realloc(slots, sizeof(RegisterSlot) * (slot_count + 1));
+            if (!new_slots) {
+                do { log_message(LOG_ERROR, "Failed to realloc new_slots\n"); exit(1); } while (0);
+            }
+            slots = new_slots;
+            l->stack_offset = -(*stack_size) - l->v->size;
+            slots[slot_count].v = ir_stack_value(l->v->size, l->v->align, l->stack_offset);
+            slots[slot_count].free_at = l->end;
+            l->stack_slot = slot_count++;
+            *stack_size += l->v->size;
+        }
+    }
+    if (slots) free(slots);
+}
+RegSize reg_size(const int size) {
+    switch (size) {
+    case 1:
+        return REG_8;
+    case 2:
+        return REG_16;
+    case 4:
+        return REG_32;
+    case 8:
+        return REG_64;
+    default:
+        do { log_message(LOG_ERROR, "Incompatible size %d, should have already been handled tho\n", size); exit(1); } while (0);
+    }
+}
+const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) {
+    for (int i = 0; i < lts_count; i++) {
+        if (lts[i].reg == reg) {
+            return &lts[i];
+        }
+    }
+    do { log_message(LOG_ERROR, "Failed to find lifetime of r%d\n", reg); exit(1); } while (0);
+}
+void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map) {
+    IR_Value old = *v;
+    switch (old.symbol->kind) {
+    case VAR:
+        if (old.symbol->storage == STORAGE_NONE) {
+            int index = get_symbol_index(symbol_map, v->symbol);
+            if (!(index != -1)) do { log_message(LOG_ERROR, "Tried to find symbol index of %s\n", v->symbol->name); exit(1); } while (0);
+            v->kind = IR_PHYS_REG;
+            *v = ((RegisterSlot *)get(symbol_slots, index))->v;
+            return;
+        }
+    case FUNC:
+        v->kind = IR_PHYS_REG;
+        v->phys_reg.kind = REG_IP;
+        v->phys_reg.size = REG_64;
+        v->phys_reg.data_kind = REG_DATA_LABEL;
+        v->phys_reg.label = old.symbol->name;
+        break;
+    case TYPEDEF:
+    case ANY:
+    case ENUM:
+        do { log_message(LOG_ERROR, "ir_lower_symbol_value dont know how to handle\n"); exit(1); } while (0);
+        break;
+    }
+}
+IR_Value ir_gp_register(GP_Reg reg) {
+    return (IR_Value){.kind = IR_PHYS_REG,
+                      .size = 8,
+                      .align = 8,
+                      .phys_reg = (PhysReg){
+                          .kind = REG_GP,
+                          .gp_reg = reg,
+                          .data_kind = REG_DATA_NONE,
+                          .size = REG_64,
+                      }};
+}
+IR_Value ir_stack_value(int size, int align, int offset) {
+    return (IR_Value){.kind = IR_PHYS_REG,
+                      .size = size,
+                      .align = align,
+                      .phys_reg = (PhysReg){
+                          .kind = REG_GP,
+                          .gp_reg = RBP,
+                          .data_kind = REG_DATA_OFFSET,
+                          .size = REG_64,
+                          .offset = offset,
+                      }};
+}
+void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count) {
+    if (!(lts)) do { log_message(LOG_ERROR, "LTS is null\n"); exit(1); } while (0);
+    if (!(v->kind == IR_VREG)) do { log_message(LOG_ERROR, "Expected VREG IR Value\n"); exit(1); } while (0);
+    *v = ir_stack_value(v->size, v->align, get_lifetime(lts, lts_count, v->vreg)->stack_offset);
+}
+void ir_lower_const_value(IR_Value *v) {
+    return;
+}
+void verify_completion(const IR_Function *f) {
+    for (int i = 0; i < f->blocks_array.count; i++) {
+        const IR_Block *b = get_block(f, i);
+        for (int j = 0; j < b->instruction_array.count; j++) {
+            const IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
+            for (int k = 0; k < value_count; k++) {
+                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
+                if (a->kind == IR_CONSTANT) continue;
+                if (a->kind == IR_CONSTANT && instr->op != IR_CALL) continue;
+                if (a->kind == IR_PHYS_REG || a->kind == IR_INT_LITERAL) continue;
+                if (instr->op == IR_RET && instr->ret.type == type_void) continue;
+                if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) continue;
+                log_start(LOG_ERROR);
+                print_ir_value(a);
+                printf(" was not converted to stack offset\n");
+                exit(1);
+            }
+        }
+    }
+}
+int get_symbol_index(const Array *symbol_map, Symbol *symbol) {
+    for (int i = 0; i < symbol_map->count; i++) {
+        Symbol *s = *(Symbol **)get(symbol_map, i);
+        if (s == symbol) return i;
+    }
+    return -1;
+}
+void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map) {
+    int slot_count = f->locals_array.count + ctx->module->global_array.count;
+    if (slot_count == 0) return;
+    array_init(symbol_map, slot_count, sizeof(Symbol *));
+    array_init(symbol_slots, slot_count, sizeof(RegisterSlot));
+    for (int i = 0; i < ctx->module->global_array.count; i++) {
+        Symbol *global_symbol = get_global(ctx, i)->symbol;
+        append(symbol_slots, &(RegisterSlot){.v = ir_symbol_value(global_symbol), .free_at = -1});
+        append(symbol_map, &global_symbol);
+    }
+    for (int i = 0; i < f->locals_array.count; i++) {
+        Symbol *local_symbol = get_local_symbol(f, i);
+        int size = align(local_symbol->type->size, 8);
+        int offset = -(*frame_size) - size;
+        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
+        append(symbol_map, &local_symbol);
+        *frame_size += size;
+    }
+}
+void generate_types() {
+    int n = typepool.count;
+    for (int i = 0; i < n; i++) {
+        Type *t = (Type *)arena_get(&typepool, i);
+        if (t->kind == T_FUNCTION) abi_func_type_gen(t);
+    }
+}
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
+                              const Array *symbol_map) {
+    for (int i = 0; i < f->blocks_array.count; i++) {
+        const IR_Block *b = get_block(f, i);
+        for (int j = 0; j < b->instruction_array.count; j++) {
+            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
+            for (int k = 0; k < value_count; k++) {
+                int is_arg_param = k >= instr->op_count;
+                int instr_index = is_arg_param ? k - instr->op_count : k;
+                IR_CallArg *arg = is_arg_param ? get_call_arg(instr, instr_index) : ((void *)0);
+                IR_Value *a = is_arg_param ? &arg->v : &instr->ops[instr_index];
+                switch (a->kind) {
+                case IR_VREG:
+                    ir_lower_vreg_value(a, lts, lts_count);
+                    break;
+                case IR_SYMBOL:
+                    ir_lower_symbol_value(a, symbol_slots, symbol_map);
+                    break;
+                case IR_CONSTANT:
+                    ir_lower_const_value(a);
+                    break;
+                case IR_PHYS_REG:
+                case IR_INT_LITERAL:
+                    break;
+                case IR_UNDEFINED:
+                    if (instr->op == IR_RET && instr->ret.type == type_void) break;
+                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) break;
+                    do { log_message(LOG_ERROR, "An undefined IR value made it to analysis!!\n"); exit(1); } while (0);
                     break;
                 }
             }
-            if (consumed_flag) continue;
-            append(&compiler->passthrough_args, &argv[i]);
-        } else if (is_source_file(argv[i])) append(&compiler->source_files, &argv[i]);
+        }
     }
 }
-void assemble(Compiler *c) {
-    set_log_stage(STAGE_ASSEMBLER);
-    if (!(c->current_source.count && c->current_output.count)) do { log_message(LOG_ERROR, "Source or output is not set for assemble\n"); exit(1); } while (0);
-    log_message(LOG_INFO, "Assembling %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "gcc -c %s -o %s", (char *)c->current_source.data, (char *)c->current_output.data);
-    int ret = system(cmd);
-    if (!(ret == 0)) do { log_message(LOG_ERROR, "Failed to assemble %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data); exit(1); } while (0);
-}
-void link(Compiler *c, Array *objs) {
-    set_log_stage(STAGE_LINKER);
-    log_message(LOG_INFO, "Linking ");
-    char cmd[512] = {};
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -lm ");
-    for (int i = 0; i < objs->count; i++) {
-        char *src = *(char **)get(objs, i);
-        printf("%s", src);
-        cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", src);
-        if (i < objs->count - 1) putchar(' ');
-    }
-    printf(" to %s\n", (char *)c->current_output.data);
-    snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "-o %s ", (char *)c->current_output.data);
-    int ret = system(cmd);
-    if (!(ret == 0)) do { log_message(LOG_ERROR, "Failed to link %d objs to %s\n", objs->count, (char *)c->current_output.data); exit(1); } while (0);
-}
-void update_current_output(Compiler *c, int cond, char *path, const char *ext) {
-    if (cond && c->output) {
-        array_str_cpy(&c->current_output, c->output);
-    } else {
-        char *out = strdup(path);
-        char *dot = strrchr(out, '.');
-        if (dot) strcpy(dot, ext);
-        else do { log_message(LOG_ERROR, "Failed to append '%s' to %s\n", ext, path); exit(1); } while (0);
-        array_str_cpy(&c->current_output, out);
-        free(out);
+void lower_ir_for_asm(IR_Function *f) {
+    for (int i = 0; i < f->blocks_array.count; i++) {
+        IR_Block *b = get_block(f, i);
+        int param_cursor = 0;
+        for (int j = 0; j < b->instruction_array.count; j++) {
+            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            if (instr->op == IR_PARAM) {
+                param_cursor++;
+            }
+        }
+        int param_index = 0;
+        int instrs_added = 0;
+        for (int j = 0; j < b->instruction_array.count; j++) {
+            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            if (instr->op == IR_RET) {
+                abi_lower_ret(f, b, instr, &j);
+            } else if (instr->op == IR_PARAM) {
+                abi_lower_param(f, b, instr, &instrs_added, param_index++, &param_cursor);
+            } else if (instr->op == IR_LOAD) {
+                if (!(instr->load.type->size <= 8)) do { log_message(LOG_ERROR, " : ir_load of type sized %d is larger than 8 bytes %t\n", instr->load.type->size, instr->load.type); exit(1); } while (0);
+                if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
+            } else if (instr->op == IR_STORE) {
+                abi_lower_store(f, b, instr, &j);
+            }
+        }
     }
 }
-void drive(Compiler *c) {
-    if ((has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) && c->source_files.count > 1 && c->output) {
-        log_message(LOG_WARN, "-o ignored with multiple inputs %d\n", c->source_files.count);
-        c->output = ((void *)0);
+void analysis(const IR_Context *ctx) {
+    for (int i = 0; i < ctx->module->functions_array.count; i++) {
+        IR_Function *f = get_func(ctx->module, i);
+        lower_ir_for_asm(f);
+        if (has_flag(CF_DEBUG_LOWERED_IR)) {
+            printf("vvvvvvvvvvvvvvvvvvvvv\n");
+            print_ir_function(ctx, f);
+            printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
+        }
+        ir_init_func_cfg(f);
+        ir_compute_func_io(f);
+        Lifetime *lifetimes = ((void *)0);
+        int *rpo = malloc(f->blocks_array.count * sizeof(int));
+        if (!rpo) {
+            do { log_message(LOG_ERROR, "Failed to allocate rpo\n"); exit(1); } while (0);
+        }
+        int reg_count = 0;
+        if (f->max_reg > 0) {
+            reg_count = reg_bitset(f);
+            compute_reverse_postorder(f, rpo);
+            compute_bitset(f, rpo);
+            lifetimes = compute_lifetimes(f, reg_count, rpo);
+            qsort(lifetimes, reg_count, sizeof(Lifetime), cmp_lifetime);
+            if (has_flag(CF_DEBUG_LIFETIMES)) {
+                for (int j = 0; j < reg_count; j++) {
+                    printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
+                }
+                printf("\n");
+            }
+        }
+        Array symbol_map = {};
+        Array symbol_slots = {};
+        const int variadic_space = f->type->_func.is_variadic ? 176 : 0;
+        int frame_size = variadic_space;
+        symbol_slot_allocation(ctx, f, &frame_size, &symbol_slots, &symbol_map);
+        linear_stack_slot_allocation(lifetimes, reg_count, &frame_size);
+        lower_ir_values_to_stack(f, lifetimes, reg_count, &symbol_slots, &symbol_map);
+        verify_completion(f);
+        f->stack_size = frame_size;
+        free(rpo);
+        free(lifetimes);
+        array_free(&symbol_map);
+        array_free(&symbol_slots);
     }
-    Array objs;
-    array_init(&objs, c->source_files.count, sizeof(char *));
-    for (int i = 0; i < c->source_files.count; i++) {
-        char *src_path = *(char **)get(&c->source_files, i);
-        array_str_cpy(&c->current_source, src_path);
-        update_current_output(c, has_flag(CF_STOP_AFTER_COMPILE), src_path, ".s");
-        load_src_file(c, (char *)c->current_source.data);
-        init_compiler(c);
-        compile(c);
-        clear_compiler(c);
-        if (has_flag(CF_STOP_AFTER_AST) || has_flag(CF_STOP_AFTER_IR)) return;
-        if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
-        array_str_cpy(&c->current_source, c->current_output.data);
-        update_current_output(c, has_flag(CF_STOP_AFTER_ASSEMBLE), src_path, ".o");
-        assemble(c);
-        if (has_flag(CF_STOP_AFTER_ASSEMBLE)) continue;
-        char *obj_path = strdup((char *)c->current_output.data);
-        append(&objs, &obj_path);
+}
+Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *rpo) {
+    Lifetime *lts = malloc(sizeof(Lifetime) * defined);
+    int pc = 0;
+    for (int i = 0; i < f->blocks_array.count; i++) {
+        const IR_Block *b = get_block(f, rpo[i]);
+        for (int j = 0; j < b->instruction_array.count; j++) {
+            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
+            for (int k = 0; k < value_count; k++) {
+                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
+                const int is_call_arg = k >= instr->op_count;
+                if (a->kind == IR_VREG) {
+                    if (a->vreg < 0) continue;
+                    if (op_info[instr->op].def_mask & (1 << k)) {
+                        lts[instr->ops[k].vreg] = (Lifetime){instr->ops[k].vreg, pc, -1, 0, 0, .v = &instr->ops[k]};
+                    }
+                    if (is_call_arg || op_info[instr->op].use_mask & (1 << k)) {
+                        if (lts[a->vreg].end < pc) {
+                            lts[a->vreg].end = pc;
+                        }
+                    }
+                }
+            }
+            pc++;
+        }
     }
-    if (has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) return;
-    array_str_cpy(&c->current_output, c->output ? c->output : "a.out");
-    if (!(objs.count > 0)) do { log_message(LOG_ERROR, "No object files to link\n"); exit(1); } while (0);
-    link(c, &objs);
-    ptr_array_free(&objs);
-    set_log_stage(STAGE_COMPILER);
-    log_message(LOG_INFO, "Done.\n");
+    return lts;
 }
-void init_compiler(Compiler *compiler) {
-    compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
-    compiler->nm = new_node_manager();
-    compiler->p = new_parser();
-    init_typepool();
-    return;
-}
-Compiler begin_compiler(const int argc, char *argv[]) {
-    printf("[\x1b[34mCompiler_C\x1b[0m]\n");
-    if (argc < 2) {
-        do { log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n"); exit(1); } while (0);
+void print_bitset(const BitSet *bs) {
+    printf("{");
+    int first = 1;
+    for (int i = 0; i < bs->num_bits; i++) {
+        if (bitset_has(bs, i)) {
+            if (!first) printf(", ");
+            printf("r%d", i);
+            first = 0;
+        }
     }
-    if (argc == 2 && strcmp(argv[1], "-h") == 0) {
-        printf("compiler [input]\n");
-        printf("\t-o [output] : Set output file path\n");
-        printf("\t-S          : Compile to Assembly File\n");
-        printf("\t-c          : Compile to Object File\n");
-        printf("\t-ir         : Compile and print IR\n");
-        printf("\t-ast        : Print parse tree\n");
-        printf("\t-h          : Get help\n");
-        printf("sizeof%d", sizeof(Type));
-        exit(0);
-    }
-    Compiler compiler = {};
-    compiler.output = ((void *)0);
-    compiler_flags = 0;
-    array_init(&compiler.passthrough_args, 4, sizeof(char *));
-    array_init(&compiler.source_files, 4, sizeof(char *));
-    array_init(&compiler.current_output, 4, sizeof(char));
-    array_init(&compiler.current_source, 4, sizeof(char));
-    read_args(&compiler, argc, argv);
-    return compiler;
+    printf("}");
 }
-void clear_compiler(Compiler *compiler) {
-    free_typepool();
-    free_node(arena_get(&compiler->nm, 0));
-    arena_free(&compiler->nm);
-    free_parser(&compiler->p);
-    t_free(&compiler->tk);
-    free(compiler->src);
-}
-void free_compiler(Compiler *compiler) {
-    array_free(&compiler->passthrough_args);
-    array_free(&compiler->source_files);
-    array_free(&compiler->current_source);
-    array_free(&compiler->current_output);
-    compiler->src = ((void *)0);
-}
-int compile(Compiler *compiler) {
-    set_log_stage(STAGE_COMPILER);
-    if (!(compiler->current_source.count && compiler->current_output.count)) do { log_message(LOG_ERROR, "Source or output is not set for compile\n"); exit(1); } while (0);
-    log_message(LOG_INFO, "Compiling %s to %s\n", (char *)compiler->current_source.data, (char *)compiler->current_output.data);
-    set_log_stage(STAGE_TOKENIZING);
-    t_tokenize(&compiler->tk);
-    set_log_stage(STAGE_PARSING);
-    init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
-    p_parse_translation_unit(&compiler->p, &compiler->nm);
-    set_log_stage(STAGE_SEMA_ANALYSIS);
-    SemanticContext sema_ctx = (SemanticContext){
-        .func = ((void *)0),
-    };
-    array_init(&sema_ctx.i_array, 4, sizeof(int));
-    array_init(&sema_ctx.compound_stack, 4, sizeof(Node *));
-    array_init(&sema_ctx.loop_stack, 4, sizeof(Node *));
-    if (has_flag(CF_DEBUG_TYPEPOOL)) print_typepool();
-    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
-    if (has_flag(CF_STOP_AFTER_AST)) {
-        print_ast(&compiler->nm);
-        return 1;
-    }
-    array_free(&sema_ctx.i_array);
-    set_log_stage(STAGE_IR);
-    generate_types();
-    lower_nodes(&compiler->nm);
-    IR_Context ctx = ir_init_ctx(&compiler->p);
-    IR_Module *module = ir_gen_translation_unit(&ctx, arena_get(&compiler->nm, 0));
-    if (has_flag(CF_STOP_AFTER_IR)) {
-        printf("---- IR ----\n");
-        print_ir_module(&ctx, module);
+void print_cfg(const IR_Function *func) {
+    printf("Func Analysis: %s\n", func->name);
+    for (int i = 0; i < func->blocks_array.count; i++) {
+        const IR_Block *b = get_block(func, i);
+        printf("L%d:\n", i);
+        printf("  Succ: ");
+        if (b->cfg.succ_count == 0) printf("None");
+        for (int j = 0; j < b->cfg.succ_count; j++) printf("L%d ", b->cfg.succ[j]);
+        printf("\n");
+        printf("  Pred: ");
+        if (b->cfg.pred_count == 0) printf("None");
+        for (int j = 0; j < b->cfg.pred_count; j++) printf("L%d ", b->cfg.pred[j]);
+        printf("\n");
+        printf("  Def: ");
+        print_bitset(&b->live.def);
+        printf("\n");
+        printf("  Use: ");
+        print_bitset(&b->live.use);
+        printf("\n");
+        printf("  Live-in: ");
+        print_bitset(&b->live.live_in);
+        printf("\n");
+        printf("  Live-out: ");
+        print_bitset(&b->live.live_out);
         printf("\n");
     }
-    analysis(&ctx);
-    if (has_flag(CF_STOP_AFTER_IR)) {
-        if (has_flag(CF_DEBUG_LIFETIMES)) {
-            for (int i = 0; i < module->functions_array.count; i++) print_cfg(get_func(module, i));
-        }
-        if (has_flag(CF_DEBUG_LOWERED_IR)) {
-            printf("---- Lowered IR ----\n");
-            print_ir_module(&ctx, module);
-            printf("\n");
-        }
-        return 1;
-    }
-    set_log_stage(STAGE_X86_GEN);
-    FILE *fp = fopen((char *)compiler->current_output.data, "w");
-    x86_gen_module(fp, &ctx);
-    fclose(fp);
-    ir_free_module(module);
-    free_ir_ctx(&ctx);
-    return 1;
-}
-static int load_src_file(Compiler *compiler, const char *file) {
-    char cmd[512];
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 %s ", file);
-    for (int i = 0; i < compiler->passthrough_args.count; i++) {
-        cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
-    }
-    FILE *fp = popen(cmd, "r");
-    if (!(fp)) do { log_message(LOG_ERROR, "Failed to open %s\n", file); exit(1); } while (0);
-    Array src;
-    array_init(&src, 1024, sizeof(char));
-    char c;
-    for (;;) {
-        c = (char)fgetc(fp);
-        if (c == (-1)) break;
-        append(&src, &c);
-    }
-    pclose(fp);
-    append(&src, &(char){'\0'});
-    compiler->src = (char *)src.data;
-    compiler->src_size = src.count - 1;
-    if (compiler->src_size == 0) log_message(LOG_WARN, "Loaded an empty source file\n");
-    return 0;
 }

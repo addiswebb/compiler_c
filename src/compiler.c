@@ -16,13 +16,13 @@
 #include <string.h>
 
 unsigned int compiler_flags = 0u;
-const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",        [CF_STOP_AFTER_IR] = "ir",
-                                      [CF_STOP_AFTER_COMPILE] = "S",      [CF_STOP_AFTER_ASSEMBLE] = "c",
-                                      [CF_DEBUG_TYPEPOOL] = "gtypepool",  [CF_DEBUG_LIFETIMES] = "glifetimes",
-                                      [CF_DEBUG_ENUM] = "genum",          [CF_DEBUG_STRUCT] = "gstruct",
-                                      [CF_DEBUG_UNION] = "gunion",        [CF_DEBUG_LOWERED_IR] = "glowered-ir",
-                                      [CF_DEBUG_IR_INSTR] = "gir-instr",  [CF_DEBUG_PARSER] = "gparser",
-                                      [CF_DEBUG_TOKENIZER] = "gtokenizer"};
+const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",         [CF_STOP_AFTER_IR] = "ir",
+                                      [CF_STOP_AFTER_COMPILE] = "S",       [CF_STOP_AFTER_ASSEMBLE] = "c",
+                                      [CF_DEBUG_TYPEPOOL] = "gtypepool",   [CF_DEBUG_LIFETIMES] = "glifetimes",
+                                      [CF_DEBUG_ENUM] = "genum",           [CF_DEBUG_STRUCT] = "gstruct",
+                                      [CF_DEBUG_UNION] = "gunion",         [CF_DEBUG_LOWERED_IR] = "glowered-ir",
+                                      [CF_DEBUG_IR_INSTR] = "gir-instr",   [CF_DEBUG_PARSER] = "gparser",
+                                      [CF_DEBUG_TOKENIZER] = "gtokenizer", [CF_DEBUG_SYMBOLS] = "gsymbols"};
 
 bool has_flag(CompilerFlag f) { return compiler_flags & FLAG(f); }
 
@@ -228,6 +228,7 @@ int compile(Compiler *compiler) {
         print_ast(&compiler->nm);
         return 1;
     }
+
     array_free(&sema_ctx.i_array);
 
     set_log_stage(STAGE_IR);
@@ -244,17 +245,22 @@ int compile(Compiler *compiler) {
     }
     analysis(&ctx);
 
-    if (has_flag(CF_STOP_AFTER_IR)) {
-        if (has_flag(CF_DEBUG_LIFETIMES)) {
-            for (int i = 0; i < module->functions_array.count; i++) print_cfg(get_func(module, i));
-        }
-        if (has_flag(CF_DEBUG_LOWERED_IR)) {
-            printf("---- Lowered IR ----\n");
-            print_ir_module(&ctx, module);
-            printf("\n");
-        }
-        return 1;
+    if (has_flag(CF_DEBUG_LIFETIMES)) {
+        for (int i = 0; i < module->functions_array.count; i++) print_cfg(get_func(module, i));
     }
+    if (has_flag(CF_DEBUG_LOWERED_IR)) {
+        printf("---- Lowered IR ----\n");
+        print_ir_module(&ctx, module);
+        printf("\n");
+    }
+    if (has_flag(CF_DEBUG_SYMBOLS)) {
+        printf("---- Symbols ----\n");
+        for (int i = 0; i < ctx.symbol_table->count; i++) {
+            Symbol *s = arena_get(ctx.symbol_table, i);
+            print("%t %s\n", s->type, s->name);
+        }
+    }
+    if (has_flag(CF_STOP_AFTER_IR)) return 1;
 
     set_log_stage(STAGE_X86_GEN);
     FILE *fp = fopen((char *)compiler->current_output.data, "w");

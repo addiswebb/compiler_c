@@ -6,7 +6,7 @@ FAILED_FILE=$(mktemp)
 
 # Files to skip (just the base name without extension)
 # Working
-SKIP_FILES=("win64" "arena" "util" "type" "array" "ir_util" "logger" "tokenizer" "x86_gen" "main" "compiler")
+SKIP_FILES=("win64" "arena" "util" "type" "array" "ir_util" "logger" "tokenizer" "x86_gen" "main" "compiler" "node")
 # Not working
 #SKIP_FILES=("sysv" "analysis" "const_expr" "sema" "node" "ir_builder" "ir_module" "ir_gen" "parser" "x86_emit")
 

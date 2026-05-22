@@ -1,6 +1,5 @@
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis_types.h"
-#include "compiler_c/compiler.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
@@ -9,7 +8,6 @@
 
 #include <inttypes.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 const char *x86_reg(const IR_Value *v) {
     if (v->phys_reg.kind == REG_GP) return gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size];
@@ -18,6 +16,7 @@ const char *x86_reg(const IR_Value *v) {
 
 void x86_operand(const IR_Value *v, char *buf, const int n) {
     int len = 0;
+    // printf("kind %d\n", v->kind);
     switch (v->kind) {
     case IR_CONSTANT:
         // WARN("Not sure if ir const value in x86 is okay\n");

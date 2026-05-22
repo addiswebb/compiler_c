@@ -35,6 +35,10 @@ NodeManager new_node_manager() {
 */
 Node *new_node(NodeManager *nm, const NodeKind kind) {
     Node *node = arena_append(nm, &(Node){0});
+#ifdef __COMPILER_C__
+    // structs are not zero'd yet...
+    memset(node, 0, sizeof(Node));
+#endif
     node->kind = kind;
     node->type = type_invalid;
     return node;
@@ -53,16 +57,7 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
             return node;
         }
     }
-
-    if (!is_valid_cast(node->type, type)) {
-        log_start(LOG_ERROR);
-        printf("Invalid cast from ");
-        print_type(node->type);
-        printf(" to ");
-        print_type(type);
-        printf("\n");
-        exit(1);
-    }
+    ASSERT(is_valid_cast(node->type, type), "Invalid cast from %t to %t\n", node->cast.expr->type, node->cast.to);
 
     Node *cast = new_node(nm, N_CAST);
     cast->type = type;
@@ -74,14 +69,20 @@ Node *cast_node(NodeManager *nm, Node *node, Type *type) {
 
 bool is_valid_cast(const Type *from, const Type *to) {
     if (from->kind == T_INVALID || to->kind == T_INVALID) return false;
-    if (from->kind == T_FUNCTION && to->kind == T_POINTER) {
-        return cmp_func_types(from, to->base);
-    }
-    if (from->kind == T_ARRAY) {
-        // Can only cast array->pointer (pointer decay)
-        return to->kind == T_POINTER;
-    }
+    if (from->kind == T_FUNCTION && to->kind == T_POINTER) return cmp_func_types(from, to->base);
+    // Can only cast array->pointer (pointer decay)
+    if (from->kind == T_ARRAY) return to->kind == T_POINTER;
+#ifdef __COMPILER_C__
+    /*
+        if(!(cond)){}
+        Incorrect handling because ir_lowering ignores !, just remove ir_branch to if->true_block/false_blocks
+        Instead just use early return value always
+    */
+    if (to->kind == T_POINTER && from->kind != T_POINTER && from->kind != T_INT) return to->base == from;
+#else
     if (to->kind == T_POINTER && !(from->kind == T_POINTER || from->kind == T_INT)) return to->base == from;
+#endif
+
     return true;
 }
 

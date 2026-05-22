@@ -423,13 +423,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->type = node->cast.to;
             break;
         }
-        log_start(LOG_ERROR);
-        printf("Invalid cast from ");
-        print_type(node->cast.expr->type);
-        printf(" to ");
-        print_type(node->cast.to);
-        printf("\n");
-        exit(1);
+        PANIC("Semantically invalid cast from %t to %t\n", node->cast.expr->type, node->cast.to);
     case N_FUNCTION_CALL:
         const char *fn_name = node->func_call.callee->kind == N_IDENTIFIER ? node->func_call.callee->identifier.name : "";
         BuiltinKind builtin = get_builtin_kind(fn_name);
