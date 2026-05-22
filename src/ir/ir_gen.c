@@ -118,20 +118,20 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             IR_Value val = ir_alloca(ctx, ir_next_virtual_reg(ctx->func), 8, 8);
             IR_Block *true_block;
             IR_Block *false_block;
-            if (ir_is_within_cond(ctx)) {
-                true_block = ctx->true_block;
-                false_block = ctx->false_block;
-            } else {
-                true_block = ir_new_block();
-                false_block = ir_new_block();
-            }
+            // if (ir_is_within_cond(ctx)) {
+            //     true_block = ctx->true_block;
+            //     false_block = ctx->false_block;
+            // } else {
+            true_block = ir_new_block();
+            false_block = ir_new_block();
+            // }
             if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, lhs, NULL, false_block);
             if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, lhs, true_block, NULL);
 
             IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
             // No need to cmp both results, if we reach here it means lhs is 1 or rhs represents (lhs op rhs)
             // Early out
-            if (ir_is_within_cond(ctx)) return rhs;
+            // if (ir_is_within_cond(ctx)) return rhs;
 
             IR_Block *end_block = ir_new_block();
             ir_branch_cond(ctx, rhs, true_block, false_block);

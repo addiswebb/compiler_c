@@ -72,16 +72,7 @@ bool is_valid_cast(const Type *from, const Type *to) {
     if (from->kind == T_FUNCTION && to->kind == T_POINTER) return cmp_func_types(from, to->base);
     // Can only cast array->pointer (pointer decay)
     if (from->kind == T_ARRAY) return to->kind == T_POINTER;
-#ifdef __COMPILER_C__
-    /*
-        if(!(cond)){}
-        Incorrect handling because ir_lowering ignores !, just remove ir_branch to if->true_block/false_blocks
-        Instead just use early return value always
-    */
-    if (to->kind == T_POINTER && from->kind != T_POINTER && from->kind != T_INT) return to->base == from;
-#else
     if (to->kind == T_POINTER && !(from->kind == T_POINTER || from->kind == T_INT)) return to->base == from;
-#endif
 
     return true;
 }

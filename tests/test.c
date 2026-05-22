@@ -1,50 +1,3 @@
-typedef enum{
-    RAX, RBX, RCX, RDX,
-    RSI, RDI,
-    RBP, RSP,
-    R8, R9, R10, R11, R12, R13, R14, R15,
-}GP_Reg;
-typedef enum{
-    XMM0, XMM1, XMM2, XMM3,
-    XMM4, XMM5, XMM6, XMM7,
-    XMM8, XMM9, XMM10, XMM11,
-    XMM12, XMM13, XMM14, XMM15,
-}XMM_Reg;
-typedef enum{
-    REG_8,
-    REG_16,
-    REG_32,
-    REG_64,
-}RegSize;
-typedef enum{
-    REG_GP,
-    REG_XMM,
-    REG_IP
-}RegKind;
-typedef enum {
-    REG_DATA_LABEL,
-    REG_DATA_OFFSET,
-    REG_DATA_CONST_INDEX,
-    REG_DATA_NONE,
-}RegDataKind;
-struct PhysReg{
-    RegKind kind;
-    union{
-        GP_Reg gp_reg;
-        XMM_Reg sse_reg;
-    };
-    RegSize size;
-    RegDataKind data_kind;
-    union{
-        const char* label;
-        struct{
-            int offset;
-            int scale;
-        };
-        int const_index;
-    };
-};
-RegSize reg_size(int size);
 typedef struct {
     int count;
     int capacity;
@@ -787,6 +740,75 @@ static inline UnionMember *get_union_member(const Type *union_t, int index) {
 }
 UnionMember *get_union_member_named(Type *union_t, const char *name);
 StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index);
+typedef struct {
+    Node *func;
+    Array compound_stack;
+    Array loop_stack;
+    Array i_array;
+} SemanticContext;
+int is_lvalue(const Node *n);
+int is_deref(const Node *n);
+Type *check_unary_op(NodeManager *nm, Node *unary_op);
+Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop);
+Type *promote_binary_operands(NodeManager *nm, Node *binop);
+void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
+void handle_builtin_call(BuiltinKind kind, Node *node);
+void lower_nodes(NodeManager *nm);
+void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
+void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n);
+void pop_sema_scope(SemanticContext *sema_ctx, Parser *p);
+void push_sema_loop(SemanticContext *sema_ctx, const Node *loop);
+void pop_sema_loop(SemanticContext *sema_ctx);
+Node *sema_current_loop(const SemanticContext *sema_ctx);
+Node *sema_current_compound(const SemanticContext *sema_ctx);
+static inline int *get_i(SemanticContext *sema_ctx) { return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
+typedef enum{
+    RAX, RBX, RCX, RDX,
+    RSI, RDI,
+    RBP, RSP,
+    R8, R9, R10, R11, R12, R13, R14, R15,
+}GP_Reg;
+typedef enum{
+    XMM0, XMM1, XMM2, XMM3,
+    XMM4, XMM5, XMM6, XMM7,
+    XMM8, XMM9, XMM10, XMM11,
+    XMM12, XMM13, XMM14, XMM15,
+}XMM_Reg;
+typedef enum{
+    REG_8,
+    REG_16,
+    REG_32,
+    REG_64,
+}RegSize;
+typedef enum{
+    REG_GP,
+    REG_XMM,
+    REG_IP
+}RegKind;
+typedef enum {
+    REG_DATA_LABEL,
+    REG_DATA_OFFSET,
+    REG_DATA_CONST_INDEX,
+    REG_DATA_NONE,
+}RegDataKind;
+struct PhysReg{
+    RegKind kind;
+    union{
+        GP_Reg gp_reg;
+        XMM_Reg sse_reg;
+    };
+    RegSize size;
+    RegDataKind data_kind;
+    union{
+        const char* label;
+        struct{
+            int offset;
+            int scale;
+        };
+        int const_index;
+    };
+};
+RegSize reg_size(int size);
 typedef enum {
     LT,
     LE,
@@ -1151,6 +1173,10 @@ extern const GP_Reg caller_saved_regs[9];
 extern const GP_Reg callee_saved_regs[6];
 extern const char *gp_register_str[16][4];
 extern const char *sse_register_str[16];
+ConstLiteral evaluate_const_expression(const Node *node);
+ConstLiteral evaluate_const_literal(const Node *node);
+void print_const_literal(const ConstLiteral *node);
+void free_const_literal(ConstLiteral *l);
 void exit(int);
 void *malloc(size_t);
 void *realloc(void *, size_t);
@@ -1246,665 +1272,772 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     fflush(logger.file);
     if (lvl == LOG_PANIC) exit(1);
 }
-void x86_gen_module(FILE *fp, IR_Context *ctx);
-void x86_operand(const IR_Value *v, char *buf, int n);
-void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst);
-void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst);
-void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst);
-void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst);
-void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *operand);
-void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, const char *r);
-const char *x86_rax_reg(Type *t);
-const char *x86_rbx_reg(const Type *t);
-const char *x86_rcx_reg(const Type *t);
-const char *x86_rdx_reg(const Type *t);
-const char *x86_op_suffix(const Type *t);
-const char *x86_integer_op_suffix(int size);
-const char *x86_float_op_suffix(int size);
-void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, IR_BINOP_OP op, Type *t);
-void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNARY_OP op, Type *t);
-void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst);
-void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to);
-void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, int pool_index);
-void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
-void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
-void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src);
-void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t);
-void x86_emit_string(FILE *fp, const char *str);
-void x86_emit_literal(FILE *fp, const ConstLiteral *c);
-static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
-static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr);
-static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr);
-static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-static void x86_gen_block(FILE *fp, IR_Context *ctx);
-static void x86_gen_function(FILE *fp, IR_Context *ctx);
-const char *x86_reg(const IR_Value *v) {
-    if (v->phys_reg.kind == REG_GP) return gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size];
-    else return sse_register_str[v->phys_reg.sse_reg];
-}
-void x86_operand(const IR_Value *v, char *buf, const int n) {
-    int len = 0;
-    switch (v->kind) {
-    case IR_CONSTANT:
-        snprintf(buf, n, ".LC%d(%%rip)", v->const_index);
-        return;
-    case IR_PHYS_REG:
-        const PhysReg *r = &v->phys_reg;
-        switch (r->data_kind) {
-        case REG_DATA_LABEL:
-            len += snprintf(buf, n, "%s", r->label);
-            break;
-        case REG_DATA_OFFSET:
-            len += snprintf(buf, n, "%d", r->offset);
-            break;
-        case REG_DATA_CONST_INDEX:
-            len += snprintf(buf, n, ".LC%d", r->const_index);
-            break;
-        case REG_DATA_NONE:
-            break;
-        }
-        if (r->data_kind != REG_DATA_NONE) len += snprintf(buf + len, n - len, "(");
-        switch (r->kind) {
-        case REG_GP:
-            len += snprintf(buf + len, n - len, "%s", gp_register_str[r->gp_reg][r->size]);
-            break;
-        case REG_XMM:
-            len += snprintf(buf + len, n - len, "%s", sse_register_str[r->sse_reg]);
-            break;
-        case REG_IP:
-            len += snprintf(buf + len, n - len, "%%rip");
-            break;
-        }
-        if (r->data_kind != REG_DATA_NONE) snprintf(buf + len, n - len, ")");
-        return;
-    case IR_INT_LITERAL:
-        snprintf(buf, n, "$%" "ld", v->int_literal);
-        return;
-    case IR_SYMBOL:
-        if (!(v->symbol->storage != STORAGE_NONE)) do { log_message(LOG_ERROR, "Can only emit global symbols to x86\n"); exit(1); } while (0);
-        snprintf(buf, n, "%s", v->symbol->name);
-        return;
-    case IR_UNDEFINED:
-    case IR_VREG:
-        do { log_message(LOG_ERROR, "Undefined operand\n"); exit(1); } while (0);
-    }
-}
-void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst) {
-    char dst_buf[64];
-    x86_operand(dst, dst_buf, sizeof(dst_buf));
-    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src, dst_buf);
-}
-void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst) {
-    char src_buf[64];
-    char dst_buf[64];
-    x86_operand(src, src_buf, sizeof(src_buf));
-    x86_operand(dst, dst_buf, sizeof(dst_buf));
-    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src_buf, dst_buf);
-}
-void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst) {
-    char src_buf[64];
-    x86_operand(src, src_buf, sizeof(src_buf));
-    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src_buf, dst);
-}
-void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst) {
-    fprintf(fp, "    %s%s%s %s, %s\n", instr, s1, s2, src, dst);
-}
-void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *operand) {
-    char operand_buf[64];
-    x86_operand(operand, operand_buf, sizeof(operand_buf));
-    fprintf(fp, "    %s%s%s %s\n", instr, s1, s2, operand_buf);
-}
-void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, const char *r) {
-    fprintf(fp, "    %s%s%s %s\n", instr, s1, s2, r);
-}
-const char *x86_rax_reg(Type *t) {
-    if (t->kind == T_FLOAT) return "%xmm0";
-    if (t->kind == T_INT) {
-        switch (t->size) {
-        case 1:
-            return "%al";
-        case 2:
-            return "%ax";
-        case 4:
-            return "%eax";
-        case 8:
-            return "%rax";
-        default:
-            do { log_message(LOG_ERROR, "Tried to get int register of unsupported size %d\n", t->size); exit(1); } while (0);
-        }
-    }
-    if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "%rax";
-    do { log_message(LOG_ERROR, "Tried to get %%rax, register of unsupported type %t\n", t); exit(1); } while (0);
-}
-const char *x86_rbx_reg(const Type *t) {
-    if (t->kind == T_FLOAT) return "%xmm1";
-    if (t->kind == T_INT) {
-        switch (t->size) {
-        case 1:
-            return "%bl";
-        case 2:
-            return "%bx";
-        case 4:
-            return "%ebx";
-        case 8:
-            return "%rbx";
-        default:
-            do { log_message(LOG_ERROR, "Tried to get int register of unsupported size\n"); exit(1); } while (0);
-        }
-    }
-    if (t->kind == T_POINTER) return "%rbx";
-    if (t->kind == T_ARRAY) return "%rbx";
-    do { log_message(LOG_ERROR, "Tried to get %%rbx register of unsupported type\n"); exit(1); } while (0);
-}
-const char *x86_rcx_reg(const Type *t) {
-    if (t->kind == T_FLOAT) return "%xmm2";
-    if (t->kind == T_INT) {
-        switch (t->size) {
-        case 1:
-            return "%cl";
-        case 2:
-            return "%cx";
-        case 4:
-            return "%ecx";
-        case 8:
-            return "%rcx";
-        default:
-            do { log_message(LOG_ERROR, "Tried to get int register of unsupported size\n"); exit(1); } while (0);
-        }
-    }
-    if (t->kind == T_POINTER) return "%rcx";
-    if (t->kind == T_ARRAY) return "%rcx";
-    do { log_message(LOG_ERROR, "Tried to get %%rcx register of unsupported type\n"); exit(1); } while (0);
-}
-const char *x86_rdx_reg(const Type *t) {
-    if (t->kind == T_FLOAT) return "%xmm3";
-    if (t->kind == T_INT) {
-        switch (t->size) {
-        case 1:
-            return "%dl";
-        case 2:
-            return "%dx";
-        case 4:
-            return "%edx";
-        case 8:
-            return "%rdx";
-        default:
-            do { log_message(LOG_ERROR, "Tried to get int register of unsupported size\n"); exit(1); } while (0);
-        }
-    }
-    if (t->kind == T_POINTER) return "%rdx";
-    if (t->kind == T_ARRAY) return "%rdx";
-    do { log_message(LOG_ERROR, "Tried to get %%rdx register of unsupported type\n"); exit(1); } while (0);
-}
-const char *x86_float_op_suffix(int size) {
-    switch (size) {
-    case 4:
-        return "ss";
-    case 8:
-        return "sd";
-    default:
-        do { log_message(LOG_ERROR, "Tried to get float suffix of unsupported size\n"); exit(1); } while (0);
-    }
-}
-const char *x86_integer_op_suffix(int size) {
-    switch (size) {
-    case 1:
-        return "b";
-    case 2:
-        return "w";
-    case 4:
-        return "l";
-    case 8:
-        return "q";
-    default:
-        do { log_message(LOG_ERROR, "Tried to get int suffix of unsupported size\n"); exit(1); } while (0);
-    }
-}
-const char *x86_op_suffix(const Type *t) {
-    if (t->kind == T_FLOAT) return x86_float_op_suffix(t->size);
-    if (t->kind == T_INT || t->kind == T_ENUM) return x86_integer_op_suffix(t->size);
-    if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "q";
-    do { log_message(LOG_ERROR, "Tried to op of unsupported type\n"); exit(1); } while (0);
-}
-void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { abi_emit_call(fp, ctx, instr); }
-void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, const IR_BINOP_OP op, Type *t) {
-    const char *rax_reg = x86_rax_reg(t);
-    const char *op_suffix = x86_op_suffix(t);
-    const int use_i = !(t->kind == T_INT && !t->is_signed);
-    const char *sign_prefix = use_i ? "i" : "";
-    switch (t->kind) {
-    case T_INT:
-        switch (op) {
-        case ADD:
-            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
-            x86_emit_xr(fp, "add", op_suffix, "", rhs, rax_reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
-            return;
-        case SUB:
-            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
-            x86_emit_xr(fp, "sub", op_suffix, "", rhs, rax_reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
-            return;
-        case MUL:
-            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
-            if (use_i) {
-                if (rhs->kind == IR_INT_LITERAL) x86_emit_xr(fp, "imul", op_suffix, "", rhs, rax_reg);
-                else x86_emit_x(fp, "imul", op_suffix, "", rhs);
-            } else {
-                x86_emit_x(fp, sign_prefix, "mul", op_suffix, rhs);
-            }
-            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
-            return;
-        case DIV:
-            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
-            switch (t->size) {
-            case 1:
-                fprintf(fp, "    cbw\n");
-                break;
-            case 2:
-                fprintf(fp, "    cwde\n");
-                break;
-            case 4:
-                fprintf(fp, "    cltd\n");
-                break;
-            case 8:
-                fprintf(fp, "    cqo\n");
-                break;
-            default:
-                do { log_message(LOG_ERROR, "Tried to divide int with unsupported size\n"); exit(1); } while (0);
-            }
-            if (rhs->kind == IR_INT_LITERAL) {
-                const char *rcx_reg = x86_rcx_reg(t);
-                x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg);
-                x86_emit_r(fp, sign_prefix, "div", op_suffix, rcx_reg);
-            } else x86_emit_x(fp, sign_prefix, "div", op_suffix, rhs);
-            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
-            return;
-        case MOD:
-            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
-            char *mod_suffix;
-            char *reg;
-            switch (t->size) {
-            case 1:
-                fprintf(fp, "    cbw\n");
-                mod_suffix = "b";
-                reg = "%ah";
-                break;
-            case 2:
-                fprintf(fp, "    cwde\n");
-                mod_suffix = "w";
-                reg = "%dx";
-                break;
-            case 4:
-                fprintf(fp, "    cltd\n");
-                mod_suffix = "l";
-                reg = "%edx";
-                break;
-            case 8:
-                fprintf(fp, "    cqo\n");
-                mod_suffix = "q";
-                reg = "%rdx";
-                break;
-            default:
-                do { log_message(LOG_ERROR, "Tried to modulo int with unsupported size\n"); exit(1); } while (0);
-            }
-            if (rhs->kind == IR_INT_LITERAL) {
-                const char *rcx_reg = x86_rcx_reg(t);
-                x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg);
-                x86_emit_r(fp, sign_prefix, "div", mod_suffix, rcx_reg);
-            } else x86_emit_x(fp, sign_prefix, "div", mod_suffix, rhs);
-            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
-            return;
-        case BW_AND:
-            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
-            x86_emit_xr(fp, "and", op_suffix, "", rhs, rax_reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
-            return;
-        case BW_OR:
-            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
-            x86_emit_xr(fp, "or", op_suffix, "", rhs, rax_reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
-            return;
-        case XOR:
-            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
-            x86_emit_xr(fp, "xor", op_suffix, "", rhs, rax_reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
-            return;
-        case SHL:
-            const char *rcx_reg_l = x86_rcx_reg(t);
-            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
-            x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg_l);
-            x86_emit_rr(fp, "shl", op_suffix, "", "%cl", rax_reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
-            return;
-        case SHR:
-            const char *rcx_reg_r = x86_rcx_reg(t);
-            x86_emit_xr(fp, "mov", op_suffix, "", lhs, rax_reg);
-            x86_emit_xr(fp, "mov", op_suffix, "", rhs, rcx_reg_r);
-            x86_emit_rr(fp, "sar", op_suffix, "", "%cl", rax_reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", rax_reg, dst);
-            return;
-        case L_AND:
-        case L_OR:
-            do { log_message(LOG_ERROR, "Logical operators && and || should not reach x86 gen\n"); exit(1); } while (0);
-        }
-    case T_FLOAT:
-        x86_emit_xr(fp, "mov", op_suffix, "", lhs, "%xmm0");
-        switch (op) {
-        case ADD:
-            x86_emit_xr(fp, "add", op_suffix, "", rhs, "%xmm0");
-            break;
-        case SUB:
-            x86_emit_xr(fp, "sub", op_suffix, "", rhs, "%xmm0");
-            break;
-        case MUL:
-            x86_emit_xr(fp, "mul", op_suffix, "", rhs, "%xmm0");
-            break;
-        case DIV:
-            x86_emit_xr(fp, "div", op_suffix, "", rhs, "%xmm0");
-            break;
-        default:
-            do { log_message(LOG_ERROR, "Tried to perform unsupported binary operation on type float\n"); exit(1); } while (0);
-        }
-        x86_emit_rx(fp, "mov", op_suffix, "", "%xmm0", dst);
+int is_lvalue(const Node *n) { return n->kind == N_IDENTIFIER || n->kind == N_INDEX || n->kind == N_MEMBER_ACCESS || is_deref(n); }
+int is_deref(const Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY; }
+Type *check_unary_op(NodeManager *nm, Node *unary_op) {
+    const Node *expr = unary_op->unary.expr;
+    const TypeKind kind = expr->type->kind;
+    switch (unary_op->unary.op) {
+    case TK_PLUS:
+    case TK_MINUS:
+        if (kind == T_INT || kind == T_FLOAT) return expr->type;
         break;
-    case T_POINTER:
-        switch (op) {
-        case ADD:
-            x86_emit_xr(fp, "mov", "q", "", lhs, "%rax");
-            x86_emit_xr(fp, "add", "q", "", rhs, "%rax");
-            x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
-            return;
-        default:
-            do { log_message(LOG_ERROR, "Tried to perform unsupported binary op on pointer\n"); exit(1); } while (0);
-        }
-    default:
-        do { log_message(LOG_ERROR, "Tried to emit binary instruction of unsupported type\n"); exit(1); } while (0);
-    }
-}
-void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, const IR_UNARY_OP op, Type *t) {
-    const char *reg = x86_rax_reg(t);
-    const char *op_suffix = x86_op_suffix(t);
-    switch (t->kind) {
-    case T_INT:
-        switch (op) {
-        case POS:
-            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
-            return;
-        case NEG:
-            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
-            fprintf(fp, "    neg%s %s\n", op_suffix, reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
-            return;
-        case LNOT:
-            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
-            fprintf(fp, "    test%s %s, %s\n", op_suffix, reg, reg);
-            fprintf(fp, "    sete %%al\n");
-            fprintf(fp, "    movzb%s %%al, %s\n", op_suffix, reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
-            return;
-        case BNOT:
-            x86_emit_xr(fp, "mov", op_suffix, "", expr, reg);
-            fprintf(fp, "    not%s %s\n", op_suffix, reg);
-            x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
-            return;
-        default:
-            return;
-        }
-    case T_FLOAT:
-        switch (op) {
-        case POS:
-            x86_emit_xr(fp, "mov", op_suffix, "", expr, "%xmm0");
-            x86_emit_rx(fp, "mov", op_suffix, "", "%xmm0", dst);
-            return;
-        case NEG:
-            x86_emit_xr(fp, "mov", op_suffix, "", expr, "%xmm0");
-            if (t->size == 4) fprintf(fp, "    xorps %%xmm1, %%xmm1\n");
-            else fprintf(fp, "    xorpd %%xmm1, %%xmm1\n");
-            x86_emit_rr(fp, "sub", op_suffix, "", "%xmm0", "%xmm1");
-            x86_emit_rx(fp, "mov", op_suffix, "", "%xmm1", dst);
-            return;
-        case LNOT:
-            x86_emit_xr(fp, "mov", op_suffix, "", expr, "%xmm0");
-            if (t->size == 4) fprintf(fp, "    xorps %%xmm1, %%xmm1\n");
-            else fprintf(fp, "    xorpd %%xmm1, %%xmm1\n");
-            fprintf(fp, "    ucomi%s %%xmm1, %%xmm0\n", op_suffix);
-            fprintf(fp, "    sete %%al\n");
-            x86_emit_rr(fp, "movz", "b", "l", "%al", "%al");
-            x86_emit_rx(fp, "mov", "l", "", "%eax", dst);
-            return;
-        case BNOT:
-            do { log_message(LOG_ERROR, "Tried to perform Bitwise Not ~ on Type float\n"); exit(1); } while (0);
-        default:
-            return;
-        }
-    default:
-        do { log_message(LOG_ERROR, "Tried to emit unary of unsupported type\n"); exit(1); } while (0);
-    }
-}
-void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst) {
-    x86_emit_xr(fp, "leaq", "", "", src, "%rax");
-    x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
-}
-void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to) {
-    const char *from_reg = x86_rax_reg(from);
-    const char *from_op_suffix = x86_op_suffix(from);
-    const char *to_reg = x86_rax_reg(to);
-    const char *to_op_suffix = x86_op_suffix(to);
-    if (from == to) {
-        x86_emit_xr(fp, "mov", "", from_op_suffix, src, from_reg);
-        x86_emit_rx(fp, "mov", "", from_op_suffix, from_reg, dst);
-        return;
-    }
-    if (from->kind == T_ARRAY && to->kind == T_POINTER) return;
-    if (from->kind == T_FUNCTION && to->kind == T_POINTER) {
-        x86_emit_xr(fp, "lea", "", "", src, from_reg);
-        x86_emit_rx(fp, "mov", "q", "", from_reg, dst);
-        return;
-    }
-    if (from->kind == T_INT || from->kind == T_POINTER) {
-        if (to->kind == T_INT || to->kind == T_POINTER) {
-            printf("1\n");
-            if (from->size < to->size) {
-                x86_emit_xr(fp, "movs", from_op_suffix, to_op_suffix, src, to_reg);
-            } else {
-                x86_emit_xr(fp, "mov", from_op_suffix, "", src, from_reg);
-            }
-            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
-            return;
-        }
-    }
-    if (from->kind == T_INT && to->kind == T_FLOAT) {
-        printf("2\n");
-        if (src->kind == IR_INT_LITERAL) {
-            x86_emit_xr(fp, "mov", from_op_suffix, "", src, from_reg);
-            x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", from_reg, to_reg);
-            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
-        } else {
-            x86_emit_xr(fp, "movs", from_op_suffix, "q", src, "%rax");
-            x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
-        }
-        x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
-        return;
-    }
-    if (from->kind == T_FLOAT && to->kind == T_INT) {
-        if (to->size == 8) {
-            x86_emit_xr(fp, "cvtt", from_op_suffix, "2sq", src, "%rax");
-            x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
-        } else {
-            x86_emit_xr(fp, "cvtt", from_op_suffix, "2si", src, "%eax");
-            x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
-        }
-        return;
-    }
-    if (from->kind == T_FLOAT && to->kind == T_FLOAT) {
-        x86_emit_xr(fp, "mov", from_op_suffix, "", src, "%xmm0");
-        fprintf(fp, "    cvt%s2%s %%xmm0, %%xmm1\n", from_op_suffix, to_op_suffix);
-        x86_emit_rx(fp, "mov", to_op_suffix, "", "%xmm1", dst);
-        return;
-    }
-    do { log_message(LOG_ERROR, "Cast node did literally nothing?\n"); exit(1); } while (0);
-}
-void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, const int pool_index) {
-    const char *reg = x86_rax_reg(t);
-    const char *op_suffix = x86_op_suffix(t);
-    switch (c->kind) {
-    case CONST_INTEGER:
-        switch (t->size) {
-        case 1:
-        case 2:
-        case 4:
-            fprintf(fp, "    movl $%d, %%eax\n", (int)c->i);
-            break;
-        case 8:
-            fprintf(fp, "    movl $%" "ld" ", %%eax\n", c->i);
-            break;
-        default:
-            do { log_message(LOG_ERROR, "Tried to emit const int of unsupported size\n"); exit(1); } while (0);
-        }
+    case TK_L_NOT:
+        if (kind == T_INT || kind == T_FLOAT || kind == T_POINTER) return type_i32;
         break;
-    case CONST_FLOAT:
-        switch (t->size) {
-        case 4:
-        case 8:
-            fprintf(fp, "    mov%s .LC%d(%%rip), %s\n", op_suffix, pool_index, reg);
-            break;
-        default:
-            do { log_message(LOG_ERROR, "Tried to emit const float of unsupported size\n"); exit(1); } while (0);
-        }
+    case TK_BW_NOT:
+        if (kind == T_INT) return expr->type;
         break;
-    case CONST_STRING:
-        return;
-    case CONST_ARRAY:
-    case CONST_LABEL:
-    case CONST_REFERENCE:
-        do { log_message(LOG_ERROR, "Tried to emit const of unsupported type\n"); exit(1); } while (0);
+    case TK_AND:
+        if (is_lvalue(expr)) {
+            return get_pointer_type(expr->type);
+        }
+        do { log_message(LOG_ERROR, "Tried to reference a non assignable term\n"); exit(1); } while (0);
+    case TK_MULTIPLY:
+        if (expr->type->kind == T_ARRAY) {
+            unary_op->unary.expr = cast_node(nm, unary_op->unary.expr, get_pointer_type(expr->type->base));
+        }
+        if (expr->type->base && expr->type->base != type_invalid) return expr->type->base;
+        do { log_message(LOG_ERROR, "Tried to dereference some nonexistent term\n"); exit(1); } while (0);
+    case TK_SIZEOF:
+        if (expr->type != type_invalid && expr->type->size) return type_i32;
+        do { log_message(LOG_ERROR, "Tried to get the sizeof something without a size\n"); exit(1); } while (0);
+    case TK_INCR:
+    case TK_DECR:
+        return expr->type;
+    default:
+        break;
     }
-    x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
+    printf("Invalid operand type ");
+    print_type(expr->type);
+    printf(" for the given unary operator ");
+    print_token_type(unary_op->unary.op);
+    printf("\n");
+    return type_invalid;
 }
-void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t) {
-    const char *v = x86_rcx_reg(t);
-    const char *op_suffix = x86_op_suffix(t);
-    x86_emit_xr(fp, "mov", "q", "", dst, "%rax");
-    x86_emit_xr(fp, "mov", op_suffix, "", src, v);
-    x86_emit_rr(fp, "mov", op_suffix, "", v, "(%rax)");
+int is_valid_binary_op(TokenType op, const Node *lhs, const Node *rhs) {
+    if (op == TK_EQ) return 1;
+    if (is_assignment_op(op)) op = get_underlying_op(op);
+    if (op == TK_AND_AND || op == TK_OR_OR) return is_scalar_type(lhs->type) && is_scalar_type(rhs->type);
+    int is_lhs_ptr = lhs->type->kind == T_POINTER || lhs->type->kind == T_ARRAY;
+    int is_rhs_ptr = rhs->type->kind == T_POINTER || rhs->type->kind == T_ARRAY;
+    if ((is_lhs_ptr || is_rhs_ptr) && is_bitwise_op(op)) return 0;
+    if (is_lhs_ptr && !is_rhs_ptr) return op == TK_PLUS || op == TK_MINUS || op == TK_EQ_EQ || op == TK_NEQ;
+    if (!is_lhs_ptr && is_rhs_ptr) return op == TK_PLUS || op == TK_EQ_EQ || op == TK_NEQ;
+    if (is_lhs_ptr && is_rhs_ptr) return op == TK_MINUS || is_comparison_op(op);
+    return 1;
 }
-void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t) {
-    const char *rax = x86_rax_reg(t);
-    const char *op_suffix = x86_op_suffix(t);
-    x86_emit_xr(fp, "mov", "q", "", addr, "%rax");
-    x86_emit_rr(fp, "mov", op_suffix, "", "(%rax)", rax);
-    x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
-}
-void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src) {
-    const char *rax = gp_register_str[RAX][REG_64];
-    const char *op_suffix = x86_integer_op_suffix(8);
-    if (dst->kind == IR_PHYS_REG && dst->phys_reg.data_kind == REG_DATA_NONE && src->kind == IR_PHYS_REG &&
-        src->phys_reg.data_kind == REG_DATA_NONE) {
-        x86_emit_xx(fp, "mov", op_suffix, "", src, dst);
+Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
+    if (binop->binary.lhs->type == type_invalid || binop->binary.rhs->type == type_invalid) {
+        do { log_message(LOG_ERROR, "Binary op was given expression with an invalid type\n"); exit(1); } while (0);
     }
-    x86_emit_xr(fp, "mov", op_suffix, "", src, rax);
-    x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
+    const Node *lhs = binop->binary.lhs;
+    Node *rhs = binop->binary.rhs;
+    if (!is_valid_binary_op(op, lhs, rhs)) {
+        do { log_message(LOG_ERROR, "Invalid arithmetic operands\n"); exit(1); } while (0);
+    }
+    if (is_assignment_op(op)) {
+        if (!(is_lvalue(lhs))) do { log_message(LOG_ERROR, "Binary op lhs is not assignable\n"); exit(1); } while (0);
+        if (lhs->type != rhs->type) binop->binary.rhs = cast_node(nm, rhs, lhs->type);
+        return lhs->type;
+    }
+    Type *common = promote_binary_operands(nm, binop);
+    if (!common || common == type_invalid) {
+        do { log_message(LOG_ERROR, "Invalid arithmetic operands\n"); exit(1); } while (0);
+    }
+    if (is_arithmetic_op(op)) return common;
+    if (is_comparison_op(op)) return common;
+    if (is_bitwise_op(op)) {
+        if (!(lhs->type->kind == T_INT || lhs->type->kind == T_ENUM) || !(rhs->type->kind == T_INT || rhs->type->kind == T_ENUM)) {
+            do { log_message(LOG_ERROR, "Bitwise operation requires integers\n"); exit(1); } while (0);
+        }
+        return type_i32;
+    }
+    if (is_logical_op(op)) return type_i32;
+    printf("Unknown binary operator\n");
+    return type_invalid;
 }
-void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t) {
-    const char *reg = x86_rax_reg(t);
-    const char *op_suffix = x86_op_suffix(t);
-    x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
-    int use_unsigned;
-    if (t->kind == T_FLOAT) {
-        x86_emit_xr(fp, "ucomi", op_suffix, "", rhs, reg);
-        use_unsigned = 1;
+Type *promote_binary_operands(NodeManager *nm, Node *binop) {
+    Type *common = type_invalid;
+    Node **lhs = &binop->binary.lhs;
+    Node **rhs = &binop->binary.rhs;
+    if ((*lhs)->type->kind == T_ENUM) {
+        *lhs = cast_node(nm, (*lhs), type_i32);
+    }
+    if ((*rhs)->type->kind == T_ENUM) {
+        *rhs = cast_node(nm, (*rhs), type_i32);
+    }
+    if ((*lhs)->type->kind == T_ARRAY) {
+        *lhs = cast_node(nm, (*lhs), get_pointer_type((*lhs)->type->base));
+    }
+    if ((*rhs)->type->kind == T_ARRAY) {
+        *rhs = cast_node(nm, (*rhs), get_pointer_type((*rhs)->type->base));
+    }
+    if (is_arithmetic_op(binop->binary.op) || is_comparison_op(binop->binary.op)) {
+        if ((*lhs)->type->kind == T_INT && (*lhs)->type->size < type_i32->size)
+            *lhs = cast_node(nm, (*lhs), (*lhs)->type->is_signed ? type_i32 : type_u32);
+        if ((*rhs)->type->kind == T_INT && (*rhs)->type->size < type_i32->size)
+            *rhs = cast_node(nm, (*rhs), (*rhs)->type->is_signed ? type_i32 : type_u32);
+    }
+    if ((*lhs)->type->kind == T_FLOAT || (*rhs)->type->kind == T_FLOAT) {
+        common = (*lhs)->type->size > (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
+    } else if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_INT) {
+        if ((*rhs)->type != type_i64) *rhs = cast_node(nm, (*rhs), type_i64);
+        return (*lhs)->type;
+    } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_POINTER) {
+        if ((*lhs)->type != type_i64) *lhs = cast_node(nm, (*lhs), type_i64);
+        return (*rhs)->type;
+    } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_INT) {
+        common = (*lhs)->type->size >= (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
+    } else if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_POINTER) {
+        return type_i64;
     } else {
-        x86_emit_xr(fp, "cmp", op_suffix, "", rhs, reg);
-        use_unsigned = t->kind == T_INT && !t->is_signed;
+        do { log_message(LOG_ERROR, "UNSURE HOW TO HANDLE COMMON CASE;\n"); exit(1); } while (0);
     }
-    const char *al_reg = "%al";
-    switch (op) {
-    case LT:
-        x86_emit_r(fp, "set", use_unsigned ? "b" : "l", "", al_reg);
-        break;
-    case LE:
-        x86_emit_r(fp, "set", use_unsigned ? "be" : "le", "", al_reg);
-        break;
-    case GT:
-        x86_emit_r(fp, "set", use_unsigned ? "a" : "g", "", al_reg);
-        break;
-    case GE:
-        x86_emit_r(fp, "set", use_unsigned ? "ae" : "ge", "", al_reg);
-        break;
-    case EQ:
-        x86_emit_r(fp, "set", "e", "", al_reg);
-        break;
-    case NEQ:
-        x86_emit_r(fp, "set", "ne", "", al_reg);
-        break;
-    }
-    x86_emit_rr(fp, "mov", "zbl", "", "%al", "%eax");
-    x86_emit_rx(fp, "mov", "l", "", "%eax", dst);
-    return;
+    if ((*lhs)->type != common) *lhs = cast_node(nm, (*lhs), common);
+    if ((*rhs)->type != common) *rhs = cast_node(nm, (*rhs), common);
+    return common;
 }
-void x86_emit_string(FILE *fp, const char *str) {
-    fprintf(fp, "    .byte ");
-    while (*str) {
-        unsigned char c = *str;
-        if (c >= 0x20 && c <= 0x7E && c != '\'' && c != '\\' && c != '"') {
-            fprintf(fp, "'%c', ", c);
-        } else {
-            fprintf(fp, "0x%02X, ", c);
-        }
-        str++;
-    }
-    fprintf(fp, "0\n");
+void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
+    Node *ident = new_node(nm, N_IDENTIFIER);
+    ident->identifier.name = "__tmp_cl";
+    ident->identifier.len = 9;
+    ident->type = node->type;
+    Node *d = new_node(nm, N_VAR_DECL);
+    d->type = node->type;
+    d->var_decl.expr = node->compound_literal.value;
+    d->var_decl.is_defined = 1;
+    d->var_decl.storage_class = STATIC;
+    d->var_decl.is_global = 0;
+    d->var_decl.identifier = ident;
+    ident->identifier.symbol = p_append_var_decl_symbol(p, d);
+    d->var_decl.symbol = ident->identifier.symbol;
+    *node = *ident;
+    insert_node(&sema_current_compound(sema_ctx)->compound.items_array, &d, *get_i(sema_ctx));
+    (*get_i(sema_ctx))++;
 }
-void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
-    switch (c->kind) {
-    case CONST_INTEGER:
-        if (c->type == type_i8 || c->type == type_u8) {
-            fprintf(fp, "    .byte %d\n", (char)c->i);
-        } else if (c->type == type_i16 || c->type == type_u16) {
-            fprintf(fp, "    .word %d\n", (short)c->i);
-        } else if (c->type == type_i32 || c->type == type_u32) {
-            fprintf(fp, "    .long %d\n", (int)c->i);
-        } else if (c->type == type_i64 || c->type == type_u64) {
-            fprintf(fp, "    .quad %" "ld" "\n", c->i);
+void handle_builtin_call(BuiltinKind kind, Node *node) {
+    Node builtin;
+    builtin.kind = N_BUILTIN;
+    builtin._builtin.kind = kind;
+    builtin._builtin.params = node->func_call.params_array;
+    memcpy(node, &builtin, sizeof(Node));
+}
+Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *t) {
+    if (t->is_resolved) return t;
+    t->is_resolved = 1;
+    switch (t->kind) {
+    case T_POINTER:
+        Type *new_pt = get_pointer_type(resolve_type(sema_ctx, p, nm, t->base));
+        new_pt->is_resolved = 1;
+        return new_pt;
+    case T_ARRAY:
+        Type *base = resolve_type(sema_ctx, p, nm, t->base);
+        semantic_analysis(sema_ctx, p, nm, t->_array.const_expr);
+        Type *new_at = get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
+        new_at->is_resolved = 1;
+        return new_at;
+    case T_UNION:
+        t->size = 0;
+        t->align = 0;
+        for (int i = 0; i < t->_union.members_array.count; i++) {
+            UnionMember *m = get_union_member(t, i);
+            m->type = resolve_type(sema_ctx, p, nm, m->type);
+            m->offset = 0;
+            if (m->type->size > t->size) {
+                t->size = m->type->size;
+                t->align = m->type->align;
+            }
+        }
+        if (!(t->size > 0)) do { log_message(LOG_ERROR, "Union size resolve failed\n"); exit(1); } while (0);
+        return t;
+    case T_STRUCT:
+        if (t->_struct.name && strcmp(t->_struct.name, "Type") == 0) {
+            printf("Here\n");
+        }
+        t->size = 0;
+        t->align = 0;
+        for (int i = 0; i < t->_struct.members_array.count; i++) {
+            StructMember *m = get_struct_member(t, i);
+            m->type = resolve_type(sema_ctx, p, nm, m->type);
+            if (m->type->align > t->align) t->align = m->type->align;
+            t->size = align(t->size, m->type->align);
+            m->offset = t->size;
+            t->size += m->type->size;
+        }
+        t->size = align(t->size, t->align);
+        return t;
+    case T_ENUM:
+        int64_t value = 0;
+        for (int i = 0; i < t->_enum.fields_array.count; i++) {
+            EnumField *f = get_enum_field(t, i);
+            if (f->const_expr) {
+                semantic_analysis(sema_ctx, p, nm, f->const_expr);
+                value = evaluate_const_expression(f->const_expr).i;
+            }
+            f->value = value++;
+            p_append_enum_const(p, f);
+        }
+        t->is_resolved = 1;
+        return t;
+    case T_FUNCTION:
+    case T_VOID:
+    case T_INT:
+    case T_FLOAT:
+        t->is_resolved = 1;
+        return t;
+    case T_INVALID:
+        do { log_message(LOG_ERROR, "Trying to resolve invalid type\n"); exit(1); } while (0);
+    }
+}
+void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
+    if (!node) return;
+    switch (node->kind) {
+    case N_TRANSLATION_UNIT:
+        for (int i = 0; i < node->translation_unit.declarations_array.count; i++) {
+            semantic_analysis(sema_ctx, p, nm, get_node(&node->translation_unit.declarations_array, i));
+        }
+        node->type = type_void;
+        break;
+    case N_FUNCTION:
+        if (!(!(node->func.is_defined && node->func.storage_class == EXTERN))) do { log_message(LOG_ERROR, "External Function cannot have a definition\n"); exit(1); } while (0);
+        Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC, 0);
+        if (func_symbol) {
+            if (func_symbol->func_def->func.storage_class == STATIC && node->func.storage_class != STATIC) {
+                do { log_message(LOG_ERROR, "Linkage conflict between function declarations of %s\n", node->func.name); exit(1); } while (0);
+            }
+            if (!func_symbol->func_def->func.is_defined && node->func.is_defined) {
+                func_symbol->func_def = node;
+            } else if (node->func.is_defined && func_symbol->func_def->func.is_defined) {
+                do { log_message(LOG_ERROR, "Redefinition of function %s\n", node->func.name); exit(1); } while (0);
+            }
+            node->func.symbol = func_symbol;
+        } else node->func.symbol = p_append_func_def(p, node);
+        if (node->func.is_defined) {
+            p_push_scope(p);
+            sema_ctx->func = node;
+            for (int i = 0; i < node->type->_func.params.count; i++) {
+                ParamDecl *param = (ParamDecl *)get(&node->type->_func.params, i);
+                if (node->func.is_defined) {
+                    if (!(param->name)) do { log_message(LOG_ERROR, "All Defined Function Paramaters must be named\n"); exit(1); } while (0);
+                    Node *param_decl = new_node(nm, N_VAR_DECL);
+                    Node *ident = new_node(nm, N_IDENTIFIER);
+                    ident->identifier.name = param->name;
+                    param_decl->var_decl.identifier = ident;
+                    param->symbol = p_append_var_decl_symbol(p, param_decl);
+                    param_decl->var_decl.symbol = param->symbol;
+                    param_decl->type = param->type;
+                }
+            }
+            semantic_analysis(sema_ctx, p, nm, node->func.body);
+            p_pop_scope(p);
         }
         break;
-    case CONST_FLOAT:
-        if (c->type == type_f64) {
-            uint64_t bits;
-            memcpy(&bits, &c->f, sizeof(bits));
-            fprintf(fp, "    .quad 0x%016" "lx" "\n", bits);
-        } else if (c->type == type_f32) {
-            uint32_t bits;
-            float f = (float)c->f;
-            memcpy(&bits, &f, sizeof(bits));
-            fprintf(fp, "    .long 0x%08x\n", bits);
+    case N_COMPOUND:
+        push_sema_scope(sema_ctx, p, node);
+        int n_nodes = node->compound.items_array.count;
+        for (int i = 0; i < n_nodes; i++) {
+            semantic_analysis(sema_ctx, p, nm, get_node(&node->compound.items_array, *get_i(sema_ctx)));
+            (*get_i(sema_ctx))++;
+        }
+        pop_sema_scope(sema_ctx, p);
+        break;
+    case N_VAR_DECL:
+        if (!node->type->is_resolved) node->type = resolve_type(sema_ctx, p, nm, node->type);
+        if (node->var_decl.storage_class == EXTERN) {
+            if (node->var_decl.is_defined) {
+                do { log_message(LOG_ERROR, "External variable cannot be initialized in the same statement\n"); exit(1); } while (0);
+            }
+        }
+        Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR, 1);
+        if (var_symbol) {
+            if (node->var_decl.is_defined && var_symbol->linkage == LINK_EXTERNAL) update_linkage_storage(var_symbol, node);
+            if (p->scopes_array.count > 1) {
+                if (var_symbol->scope_depth == p->current_scope_depth) {
+                    do { log_message(LOG_ERROR, "Redeclaration of local variable %s\n", node->var_decl.identifier->identifier.name); exit(1); } while (0);
+                }
+            } else if (!var_symbol->var_decl->var_decl.is_defined && node->var_decl.is_defined) {
+                var_symbol->var_decl = node;
+            } else if (var_symbol->var_decl->var_decl.is_defined && node->var_decl.is_defined) {
+                do { log_message(LOG_ERROR, "Redefinition of global variable %s\n", node->var_decl.identifier->identifier.name); exit(1); } while (0);
+            }
+        } else var_symbol = p_append_var_decl_symbol(p, node);
+        node->var_decl.symbol = var_symbol;
+        node->var_decl.identifier->identifier.symbol = var_symbol;
+        if (!node->var_decl.expr) break;
+        if (node->var_decl.expr->kind == N_INIT_LIST) {
+            node->var_decl.expr->type = node->type;
+            semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
+            if (node->var_decl.is_global) {
+                ConstLiteral init_list = evaluate_const_expression(node->var_decl.expr);
+                node->var_decl.const_expr = malloc(sizeof(ConstLiteral));
+                if (!(node->var_decl.const_expr)) do { log_message(LOG_ERROR, "Failed to allocate for const expr"); exit(1); } while (0);
+                *node->var_decl.const_expr = init_list;
+            }
+            Node *init_list = node->var_decl.expr;
+            break;
+        }
+        semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
+        if (node->var_decl.expr->kind == N_LITERAL && node->var_decl.expr->literal.kind == L_STRING) {
+            if (node->var_decl.expr->literal.kind == L_STRING) {
+                if (!(node->type->kind == T_ARRAY || node->type->kind == T_POINTER) && node->type->base == type_i8) {
+                    log_start(LOG_ERROR);
+                    printf("Cannot initialize ");
+                    print_type(node->type);
+                    printf(" with String Literal\n");
+                    exit(1);
+                }
+                if (node->type->kind == T_ARRAY && node->type->_array.array_len == -1) {
+                    node->type = node->var_decl.expr->type;
+                    node->var_decl.symbol->type = node->type;
+                }
+            }
+        }
+        if (node->var_decl.expr->type != node->type) {
+            node->var_decl.expr = cast_node(nm, node->var_decl.expr, node->type);
+        }
+        if (node->var_decl.is_global) {
+            ConstLiteral val = evaluate_const_expression(node->var_decl.expr);
+            node->var_decl.const_expr = malloc(sizeof(ConstLiteral));
+            if (!(node->var_decl.const_expr)) do { log_message(LOG_ERROR, "Failed to allocate for const expr"); exit(1); } while (0);
+            *node->var_decl.const_expr = val;
         }
         break;
-    case CONST_STRING:
-        x86_emit_string(fp, c->s.data);
+    case N_UNARY:
+        semantic_analysis(sema_ctx, p, nm, node->unary.expr);
+        node->type = check_unary_op(nm, node);
         break;
-    case CONST_ARRAY:
-        for (int i = 0; i < c->arr.count; i++) {
-            ConstLiteral *e = get(&c->arr, i);
-            x86_emit_literal(fp, e);
+    case N_BINARY:
+        semantic_analysis(sema_ctx, p, nm, node->binary.lhs);
+        semantic_analysis(sema_ctx, p, nm, node->binary.rhs);
+        node->binary.common_type = check_binary_op(nm, node->binary.op, node);
+        node->type = is_comparison_op(node->binary.op) ? type_i32 : node->binary.common_type;
+        break;
+    case N_TERNARY:
+        semantic_analysis(sema_ctx, p, nm, node->ternary.cond);
+        semantic_analysis(sema_ctx, p, nm, node->ternary.if_true);
+        semantic_analysis(sema_ctx, p, nm, node->ternary.if_false);
+        node->type = node->ternary.if_true->type;
+        break;
+    case N_CAST:
+        semantic_analysis(sema_ctx, p, nm, node->cast.expr);
+        if (is_valid_cast(node->cast.expr->type, node->cast.to)) {
+            node->cast.from = node->cast.expr->type;
+            node->type = node->cast.to;
+            break;
+        }
+        do { log_message(LOG_ERROR, "Semantically invalid cast from %t to %t\n", node->cast.expr->type, node->cast.to); exit(1); } while (0);
+    case N_FUNCTION_CALL:
+        const char *fn_name = node->func_call.callee->kind == N_IDENTIFIER ? node->func_call.callee->identifier.name : "";
+        BuiltinKind builtin = get_builtin_kind(fn_name);
+        if (builtin != BUILTIN_NONE) {
+            handle_builtin_call(builtin, node);
+            return semantic_analysis(sema_ctx, p, nm, node);
+        }
+        semantic_analysis(sema_ctx, p, nm, node->func_call.callee);
+        Type *callee_type = node->func_call.callee->type;
+        if (!(callee_type->kind == T_FUNCTION || (callee_type->kind == T_POINTER && callee_type->base->kind == T_FUNCTION))) do { log_message(LOG_ERROR, "Cannot call non function type\n"); exit(1); } while (0);
+        Type *fn_type = callee_type->kind == T_FUNCTION ? callee_type : callee_type->base;
+        if (!fn_type->_func.is_variadic && fn_type->_func.params.count != node->func_call.params_array.count) {
+            print_type(fn_type);
+            printf("\n");
+            do { log_message(LOG_ERROR, "Argument count mismatch: Function %s expects %d found %d\n", fn_name, fn_type->_func.params.count, node->func_call.params_array.count); exit(1); } while (0);
+        }
+        node->type = fn_type->_func.return_type;
+        for (int i = 0; i < node->func_call.params_array.count; i++) {
+            Node *fn_call_param = get_node(&node->func_call.params_array, i);
+            semantic_analysis(sema_ctx, p, nm, fn_call_param);
+            if (fn_call_param->type->kind == T_ARRAY) {
+                Node *casted_node = cast_node(nm, fn_call_param, get_pointer_type(fn_call_param->type->base));
+                set_node(&node->func_call.params_array, &casted_node, i);
+            }
+            if (i < fn_type->_func.params.count) {
+                ParamDecl *fn_param = get(&fn_type->_func.params, i);
+                if (fn_param->type != fn_call_param->type) {
+                    Node *casted_node = cast_node(nm, fn_call_param, fn_param->type);
+                    set_node(&node->func_call.params_array, &casted_node, i);
+                }
+            } else {
+                if (fn_call_param->type->kind == T_INT && fn_call_param->type->size < type_i32->size) {
+                    Node *casted_node = cast_node(nm, fn_call_param, fn_call_param->type->is_signed ? type_i32 : type_u32);
+                    set_node(&node->func_call.params_array, &casted_node, i);
+                } else if (fn_call_param->type->kind == T_FLOAT && fn_call_param->type->size < type_f64->size) {
+                    Node *casted_node = cast_node(nm, fn_call_param, type_f64);
+                    set_node(&node->func_call.params_array, &casted_node, i);
+                }
+            }
         }
         break;
-    case CONST_LABEL:
-        fprintf(fp, "    .quad .LC%d\n", c->const_index);
+    case N_IDENTIFIER:
+        Symbol *ident_symbol = p_get_symbol(p, node->identifier.name, ANY, 0);
+        if (!ident_symbol) {
+            do { log_message(LOG_ERROR, "Failed to find symbol \"%s\"\n", node->identifier.name); exit(1); } while (0);
+        }
+        node->identifier.symbol = ident_symbol;
+        switch (ident_symbol->kind) {
+        case ENUM:
+            node->kind = N_LITERAL;
+            node->literal.kind = L_INT;
+            node->literal.i = (int64_t)ident_symbol->enum_field->value;
+            node->type = ident_symbol->enum_field->_enum_t;
+            break;
+        case VAR:
+            node->type = ident_symbol->var_decl->type;
+            break;
+        case TYPEDEF:
+            node->type = ident_symbol->_typedef.type;
+            break;
+        case FUNC:
+            node->type = ident_symbol->func_def->type;
+            break;
+        case ANY:
+            do { log_message(LOG_ERROR, "Should be unreachable\n"); exit(1); } while (0);
+        }
         break;
-    case CONST_REFERENCE:
-        fprintf(fp, "    .quad %s", c->ref.symbol->name);
-        if (c->ref.offset) fprintf(fp, " + %d", c->ref.offset);
-        fprintf(fp, "\n");
+    case N_IF:
+        p_push_scope(p);
+        semantic_analysis(sema_ctx, p, nm, node->_if.cond);
+        if (node->_if.cond->type != type_i32) {
+            node->_if.cond = cast_node(nm, node->_if.cond, type_i32);
+        }
+        semantic_analysis(sema_ctx, p, nm, node->_if.if_true);
+        semantic_analysis(sema_ctx, p, nm, node->_if.if_false);
+        p_pop_scope(p);
         break;
+    case N_WHILE:
+        p_push_scope(p);
+        push_sema_loop(sema_ctx, node);
+        semantic_analysis(sema_ctx, p, nm, node->_while.cond);
+        if (node->_while.cond->type != type_i32) {
+            node->_while.cond = cast_node(nm, node->_while.cond, type_i32);
+        }
+        semantic_analysis(sema_ctx, p, nm, node->_while.block);
+        pop_sema_loop(sema_ctx);
+        p_pop_scope(p);
+        break;
+    case N_FOR:
+        p_push_scope(p);
+        push_sema_loop(sema_ctx, node);
+        semantic_analysis(sema_ctx, p, nm, node->_for.init);
+        semantic_analysis(sema_ctx, p, nm, node->_for.cond);
+        if (node->_for.cond && node->_for.cond->type != type_i32) {
+            node->_for.cond = cast_node(nm, node->_for.cond, type_i32);
+        }
+        semantic_analysis(sema_ctx, p, nm, node->_for.iter);
+        semantic_analysis(sema_ctx, p, nm, node->_for.block);
+        pop_sema_loop(sema_ctx);
+        p_pop_scope(p);
+        break;
+    case N_RETURN:
+        if (!sema_ctx->func) {
+            do { log_message(LOG_ERROR, "Cannot call return outside of a function\n"); exit(1); } while (0);
+        }
+        Type *expected_type = sema_ctx->func->type->_func.return_type;
+        if (expected_type != type_void)
+            if (!(node->_return.expr)) do { log_message(LOG_ERROR, "Non-void type function '%s' should return a value\n", sema_ctx->func->func.name); exit(1); } while (0);
+        if (node->_return.expr) {
+            semantic_analysis(sema_ctx, p, nm, node->_return.expr);
+            Type *return_type = node->_return.expr->type;
+            if (node->_return.expr->type != expected_type) {
+                node->_return.expr = cast_node(nm, node->_return.expr, expected_type);
+            }
+        }
+        node->type = expected_type;
+        break;
+    case N_LITERAL:
+        if (node->type->kind == T_ENUM) break;
+        char *data = malloc(node->literal.len + 1);
+        if (!data) {
+            do { log_message(LOG_ERROR, "Failed to allocate for sema literal analysis\n"); exit(1); } while (0);
+        }
+        memcpy(data, node->literal.raw_rata, node->literal.len);
+        data[node->literal.len] = '\0';
+        switch (node->literal.kind) {
+        case L_INT:
+            node->type = parse_int_suffix(node->literal.raw_rata, &node->literal.len);
+            node->literal.i = parse_int(data, node->literal.len);
+            free(data);
+            break;
+        case L_FLOAT:
+            node->type = parse_float_suffix(node->literal.raw_rata, &node->literal.len);
+            node->literal.f = parse_float(data, node->literal.len);
+            free(data);
+            break;
+        case L_CHAR:
+            node->type = type_u32;
+            node->literal.i = parse_multi_character(data, node->literal.len);
+            free(data);
+            break;
+        case L_STRING:
+            node->type = get_array_type(type_i8, node->literal.len + 1);
+            node->literal.s.data = data;
+            node->literal.s.len = node->literal.len + 1;
+            break;
+        }
+        break;
+    case N_INDEX:
+        semantic_analysis(sema_ctx, p, nm, node->index.index);
+        semantic_analysis(sema_ctx, p, nm, node->index.identifier);
+        if (node->index.index->type != type_i64) {
+            node->index.index = cast_node(nm, node->index.index, type_i64);
+        }
+        if (node->index.identifier->type->kind != T_POINTER) {
+            Type *pointer_type = get_pointer_type(node->index.identifier->type->base);
+            node->index.identifier = cast_node(nm, node->index.identifier, pointer_type);
+        }
+        node->type = node->index.identifier->type->base;
+        break;
+    case N_CONTINUE:
+        if (!(sema_ctx->loop_stack.count > 0)) do { log_message(LOG_ERROR, "Cannot call continue outside of loop scope\n"); exit(1); } while (0);
+        node->_continue.loop = sema_current_loop(sema_ctx);
+        break;
+    case N_BREAK:
+        if (!(sema_ctx->loop_stack.count > 0)) do { log_message(LOG_ERROR, "Cannot call break outside of loop scope\n"); exit(1); } while (0);
+        node->_break.loop = sema_current_loop(sema_ctx);
+        break;
+    case N_INIT_LIST:
+        if (node->type == type_invalid) {
+            do { log_message(LOG_ERROR, "Semantic Analysis recieved an untyped initializer list\n"); exit(1); } while (0);
+        }
+        switch (node->type->kind) {
+        case T_INT:
+        case T_FLOAT:
+        case T_POINTER:
+        case T_UNION:
+            if (node->init_list.elements_array.count == 0) break;
+            if (node->init_list.elements_array.count > 1) {
+                log_start(LOG_ERROR);
+                printf("Excess elements in initializer list for ");
+                print_type(node->type);
+                printf("\n");
+                exit(1);
+            }
+            Node *e = get_node(&node->init_list.elements_array, 0);
+            Type *target_type = node->type->kind == T_UNION ? get_union_member(node->type, 0)->type : node->type;
+            Node *value = e;
+            if (e->kind == N_DESIGNATED_INITIALIZER) {
+                if (node->type->kind != T_UNION) {
+                    log_start(LOG_ERROR);
+                    printf("Cannot use designated initializers for type ");
+                    print_type(node->type);
+                    printf("\n");
+                    exit(1);
+                }
+                UnionMember *member = get_union_member_named(node->type, e->designated_init._union.name);
+                target_type = member->type;
+                e->type = target_type;
+                e->designated_init._union.member = member;
+                value = e->designated_init.value;
+            }
+            semantic_analysis(sema_ctx, p, nm, value);
+            if (value->type != target_type) {
+                Node *casted_node = cast_node(nm, value, target_type);
+                set_node(&node->init_list.elements_array, &casted_node, 0);
+            }
+            break;
+        case T_ARRAY:
+        case T_STRUCT:
+            int index = 0;
+            int is_array = node->type->kind == T_ARRAY;
+            int max_count = 0;
+            int infered_length = 0;
+            if (is_array) {
+                if (node->type->_array.array_len == -1) {
+                    if (!node || node->init_list.elements_array.count < 1) {
+                        do { log_message(LOG_ERROR, "Inferred array must be initialized, and cannot be empty.\n"); exit(1); } while (0);
+                    }
+                } else max_count = node->type->_array.array_len;
+            } else max_count = node->type->_struct.members_array.count;
+            for (int i = 0; i < node->init_list.elements_array.count; i++) {
+                Node *e = get_node(&node->init_list.elements_array, i);
+                int is_designator = e->kind == N_DESIGNATED_INITIALIZER;
+                if (max_count && index >= max_count && !is_designator) do { log_message(LOG_ERROR, "Too many initializers for %d\n", node->type); exit(1); } while (0);
+                StructMember *member = ((void *)0);
+                if (is_array) {
+                    if (is_designator) {
+                        if (!e->designated_init._array.is_complete) {
+                            semantic_analysis(sema_ctx, p, nm, e->designated_init._array.const_expr);
+                            e->designated_init._array.index = evaluate_const_expression(e->designated_init._array.const_expr).i;
+                        }
+                        index = e->designated_init._array.index;
+                        if (node->type->_array.array_len == -1) {
+                            infered_length = infered_length > index + 1 ? infered_length : index + 1;
+                        }
+                    }
+                } else
+                    member = is_designator ? get_struct_member_named(node->type, e->designated_init._struct.name, &index)
+                                           : get_struct_member(node->type, index);
+                Type *target_type = is_array ? node->type->base : member->type;
+                Node *value = is_designator ? e->designated_init.value : e;
+                if (value->kind == N_INIT_LIST) value->type = target_type;
+                semantic_analysis(sema_ctx, p, nm, value);
+                if (!is_designator) {
+                    Node *de = new_node(nm, N_DESIGNATED_INITIALIZER);
+                    if (is_array) {
+                        de->designated_init._array.index = index;
+                    } else de->designated_init._struct.name = member->name;
+                    de->designated_init.value = e;
+                    set_node(&node->init_list.elements_array, &de, i);
+                    e = de;
+                }
+                e->designated_init.kind = is_array ? T_ARRAY : T_STRUCT;
+                e->type = target_type;
+                if (is_array) e->designated_init._array.index = index;
+                else e->designated_init._struct.member = member;
+                if (value->type != target_type) e->designated_init.value = cast_node(nm, value, target_type);
+                index++;
+            }
+            if (is_array && node->type->_array.array_len == -1)
+                node->type = infer_array_length(node->type, infered_length ? infered_length : node->init_list.elements_array.count);
+            break;
+        default:
+            log_start(LOG_ERROR);
+            printf("Tried to assign initializer list to unsupported type ");
+            print_type(node->type);
+            printf("\n");
+            exit(1);
+        }
+        break;
+    case N_MEMBER_ACCESS:
+        semantic_analysis(sema_ctx, p, nm, node->member_access.identifier);
+        Type *lhs_t = node->member_access.identifier->type;
+        if (node->member_access.op == TK_ARROW) {
+            if (lhs_t->kind != T_POINTER) {
+                do { log_message(LOG_ERROR, "Dereference '->' can only be used on pointers\n"); exit(1); } while (0);
+            }
+            lhs_t = lhs_t->base;
+            Node *deref = new_node(nm, N_UNARY);
+            deref->unary.op = TK_MULTIPLY;
+            deref->unary.associativity = 0;
+            deref->unary.expr = node->member_access.identifier;
+            deref->type = lhs_t;
+            node->member_access.identifier = deref;
+            node->member_access.op = TK_DOT;
+        }
+        int nested_offset = 0;
+        AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, 1, &nested_offset);
+        node->member_access.member->type = member_f->type;
+        node->member_access.offset = member_f->offset + nested_offset;
+        node->type = member_f->type;
+        break;
+    case N_SWITCH:
+        p_push_scope(p);
+        push_sema_loop(sema_ctx, node);
+        semantic_analysis(sema_ctx, p, nm, node->_switch.test);
+        if (node->_switch.test->type != type_i32) node->_switch.test = cast_node(nm, node->_switch.test, type_i32);
+        semantic_analysis(sema_ctx, p, nm, node->_switch.block);
+        node->type = node->_switch.test->type;
+        pop_sema_loop(sema_ctx);
+        p_pop_scope(p);
+        break;
+    case N_CASE:
+        semantic_analysis(sema_ctx, p, nm, node->_case.const_expr);
+        if (!node->_case.const_expr) break;
+        if (!(node->_case.const_expr->type->kind == T_INT || node->_case.const_expr->type->kind == T_ENUM)) {
+            do { log_message(LOG_ERROR, "Not ready to handle non int test cases\n"); exit(1); } while (0);
+        }
+        node->_case.test = evaluate_const_expression(node->_case.const_expr).i;
+        break;
+    case N_COMPOUND_LITERAL:
+        node->compound_literal.value->type = node->type;
+        semantic_analysis(sema_ctx, p, nm, node->compound_literal.value);
+        lower_compound_literal(sema_ctx, p, nm, node);
+        break;
+    case N_TYPEDEF:
+    case N_TYPE:
+        if (!node->type->is_resolved) node->type = resolve_type(sema_ctx, p, nm, node->type);
+        break;
+    case N_BUILTIN:
+        switch (node->_builtin.kind) {
+        case BUILTIN_VA_START:
+            if (!(node->_builtin.params.count == 2)) do { log_message(LOG_ERROR, "%s expects 2 arguments\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
+            Node *dst_ap = get_node(&node->_builtin.params, 0);
+            Node *last_named_param = get_node(&node->_builtin.params, 1);
+            semantic_analysis(sema_ctx, p, nm, dst_ap);
+            semantic_analysis(sema_ctx, p, nm, last_named_param);
+            if (!(last_named_param->kind == N_IDENTIFIER)) do { log_message(LOG_ERROR, "Last named param must be an identifier.\n"); exit(1); } while (0);
+            if (!(is_va_list_type(dst_ap->type))) do { log_message(LOG_ERROR, "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
+            node->type = type_void;
+            break;
+        case BUILTIN_VA_ARG:
+            if (!(node->_builtin.params.count == 2)) do { log_message(LOG_ERROR, "%s expects 2 arguments\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
+            dst_ap = get_node(&node->_builtin.params, 0);
+            Node *type_info = get_node(&node->_builtin.params, 1);
+            semantic_analysis(sema_ctx, p, nm, dst_ap);
+            semantic_analysis(sema_ctx, p, nm, type_info);
+            if (!(is_va_list_type(dst_ap->type))) do { log_message(LOG_ERROR, "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
+            if (!(type_info->kind == N_TYPE && type_info->type != type_invalid)) do { log_message(LOG_ERROR, "%s expects a type as second arg.", builtin_names[node->_builtin.kind]); exit(1); } while (0);
+            node->type = type_info->type;
+            break;
+        case BUILTIN_VA_END:
+            if (!(node->_builtin.params.count == 1)) do { log_message(LOG_ERROR, "%s expects 1 arguments\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
+            dst_ap = get_node(&node->_builtin.params, 0);
+            semantic_analysis(sema_ctx, p, nm, dst_ap);
+            if (!(is_va_list_type(dst_ap->type))) do { log_message(LOG_ERROR, "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
+            node->type = type_void;
+            break;
+        case BUILTIN_MEMCPY:
+            if (!(node->_builtin.params.count == 3)) do { log_message(LOG_ERROR, "%s expects 3 arguments\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
+            Node *memcpy_dst = get_node(&node->_builtin.params, 0);
+            Node *memcpy_src = get_node(&node->_builtin.params, 1);
+            Node *memcpy_size = get_node(&node->_builtin.params, 2);
+            semantic_analysis(sema_ctx, p, nm, memcpy_dst);
+            semantic_analysis(sema_ctx, p, nm, memcpy_src);
+            semantic_analysis(sema_ctx, p, nm, memcpy_size);
+            if (!(memcpy_dst->type->kind == T_POINTER && memcpy_src->type->kind)) do { log_message(LOG_ERROR, "%s expects both src and dst to be pointers\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
+            if (!(memcpy_size->type->kind == T_INT)) do { log_message(LOG_ERROR, "%s expects size to be integer or size_t\n"); exit(1); } while (0);
+            node->type = type_u64;
+            break;
+        case BUILTIN_NONE:
+            do { log_message(LOG_ERROR, "given __builtin_none but BUILTIN?\n"); exit(1); } while (0);
+        }
+        break;
+    case N_NULL:
+        break;
+    case N_GOTO:
+    case N_LABEL:
+    case N_DESIGNATED_INITIALIZER:
+        do { log_message(LOG_ERROR, "Unreachable\n"); exit(1); } while (0);
+    }
+}
+void push_sema_loop(SemanticContext *sema_ctx, const Node *loop) { append(&sema_ctx->loop_stack, &loop); }
+void pop_sema_loop(SemanticContext *sema_ctx) { pop(&sema_ctx->loop_stack); }
+Node *sema_current_loop(const SemanticContext *sema_ctx) {
+    if (!(sema_ctx->loop_stack.count > 0)) do { log_message(LOG_ERROR, "Tried to retrieve current loop outside of loop scope\n"); exit(1); } while (0);
+    return *(Node **)get(&sema_ctx->loop_stack, sema_ctx->loop_stack.count - 1);
+}
+Node *sema_current_compound(const SemanticContext *sema_ctx) {
+    if (!(sema_ctx->compound_stack.count > 0)) do { log_message(LOG_ERROR, "Tried to retrieve current compound outside of compound scope\n"); exit(1); } while (0);
+    return *(Node **)get(&sema_ctx->compound_stack, sema_ctx->compound_stack.count - 1);
+}
+void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n) {
+    p_push_scope(p);
+    append(&sema_ctx->compound_stack, &n);
+    int tmp = 0;
+    append(&sema_ctx->i_array, &tmp);
+}
+void pop_sema_scope(SemanticContext *sema_ctx, Parser *p) {
+    pop(&sema_ctx->i_array);
+    pop(&sema_ctx->compound_stack);
+    p_pop_scope(p);
+}
+void lower_nodes(NodeManager *nm) {
+    for (int i = 0; i < nm->count; i++) {
+        Node *n = arena_get(nm, i);
+        if (n->type->kind == T_ENUM) {
+            n->type = type_i32;
+        }
+        if (n->kind == N_CAST) {
+            if (n->cast.from && n->cast.from->kind == T_ENUM) {
+                n->cast.from = type_i32;
+            }
+            if (n->cast.to && n->cast.to->kind == T_ENUM) {
+                n->cast.to = type_i32;
+                n->type = type_i32;
+            }
+            if (n->cast.from == n->type) {
+                *n = *n->cast.expr;
+            }
+        }
     }
 }
