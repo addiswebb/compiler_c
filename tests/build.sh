@@ -26,9 +26,9 @@ done
 
 # Files to compile with GCC instead of compiler_c
 
-# Working on "analysis"
+# Working on "x86_emit"
 GCC_COMPILE=()
-# GCC_COMPILE=("sysv" "const_expr" "sema" "node" "ir_builder" "ir_module" "ir_gen" "parser" "x86_emit")
+# GCC_COMPILE=("sysv" "analysis" "sema" "node" "ir_builder" "ir_module" "ir_gen" "parser")
 
 # Files to skip completely (not compiled at all)
 SKIP=("win64")

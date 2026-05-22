@@ -1,4 +1,5 @@
 #include "compiler_c/log/logger.h"
+#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/tokenize/tokenizer.h"
 #include <stdio.h>
@@ -35,6 +36,10 @@ void vprint(const char *fmt, va_list ap) {
             case 'c':
                 char c = va_arg(ap, int);
                 putchar(c);
+                break;
+            case 'C':
+                ConstLiteral *cl = va_arg(ap, ConstLiteral *);
+                print_const_literal(cl);
                 break;
             default:
                 WARN("Logger print doesnt handle '%c' in '%s'\n", *fmt, fmt);

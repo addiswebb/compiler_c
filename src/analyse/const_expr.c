@@ -249,11 +249,7 @@ ConstLiteral evaluate_const_literal(const Node *node) {
             break;
         }
     default:
-        log_start(LOG_ERROR);
-        printf("Tried to convert literal with an invalid type ");
-        print_type(node->type);
-        printf(" to ConstExpr.\n");
-        exit(1);
+        PANIC("Tried to convert literal with invalid type %t to ConstExpr\n", node->type);
     }
     return l;
 }
@@ -273,7 +269,15 @@ ConstLiteral evaluate_const_expression(const Node *node) {
     case N_INIT_LIST:
         return evaluate_const_init_list(node);
     case N_IDENTIFIER:
-        return (ConstLiteral){.ref = {.symbol = node->identifier.symbol}, .kind = CONST_REFERENCE};
+#ifdef __COMPILER_C__
+        ConstLiteral i;
+        i.kind = CONST_REFERENCE;
+        i.ref.symbol = node->identifier.symbol;
+        i.ref.offset = 0;
+        return i;
+#else
+        return (ConstLiteral){.ref = {.symbol = node->identifier.symbol, .offset = 0}, .kind = CONST_REFERENCE};
+#endif
     case N_INDEX:
         PANIC("Indexing not handled in const expr yet\n");
     case N_MEMBER_ACCESS:

@@ -44,7 +44,8 @@ foo_0:
     movq -32(%rbp), %rax
     movl (%rax), %eax
     movl %eax, -32(%rbp)
-    movslsd -32(%rbp), %xmm0
+    movslq -32(%rbp), %rax
+    cvtsi2sd %rax, %xmm0
     movsd %xmm0, -32(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -40(%rbp)
@@ -70,7 +71,8 @@ foo_0:
     movb %al, -40(%rbp)
     movsbl -40(%rbp), %eax
     movl %eax, -40(%rbp)
-    movslsd -40(%rbp), %xmm0
+    movslq -40(%rbp), %rax
+    cvtsi2sd %rax, %xmm0
     movsd %xmm0, -40(%rbp)
     movsd -32(%rbp), %xmm0
     addsd -40(%rbp), %xmm0

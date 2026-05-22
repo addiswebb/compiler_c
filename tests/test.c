@@ -1088,37 +1088,6 @@ static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int in
     return (IR_LabeledBlock *)get(&module->labeled_block_array, index);
 }
 static inline IR_CallArg *get_call_arg(const IR_Instruction *call, int index) { return (IR_CallArg *)get(&call->call.arg_array, index); }
-IR_Value ir_stack_value(int size, int align, int offset);
-void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count);
-void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map);
-void ir_lower_const_value(IR_Value *v);
-void analysis(const IR_Context *ctx);
-void generate_types();
-void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map);
-int get_symbol_index(const Array *symbol_map, Symbol *symbol);
-int bitset_add_defined(const BitSet *defined, const IR_Value *v);
-void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v);
-int reg_bitset(const IR_Function *f);
-void lower_ir_for_asm(IR_Function *f);
-void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots, const Array *symbol_map);
-void add_successor(IR_Function *func, IR_Block *from, IR_Block *to);
-Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *rpo);
-void compute_reverse_postorder(IR_Function *func, int *rpo);
-void compute_bitset(const IR_Function *f, const int *rpo);
-int cmp_lifetime(const void *a, const void *b);
-void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size);
-void bitset_init(BitSet *s, int reg_count);
-void bitset_expand(BitSet *s);
-void bitset_add(const BitSet *s, int reg);
-void bitset_remove(const BitSet *s, int reg);
-int bitset_has(const BitSet *s, int reg);
-void bitset_union(const BitSet *dst, const BitSet *src);
-void bitset_intersect(const BitSet *dst, const BitSet *src);
-void bitset_difference(const BitSet *dst, const BitSet *src);
-void bitset_copy(const BitSet *dst, const BitSet *src);
-int bitset_equal(const BitSet *a, const BitSet *b);
-void print_bitset(const BitSet *bs);
-void print_cfg(const IR_Function *func);
 typedef struct{
     unsigned int gp_offset;
     unsigned int fp_offset;
@@ -1182,61 +1151,6 @@ extern const GP_Reg caller_saved_regs[9];
 extern const GP_Reg callee_saved_regs[6];
 extern const char *gp_register_str[16][4];
 extern const char *sse_register_str[16];
-typedef struct {
-    char *output;
-    Array current_source;
-    Array current_output;
-    Array source_files;
-    Array passthrough_args;
-    char *src;
-    int src_size;
-    NodeManager nm;
-    Parser p;
-    Tokenizer tk;
-} Compiler;
-typedef enum {
-    CF_STOP_AFTER_AST,
-    CF_STOP_AFTER_IR,
-    CF_STOP_AFTER_COMPILE,
-    CF_STOP_AFTER_ASSEMBLE,
-    CF_DEBUG_TYPEPOOL,
-    CF_DEBUG_LIFETIMES,
-    CF_DEBUG_ENUM,
-    CF_DEBUG_STRUCT,
-    CF_DEBUG_UNION,
-    CF_DEBUG_LOWERED_IR,
-    CF_DEBUG_IR_INSTR,
-    CF_DEBUG_PARSER,
-    CF_DEBUG_TOKENIZER,
-    CF_DEBUG_SYMBOLS,
-    CF_COUNT,
-} CompilerFlag;
-extern unsigned int compiler_flags;
-extern const char *flag_strings[CF_COUNT];
-int has_flag(CompilerFlag f);
-Compiler begin_compiler(int argc, char *argv[]);
-void init_compiler(Compiler *compiler);
-void clear_compiler(Compiler *compiler);
-void free_compiler(Compiler *compiler);
-void drive(Compiler *c);
-void assemble(Compiler *c);
-void link(Compiler *c, Array *objs);
-int compile(Compiler *compiler);
-void free_compiler(Compiler *compiler);
-static int load_src_file(Compiler *compiler, const char *file);
-char *replace_extension(const char *path, const char *ext);
-IR_CMP_OP ir_cmp_op(const TokenType type);
-IR_UNARY_OP ir_unary_op(const TokenType type);
-IR_BINOP_OP ir_binary_op(const TokenType type);
-void print_ir_module(const IR_Context *ctx,const IR_Module *module);
-void print_ir_value(const IR_Value *v);
-void print_ir_phys_reg(const PhysReg *r);
-static void print_ir_block(const IR_Context *ctx, const IR_Block *block);
-void print_ir_function(const IR_Context *ctx, const IR_Function *func);
-void print_ir_instruction(const IR_Context *ctx,const IR_Instruction *instr);
-static void print_unary_op(IR_UNARY_OP op);
-static void print_binary_op(IR_BINOP_OP op);
-static void print_cmp_op(IR_CMP_OP op);
 void exit(int);
 void *malloc(size_t);
 void *realloc(void *, size_t);
@@ -1332,558 +1246,214 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     fflush(logger.file);
     if (lvl == LOG_PANIC) exit(1);
 }
-const char *gp_register_str[16][4] = {
-    [RAX] = {"%al", "%ax", "%eax", "%rax"}, [RBX] = {"%bl", "%bx", "%ebx", "%rbx"}, [RCX] = {"%cl", "%cx", "%ecx", "%rcx"},
-    [RDX] = {"%dl", "%dx", "%edx", "%rdx"}, [RSI] = {"%sil", "%si", "%esi", "%rsi"}, [RDI] = {"%dil", "%di", "%edi", "%rdi"},
-    [RBP] = {"%bpl", "%bp", "%ebp", "%rbp"}, [RSP] = {"%spl", "%sp", "%esp", "%rsp"}, [R8] = {"%r8b", "%r8w", "%r8d", "%r8"},
-    [R9] = {"%r9b", "%r9w", "%r9d", "%r9"}, [R10] = {"%r10b", "%r10w", "%r10d", "%r10"}, [R11] = {"%r11b", "%r11w", "%r11d", "%r11"},
-    [R12] = {"%r12b", "%r12w", "%r12d", "%r12"}, [R13] = {"%r13b", "%r13w", "%r13d", "%r13"}, [R14] = {"%r14b", "%r14w", "%r14d", "%r14"},
-    [R15] = {"%r15b", "%r15w", "%r15d", "%r15"},
-};
-const char *sse_register_str[16] = {
-    [XMM0] = "%xmm0", [XMM1] = "%xmm1", [XMM2] = "%xmm2", [XMM3] = "%xmm3", [XMM4] = "%xmm4", [XMM5] = "%xmm5",
-    [XMM6] = "%xmm6", [XMM7] = "%xmm7", [XMM8] = "%xmm8", [XMM9] = "%xmm9", [XMM10] = "%xmm10", [XMM11] = "%xmm11",
-    [XMM12] = "%xmm12", [XMM13] = "%xmm13", [XMM14] = "%xmm14", [XMM15] = "%xmm15",
-};
-void bitset_init(BitSet *s, const int reg_count) {
-    s->num_bits = reg_count;
-    s->capacity = (s->num_bits + 31) / 32;
-    if (reg_count) {
-        s->data = calloc(s->capacity, sizeof(int));
-        if (!(s->data)) do { log_message(LOG_ERROR, "Failed to alloc for bitset init\n"); exit(1); } while (0);
-    } else {
-        s->data = ((void *)0);
+void x86_gen_module(FILE *fp, IR_Context *ctx);
+void x86_operand(const IR_Value *v, char *buf, int n);
+void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst);
+void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst);
+void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst);
+void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst);
+void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *operand);
+void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, const char *r);
+const char *x86_rax_reg(Type *t);
+const char *x86_rbx_reg(const Type *t);
+const char *x86_rcx_reg(const Type *t);
+const char *x86_rdx_reg(const Type *t);
+const char *x86_op_suffix(const Type *t);
+const char *x86_integer_op_suffix(int size);
+const char *x86_float_op_suffix(int size);
+void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, IR_BINOP_OP op, Type *t);
+void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNARY_OP op, Type *t);
+void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst);
+void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to);
+void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, int pool_index);
+void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
+void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
+void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src);
+void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t);
+void x86_emit_string(FILE *fp, const char *str);
+void x86_emit_literal(FILE *fp, const ConstLiteral *c);
+static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_block(FILE *fp, IR_Context *ctx);
+static void x86_gen_function(FILE *fp, IR_Context *ctx);
+static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memcpy_instruction(fp, instr); }
+static void x86_gen_cmp_instruction(FILE *fp, const IR_Instruction *instr) {
+    x86_emit_cmp(fp, instr->cmp.op, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->cmp.type);
+}
+static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr) { x86_emit_addr(fp, &instr->ops[1], &instr->ops[0]); }
+static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
+    x86_emit_cast(fp, &instr->ops[1], &instr->ops[0], instr->cast.from, instr->cast.to);
+}
+static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
+    if (instr->ops[1].kind == IR_CONSTANT) {
+        ConstLiteral *c = get_const(ctx, instr->ops[1].const_index);
+        x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
+        return;
     }
+    const char *reg = x86_rax_reg(instr->_const.type);
+    const char *op_suffix = x86_op_suffix(instr->_const.type);
+    x86_emit_xr(fp, "mov", op_suffix, "", &instr->ops[1], reg);
+    x86_emit_rx(fp, "mov", op_suffix, "", reg, &instr->ops[0]);
 }
-void bitset_clear(const BitSet *s) {
-    for (int i = 0; i < s->capacity; i++) {
-        s->data[i] = 0;
-    }
+static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { x86_emit_call(fp, ctx, instr); }
+static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_store(fp, &instr->ops[1], &instr->ops[0], instr->store.type);
 }
-void bitset_add(const BitSet *s, const int reg) {
-    if (reg >= s->num_bits) {
-        do { log_message(LOG_ERROR, "%d is too large a register for this bitset\n", reg); exit(1); } while (0);
-    }
-    if (!(reg >= 0)) do { log_message(LOG_ERROR, "Reg must be >= 0\n"); exit(1); } while (0);
-    const int word = reg / 32;
-    const unsigned int offset = reg % 32;
-    s->data[word] |= (1u << offset);
+static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_load(fp, &instr->ops[1], &instr->ops[0], instr->load.type);
 }
-void bitset_remove(const BitSet *s, const int reg) {
-    if (!(reg >= 0)) do { log_message(LOG_ERROR, "Reg must be >= 0\n"); exit(1); } while (0);
-    const int word = reg / 32;
-    const unsigned int offset = reg % 32;
-    s->data[word] &= ~(1u << offset);
+static void x86_gen_move_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_move(fp, &instr->ops[0], &instr->ops[1]);
 }
-int bitset_has(const BitSet *s, const int reg) {
-    if (!(reg >= 0)) do { log_message(LOG_ERROR, "Reg must be >= 0\n"); exit(1); } while (0);
-    const int word = reg / 32;
-    const unsigned int offset = reg % 32;
-    return (s->data[word] & (1u << offset)) != 0;
+static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_unary(fp, &instr->ops[0], &instr->ops[1], instr->unary.op, instr->unary.type);
 }
-void bitset_union(const BitSet *dst, const BitSet *src) {
-    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
-    for (int i = 0; i < dst->capacity; i++) dst->data[i] |= src->data[i];
+static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_binary(fp, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->binop.op, instr->binop.type);
 }
-void bitset_intersect(const BitSet *dst, const BitSet *src) {
-    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
-    for (int i = 0; i < dst->capacity; i++) dst->data[i] &= src->data[i];
-}
-void bitset_difference(const BitSet *dst, const BitSet *src) {
-    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
-    for (int i = 0; i < dst->capacity; i++) dst->data[i] &= ~src->data[i];
-}
-void bitset_copy(const BitSet *dst, const BitSet *src) {
-    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
-    for (int i = 0; i < dst->capacity; i++) dst->data[i] = src->data[i];
-}
-int bitset_equal(const BitSet *a, const BitSet *b) {
-    if (!(a->capacity == b->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
-    for (int i = 0; i < a->capacity; i++) {
-        if (a->data[i] != b->data[i]) return 0;
-    }
-    return 1;
-}
-static int contains(const int *arr, const int count, const int val) {
-    for (int i = 0; i < count; i++) {
-        if (arr[i] == val) return 1;
-    }
-    return 0;
-}
-void add_successor(IR_Function *func, IR_Block *from, IR_Block *to) {
-    if (!contains(from->cfg.succ, from->cfg.succ_count, to->id)) {
-        from->cfg.succ = realloc(from->cfg.succ, sizeof(int) * (from->cfg.succ_count + 1));
-        from->cfg.succ[from->cfg.succ_count++] = to->id;
-    }
-    if (!contains(to->cfg.pred, to->cfg.pred_count, from->id)) {
-        to->cfg.pred = realloc(to->cfg.pred, sizeof(int) * (to->cfg.pred_count + 1));
-        to->cfg.pred[to->cfg.pred_count++] = from->id;
-    }
-}
-void dfs_postorder(IR_Function *func, const int block_id, int *visited, int *postorder, int *count) {
-    if (visited[block_id]) return;
-    visited[block_id] = 1;
-    const IR_Block *b = get_block(func, block_id);
-    for (int i = 0; i < b->cfg.succ_count; i++) {
-        dfs_postorder(func, b->cfg.succ[i], visited, postorder, count);
-    }
-    postorder[(*count)++] = block_id;
-}
-void compute_reverse_postorder(IR_Function *func, int *rpo) {
-    int *visited = calloc(func->blocks_array.count, sizeof(int));
-    if (!visited) {
-        do { log_message(LOG_ERROR, "Failed to calloc for visited\n"); exit(1); } while (0);
-    }
-    int *postorder = malloc(func->blocks_array.count * sizeof(int));
-    if (!postorder) {
-        free(visited);
-        do { log_message(LOG_ERROR, "Failed to calloc for postorder\n"); exit(1); } while (0);
-    }
-    int count = 0;
-    dfs_postorder(func, 0, visited, postorder, &count);
-    for (int i = 0; i < count; i++) {
-        rpo[i] = postorder[count - 1 - i];
-    }
-    free(postorder);
-    free(visited);
-}
-int bitset_add_defined(const BitSet *defined, const IR_Value *v) {
-    if (v->kind == IR_VREG) {
-        if (!bitset_has(defined, v->vreg)) {
-            bitset_add(defined, v->vreg);
-            return 1;
-        }
-    }
-    return 0;
-}
-void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v) {
-    if (v->kind == IR_VREG) {
-        if (!bitset_has(defined, v->vreg)) {
-            bitset_add(used, v->vreg);
-        }
-    }
-}
-void ir_init_func_cfg(const IR_Function *f) {
-    for (int j = 0; j < f->blocks_array.count; j++) {
-        IR_Block *b = get_block(f, j);
-        b->cfg.succ = ((void *)0);
-        b->cfg.succ_count = 0;
-        b->cfg.pred = ((void *)0);
-        b->cfg.pred_count = 0;
-        bitset_init(&b->live.live_in, f->max_reg);
-        bitset_init(&b->live.live_out, f->max_reg);
-        bitset_init(&b->live.def, f->max_reg);
-        bitset_init(&b->live.use, f->max_reg);
-    }
-}
-void ir_compute_func_io(IR_Function *f) {
-    for (int j = 0; j < f->blocks_array.count; j++) {
-        IR_Block *b = get_block(f, j);
-        int found = 0;
-        for (int i = 0; i < b->instruction_array.count; i++) {
-            const IR_Instruction *instr = get_instruction(&b->instruction_array, i);
-            switch (instr->op) {
-            case IR_BR:
-                add_successor(f, b, instr->br.block);
-                found = 1;
-                break;
-            case IR_BR_COND:
-                if (instr->br_cond.f_block) add_successor(f, b, instr->br_cond.f_block);
-                if (instr->br_cond.t_block) add_successor(f, b, instr->br_cond.t_block);
-                found = instr->br_cond.f_block && instr->br_cond.t_block;
-                break;
-            case IR_RET:
-            default:
-                break;
-            }
-        }
-        if (!found && j < f->blocks_array.count - 1) add_successor(f, b, get_block(f, j + 1));
-    }
-}
-int reg_bitset(const IR_Function *f) {
-    int defined = 0;
-    for (int j = 0; j < f->blocks_array.count; j++) {
-        const IR_Block *b = get_block(f, j);
-        for (int k = 0; k < b->instruction_array.count; k++) {
-            const IR_Instruction *instr = get_instruction(&b->instruction_array, k);
-            for (int i = 0; i < instr->op_count; i++) {
-                if (instr->ops[i].kind != IR_VREG) continue;
-                if (op_info[instr->op].def_mask & (1 << i)) {
-                    if (bitset_add_defined(&b->live.def, &instr->ops[i])) defined++;
-                }
-                if (op_info[instr->op].use_mask & (1 << i)) {
-                    bitset_add_used(&b->live.def, &b->live.use, &instr->ops[i]);
-                }
-            }
-        }
-    }
-    return defined;
-}
-void compute_bitset(const IR_Function *f, const int *rpo) {
-    BitSet old_live_out;
-    BitSet old_live_in;
-    BitSet tmp;
-    bitset_init(&old_live_out, f->max_reg);
-    bitset_init(&old_live_in, f->max_reg);
-    bitset_init(&tmp, f->max_reg);
-    int changed = 1;
-    while (changed) {
-        changed = 0;
-        for (int i = 0; i < f->blocks_array.count; i++) {
-            const IR_Block *b = get_block(f, rpo[i]);
-            bitset_clear(&old_live_out);
-            bitset_clear(&old_live_in);
-            bitset_clear(&tmp);
-            bitset_copy(&old_live_out, &b->live.live_out);
-            bitset_copy(&old_live_in, &b->live.live_in);
-            bitset_clear(&b->live.live_out);
-            for (int j = 0; j < b->cfg.succ_count; j++) bitset_union(&b->live.live_out, &get_block(f, b->cfg.succ[j])->live.live_in);
-            bitset_copy(&tmp, &b->live.live_out);
-            bitset_difference(&tmp, &b->live.def);
-            bitset_copy(&b->live.live_in, &b->live.use);
-            bitset_union(&b->live.live_in, &tmp);
-            if (!bitset_equal(&b->live.live_out, &old_live_out) || !bitset_equal(&b->live.live_in, &old_live_in)) changed = 1;
-        }
-    }
-    free(old_live_out.data);
-    free(old_live_in.data);
-    free(tmp.data);
-}
-int cmp_lifetime(const void *a, const void *b) { return ((Lifetime *)a)->start - ((Lifetime *)b)->start; }
-void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size) {
-    RegisterSlot *slots = ((void *)0);
-    int slot_count = 0;
-    for (int i = 0; i < count; i++) {
-        Lifetime *l = &lts[i];
-        int found_slot = 0;
-        for (int j = 0; j < slot_count; j++) {
-            RegisterSlot *s = &slots[j];
-            if (s->free_at <= l->start) {
-                s->free_at = l->end;
-                l->stack_slot = j;
-                l->stack_offset = s->v.phys_reg.offset;
-                found_slot = 1;
-                break;
-            }
-        }
-        if (!found_slot) {
-            RegisterSlot *new_slots = realloc(slots, sizeof(RegisterSlot) * (slot_count + 1));
-            if (!new_slots) {
-                do { log_message(LOG_ERROR, "Failed to realloc new_slots\n"); exit(1); } while (0);
-            }
-            slots = new_slots;
-            l->stack_offset = -(*stack_size) - l->v->size;
-            slots[slot_count].v = ir_stack_value(l->v->size, l->v->align, l->stack_offset);
-            slots[slot_count].free_at = l->end;
-            l->stack_slot = slot_count++;
-            *stack_size += l->v->size;
-        }
-    }
-    if (slots) free(slots);
-}
-RegSize reg_size(const int size) {
-    switch (size) {
-    case 1:
-        return REG_8;
-    case 2:
-        return REG_16;
-    case 4:
-        return REG_32;
-    case 8:
-        return REG_64;
-    default:
-        do { log_message(LOG_ERROR, "Incompatible size %d, should have already been handled tho\n", size); exit(1); } while (0);
-    }
-}
-const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) {
-    for (int i = 0; i < lts_count; i++) {
-        if (lts[i].reg == reg) {
-            return &lts[i];
-        }
-    }
-    do { log_message(LOG_ERROR, "Failed to find lifetime of r%d\n", reg); exit(1); } while (0);
-}
-void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map) {
-    IR_Value old = *v;
-    switch (old.symbol->kind) {
-    case VAR:
-        if (old.symbol->storage == STORAGE_NONE) {
-            int index = get_symbol_index(symbol_map, v->symbol);
-            if (!(index != -1)) do { log_message(LOG_ERROR, "Tried to find symbol index of %s\n", v->symbol->name); exit(1); } while (0);
-            v->kind = IR_PHYS_REG;
-            *v = ((RegisterSlot *)get(symbol_slots, index))->v;
-            return;
-        }
-    case FUNC:
-        v->kind = IR_PHYS_REG;
-        v->phys_reg.kind = REG_IP;
-        v->phys_reg.size = REG_64;
-        v->phys_reg.data_kind = REG_DATA_LABEL;
-        v->phys_reg.label = old.symbol->name;
+static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->op) {
+    case IR_UNOP:
+        x86_gen_unary_instruction(fp, ctx, instr);
+        return;
+    case IR_BINOP:
+        x86_gen_binary_instruction(fp, ctx, instr);
+        return;
+    case IR_LOAD:
+        x86_gen_load_instruction(fp, ctx, instr);
+        return;
+    case IR_STORE:
+        x86_gen_store_instruction(fp, ctx, instr);
+        return;
+    case IR_MOVE:
+        x86_gen_move_instruction(fp, ctx, instr);
+        return;
+    case IR_CALL:
+        x86_gen_call_instruction(fp, ctx, instr);
+        return;
+    case IR_CONST:
+        x86_gen_const_instruction(fp, ctx, instr);
+        return;
+    case IR_CAST:
+        x86_gen_cast_instruction(fp, instr);
+        return;
+    case IR_ADDR:
+        x86_gen_addr_instruction(fp, instr);
         break;
-    case TYPEDEF:
-    case ANY:
-    case ENUM:
-        do { log_message(LOG_ERROR, "ir_lower_symbol_value dont know how to handle\n"); exit(1); } while (0);
+    case IR_ALLOCA:
+        break;
+    case IR_MEMCPY:
+        x86_gen_memcpy_instruction(fp, instr);
+        break;
+    case IR_CMP:
+        x86_gen_cmp_instruction(fp, instr);
+        break;
+    case IR_RET:
+        if (instr->ops[0].kind != IR_UNDEFINED && instr->ret.type != type_void)
+            x86_emit_xr(fp, "mov", x86_op_suffix(instr->ret.type), "", &instr->ops[0], x86_rax_reg(instr->ret.type));
+        fprintf(fp, "    mov %%rbp, %%rsp\n");
+        fprintf(fp, "    pop %%rbp\n");
+        fprintf(fp, "    ret\n");
+        return;
+    case IR_BR:
+        fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.block->id);
+        return;
+    case IR_BR_COND:
+        x86_emit_xr(fp, "mov", "l", "", &instr->ops[0], "%eax");
+        fprintf(fp, "    testl %%eax, %%eax\n");
+        if (instr->br_cond.f_block) fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_block->id);
+        else if (instr->br_cond.t_block) fprintf(fp, "    jnz %s_%d\n", ctx->func->name, instr->br_cond.t_block->id);
+        break;
+    case IR_LABEL:
+        fprintf(fp, "%s:\n", instr->label.name);
+        break;
+    case IR_JMP:
+        fprintf(fp, "    jmp %s\n", instr->jmp.name);
+        break;
+    case IR_BUILTIN_VA_START:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rax");
+        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[1]);
+        break;
+    case IR_BUILTIN_VA_ARG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
+        fprintf(fp, "    addq $%d, %%rax\n", instr->builtin_va_arg.type->size);
+        x86_emit_rr(fp, "mov", "q", "", "(%rax)", "%rcx");
+        x86_emit_rx(fp, "mov", "q", "", "%rcx", &instr->ops[0]);
+        break;
+    case IR_PARAM:
+        if (!(instr->op_count == 2)) do { log_message(LOG_ERROR, "Param instruction not correctly lowered\n"); exit(1); } while (0);
+        if (!memcmp(&instr->ops[0], &instr->ops[1], sizeof(IR_Value))) break;
+        const char *param_op_suffix = x86_op_suffix(instr->param.type);
+        if (instr->param.param_index < 6 && instr->param.param_index != -1) {
+            x86_emit_xx(fp, "mov", param_op_suffix, "", &instr->ops[1], &instr->ops[0]);
+        } else {
+            const char *rax_reg = x86_rax_reg(instr->param.type);
+            x86_emit_xr(fp, "mov", param_op_suffix, "", &instr->ops[1], rax_reg);
+            x86_emit_rx(fp, "mov", param_op_suffix, "", rax_reg, &instr->ops[0]);
+        }
         break;
     }
 }
-IR_Value ir_gp_register(GP_Reg reg) {
-    return (IR_Value){.kind = IR_PHYS_REG,
-                      .size = 8,
-                      .align = 8,
-                      .phys_reg = (PhysReg){
-                          .kind = REG_GP,
-                          .gp_reg = reg,
-                          .data_kind = REG_DATA_NONE,
-                          .size = REG_64,
-                      }};
+static void x86_gen_block(FILE *fp, IR_Context *ctx) {
+    for (int i = 0; i < ctx->block->instruction_array.count; i++) {
+        x86_gen_instruction(fp, ctx, get_instruction(&ctx->block->instruction_array, i));
+    }
 }
-IR_Value ir_stack_value(int size, int align, int offset) {
-    return (IR_Value){.kind = IR_PHYS_REG,
-                      .size = size,
-                      .align = align,
-                      .phys_reg = (PhysReg){
-                          .kind = REG_GP,
-                          .gp_reg = RBP,
-                          .data_kind = REG_DATA_OFFSET,
-                          .size = REG_64,
-                          .offset = offset,
-                      }};
+static void x86_gen_function(FILE *fp, IR_Context *ctx) {
+    const int stack_size = ctx->func->stack_size;
+    const int aligned_stack_size = stack_size + 15 & ~15;
+    if (ctx->func->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", ctx->func->name);
+    fprintf(fp, "%s:\n", ctx->func->name);
+    fprintf(fp, "    push %%rbp\n");
+    fprintf(fp, "    mov %%rsp, %%rbp\n");
+    fprintf(fp, "    subq $%d, %%rsp\n", aligned_stack_size);
+    for (int i = 0; i < ctx->func->blocks_array.count; i++) {
+        fprintf(fp, "%s_%d:\n", ctx->func->name, i);
+        ctx->block = get_block(ctx->func, i);
+        x86_gen_block(fp, ctx);
+    }
 }
-void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count) {
-    if (!(lts)) do { log_message(LOG_ERROR, "LTS is null\n"); exit(1); } while (0);
-    if (!(v->kind == IR_VREG)) do { log_message(LOG_ERROR, "Expected VREG IR Value\n"); exit(1); } while (0);
-    *v = ir_stack_value(v->size, v->align, get_lifetime(lts, lts_count, v->vreg)->stack_offset);
-}
-void ir_lower_const_value(IR_Value *v) {
-    return;
-}
-void verify_completion(const IR_Function *f) {
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        const IR_Block *b = get_block(f, i);
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            const IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
-            for (int k = 0; k < value_count; k++) {
-                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
-                if (a->kind == IR_CONSTANT) continue;
-                if (a->kind == IR_CONSTANT && instr->op != IR_CALL) continue;
-                if (a->kind == IR_PHYS_REG || a->kind == IR_INT_LITERAL) continue;
-                if (instr->op == IR_RET && instr->ret.type == type_void) continue;
-                if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) continue;
-                log_start(LOG_ERROR);
-                print_ir_value(a);
-                printf(" was not converted to stack offset\n");
-                exit(1);
-            }
+void x86_gen_module(FILE *fp, IR_Context *ctx) {
+    fprintf(fp, ".section .note.GNU-stack,\"\",@progbits\n");
+    if (ctx->module->const_array.count > 0) {
+        fprintf(fp, ".section .rodata\n");
+        for (int i = 0; i < ctx->module->const_array.count; i++) {
+            const ConstLiteral *c = get_const(ctx, i);
+            if (c->type->align > 1) fprintf(fp, ".align %d\n", c->type->align);
+            fprintf(fp, ".LC%d:\n", i);
+            x86_emit_literal(fp, c);
         }
     }
-}
-int get_symbol_index(const Array *symbol_map, Symbol *symbol) {
-    for (int i = 0; i < symbol_map->count; i++) {
-        Symbol *s = *(Symbol **)get(symbol_map, i);
-        if (s == symbol) return i;
-    }
-    return -1;
-}
-void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map) {
-    int slot_count = f->locals_array.count + ctx->module->global_array.count;
-    if (slot_count == 0) return;
-    array_init(symbol_map, slot_count, sizeof(Symbol *));
-    array_init(symbol_slots, slot_count, sizeof(RegisterSlot));
     for (int i = 0; i < ctx->module->global_array.count; i++) {
-        Symbol *global_symbol = get_global(ctx, i)->symbol;
-        append(symbol_slots, &(RegisterSlot){.v = ir_symbol_value(global_symbol), .free_at = -1});
-        append(symbol_map, &global_symbol);
-    }
-    for (int i = 0; i < f->locals_array.count; i++) {
-        Symbol *local_symbol = get_local_symbol(f, i);
-        int size = align(local_symbol->type->size, 8);
-        int offset = -(*frame_size) - size;
-        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
-        append(symbol_map, &local_symbol);
-        *frame_size += size;
-    }
-}
-void generate_types() {
-    int n = typepool.count;
-    for (int i = 0; i < n; i++) {
-        Type *t = (Type *)arena_get(&typepool, i);
-        if (t->kind == T_FUNCTION) abi_func_type_gen(t);
-    }
-}
-void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
-                              const Array *symbol_map) {
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        const IR_Block *b = get_block(f, i);
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
-            for (int k = 0; k < value_count; k++) {
-                int is_arg_param = k >= instr->op_count;
-                int instr_index = is_arg_param ? k - instr->op_count : k;
-                IR_CallArg *arg = is_arg_param ? get_call_arg(instr, instr_index) : ((void *)0);
-                IR_Value *a = is_arg_param ? &arg->v : &instr->ops[instr_index];
-                switch (a->kind) {
-                case IR_VREG:
-                    ir_lower_vreg_value(a, lts, lts_count);
-                    break;
-                case IR_SYMBOL:
-                    ir_lower_symbol_value(a, symbol_slots, symbol_map);
-                    break;
-                case IR_CONSTANT:
-                    ir_lower_const_value(a);
-                    break;
-                case IR_PHYS_REG:
-                case IR_INT_LITERAL:
-                    break;
-                case IR_UNDEFINED:
-                    if (instr->op == IR_RET && instr->ret.type == type_void) break;
-                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) break;
-                    do { log_message(LOG_ERROR, "An undefined IR value made it to analysis!!\n"); exit(1); } while (0);
-                    break;
-                }
-            }
+        const IR_Global *g = get_global(ctx, i);
+        const ConstLiteral *c = &g->val;
+        if (g->symbol->storage == STORAGE_NONE) {
+            fprintf(fp, ".extern %s\n", g->symbol->name);
+            continue;
+        }
+        if (g->symbol->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", g->symbol->name);
+        if (g->symbol->storage == STORAGE_DATA) fprintf(fp, ".data\n");
+        if (g->symbol->storage == STORAGE_BSS) {
+            fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->symbol->type->align, g->symbol->name, g->symbol->type->size);
+        } else {
+            if (!(c->type != type_invalid)) do { log_message(LOG_ERROR, "Received invalid type, probably an uninitialized global with incorrect storage specifier\n"); exit(1); } while (0);
+            if (g->symbol->type->align > 1) fprintf(fp, ".align %d\n", g->symbol->type->align);
+            fprintf(fp, "%s:\n", g->symbol->name);
+            x86_emit_literal(fp, &g->val);
         }
     }
-}
-void lower_ir_for_asm(IR_Function *f) {
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        IR_Block *b = get_block(f, i);
-        int param_cursor = 0;
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            if (instr->op == IR_PARAM) {
-                param_cursor++;
-            }
-        }
-        int param_index = 0;
-        int instrs_added = 0;
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            if (instr->op == IR_RET) {
-                abi_lower_ret(f, b, instr, &j);
-            } else if (instr->op == IR_PARAM) {
-                abi_lower_param(f, b, instr, &instrs_added, param_index++, &param_cursor);
-            } else if (instr->op == IR_LOAD) {
-                if (!(instr->load.type->size <= 8)) do { log_message(LOG_ERROR, " : ir_load of type sized %d is larger than 8 bytes %t\n", instr->load.type->size, instr->load.type); exit(1); } while (0);
-                if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
-            } else if (instr->op == IR_STORE) {
-                abi_lower_store(f, b, instr, &j);
-            }
-        }
-    }
-}
-void analysis(const IR_Context *ctx) {
+    fprintf(fp, "\n.text\n");
     for (int i = 0; i < ctx->module->functions_array.count; i++) {
-        IR_Function *f = get_func(ctx->module, i);
-        lower_ir_for_asm(f);
-        if (has_flag(CF_DEBUG_LOWERED_IR)) {
-            printf("vvvvvvvvvvvvvvvvvvvvv\n");
-            print_ir_function(ctx, f);
-            printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
-        }
-        ir_init_func_cfg(f);
-        ir_compute_func_io(f);
-        Lifetime *lifetimes = ((void *)0);
-        int *rpo = malloc(f->blocks_array.count * sizeof(int));
-        if (!rpo) {
-            do { log_message(LOG_ERROR, "Failed to allocate rpo\n"); exit(1); } while (0);
-        }
-        int reg_count = 0;
-        if (f->max_reg > 0) {
-            reg_count = reg_bitset(f);
-            compute_reverse_postorder(f, rpo);
-            compute_bitset(f, rpo);
-            lifetimes = compute_lifetimes(f, reg_count, rpo);
-            qsort(lifetimes, reg_count, sizeof(Lifetime), cmp_lifetime);
-            if (has_flag(CF_DEBUG_LIFETIMES)) {
-                for (int j = 0; j < reg_count; j++) {
-                    printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
-                }
-                printf("\n");
-            }
-        }
-        Array symbol_map = {};
-        Array symbol_slots = {};
-        const int variadic_space = f->type->_func.is_variadic ? 176 : 0;
-        int frame_size = variadic_space;
-        symbol_slot_allocation(ctx, f, &frame_size, &symbol_slots, &symbol_map);
-        linear_stack_slot_allocation(lifetimes, reg_count, &frame_size);
-        lower_ir_values_to_stack(f, lifetimes, reg_count, &symbol_slots, &symbol_map);
-        verify_completion(f);
-        f->stack_size = frame_size;
-        free(rpo);
-        free(lifetimes);
-        array_free(&symbol_map);
-        array_free(&symbol_slots);
-    }
-}
-Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *rpo) {
-    Lifetime *lts = malloc(sizeof(Lifetime) * defined);
-    int pc = 0;
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        const IR_Block *b = get_block(f, rpo[i]);
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
-            for (int k = 0; k < value_count; k++) {
-                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
-                const int is_call_arg = k >= instr->op_count;
-                if (a->kind == IR_VREG) {
-                    if (a->vreg < 0) continue;
-                    if (op_info[instr->op].def_mask & (1 << k)) {
-                        lts[instr->ops[k].vreg] = (Lifetime){instr->ops[k].vreg, pc, -1, 0, 0, .v = &instr->ops[k]};
-                    }
-                    if (is_call_arg || op_info[instr->op].use_mask & (1 << k)) {
-                        if (lts[a->vreg].end < pc) {
-                            lts[a->vreg].end = pc;
-                        }
-                    }
-                }
-            }
-            pc++;
-        }
-    }
-    return lts;
-}
-void print_bitset(const BitSet *bs) {
-    printf("{");
-    int first = 1;
-    for (int i = 0; i < bs->num_bits; i++) {
-        if (bitset_has(bs, i)) {
-            if (!first) printf(", ");
-            printf("r%d", i);
-            first = 0;
-        }
-    }
-    printf("}");
-}
-void print_cfg(const IR_Function *func) {
-    printf("Func Analysis: %s\n", func->name);
-    for (int i = 0; i < func->blocks_array.count; i++) {
-        const IR_Block *b = get_block(func, i);
-        printf("L%d:\n", i);
-        printf("  Succ: ");
-        if (b->cfg.succ_count == 0) printf("None");
-        for (int j = 0; j < b->cfg.succ_count; j++) printf("L%d ", b->cfg.succ[j]);
-        printf("\n");
-        printf("  Pred: ");
-        if (b->cfg.pred_count == 0) printf("None");
-        for (int j = 0; j < b->cfg.pred_count; j++) printf("L%d ", b->cfg.pred[j]);
-        printf("\n");
-        printf("  Def: ");
-        print_bitset(&b->live.def);
-        printf("\n");
-        printf("  Use: ");
-        print_bitset(&b->live.use);
-        printf("\n");
-        printf("  Live-in: ");
-        print_bitset(&b->live.live_in);
-        printf("\n");
-        printf("  Live-out: ");
-        print_bitset(&b->live.live_out);
-        printf("\n");
+        ctx->func = get_func(ctx->module, i);
+        x86_gen_function(fp, ctx);
     }
 }
