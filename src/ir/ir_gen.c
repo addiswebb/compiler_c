@@ -116,35 +116,26 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         // Handle early branching for '&&' and '||' binary operations
         if (expr->binary.op == TK_OR_OR || expr->binary.op == TK_AND_AND) {
             IR_Value val = ir_alloca(ctx, ir_next_virtual_reg(ctx->func), 8, 8);
-            IR_Block *true_block;
-            IR_Block *false_block;
-            // if (ir_is_within_cond(ctx)) {
-            //     true_block = ctx->true_block;
-            //     false_block = ctx->false_block;
-            // } else {
-            true_block = ir_new_block();
-            false_block = ir_new_block();
-            // }
+            IR_Block *true_block = ir_new_block();
+            IR_Block *false_block = ir_new_block();
+            IR_Block *end_block = ir_new_block();
+
             if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, lhs, NULL, false_block);
             if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, lhs, true_block, NULL);
 
             IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
-            // No need to cmp both results, if we reach here it means lhs is 1 or rhs represents (lhs op rhs)
-            // Early out
-            // if (ir_is_within_cond(ctx)) return rhs;
 
-            IR_Block *end_block = ir_new_block();
             ir_branch_cond(ctx, rhs, true_block, false_block);
+
             ir_append_block(ctx, true_block);
             ir_move(ctx, val, ir_integer_literal(1));
             ir_branch(ctx, end_block);
+
             ir_append_block(ctx, false_block);
             ir_move(ctx, val, ir_integer_literal(0));
+
             ir_append_block(ctx, end_block);
             return val;
-
-            // // Otherwise generate the whole || or && result
-            // return ir_binary(ctx, expr->binary.op == TK_OR_OR ? BW_OR : BW_AND, ir_next_virtual_reg(ctx->func), lhs, rhs, type_i32);
         }
 
         IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
