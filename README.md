@@ -264,13 +264,9 @@ When a block is full, instead of reallocating the whole block somewhere else at 
 * Const Expression Evaluation
 
 ## Todo
-- [x] Fix switch statements
-- [x] Successfully compile `calculator`
-- [x] Implicit cast comparison operands to type_i32
-    * `5.0 > 2.0` fails
-- [x] Fix if statements with `||` and possibly `&&`
-- [x] Optimize SysV variadic float arg spilling to check `%al` 
-- [x] const global var_decls dont evaluate array bounds correctly
+- [ ] Add tests for `||` and `&&` to ensure early returns
+- [ ] Allow `{.x = {}}` where `x` is a union;
+- [ ] Self-compile `sysv.c`, `analysis.c`, `sema.c`, `ir_builder.c`, `ir_module.c`, `ir_gen.c`, `parser.c`,
 
 ## To be Implemented (Ordered from next to never...)
 * Use physical registers
