@@ -281,7 +281,7 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
     if (res.memory) {
         set_hidden_sret_ptr(f->type->_func.return_type);
         append(&f->locals_array, &_hidden_sret_ptr);
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+        ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
                                                             .op_count = 1,
                                                             .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
                                                             .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
@@ -294,7 +294,7 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
         d->symbol->type = d->type;
         append(&f->locals_array, &d->symbol);
         const int param_index = d->type->kind == T_FLOAT ? floats_emitted++ : integers_emitted++;
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+        ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
                                                             .op_count = 1,
                                                             .ops = {[0] = ir_symbol_value(d->symbol)},
                                                             .param = {.param_index = param_index, .type = d->type}});
@@ -305,7 +305,7 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
     if (f->type->_func.is_variadic) {
         // Space for this will be allocated later in x86 gen +176 bytes if variadic
         for (int i = integers_emitted; i < INTEGER_PARAM_REGISTERS; i++) {
-            ir_append_instruction(ctx->block,
+            ir_append_instruction(ctx,
                                   &(IR_Instruction){.op = IR_PARAM,
                                                     .op_count = 1,
                                                     .ops = {[0] = ir_stack_value(8, 8, -8 * (INTEGER_PARAM_REGISTERS - i) - 128)},
@@ -329,7 +329,7 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
 
         // Todo use movaps or move this to x86 lowering
         for (int i = floats_emitted; i < FLOAT_PARAM_REGISTERS; i++) {
-            ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+            ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
                                                                 .op_count = 1,
                                                                 .ops = {[0] = ir_stack_value(8, 8, -16 * (FLOAT_PARAM_REGISTERS - i))},
                                                                 .param = {.param_index = i, .type = type_f64}});

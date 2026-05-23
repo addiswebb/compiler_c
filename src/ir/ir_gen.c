@@ -303,7 +303,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_begin_scope(ctx->func);
     if (_for->_for.init) ir_gen_block_item(ctx, _for->_for.init);
 
-    IR_Block *cond_block = ir_new_block(); // IR_Block *cond_block = ir_add_block(ctx);
+    IR_Block *cond_block = ir_new_block();
     IR_Block *block_block = ir_new_block();
     IR_Block *iter_block = ir_new_block();
     IR_Block *end_block = ir_new_block();

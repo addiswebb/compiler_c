@@ -162,6 +162,7 @@ Node *p_parse_builtin(Parser *p, NodeManager *nm, BuiltinKind kind) {
 Node *p_parse_postfix_expression(Parser *p, NodeManager *nm) {
     Node *expr = p_parse_primary_expression(p, nm);
     for (;;) {
+        // while (1) {
         switch (p_peek(p)->type) {
         case TK_OPEN_PAREN:
             if (expr->kind == N_IDENTIFIER) {

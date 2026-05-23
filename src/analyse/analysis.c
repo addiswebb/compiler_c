@@ -174,27 +174,29 @@ void ir_init_func_cfg(const IR_Function *f) {
 void ir_compute_func_io(IR_Function *f) {
     for (int j = 0; j < f->blocks_array.count; j++) {
         IR_Block *b = get_block(f, j);
-
-        bool found = false;
+        bool has_terminator = false;
         for (int i = 0; i < b->instruction_array.count; i++) {
             const IR_Instruction *instr = get_instruction(&b->instruction_array, i);
             switch (instr->op) {
             case IR_BR:
                 add_successor(f, b, instr->br.block);
-                found = true;
+                has_terminator = true;
                 break;
             case IR_BR_COND:
                 if (instr->br_cond.f_block) add_successor(f, b, instr->br_cond.f_block);
                 if (instr->br_cond.t_block) add_successor(f, b, instr->br_cond.t_block);
-                found = instr->br_cond.f_block && instr->br_cond.t_block;
+                has_terminator = instr->br_cond.f_block && instr->br_cond.t_block;
                 break;
             case IR_RET:
+                has_terminator = true;
+                break;
             default:
                 break;
             }
+            if (has_terminator) break;
         }
         // Means we may still be within the block, allow fallthrough to sequentially next block.
-        if (!found && j < f->blocks_array.count - 1) add_successor(f, b, get_block(f, j + 1));
+        if (!has_terminator && j < f->blocks_array.count - 1) add_successor(f, b, get_block(f, j + 1));
     }
 }
 
@@ -231,7 +233,9 @@ void compute_bitset(const IR_Function *f, const int *rpo) {
     while (changed) {
         changed = false;
         for (int i = 0; i < f->blocks_array.count; i++) {
-            const IR_Block *b = get_block(f, rpo[i]);
+            int index = rpo[i];
+            if (index == -1) continue;
+            const IR_Block *b = get_block(f, index);
             bitset_clear(&old_live_out);
             bitset_clear(&old_live_in);
             bitset_clear(&tmp);
@@ -526,6 +530,9 @@ void analysis(const IR_Context *ctx) {
 
         Lifetime *lifetimes = NULL;
         int *rpo = malloc(f->blocks_array.count * sizeof(int));
+        for (int i = 0; i < f->blocks_array.count; i++) {
+            rpo[i] = -1;
+        }
         if (!rpo) {
             PANIC("Failed to allocate rpo\n");
         }
@@ -576,6 +583,8 @@ Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *
     int pc = 0;
 
     for (int i = 0; i < f->blocks_array.count; i++) {
+        int index = rpo[i];
+        if (index == -1) continue;
         const IR_Block *b = get_block(f, rpo[i]);
         for (int j = 0; j < b->instruction_array.count; j++) {
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);

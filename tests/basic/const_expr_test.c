@@ -12,4 +12,5 @@ int main() {
     default:
         return 1;
     }
+    return 0;
 }

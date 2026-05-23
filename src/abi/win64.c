@@ -149,7 +149,7 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
     if (res.memory) {
         set_hidden_sret_ptr(f->type->_func.return_type);
         append(&f->locals_array, &_hidden_sret_ptr);
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+        ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
                                                             .op_count = 1,
                                                             .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
                                                             .param = {.param_index = hidden_ptr_offset++, .type = _hidden_sret_ptr->type}});
@@ -160,14 +160,14 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
         ParamDecl *d = get(&f->type->_func.params, i);
         d->symbol->type = d->type;
         append(&f->locals_array, &d->symbol);
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+        ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
                                                             .op_count = 1,
                                                             .ops = {[0] = ir_symbol_value(d->symbol)},
                                                             .param = {.param_index = params_emitted++, .type = d->type}});
     }
     if (f->type->_func.is_variadic) {
         for (int i = params_emitted; i < PARAM_REGISTERS; i++) {
-            ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
+            ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
                                                                 .op_count = 1,
                                                                 .ops = {[0] = ir_stack_value(8, 8, 16 + i * 8)},
                                                                 .param = {.param_index = params_emitted++, .type = type_u64}});

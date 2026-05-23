@@ -348,7 +348,7 @@ void ir_pop_loop_ctx(IR_Context *ctx);
 /* Returns an IR Const Value using the constant at `const_index`. */
 IR_Value ir_literal_value(int const_index);
 
-void ir_append_instruction(IR_Block *b, IR_Instruction *instr);
+void ir_append_instruction(IR_Context *ctx, IR_Instruction *instr);
 void ir_free_module(IR_Module *module);
 
 /* Begins a new scope to track locals defined. */
