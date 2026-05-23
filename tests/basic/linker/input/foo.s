@@ -8,7 +8,7 @@
 foo:
     push %rbp
     mov %rsp, %rbp
-    subq $64, %rsp
+    subq $72, %rsp
 foo_0:
     movl %edi, -8(%rbp)
     movsd %xmm0, -16(%rbp)
@@ -30,14 +30,14 @@ foo_0:
     movq -56(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -56(%rbp)
-    subq $176, %rsp
+    subq $184, %rsp
     movq -32(%rbp), %rdi
     movl -40(%rbp), %esi
     movsd -48(%rbp), %xmm0
     movq -56(%rbp), %rdx
     movl $1, %eax
     call printf
-    addq $176, %rsp
+    addq $184, %rsp
     movl %eax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -32(%rbp)

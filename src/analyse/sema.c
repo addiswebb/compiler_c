@@ -225,7 +225,7 @@ Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *
         return t;
     case T_STRUCT:
         if (t->_struct.name && strcmp(t->_struct.name, "Type") == 0) {
-            printf("Here\n");
+            // printf("Here\n");
         }
         t->size = 0;
         t->align = 0;

@@ -762,354 +762,58 @@ void pop_sema_loop(SemanticContext *sema_ctx);
 Node *sema_current_loop(const SemanticContext *sema_ctx);
 Node *sema_current_compound(const SemanticContext *sema_ctx);
 static inline int *get_i(SemanticContext *sema_ctx) { return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
-typedef enum{
-    RAX, RBX, RCX, RDX,
-    RSI, RDI,
-    RBP, RSP,
-    R8, R9, R10, R11, R12, R13, R14, R15,
-}GP_Reg;
-typedef enum{
-    XMM0, XMM1, XMM2, XMM3,
-    XMM4, XMM5, XMM6, XMM7,
-    XMM8, XMM9, XMM10, XMM11,
-    XMM12, XMM13, XMM14, XMM15,
-}XMM_Reg;
-typedef enum{
-    REG_8,
-    REG_16,
-    REG_32,
-    REG_64,
-}RegSize;
-typedef enum{
-    REG_GP,
-    REG_XMM,
-    REG_IP
-}RegKind;
+typedef struct {
+    char *output;
+    Array current_source;
+    Array current_output;
+    Array source_files;
+    Array passthrough_args;
+    char *src;
+    int src_size;
+    NodeManager nm;
+    Parser p;
+    Tokenizer tk;
+} Compiler;
 typedef enum {
-    REG_DATA_LABEL,
-    REG_DATA_OFFSET,
-    REG_DATA_CONST_INDEX,
-    REG_DATA_NONE,
-}RegDataKind;
-struct PhysReg{
-    RegKind kind;
-    union{
-        GP_Reg gp_reg;
-        XMM_Reg sse_reg;
-    };
-    RegSize size;
-    RegDataKind data_kind;
-    union{
-        const char* label;
-        struct{
-            int offset;
-            int scale;
-        };
-        int const_index;
-    };
-};
-RegSize reg_size(int size);
-typedef enum {
-    LT,
-    LE,
-    GT,
-    GE,
-    EQ,
-    NEQ,
-} IR_CMP_OP;
-typedef enum {
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    MOD,
-    BW_AND,
-    L_AND,
-    BW_OR,
-    L_OR,
-    XOR,
-    SHR,
-    SHL,
-} IR_BINOP_OP;
-typedef enum {
-    POS,
-    NEG,
-    LNOT,
-    BNOT,
-    REF,
-    DEREF,
-} IR_UNARY_OP;
-typedef enum {
-    IR_CONST,
-    IR_UNOP,
-    IR_BINOP,
-    IR_LOAD,
-    IR_STORE,
-    IR_MOVE,
-    IR_RET,
-    IR_CALL,
-    IR_BR,
-    IR_BR_COND,
-    IR_CMP,
-    IR_CAST,
-    IR_ADDR,
-    IR_ALLOCA,
-    IR_MEMCPY,
-    IR_LABEL,
-    IR_JMP,
-    IR_PARAM,
-    IR_BUILTIN_VA_START,
-    IR_BUILTIN_VA_ARG,
-} IR_OP;
-typedef enum {
-    IR_UNDEFINED,
-    IR_SYMBOL,
-    IR_VREG,
-    IR_CONSTANT,
-    IR_PHYS_REG,
-    IR_INT_LITERAL,
-} IR_ValueKind;
-typedef struct PhysReg PhysReg;
-typedef struct IR_Value {
-    IR_ValueKind kind;
-    int size;
-    int align;
-    union {
-        Symbol *symbol;
-        int vreg;
-        int const_index;
-        PhysReg phys_reg;
-        int64_t int_literal;
-    };
-} IR_Value;
-typedef struct {
-    Symbol *symbol;
-    ConstLiteral val;
-} IR_Global;
-typedef struct {
-    Type *type;
-    IR_Value v;
-} IR_CallArg;
-typedef struct {
-    uint8_t def_mask;
-    uint8_t use_mask;
-} IR_OpInfo;
-extern IR_OpInfo op_info[];
-typedef struct IR_Block IR_Block;
-typedef struct {
-    const char *name;
-    int index;
-    int is_defined;
-    int is_variadic;
-    StorageClass storage_class;
-} IR_Func_Def;
-typedef struct {
-    IR_OP op;
-    IR_Value ops[3];
-    int op_count;
-    union {
-        struct {
-            Type *type;
-        } _const;
-        struct {
-            Type *type;
-        } load;
-        struct {
-            Type *type;
-        } store;
-        struct {
-            Type *type;
-        } ret;
-        struct {
-            IR_UNARY_OP op;
-            Type *type;
-        } unary;
-        struct {
-            IR_BINOP_OP op;
-            Type *type;
-        } binop;
-        struct {
-            IR_CMP_OP op;
-            Type *type;
-        } cmp;
-        struct {
-            Array arg_array;
-            Type *type;
-        } call;
-        struct {
-            IR_Block *block;
-        } br;
-        struct {
-            IR_Block *t_block;
-            IR_Block *f_block;
-        } br_cond;
-        struct {
-            Type *from;
-            Type *to;
-        } cast;
-        struct {
-            int offset;
-        } addr;
-        struct {
-            int size;
-        } alloca;
-        struct {
-            int size;
-        } memcpy;
-        struct {
-            const char *name;
-        } label;
-        struct {
-            const char *name;
-        } jmp;
-        struct {
-            Type *type;
-        } builtin_va_arg;
-        struct {
-            Type *type;
-            int param_index;
-        } param;
-    };
-} IR_Instruction;
-typedef enum {
-    SLOT_REGISTER,
-    SLOT_STACK,
-} RegisterSlotKind;
-typedef struct {
-    IR_Value v;
-    int free_at;
-} RegisterSlot;
-typedef struct {
-    unsigned int *data;
-    int num_bits;
-    int capacity;
-} BitSet;
-typedef struct {
-    int *succ;
-    int succ_count;
-    int *pred;
-    int pred_count;
-} IR_BlockCFG;
-typedef struct {
-    BitSet def;
-    BitSet use;
-    BitSet live_in;
-    BitSet live_out;
-} IR_BlockLiveness;
-typedef struct {
-    int reg;
-    int start;
-    int end;
-    int stack_slot;
-    int stack_offset;
-    IR_Value *v;
-} Lifetime;
-struct IR_Block {
-    int id;
-    Array instruction_array;
-    IR_BlockCFG cfg;
-    IR_BlockLiveness live;
-};
-typedef struct {
-    int reg_count;
-    int stack_pointer;
-    Array var_array;
-} IR_Scope;
-typedef struct {
-    const char *name;
-    Array blocks_array;
-    int next_reg;
-    int max_reg;
-    int stack_size;
-    Array locals_array;
-    Array scopes_array;
-    int stack_slot_count;
-    int stack_slot_capacity;
-    Linkage linkage;
-    Storage storage;
-    Type *type;
-} IR_Function;
-typedef struct {
-    int count;
-    int capacity;
-    IR_Global *globals;
-} IR_Global_Pool;
-typedef struct {
-    IR_Block *block;
-    const char *label;
-    int placeholder;
-} IR_LabeledBlock;
-typedef struct {
-    Array functions_array;
-    Array const_array;
-    Array global_array;
-    Array labeled_block_array;
-} IR_Module;
-typedef struct {
-    IR_Block *continue_block;
-    IR_Block *break_block;
-} IR_LoopContext;
-typedef struct {
-    IR_LoopContext *data;
-    int size;
-    int capacity;
-} IR_LoopStack;
-typedef struct {
-    IR_Module *module;
-    IR_Function *func;
-    IR_Block *block;
-    Array loop_stack_array;
-    IR_Block *true_block;
-    IR_Block *false_block;
-    Arena *symbol_table;
-    int func_not_address;
-} IR_Context;
-extern const IR_Value ir_no_value;
-IR_Context ir_init_ctx(Parser *p);
-void free_ir_ctx(IR_Context *ctx);
-IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu);
-void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break_block);
-void ir_pop_loop_ctx(IR_Context *ctx);
-IR_Value ir_literal_value(int const_index);
-void ir_append_instruction(IR_Block *b, IR_Instruction *instr);
-void ir_free_module(IR_Module *module);
-void ir_begin_scope(IR_Function *func);
-void ir_end_scope(IR_Function *func);
-IR_Value ir_next_virtual_reg(IR_Function *func);
-IR_Value ir_integer_literal(int64_t i);
-IR_Module *ir_new_module();
-IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type);
-IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const int is_defined, const int is_variadic,
-                                const StorageClass storage_class);
-IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
-IR_Block *ir_new_block();
-IR_Block *ir_add_block(IR_Context *ctx);
-IR_Value ir_symbol_value(Symbol *s);
-void ir_append_function(const IR_Context *ctx, IR_Function *func);
-void ir_append_global(IR_Module *module, Symbol *symbol, const ConstLiteral *literal);
-int ir_append_const(IR_Module *module, const ConstLiteral *literal);
-IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
-IR_LabeledBlock *ir_append_labeled_block(IR_Context *ctx, const char *label);
-IR_Value ir_get_symbol_value(IR_Context *ctx, const char *name, int give_lvalue);
-IR_LabeledBlock *ir_get_labeled_block(IR_Context *ctx, const char *label);
-static inline IR_Instruction *get_instruction(const Array *arr, int index) { return (IR_Instruction *)get(arr, index); }
-static inline IR_LoopContext *get_loop_ctx(const IR_Context *ctx) {
-    return (IR_LoopContext *)get(&ctx->loop_stack_array, ctx->loop_stack_array.count - 1);
-}
-static inline IR_Scope *get_current_scope(const IR_Function *func) {
-    return (IR_Scope *)get(&func->scopes_array, func->scopes_array.count - 1);
-}
-static inline IR_Scope *get_scope(const IR_Function *func, int index) { return (IR_Scope *)get(&func->scopes_array, index); }
-static inline IR_Block *get_block(const IR_Function *func, int index) { return *(IR_Block **)get(&func->blocks_array, index); }
-static inline ConstLiteral *get_const(const IR_Context *ctx, int index) { return (ConstLiteral *)get(&ctx->module->const_array, index); }
-static inline IR_Global *get_global(const IR_Context *ctx, int index) { return (IR_Global *)get(&ctx->module->global_array, index); }
-static inline Symbol *get_local_symbol(const IR_Function *func, int index) { return *(Symbol **)get(&func->locals_array, index); }
-static inline int get_var_index(const IR_Scope *scope, int index) { return *(int *)get(&scope->var_array, index); }
-static inline IR_Function *get_func(const IR_Module *module, int index) { return *(IR_Function **)get(&module->functions_array, index); }
-static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int index) {
-    return (IR_LabeledBlock *)get(&module->labeled_block_array, index);
-}
-static inline IR_CallArg *get_call_arg(const IR_Instruction *call, int index) { return (IR_CallArg *)get(&call->call.arg_array, index); }
+    CF_STOP_AFTER_AST,
+    CF_STOP_AFTER_IR,
+    CF_STOP_AFTER_COMPILE,
+    CF_STOP_AFTER_ASSEMBLE,
+    CF_DEBUG_TYPEPOOL,
+    CF_DEBUG_LIFETIMES,
+    CF_DEBUG_ENUM,
+    CF_DEBUG_STRUCT,
+    CF_DEBUG_UNION,
+    CF_DEBUG_LOWERED_IR,
+    CF_DEBUG_IR_INSTR,
+    CF_DEBUG_PARSER,
+    CF_DEBUG_TOKENIZER,
+    CF_DEBUG_SYMBOLS,
+    CF_COUNT,
+} CompilerFlag;
+extern unsigned int compiler_flags;
+extern const char *flag_strings[CF_COUNT];
+int has_flag(CompilerFlag f);
+Compiler begin_compiler(int argc, char *argv[]);
+void init_compiler(Compiler *compiler);
+void clear_compiler(Compiler *compiler);
+void free_compiler(Compiler *compiler);
+void drive(Compiler *c);
+void assemble(Compiler *c);
+void link(Compiler *c, Array *objs);
+int compile(Compiler *compiler);
+void free_compiler(Compiler *compiler);
+static int load_src_file(Compiler *compiler, const char *file);
+char *replace_extension(const char *path, const char *ext);
+int is_alpha(char c);
+int is_num(char c);
+int is_alpha_num(char c);
+int is_alpha_numeric_str(const char *c);
+char to_lower_case(const char c);
+int is_hex(const char c);
+int is_oct(const char c);
+int is_binary(const char c);
+int is_whitespace(char c);
 typedef struct{
     unsigned int gp_offset;
     unsigned int fp_offset;
@@ -1139,44 +843,6 @@ int snprintf(char *, size_t, const char *, ...);
 extern int vfprintf(FILE *, const char *, va_list);
 FILE *popen(const char *, const char *);
 int pclose(FILE *);
-typedef enum {
-    ABI_NO_CLASS,
-    ABI_MEMORY,
-    ABI_INTEGER,
-    ABI_SSE,
-} ABI_TypeClass;
-typedef struct {
-    ABI_TypeClass class[2];
-    int memory;
-    char p[8];
-} ABI_Result;
-ABI_Result abi_classify(Type *type);
-IR_Value abi_lower_param_register(Type *type, int i);
-int is_va_list_type(Type *type);
-void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
-void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i, int param_index, int *param_cursor);
-void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
-void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-void abi_func_type_gen(Type *type);
-IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr);
-void abi_gen_params(IR_Context *ctx, IR_Function *f);
-void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
-extern Symbol *_hidden_sret_ptr;
-Symbol *current_sret();
-void set_sret(Type *return_type);
-void set_hidden_sret_ptr(Type *return_type);
-ABI_TypeClass merge(ABI_TypeClass chunk_class, ABI_TypeClass field_class);
-ABI_Result classify_struct(Type *type);
-extern const GP_Reg int_param_regs[6];
-extern const XMM_Reg float_param_regs[8];
-extern const GP_Reg caller_saved_regs[9];
-extern const GP_Reg callee_saved_regs[6];
-extern const char *gp_register_str[16][4];
-extern const char *sse_register_str[16];
-ConstLiteral evaluate_const_expression(const Node *node);
-ConstLiteral evaluate_const_literal(const Node *node);
-void print_const_literal(const ConstLiteral *node);
-void free_const_literal(ConstLiteral *l);
 void exit(int);
 void *malloc(size_t);
 void *realloc(void *, size_t);
@@ -1272,772 +938,1191 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     fflush(logger.file);
     if (lvl == LOG_PANIC) exit(1);
 }
-int is_lvalue(const Node *n) { return n->kind == N_IDENTIFIER || n->kind == N_INDEX || n->kind == N_MEMBER_ACCESS || is_deref(n); }
-int is_deref(const Node *n) { return n->kind == N_UNARY && n->unary.op == TK_MULTIPLY; }
-Type *check_unary_op(NodeManager *nm, Node *unary_op) {
-    const Node *expr = unary_op->unary.expr;
-    const TypeKind kind = expr->type->kind;
-    switch (unary_op->unary.op) {
-    case TK_PLUS:
-    case TK_MINUS:
-        if (kind == T_INT || kind == T_FLOAT) return expr->type;
-        break;
-    case TK_L_NOT:
-        if (kind == T_INT || kind == T_FLOAT || kind == T_POINTER) return type_i32;
-        break;
-    case TK_BW_NOT:
-        if (kind == T_INT) return expr->type;
-        break;
-    case TK_AND:
-        if (is_lvalue(expr)) {
-            return get_pointer_type(expr->type);
-        }
-        do { log_message(LOG_ERROR, "Tried to reference a non assignable term\n"); exit(1); } while (0);
-    case TK_MULTIPLY:
-        if (expr->type->kind == T_ARRAY) {
-            unary_op->unary.expr = cast_node(nm, unary_op->unary.expr, get_pointer_type(expr->type->base));
-        }
-        if (expr->type->base && expr->type->base != type_invalid) return expr->type->base;
-        do { log_message(LOG_ERROR, "Tried to dereference some nonexistent term\n"); exit(1); } while (0);
-    case TK_SIZEOF:
-        if (expr->type != type_invalid && expr->type->size) return type_i32;
-        do { log_message(LOG_ERROR, "Tried to get the sizeof something without a size\n"); exit(1); } while (0);
-    case TK_INCR:
-    case TK_DECR:
-        return expr->type;
-    default:
-        break;
-    }
-    printf("Invalid operand type ");
-    print_type(expr->type);
-    printf(" for the given unary operator ");
-    print_token_type(unary_op->unary.op);
-    printf("\n");
-    return type_invalid;
+Parser new_parser() { return (Parser){0}; }
+void init_parser(Parser *p, Array *src, const int size) {
+    p->size = size;
+    p->src = src;
+    p->index = 0;
+    p->expect_semi = 1;
+    array_init(&p->scopes_array, 4, sizeof(Array));
+    arena_init(&p->symbols_arena, 64, sizeof(Symbol));
+    p_append_symbol_table(p);
 }
-int is_valid_binary_op(TokenType op, const Node *lhs, const Node *rhs) {
-    if (op == TK_EQ) return 1;
-    if (is_assignment_op(op)) op = get_underlying_op(op);
-    if (op == TK_AND_AND || op == TK_OR_OR) return is_scalar_type(lhs->type) && is_scalar_type(rhs->type);
-    int is_lhs_ptr = lhs->type->kind == T_POINTER || lhs->type->kind == T_ARRAY;
-    int is_rhs_ptr = rhs->type->kind == T_POINTER || rhs->type->kind == T_ARRAY;
-    if ((is_lhs_ptr || is_rhs_ptr) && is_bitwise_op(op)) return 0;
-    if (is_lhs_ptr && !is_rhs_ptr) return op == TK_PLUS || op == TK_MINUS || op == TK_EQ_EQ || op == TK_NEQ;
-    if (!is_lhs_ptr && is_rhs_ptr) return op == TK_PLUS || op == TK_EQ_EQ || op == TK_NEQ;
-    if (is_lhs_ptr && is_rhs_ptr) return op == TK_MINUS || is_comparison_op(op);
-    return 1;
+void free_parser(Parser *p) {
+    for (int i = 0; i < p->scopes_array.count; i++) {
+        array_free(get_symbol_table(p, i));
+    }
+    array_free(&p->scopes_array);
+    arena_free(&p->symbols_arena);
 }
-Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
-    if (binop->binary.lhs->type == type_invalid || binop->binary.rhs->type == type_invalid) {
-        do { log_message(LOG_ERROR, "Binary op was given expression with an invalid type\n"); exit(1); } while (0);
-    }
-    const Node *lhs = binop->binary.lhs;
-    Node *rhs = binop->binary.rhs;
-    if (!is_valid_binary_op(op, lhs, rhs)) {
-        do { log_message(LOG_ERROR, "Invalid arithmetic operands\n"); exit(1); } while (0);
-    }
-    if (is_assignment_op(op)) {
-        if (!(is_lvalue(lhs))) do { log_message(LOG_ERROR, "Binary op lhs is not assignable\n"); exit(1); } while (0);
-        if (lhs->type != rhs->type) binop->binary.rhs = cast_node(nm, rhs, lhs->type);
-        return lhs->type;
-    }
-    Type *common = promote_binary_operands(nm, binop);
-    if (!common || common == type_invalid) {
-        do { log_message(LOG_ERROR, "Invalid arithmetic operands\n"); exit(1); } while (0);
-    }
-    if (is_arithmetic_op(op)) return common;
-    if (is_comparison_op(op)) return common;
-    if (is_bitwise_op(op)) {
-        if (!(lhs->type->kind == T_INT || lhs->type->kind == T_ENUM) || !(rhs->type->kind == T_INT || rhs->type->kind == T_ENUM)) {
-            do { log_message(LOG_ERROR, "Bitwise operation requires integers\n"); exit(1); } while (0);
-        }
-        return type_i32;
-    }
-    if (is_logical_op(op)) return type_i32;
-    printf("Unknown binary operator\n");
-    return type_invalid;
+void p_append_symbol_table(Parser *p) {
+    Array symbol_table;
+    array_init(&symbol_table, 4, sizeof(Symbol *));
+    append(&p->scopes_array, &symbol_table);
 }
-Type *promote_binary_operands(NodeManager *nm, Node *binop) {
-    Type *common = type_invalid;
-    Node **lhs = &binop->binary.lhs;
-    Node **rhs = &binop->binary.rhs;
-    if ((*lhs)->type->kind == T_ENUM) {
-        *lhs = cast_node(nm, (*lhs), type_i32);
+int current_scope_depth;
+int p_is_last_token(const Parser *p) { return p->index >= p->size; }
+Token *p_peek_n(const Parser *p, const int n) {
+    if (p->index + n > p->src->count) {
+        printf("P_peek_n Tried peeking past eof\n");
+        return ((void *)0);
     }
-    if ((*rhs)->type->kind == T_ENUM) {
-        *rhs = cast_node(nm, (*rhs), type_i32);
-    }
-    if ((*lhs)->type->kind == T_ARRAY) {
-        *lhs = cast_node(nm, (*lhs), get_pointer_type((*lhs)->type->base));
-    }
-    if ((*rhs)->type->kind == T_ARRAY) {
-        *rhs = cast_node(nm, (*rhs), get_pointer_type((*rhs)->type->base));
-    }
-    if (is_arithmetic_op(binop->binary.op) || is_comparison_op(binop->binary.op)) {
-        if ((*lhs)->type->kind == T_INT && (*lhs)->type->size < type_i32->size)
-            *lhs = cast_node(nm, (*lhs), (*lhs)->type->is_signed ? type_i32 : type_u32);
-        if ((*rhs)->type->kind == T_INT && (*rhs)->type->size < type_i32->size)
-            *rhs = cast_node(nm, (*rhs), (*rhs)->type->is_signed ? type_i32 : type_u32);
-    }
-    if ((*lhs)->type->kind == T_FLOAT || (*rhs)->type->kind == T_FLOAT) {
-        common = (*lhs)->type->size > (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
-    } else if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_INT) {
-        if ((*rhs)->type != type_i64) *rhs = cast_node(nm, (*rhs), type_i64);
-        return (*lhs)->type;
-    } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_POINTER) {
-        if ((*lhs)->type != type_i64) *lhs = cast_node(nm, (*lhs), type_i64);
-        return (*rhs)->type;
-    } else if ((*lhs)->type->kind == T_INT && (*rhs)->type->kind == T_INT) {
-        common = (*lhs)->type->size >= (*rhs)->type->size ? (*lhs)->type : (*rhs)->type;
-    } else if ((*lhs)->type->kind == T_POINTER && (*rhs)->type->kind == T_POINTER) {
-        return type_i64;
-    } else {
-        do { log_message(LOG_ERROR, "UNSURE HOW TO HANDLE COMMON CASE;\n"); exit(1); } while (0);
-    }
-    if ((*lhs)->type != common) *lhs = cast_node(nm, (*lhs), common);
-    if ((*rhs)->type != common) *rhs = cast_node(nm, (*rhs), common);
-    return common;
+    return get_token(p->src, p->index + n);
 }
-void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
-    Node *ident = new_node(nm, N_IDENTIFIER);
-    ident->identifier.name = "__tmp_cl";
-    ident->identifier.len = 9;
-    ident->type = node->type;
-    Node *d = new_node(nm, N_VAR_DECL);
-    d->type = node->type;
-    d->var_decl.expr = node->compound_literal.value;
-    d->var_decl.is_defined = 1;
-    d->var_decl.storage_class = STATIC;
-    d->var_decl.is_global = 0;
-    d->var_decl.identifier = ident;
-    ident->identifier.symbol = p_append_var_decl_symbol(p, d);
-    d->var_decl.symbol = ident->identifier.symbol;
-    *node = *ident;
-    insert_node(&sema_current_compound(sema_ctx)->compound.items_array, &d, *get_i(sema_ctx));
-    (*get_i(sema_ctx))++;
-}
-void handle_builtin_call(BuiltinKind kind, Node *node) {
-    Node builtin;
-    builtin.kind = N_BUILTIN;
-    builtin._builtin.kind = kind;
-    builtin._builtin.params = node->func_call.params_array;
-    memcpy(node, &builtin, sizeof(Node));
-}
-Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *t) {
-    if (t->is_resolved) return t;
-    t->is_resolved = 1;
-    switch (t->kind) {
-    case T_POINTER:
-        Type *new_pt = get_pointer_type(resolve_type(sema_ctx, p, nm, t->base));
-        new_pt->is_resolved = 1;
-        return new_pt;
-    case T_ARRAY:
-        Type *base = resolve_type(sema_ctx, p, nm, t->base);
-        semantic_analysis(sema_ctx, p, nm, t->_array.const_expr);
-        Type *new_at = get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
-        new_at->is_resolved = 1;
-        return new_at;
-    case T_UNION:
-        t->size = 0;
-        t->align = 0;
-        for (int i = 0; i < t->_union.members_array.count; i++) {
-            UnionMember *m = get_union_member(t, i);
-            m->type = resolve_type(sema_ctx, p, nm, m->type);
-            m->offset = 0;
-            if (m->type->size > t->size) {
-                t->size = m->type->size;
-                t->align = m->type->align;
-            }
-        }
-        if (!(t->size > 0)) do { log_message(LOG_ERROR, "Union size resolve failed\n"); exit(1); } while (0);
-        return t;
-    case T_STRUCT:
-        if (t->_struct.name && strcmp(t->_struct.name, "Type") == 0) {
-            printf("Here\n");
-        }
-        t->size = 0;
-        t->align = 0;
-        for (int i = 0; i < t->_struct.members_array.count; i++) {
-            StructMember *m = get_struct_member(t, i);
-            m->type = resolve_type(sema_ctx, p, nm, m->type);
-            if (m->type->align > t->align) t->align = m->type->align;
-            t->size = align(t->size, m->type->align);
-            m->offset = t->size;
-            t->size += m->type->size;
-        }
-        t->size = align(t->size, t->align);
-        return t;
-    case T_ENUM:
-        int64_t value = 0;
-        for (int i = 0; i < t->_enum.fields_array.count; i++) {
-            EnumField *f = get_enum_field(t, i);
-            if (f->const_expr) {
-                semantic_analysis(sema_ctx, p, nm, f->const_expr);
-                value = evaluate_const_expression(f->const_expr).i;
-            }
-            f->value = value++;
-            p_append_enum_const(p, f);
-        }
-        t->is_resolved = 1;
-        return t;
-    case T_FUNCTION:
-    case T_VOID:
-    case T_INT:
-    case T_FLOAT:
-        t->is_resolved = 1;
-        return t;
-    case T_INVALID:
-        do { log_message(LOG_ERROR, "Trying to resolve invalid type\n"); exit(1); } while (0);
+Token *p_peek(const Parser *p) { return p_peek_n(p, 0); }
+Token *p_peek_next(const Parser *p) { return p_peek_n(p, 1); }
+Token *p_consume_n(Parser *p, const int n) {
+    if (n == 0) return ((void *)0);
+    if (p->index + n > p->src->count) {
+        printf("P_consume_n %d Reached the end of the token list %d/%d\n", n, p->index, p->src->count);
+        return ((void *)0);
     }
+    Token *token = get_token(p->src, p->index);
+    p->index += n;
+    if (has_flag(CF_DEBUG_PARSER)) print_token(token);
+    return token;
 }
-void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
-    if (!node) return;
-    switch (node->kind) {
-    case N_TRANSLATION_UNIT:
-        for (int i = 0; i < node->translation_unit.declarations_array.count; i++) {
-            semantic_analysis(sema_ctx, p, nm, get_node(&node->translation_unit.declarations_array, i));
-        }
-        node->type = type_void;
-        break;
-    case N_FUNCTION:
-        if (!(!(node->func.is_defined && node->func.storage_class == EXTERN))) do { log_message(LOG_ERROR, "External Function cannot have a definition\n"); exit(1); } while (0);
-        Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC, 0);
-        if (func_symbol) {
-            if (func_symbol->func_def->func.storage_class == STATIC && node->func.storage_class != STATIC) {
-                do { log_message(LOG_ERROR, "Linkage conflict between function declarations of %s\n", node->func.name); exit(1); } while (0);
-            }
-            if (!func_symbol->func_def->func.is_defined && node->func.is_defined) {
-                func_symbol->func_def = node;
-            } else if (node->func.is_defined && func_symbol->func_def->func.is_defined) {
-                do { log_message(LOG_ERROR, "Redefinition of function %s\n", node->func.name); exit(1); } while (0);
-            }
-            node->func.symbol = func_symbol;
-        } else node->func.symbol = p_append_func_def(p, node);
-        if (node->func.is_defined) {
-            p_push_scope(p);
-            sema_ctx->func = node;
-            for (int i = 0; i < node->type->_func.params.count; i++) {
-                ParamDecl *param = (ParamDecl *)get(&node->type->_func.params, i);
-                if (node->func.is_defined) {
-                    if (!(param->name)) do { log_message(LOG_ERROR, "All Defined Function Paramaters must be named\n"); exit(1); } while (0);
-                    Node *param_decl = new_node(nm, N_VAR_DECL);
-                    Node *ident = new_node(nm, N_IDENTIFIER);
-                    ident->identifier.name = param->name;
-                    param_decl->var_decl.identifier = ident;
-                    param->symbol = p_append_var_decl_symbol(p, param_decl);
-                    param_decl->var_decl.symbol = param->symbol;
-                    param_decl->type = param->type;
-                }
-            }
-            semantic_analysis(sema_ctx, p, nm, node->func.body);
-            p_pop_scope(p);
-        }
-        break;
-    case N_COMPOUND:
-        push_sema_scope(sema_ctx, p, node);
-        int n_nodes = node->compound.items_array.count;
-        for (int i = 0; i < n_nodes; i++) {
-            semantic_analysis(sema_ctx, p, nm, get_node(&node->compound.items_array, *get_i(sema_ctx)));
-            (*get_i(sema_ctx))++;
-        }
-        pop_sema_scope(sema_ctx, p);
-        break;
-    case N_VAR_DECL:
-        if (!node->type->is_resolved) node->type = resolve_type(sema_ctx, p, nm, node->type);
-        if (node->var_decl.storage_class == EXTERN) {
-            if (node->var_decl.is_defined) {
-                do { log_message(LOG_ERROR, "External variable cannot be initialized in the same statement\n"); exit(1); } while (0);
-            }
-        }
-        Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR, 1);
-        if (var_symbol) {
-            if (node->var_decl.is_defined && var_symbol->linkage == LINK_EXTERNAL) update_linkage_storage(var_symbol, node);
-            if (p->scopes_array.count > 1) {
-                if (var_symbol->scope_depth == p->current_scope_depth) {
-                    do { log_message(LOG_ERROR, "Redeclaration of local variable %s\n", node->var_decl.identifier->identifier.name); exit(1); } while (0);
-                }
-            } else if (!var_symbol->var_decl->var_decl.is_defined && node->var_decl.is_defined) {
-                var_symbol->var_decl = node;
-            } else if (var_symbol->var_decl->var_decl.is_defined && node->var_decl.is_defined) {
-                do { log_message(LOG_ERROR, "Redefinition of global variable %s\n", node->var_decl.identifier->identifier.name); exit(1); } while (0);
-            }
-        } else var_symbol = p_append_var_decl_symbol(p, node);
-        node->var_decl.symbol = var_symbol;
-        node->var_decl.identifier->identifier.symbol = var_symbol;
-        if (!node->var_decl.expr) break;
-        if (node->var_decl.expr->kind == N_INIT_LIST) {
-            node->var_decl.expr->type = node->type;
-            semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
-            if (node->var_decl.is_global) {
-                ConstLiteral init_list = evaluate_const_expression(node->var_decl.expr);
-                node->var_decl.const_expr = malloc(sizeof(ConstLiteral));
-                if (!(node->var_decl.const_expr)) do { log_message(LOG_ERROR, "Failed to allocate for const expr"); exit(1); } while (0);
-                *node->var_decl.const_expr = init_list;
-            }
-            Node *init_list = node->var_decl.expr;
-            break;
-        }
-        semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
-        if (node->var_decl.expr->kind == N_LITERAL && node->var_decl.expr->literal.kind == L_STRING) {
-            if (node->var_decl.expr->literal.kind == L_STRING) {
-                if (!(node->type->kind == T_ARRAY || node->type->kind == T_POINTER) && node->type->base == type_i8) {
-                    log_start(LOG_ERROR);
-                    printf("Cannot initialize ");
-                    print_type(node->type);
-                    printf(" with String Literal\n");
-                    exit(1);
-                }
-                if (node->type->kind == T_ARRAY && node->type->_array.array_len == -1) {
-                    node->type = node->var_decl.expr->type;
-                    node->var_decl.symbol->type = node->type;
-                }
-            }
-        }
-        if (node->var_decl.expr->type != node->type) {
-            node->var_decl.expr = cast_node(nm, node->var_decl.expr, node->type);
-        }
-        if (node->var_decl.is_global) {
-            ConstLiteral val = evaluate_const_expression(node->var_decl.expr);
-            node->var_decl.const_expr = malloc(sizeof(ConstLiteral));
-            if (!(node->var_decl.const_expr)) do { log_message(LOG_ERROR, "Failed to allocate for const expr"); exit(1); } while (0);
-            *node->var_decl.const_expr = val;
-        }
-        break;
-    case N_UNARY:
-        semantic_analysis(sema_ctx, p, nm, node->unary.expr);
-        node->type = check_unary_op(nm, node);
-        break;
-    case N_BINARY:
-        semantic_analysis(sema_ctx, p, nm, node->binary.lhs);
-        semantic_analysis(sema_ctx, p, nm, node->binary.rhs);
-        node->binary.common_type = check_binary_op(nm, node->binary.op, node);
-        node->type = is_comparison_op(node->binary.op) ? type_i32 : node->binary.common_type;
-        break;
-    case N_TERNARY:
-        semantic_analysis(sema_ctx, p, nm, node->ternary.cond);
-        semantic_analysis(sema_ctx, p, nm, node->ternary.if_true);
-        semantic_analysis(sema_ctx, p, nm, node->ternary.if_false);
-        node->type = node->ternary.if_true->type;
-        break;
-    case N_CAST:
-        semantic_analysis(sema_ctx, p, nm, node->cast.expr);
-        if (is_valid_cast(node->cast.expr->type, node->cast.to)) {
-            node->cast.from = node->cast.expr->type;
-            node->type = node->cast.to;
-            break;
-        }
-        do { log_message(LOG_ERROR, "Semantically invalid cast from %t to %t\n", node->cast.expr->type, node->cast.to); exit(1); } while (0);
-    case N_FUNCTION_CALL:
-        const char *fn_name = node->func_call.callee->kind == N_IDENTIFIER ? node->func_call.callee->identifier.name : "";
-        BuiltinKind builtin = get_builtin_kind(fn_name);
-        if (builtin != BUILTIN_NONE) {
-            handle_builtin_call(builtin, node);
-            return semantic_analysis(sema_ctx, p, nm, node);
-        }
-        semantic_analysis(sema_ctx, p, nm, node->func_call.callee);
-        Type *callee_type = node->func_call.callee->type;
-        if (!(callee_type->kind == T_FUNCTION || (callee_type->kind == T_POINTER && callee_type->base->kind == T_FUNCTION))) do { log_message(LOG_ERROR, "Cannot call non function type\n"); exit(1); } while (0);
-        Type *fn_type = callee_type->kind == T_FUNCTION ? callee_type : callee_type->base;
-        if (!fn_type->_func.is_variadic && fn_type->_func.params.count != node->func_call.params_array.count) {
-            print_type(fn_type);
-            printf("\n");
-            do { log_message(LOG_ERROR, "Argument count mismatch: Function %s expects %d found %d\n", fn_name, fn_type->_func.params.count, node->func_call.params_array.count); exit(1); } while (0);
-        }
-        node->type = fn_type->_func.return_type;
-        for (int i = 0; i < node->func_call.params_array.count; i++) {
-            Node *fn_call_param = get_node(&node->func_call.params_array, i);
-            semantic_analysis(sema_ctx, p, nm, fn_call_param);
-            if (fn_call_param->type->kind == T_ARRAY) {
-                Node *casted_node = cast_node(nm, fn_call_param, get_pointer_type(fn_call_param->type->base));
-                set_node(&node->func_call.params_array, &casted_node, i);
-            }
-            if (i < fn_type->_func.params.count) {
-                ParamDecl *fn_param = get(&fn_type->_func.params, i);
-                if (fn_param->type != fn_call_param->type) {
-                    Node *casted_node = cast_node(nm, fn_call_param, fn_param->type);
-                    set_node(&node->func_call.params_array, &casted_node, i);
-                }
-            } else {
-                if (fn_call_param->type->kind == T_INT && fn_call_param->type->size < type_i32->size) {
-                    Node *casted_node = cast_node(nm, fn_call_param, fn_call_param->type->is_signed ? type_i32 : type_u32);
-                    set_node(&node->func_call.params_array, &casted_node, i);
-                } else if (fn_call_param->type->kind == T_FLOAT && fn_call_param->type->size < type_f64->size) {
-                    Node *casted_node = cast_node(nm, fn_call_param, type_f64);
-                    set_node(&node->func_call.params_array, &casted_node, i);
-                }
-            }
-        }
-        break;
-    case N_IDENTIFIER:
-        Symbol *ident_symbol = p_get_symbol(p, node->identifier.name, ANY, 0);
-        if (!ident_symbol) {
-            do { log_message(LOG_ERROR, "Failed to find symbol \"%s\"\n", node->identifier.name); exit(1); } while (0);
-        }
-        node->identifier.symbol = ident_symbol;
-        switch (ident_symbol->kind) {
-        case ENUM:
-            node->kind = N_LITERAL;
-            node->literal.kind = L_INT;
-            node->literal.i = (int64_t)ident_symbol->enum_field->value;
-            node->type = ident_symbol->enum_field->_enum_t;
-            break;
-        case VAR:
-            node->type = ident_symbol->var_decl->type;
-            break;
-        case TYPEDEF:
-            node->type = ident_symbol->_typedef.type;
-            break;
-        case FUNC:
-            node->type = ident_symbol->func_def->type;
-            break;
-        case ANY:
-            do { log_message(LOG_ERROR, "Should be unreachable\n"); exit(1); } while (0);
-        }
-        break;
-    case N_IF:
-        p_push_scope(p);
-        semantic_analysis(sema_ctx, p, nm, node->_if.cond);
-        if (node->_if.cond->type != type_i32) {
-            node->_if.cond = cast_node(nm, node->_if.cond, type_i32);
-        }
-        semantic_analysis(sema_ctx, p, nm, node->_if.if_true);
-        semantic_analysis(sema_ctx, p, nm, node->_if.if_false);
-        p_pop_scope(p);
-        break;
-    case N_WHILE:
-        p_push_scope(p);
-        push_sema_loop(sema_ctx, node);
-        semantic_analysis(sema_ctx, p, nm, node->_while.cond);
-        if (node->_while.cond->type != type_i32) {
-            node->_while.cond = cast_node(nm, node->_while.cond, type_i32);
-        }
-        semantic_analysis(sema_ctx, p, nm, node->_while.block);
-        pop_sema_loop(sema_ctx);
-        p_pop_scope(p);
-        break;
-    case N_FOR:
-        p_push_scope(p);
-        push_sema_loop(sema_ctx, node);
-        semantic_analysis(sema_ctx, p, nm, node->_for.init);
-        semantic_analysis(sema_ctx, p, nm, node->_for.cond);
-        if (node->_for.cond && node->_for.cond->type != type_i32) {
-            node->_for.cond = cast_node(nm, node->_for.cond, type_i32);
-        }
-        semantic_analysis(sema_ctx, p, nm, node->_for.iter);
-        semantic_analysis(sema_ctx, p, nm, node->_for.block);
-        pop_sema_loop(sema_ctx);
-        p_pop_scope(p);
-        break;
-    case N_RETURN:
-        if (!sema_ctx->func) {
-            do { log_message(LOG_ERROR, "Cannot call return outside of a function\n"); exit(1); } while (0);
-        }
-        Type *expected_type = sema_ctx->func->type->_func.return_type;
-        if (expected_type != type_void)
-            if (!(node->_return.expr)) do { log_message(LOG_ERROR, "Non-void type function '%s' should return a value\n", sema_ctx->func->func.name); exit(1); } while (0);
-        if (node->_return.expr) {
-            semantic_analysis(sema_ctx, p, nm, node->_return.expr);
-            Type *return_type = node->_return.expr->type;
-            if (node->_return.expr->type != expected_type) {
-                node->_return.expr = cast_node(nm, node->_return.expr, expected_type);
-            }
-        }
-        node->type = expected_type;
-        break;
-    case N_LITERAL:
-        if (node->type->kind == T_ENUM) break;
-        char *data = malloc(node->literal.len + 1);
-        if (!data) {
-            do { log_message(LOG_ERROR, "Failed to allocate for sema literal analysis\n"); exit(1); } while (0);
-        }
-        memcpy(data, node->literal.raw_rata, node->literal.len);
-        data[node->literal.len] = '\0';
-        switch (node->literal.kind) {
-        case L_INT:
-            node->type = parse_int_suffix(node->literal.raw_rata, &node->literal.len);
-            node->literal.i = parse_int(data, node->literal.len);
-            free(data);
-            break;
-        case L_FLOAT:
-            node->type = parse_float_suffix(node->literal.raw_rata, &node->literal.len);
-            node->literal.f = parse_float(data, node->literal.len);
-            free(data);
-            break;
-        case L_CHAR:
-            node->type = type_u32;
-            node->literal.i = parse_multi_character(data, node->literal.len);
-            free(data);
-            break;
-        case L_STRING:
-            node->type = get_array_type(type_i8, node->literal.len + 1);
-            node->literal.s.data = data;
-            node->literal.s.len = node->literal.len + 1;
-            break;
-        }
-        break;
-    case N_INDEX:
-        semantic_analysis(sema_ctx, p, nm, node->index.index);
-        semantic_analysis(sema_ctx, p, nm, node->index.identifier);
-        if (node->index.index->type != type_i64) {
-            node->index.index = cast_node(nm, node->index.index, type_i64);
-        }
-        if (node->index.identifier->type->kind != T_POINTER) {
-            Type *pointer_type = get_pointer_type(node->index.identifier->type->base);
-            node->index.identifier = cast_node(nm, node->index.identifier, pointer_type);
-        }
-        node->type = node->index.identifier->type->base;
-        break;
-    case N_CONTINUE:
-        if (!(sema_ctx->loop_stack.count > 0)) do { log_message(LOG_ERROR, "Cannot call continue outside of loop scope\n"); exit(1); } while (0);
-        node->_continue.loop = sema_current_loop(sema_ctx);
-        break;
-    case N_BREAK:
-        if (!(sema_ctx->loop_stack.count > 0)) do { log_message(LOG_ERROR, "Cannot call break outside of loop scope\n"); exit(1); } while (0);
-        node->_break.loop = sema_current_loop(sema_ctx);
-        break;
-    case N_INIT_LIST:
-        if (node->type == type_invalid) {
-            do { log_message(LOG_ERROR, "Semantic Analysis recieved an untyped initializer list\n"); exit(1); } while (0);
-        }
-        switch (node->type->kind) {
-        case T_INT:
-        case T_FLOAT:
-        case T_POINTER:
-        case T_UNION:
-            if (node->init_list.elements_array.count == 0) break;
-            if (node->init_list.elements_array.count > 1) {
-                log_start(LOG_ERROR);
-                printf("Excess elements in initializer list for ");
-                print_type(node->type);
-                printf("\n");
-                exit(1);
-            }
-            Node *e = get_node(&node->init_list.elements_array, 0);
-            Type *target_type = node->type->kind == T_UNION ? get_union_member(node->type, 0)->type : node->type;
-            Node *value = e;
-            if (e->kind == N_DESIGNATED_INITIALIZER) {
-                if (node->type->kind != T_UNION) {
-                    log_start(LOG_ERROR);
-                    printf("Cannot use designated initializers for type ");
-                    print_type(node->type);
-                    printf("\n");
-                    exit(1);
-                }
-                UnionMember *member = get_union_member_named(node->type, e->designated_init._union.name);
-                target_type = member->type;
-                e->type = target_type;
-                e->designated_init._union.member = member;
-                value = e->designated_init.value;
-            }
-            semantic_analysis(sema_ctx, p, nm, value);
-            if (value->type != target_type) {
-                Node *casted_node = cast_node(nm, value, target_type);
-                set_node(&node->init_list.elements_array, &casted_node, 0);
-            }
-            break;
-        case T_ARRAY:
-        case T_STRUCT:
-            int index = 0;
-            int is_array = node->type->kind == T_ARRAY;
-            int max_count = 0;
-            int infered_length = 0;
-            if (is_array) {
-                if (node->type->_array.array_len == -1) {
-                    if (!node || node->init_list.elements_array.count < 1) {
-                        do { log_message(LOG_ERROR, "Inferred array must be initialized, and cannot be empty.\n"); exit(1); } while (0);
-                    }
-                } else max_count = node->type->_array.array_len;
-            } else max_count = node->type->_struct.members_array.count;
-            for (int i = 0; i < node->init_list.elements_array.count; i++) {
-                Node *e = get_node(&node->init_list.elements_array, i);
-                int is_designator = e->kind == N_DESIGNATED_INITIALIZER;
-                if (max_count && index >= max_count && !is_designator) do { log_message(LOG_ERROR, "Too many initializers for %d\n", node->type); exit(1); } while (0);
-                StructMember *member = ((void *)0);
-                if (is_array) {
-                    if (is_designator) {
-                        if (!e->designated_init._array.is_complete) {
-                            semantic_analysis(sema_ctx, p, nm, e->designated_init._array.const_expr);
-                            e->designated_init._array.index = evaluate_const_expression(e->designated_init._array.const_expr).i;
-                        }
-                        index = e->designated_init._array.index;
-                        if (node->type->_array.array_len == -1) {
-                            infered_length = infered_length > index + 1 ? infered_length : index + 1;
-                        }
-                    }
-                } else
-                    member = is_designator ? get_struct_member_named(node->type, e->designated_init._struct.name, &index)
-                                           : get_struct_member(node->type, index);
-                Type *target_type = is_array ? node->type->base : member->type;
-                Node *value = is_designator ? e->designated_init.value : e;
-                if (value->kind == N_INIT_LIST) value->type = target_type;
-                semantic_analysis(sema_ctx, p, nm, value);
-                if (!is_designator) {
-                    Node *de = new_node(nm, N_DESIGNATED_INITIALIZER);
-                    if (is_array) {
-                        de->designated_init._array.index = index;
-                    } else de->designated_init._struct.name = member->name;
-                    de->designated_init.value = e;
-                    set_node(&node->init_list.elements_array, &de, i);
-                    e = de;
-                }
-                e->designated_init.kind = is_array ? T_ARRAY : T_STRUCT;
-                e->type = target_type;
-                if (is_array) e->designated_init._array.index = index;
-                else e->designated_init._struct.member = member;
-                if (value->type != target_type) e->designated_init.value = cast_node(nm, value, target_type);
-                index++;
-            }
-            if (is_array && node->type->_array.array_len == -1)
-                node->type = infer_array_length(node->type, infered_length ? infered_length : node->init_list.elements_array.count);
-            break;
-        default:
+Token *p_consume(Parser *p) { return p_consume_n(p, 1); }
+void p_skip_n(Parser *p, const int n) { p_consume_n(p, n); }
+void p_skip(Parser *p) { p_consume_n(p, 1); }
+void p_expect(const Parser *p, const TokenType expected_type) {
+    if (!p_is_last_token(p)) {
+        const Token *token = get_token(p->src, p->index);
+        if (token->type != expected_type) {
             log_start(LOG_ERROR);
-            printf("Tried to assign initializer list to unsupported type ");
-            print_type(node->type);
+            printf("[%d:%d]: ", token->line_n, token->char_n);
+            printf("Expected ");
+            print_token_type(expected_type);
+            printf(" got ");
+            print_token_type(token->type);
             printf("\n");
             exit(1);
         }
-        break;
-    case N_MEMBER_ACCESS:
-        semantic_analysis(sema_ctx, p, nm, node->member_access.identifier);
-        Type *lhs_t = node->member_access.identifier->type;
-        if (node->member_access.op == TK_ARROW) {
-            if (lhs_t->kind != T_POINTER) {
-                do { log_message(LOG_ERROR, "Dereference '->' can only be used on pointers\n"); exit(1); } while (0);
-            }
-            lhs_t = lhs_t->base;
-            Node *deref = new_node(nm, N_UNARY);
-            deref->unary.op = TK_MULTIPLY;
-            deref->unary.associativity = 0;
-            deref->unary.expr = node->member_access.identifier;
-            deref->type = lhs_t;
-            node->member_access.identifier = deref;
-            node->member_access.op = TK_DOT;
-        }
-        int nested_offset = 0;
-        AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, 1, &nested_offset);
-        node->member_access.member->type = member_f->type;
-        node->member_access.offset = member_f->offset + nested_offset;
-        node->type = member_f->type;
-        break;
-    case N_SWITCH:
-        p_push_scope(p);
-        push_sema_loop(sema_ctx, node);
-        semantic_analysis(sema_ctx, p, nm, node->_switch.test);
-        if (node->_switch.test->type != type_i32) node->_switch.test = cast_node(nm, node->_switch.test, type_i32);
-        semantic_analysis(sema_ctx, p, nm, node->_switch.block);
-        node->type = node->_switch.test->type;
-        pop_sema_loop(sema_ctx);
-        p_pop_scope(p);
-        break;
-    case N_CASE:
-        semantic_analysis(sema_ctx, p, nm, node->_case.const_expr);
-        if (!node->_case.const_expr) break;
-        if (!(node->_case.const_expr->type->kind == T_INT || node->_case.const_expr->type->kind == T_ENUM)) {
-            do { log_message(LOG_ERROR, "Not ready to handle non int test cases\n"); exit(1); } while (0);
-        }
-        node->_case.test = evaluate_const_expression(node->_case.const_expr).i;
-        break;
-    case N_COMPOUND_LITERAL:
-        node->compound_literal.value->type = node->type;
-        semantic_analysis(sema_ctx, p, nm, node->compound_literal.value);
-        lower_compound_literal(sema_ctx, p, nm, node);
-        break;
-    case N_TYPEDEF:
-    case N_TYPE:
-        if (!node->type->is_resolved) node->type = resolve_type(sema_ctx, p, nm, node->type);
-        break;
-    case N_BUILTIN:
-        switch (node->_builtin.kind) {
-        case BUILTIN_VA_START:
-            if (!(node->_builtin.params.count == 2)) do { log_message(LOG_ERROR, "%s expects 2 arguments\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
-            Node *dst_ap = get_node(&node->_builtin.params, 0);
-            Node *last_named_param = get_node(&node->_builtin.params, 1);
-            semantic_analysis(sema_ctx, p, nm, dst_ap);
-            semantic_analysis(sema_ctx, p, nm, last_named_param);
-            if (!(last_named_param->kind == N_IDENTIFIER)) do { log_message(LOG_ERROR, "Last named param must be an identifier.\n"); exit(1); } while (0);
-            if (!(is_va_list_type(dst_ap->type))) do { log_message(LOG_ERROR, "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
-            node->type = type_void;
-            break;
-        case BUILTIN_VA_ARG:
-            if (!(node->_builtin.params.count == 2)) do { log_message(LOG_ERROR, "%s expects 2 arguments\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
-            dst_ap = get_node(&node->_builtin.params, 0);
-            Node *type_info = get_node(&node->_builtin.params, 1);
-            semantic_analysis(sema_ctx, p, nm, dst_ap);
-            semantic_analysis(sema_ctx, p, nm, type_info);
-            if (!(is_va_list_type(dst_ap->type))) do { log_message(LOG_ERROR, "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
-            if (!(type_info->kind == N_TYPE && type_info->type != type_invalid)) do { log_message(LOG_ERROR, "%s expects a type as second arg.", builtin_names[node->_builtin.kind]); exit(1); } while (0);
-            node->type = type_info->type;
-            break;
-        case BUILTIN_VA_END:
-            if (!(node->_builtin.params.count == 1)) do { log_message(LOG_ERROR, "%s expects 1 arguments\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
-            dst_ap = get_node(&node->_builtin.params, 0);
-            semantic_analysis(sema_ctx, p, nm, dst_ap);
-            if (!(is_va_list_type(dst_ap->type))) do { log_message(LOG_ERROR, "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
-            node->type = type_void;
-            break;
-        case BUILTIN_MEMCPY:
-            if (!(node->_builtin.params.count == 3)) do { log_message(LOG_ERROR, "%s expects 3 arguments\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
-            Node *memcpy_dst = get_node(&node->_builtin.params, 0);
-            Node *memcpy_src = get_node(&node->_builtin.params, 1);
-            Node *memcpy_size = get_node(&node->_builtin.params, 2);
-            semantic_analysis(sema_ctx, p, nm, memcpy_dst);
-            semantic_analysis(sema_ctx, p, nm, memcpy_src);
-            semantic_analysis(sema_ctx, p, nm, memcpy_size);
-            if (!(memcpy_dst->type->kind == T_POINTER && memcpy_src->type->kind)) do { log_message(LOG_ERROR, "%s expects both src and dst to be pointers\n", builtin_names[node->_builtin.kind]); exit(1); } while (0);
-            if (!(memcpy_size->type->kind == T_INT)) do { log_message(LOG_ERROR, "%s expects size to be integer or size_t\n"); exit(1); } while (0);
-            node->type = type_u64;
-            break;
-        case BUILTIN_NONE:
-            do { log_message(LOG_ERROR, "given __builtin_none but BUILTIN?\n"); exit(1); } while (0);
-        }
-        break;
-    case N_NULL:
-        break;
-    case N_GOTO:
-    case N_LABEL:
-    case N_DESIGNATED_INITIALIZER:
-        do { log_message(LOG_ERROR, "Unreachable\n"); exit(1); } while (0);
     }
 }
-void push_sema_loop(SemanticContext *sema_ctx, const Node *loop) { append(&sema_ctx->loop_stack, &loop); }
-void pop_sema_loop(SemanticContext *sema_ctx) { pop(&sema_ctx->loop_stack); }
-Node *sema_current_loop(const SemanticContext *sema_ctx) {
-    if (!(sema_ctx->loop_stack.count > 0)) do { log_message(LOG_ERROR, "Tried to retrieve current loop outside of loop scope\n"); exit(1); } while (0);
-    return *(Node **)get(&sema_ctx->loop_stack, sema_ctx->loop_stack.count - 1);
+Token *p_consume_a(Parser *p, const TokenType type) {
+    p_expect(p, type);
+    return p_consume(p);
 }
-Node *sema_current_compound(const SemanticContext *sema_ctx) {
-    if (!(sema_ctx->compound_stack.count > 0)) do { log_message(LOG_ERROR, "Tried to retrieve current compound outside of compound scope\n"); exit(1); } while (0);
-    return *(Node **)get(&sema_ctx->compound_stack, sema_ctx->compound_stack.count - 1);
+Token *p_consume_semi(Parser *p) {
+    if (p->expect_semi) {
+        return p_consume_a(p, TK_SEMI);
+    }
+    return ((void *)0);
 }
-void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n) {
-    p_push_scope(p);
-    append(&sema_ctx->compound_stack, &n);
-    int tmp = 0;
-    append(&sema_ctx->i_array, &tmp);
+Node *init_translation_unit(NodeManager *nm) {
+    Node *node = new_node(nm, N_TRANSLATION_UNIT);
+    array_init(&node->translation_unit.declarations_array, 8, sizeof(Node **));
+    return node;
 }
-void pop_sema_scope(SemanticContext *sema_ctx, Parser *p) {
-    pop(&sema_ctx->i_array);
-    pop(&sema_ctx->compound_stack);
-    p_pop_scope(p);
+Node *new_compound_node(NodeManager *nm) {
+    Node *node = new_node(nm, N_COMPOUND);
+    array_init(&node->compound.items_array, 8, sizeof(Node **));
+    return node;
 }
-void lower_nodes(NodeManager *nm) {
-    for (int i = 0; i < nm->count; i++) {
-        Node *n = arena_get(nm, i);
-        if (n->type->kind == T_ENUM) {
-            n->type = type_i32;
+Node *p_parse_builtin(Parser *p, NodeManager *nm, BuiltinKind kind) {
+    Node *b = new_node(nm, N_BUILTIN);
+    b->_builtin.kind = kind;
+    p_consume_a(p, TK_OPEN_PAREN);
+    switch (kind) {
+    case BUILTIN_MEMCPY:
+        array_init(&b->_builtin.params, 3, sizeof(Node *));
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        p_consume_a(p, TK_COMMA);
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        p_consume_a(p, TK_COMMA);
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        break;
+    case BUILTIN_VA_START:
+        array_init(&b->_builtin.params, 2, sizeof(Node *));
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        p_consume_a(p, TK_COMMA);
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        break;
+    case BUILTIN_VA_ARG:
+        array_init(&b->_builtin.params, 2, sizeof(Node *));
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        p_consume_a(p, TK_COMMA);
+        Node *va_arg_type = new_node(nm, N_TYPE);
+        va_arg_type->type = p_parse_abstract_type(p, nm);
+        append(&b->_builtin.params, &va_arg_type);
+        break;
+    case BUILTIN_VA_END:
+        array_init(&b->_builtin.params, 1, sizeof(Node *));
+        append(&b->_builtin.params, &(Node *){p_parse_expression(p, nm, 0)});
+        break;
+    case BUILTIN_NONE:
+        do { log_message(LOG_ERROR, "builtin reached but not builtin\n"); exit(1); } while (0);
+        break;
+    }
+    p_consume_a(p, TK_CLOSE_PAREN);
+    return b;
+}
+Node *p_parse_postfix_expression(Parser *p, NodeManager *nm) {
+    Node *expr = p_parse_primary_expression(p, nm);
+    for (;;) {
+        switch (p_peek(p)->type) {
+        case TK_OPEN_PAREN:
+            if (expr->kind == N_IDENTIFIER) {
+                BuiltinKind kind = get_builtin_kind(expr->identifier.name);
+                if (kind != BUILTIN_NONE) {
+                    expr = p_parse_builtin(p, nm, kind);
+                    break;
+                }
+            }
+            p_consume(p);
+            Node *func_call = new_function_call_node(nm, expr);
+            while (p_peek(p)->type != TK_CLOSE_PAREN) {
+                p_append_call_param(func_call, p_parse_expression(p, nm, 0));
+                if (p_peek(p)->type == TK_COMMA) p_consume(p);
+                else break;
+            }
+            p_consume_a(p, TK_CLOSE_PAREN);
+            expr = func_call;
+            break;
+        case TK_OPEN_SQUARE:
+            p_consume(p);
+            if (!is_lvalue(expr)) {
+                log_start(LOG_ERROR);
+                print_node_type(expr->kind);
+                printf(" is not a an lvalue, needed for indexing\n");
+                exit(1);
+            }
+            Node *node = new_node(nm, N_INDEX);
+            node->index.index = p_parse_expression(p, nm, 0);
+            node->index.identifier = expr;
+            expr = node;
+            p_consume_a(p, TK_CLOSE_SQUARE);
+            break;
+        case TK_DOT:
+        case TK_ARROW:
+            TokenType op = p_consume(p)->type;
+            Token *t = p_consume_a(p, TK_IDENTIFIER);
+            Node *member = new_node(nm, N_IDENTIFIER);
+            member->identifier.name = t->value;
+            member->identifier.len = t->size;
+            Node *access = new_node(nm, N_MEMBER_ACCESS);
+            access->member_access.op = op;
+            access->member_access.identifier = expr;
+            access->member_access.member = member;
+            expr = access;
+            break;
+        case TK_INCR:
+        case TK_DECR:
+            Node *unary = new_node(nm, N_UNARY);
+            unary->unary.op = p_consume(p)->type;
+            unary->unary.associativity = 1;
+            unary->unary.expr = expr;
+            expr = unary;
+            break;
+        default:
+            return expr;
         }
-        if (n->kind == N_CAST) {
-            if (n->cast.from && n->cast.from->kind == T_ENUM) {
-                n->cast.from = type_i32;
+    }
+}
+Node *p_parse_prefix(Parser *p, NodeManager *nm) {
+    if (is_unary_operator(p_peek(p)->type)) {
+        Node *node = new_node(nm, N_UNARY);
+        node->unary.op = p_consume(p)->type;
+        node->unary.associativity = 0;
+        if (node->unary.op == TK_SIZEOF && p_peek(p)->type == TK_OPEN_PAREN && is_start_of_type(p, p_peek_next(p))) {
+            node->unary.expr = new_node(nm, N_TYPE);
+            p_consume(p);
+            node->unary.expr->type = p_parse_abstract_type(p, nm);
+            p_consume_a(p, TK_CLOSE_PAREN);
+        } else node->unary.expr = p_parse_cast(p, nm);
+        return node;
+    }
+    return p_parse_postfix_expression(p, nm);
+}
+Node *p_parse_primary_expression(Parser *p, NodeManager *nm) {
+    Node *primary = ((void *)0);
+    Token *tk;
+    switch (p_peek(p)->type) {
+    case TK_INT_LITERAL:
+    case TK_FLT_LITERAL:
+    case TK_CHAR_LITERAL:
+    case TK_STRING_LITERAL:
+        primary = new_node(nm, N_LITERAL);
+        tk = p_consume(p);
+        primary->literal.kind = literal_kind(tk->type);
+        primary->literal.raw_rata = tk->value;
+        primary->literal.len = tk->size;
+        if (primary->literal.kind == L_STRING) {
+            Array cat_str;
+            array_init(&cat_str, primary->literal.len + tk->size + 1, sizeof(char));
+            memcpy(cat_str.data, primary->literal.raw_rata, primary->literal.len);
+            cat_str.count += primary->literal.len;
+            while (p_peek(p)->type == TK_STRING_LITERAL) {
+                tk = p_consume(p);
+                array_str_catn(&cat_str, tk->value, tk->size);
             }
-            if (n->cast.to && n->cast.to->kind == T_ENUM) {
-                n->cast.to = type_i32;
-                n->type = type_i32;
+            primary->literal.raw_rata = cat_str.data;
+            primary->literal.len = cat_str.count;
+        }
+        return primary;
+    case TK_IDENTIFIER:
+        primary = new_node(nm, N_IDENTIFIER);
+        tk = p_consume(p);
+        primary->identifier.name = tk->value;
+        primary->identifier.len = tk->size;
+        break;
+    case TK_OPEN_PAREN:
+        p_consume_a(p, TK_OPEN_PAREN);
+        primary = p_parse_expression(p, nm, 0);
+        p_consume_a(p, TK_CLOSE_PAREN);
+        return primary;
+    case TK_OPEN_CURLY:
+        return p_parse_init_list(p, nm);
+    default:
+        tk = p_consume(p);
+        do { log_message(LOG_ERROR, "[%d:%d]: Expected primary expression got %tk\n", tk->line_n, tk->char_n, tk->type); exit(1); } while (0);
+    }
+    return primary;
+}
+Node *p_parse_init_list(Parser *p, NodeManager *nm) {
+    Node *node = new_init_list_node(nm);
+    p_consume(p);
+    while (p_peek(p)->type != TK_CLOSE_CURLY) {
+        if (p_peek(p)->type == TK_DOT) {
+            p_consume(p);
+            Token *token = p_consume_a(p, TK_IDENTIFIER);
+            p_consume_a(p, TK_EQ);
+            Node *member_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+            member_assign->designated_init.kind = T_STRUCT;
+            member_assign->designated_init._struct.name = token->value;
+            member_assign->designated_init.value = p_parse_expression(p, nm, 0);
+            p_append_element(node, member_assign);
+        } else if (p_peek(p)->type == TK_OPEN_SQUARE) {
+            p_consume(p);
+            Node *index_expr = p_parse_expression(p, nm, 0);
+            p_consume_a(p, TK_CLOSE_SQUARE);
+            p_consume_a(p, TK_EQ);
+            Node *element_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+            element_assign->designated_init._array.const_expr = index_expr;
+            element_assign->designated_init.value = p_parse_expression(p, nm, 0);
+            p_append_element(node, element_assign);
+        } else p_append_element(node, p_parse_expression(p, nm, 0));
+        if (p_peek(p)->type == TK_COMMA) p_consume(p);
+        else break;
+    }
+    p_consume_a(p, TK_CLOSE_CURLY);
+    return node;
+}
+Node *new_init_list_node(NodeManager *nm) {
+    Node *node = new_node(nm, N_INIT_LIST);
+    array_init(&node->init_list.elements_array, 4, sizeof(Node *));
+    return node;
+}
+Node *new_function_node(NodeManager *nm) { return new_node(nm, N_FUNCTION); }
+Node *new_function_call_node(NodeManager *nm, Node *identifier) {
+    Node *node = new_node(nm, N_FUNCTION_CALL);
+    node->func_call.callee = identifier;
+    array_init(&node->func_call.params_array, 4, sizeof(Node *));
+    return node;
+}
+Node *p_parse_goto_statement(Parser *p, NodeManager *nm) {
+    p_consume(p);
+    Node *identifier = new_node(nm, N_IDENTIFIER);
+    const Token *t = p_consume_a(p, TK_IDENTIFIER);
+    identifier->identifier.name = t->value;
+    identifier->identifier.len = t->size;
+    Node *node = new_node(nm, N_GOTO);
+    node->_goto.identifier = identifier;
+    p_consume_semi(p);
+    return node;
+}
+Node *p_parse_label(Parser *p, NodeManager *nm) {
+    Node *identifier = new_node(nm, N_IDENTIFIER);
+    const Token *t = p_consume_a(p, TK_IDENTIFIER);
+    identifier->identifier.name = t->value;
+    identifier->identifier.len = t->size;
+    Node *node = new_node(nm, N_LABEL);
+    node->_goto.identifier = identifier;
+    p_consume_a(p, TK_COLON);
+    return node;
+}
+Node *p_parse_cast(Parser *p, NodeManager *nm) {
+    if (p_peek(p)->type == TK_OPEN_PAREN && is_start_of_type(p, p_peek_next(p))) {
+        p_consume_a(p, TK_OPEN_PAREN);
+        Type *type = p_parse_abstract_type(p, nm);
+        p_consume_a(p, TK_CLOSE_PAREN);
+        if (p_peek(p)->type == TK_OPEN_CURLY) {
+            Node *comp_node = new_node(nm, N_COMPOUND_LITERAL);
+            comp_node->type = type;
+            comp_node->compound_literal.value = p_parse_init_list(p, nm);
+            return comp_node;
+        }
+        Node *cast_node = new_node(nm, N_CAST);
+        cast_node->type = type;
+        cast_node->cast.to = type;
+        cast_node->cast.expr = p_parse_cast(p, nm);
+        return cast_node;
+    }
+    return p_parse_prefix(p, nm);
+}
+Node *p_parse_binary(Parser *p, NodeManager *nm, Node *lhs, const int min_prec) {
+    Node *b = new_node(nm, N_BINARY);
+    b->binary.op = p_consume(p)->type;
+    b->binary.rhs = p_parse_expression(p, nm, op_precedence(b->binary.op) + op_associativity(b->binary.op));
+    b->binary.lhs = lhs;
+    return b;
+}
+Node *p_parse_ternary(Parser *p, NodeManager *nm, Node *cond) {
+    p_consume(p);
+    Node *t = new_node(nm, N_TERNARY);
+    t->ternary.cond = cond;
+    t->ternary.if_true = p_parse_expression(p, nm, 0);
+    p_consume_a(p, TK_COLON);
+    t->ternary.if_false = p_parse_expression(p, nm, op_precedence(TK_TERNARY));
+    return t;
+}
+Node *p_parse_expression(Parser *p, NodeManager *nm, const int min_prec) {
+    if (p_peek(p)->type == TK_SEMI) {
+        if (p->expect_semi) p_consume(p);
+        return new_node(nm, N_NULL);
+    }
+    Node *primary = p_parse_cast(p, nm);
+    while (is_postfix_operator(p_peek(p)->type)) primary = p_parse_postfix_expression(p, nm);
+    for (;;) {
+        if (is_binary_operator(p_peek(p)->type) && op_precedence(p_peek(p)->type) >= min_prec) {
+            primary = p_parse_binary(p, nm, primary, min_prec);
+        } else if (p_peek(p)->type == TK_TERNARY && op_precedence(TK_TERNARY) >= min_prec) {
+            primary = p_parse_ternary(p, nm, primary);
+        } else break;
+    }
+    return primary;
+}
+Node *p_parse_block_item(Parser *p, NodeManager *nm) {
+    if (is_start_of_type(p, p_peek(p))) return p_parse_block_declaration(p, nm);
+    else return p_parse_statement(p, nm);
+}
+Type *p_parse_abstract_type(Parser *p, NodeManager *nm) {
+    const char *name = ((void *)0);
+    Type *type = p_parse_type(p, nm, &name);
+    if (!(name == ((void *)0))) do { log_message(LOG_ERROR, "Unexpected identifier in parsing abstract type.\n"); exit(1); } while (0);
+    return type;
+}
+void free_declarator(Declarator *decl) {
+    for (int i = 0; i < decl->modifiers.count; i++) {
+        Modifier *mod = get(&decl->modifiers, i);
+        if (mod->kind == MOD_FUNCTION) array_free(&mod->function.params);
+    }
+    array_free(&decl->modifiers);
+}
+Type *p_parse_type(Parser *p, NodeManager *nm, const char **name) {
+    Type *type;
+    unsigned int qualifiers = QUAL_NONE;
+    int is_signed = 1;
+    for (;;) {
+        if (p_peek(p)->type == TK_CONST) qualifiers |= QUAL_CONST;
+        else if (p_peek(p)->type == TK_VOLATILE) qualifiers |= QUAL_VOLATILE;
+        else if (p_peek(p)->type == TK_UNSIGNED) is_signed = 0;
+        else if (p_peek(p)->type == TK_SIGNED) is_signed = 1;
+        else break;
+        p_consume(p);
+    }
+    if (p_peek(p)->type == TK_STRUCT) type = p_parse_struct(p, nm);
+    else if (p_peek(p)->type == TK_ENUM) type = p_parse_enum(p, nm);
+    else if (p_peek(p)->type == TK_UNION) type = p_parse_union(p, nm);
+    else type = token_to_type(p, p_consume(p));
+    if (!(type != type_invalid)) do { log_message(LOG_ERROR, "Got type_invalid in p_parse_base_type\n"); exit(1); } while (0);
+    if (type->kind == T_INT && !is_signed && is_signed != type->is_signed) type = get_unsigned_type(type);
+    Declarator decl = p_parse_declarator(p, nm);
+    *name = decl.name;
+    type = get_modified_type(type, &decl);
+    if (qualifiers != QUAL_NONE) type = get_qualified_type(type, qualifiers);
+    free_declarator(&decl);
+    return type;
+}
+Declarator p_parse_declarator(Parser *p, NodeManager *nm) {
+    Declarator d = {.name = ((void *)0)};
+    array_init(&d.modifiers, 4, sizeof(Modifier));
+    int ptrs = 0;
+    while (p_peek(p)->type == TK_MULTIPLY) {
+        p_consume(p);
+        ptrs++;
+    }
+    if (p_peek(p)->type == TK_OPEN_PAREN) {
+        p_consume(p);
+        free_declarator(&d);
+        d = p_parse_declarator(p, nm);
+        p_consume_a(p, TK_CLOSE_PAREN);
+    } else if (p_peek(p)->type == TK_IDENTIFIER) d.name = p_consume_a(p, TK_IDENTIFIER)->value;
+    for (;;) {
+        if (p_peek(p)->type == TK_OPEN_SQUARE) {
+            p_consume(p);
+            Node *expr = ((void *)0);
+            if (p_peek(p)->type != TK_CLOSE_SQUARE) expr = p_parse_expression(p, nm, 0);
+            p_consume_a(p, TK_CLOSE_SQUARE);
+            append(&d.modifiers, &(Modifier){.kind = MOD_ARRAY, .array_bounds = expr});
+        } else if (p_peek(p)->type == TK_OPEN_PAREN) {
+            Modifier func_modifier = p_parse_parameter_list(p, nm);
+            append(&d.modifiers, &func_modifier);
+        } else break;
+    }
+    for (int i = 0; i < ptrs; i++) {
+        append(&d.modifiers, &(Modifier){.kind = MOD_POINTER});
+    }
+    return d;
+}
+Type *p_parse_enum(Parser *p, NodeManager *nm) {
+    Type enum_t = enum_type();
+    p_consume_a(p, TK_ENUM);
+    if (p_peek(p)->type == TK_IDENTIFIER) {
+        enum_t._enum.name = p_consume(p)->value;
+    }
+    if (p_peek(p)->type == TK_OPEN_CURLY) {
+        array_init(&enum_t._enum.fields_array, 4, sizeof(EnumField));
+        p_consume(p);
+        int val = 0;
+        while (p_peek(p)->type != TK_CLOSE_CURLY) {
+            EnumField f = {};
+            f.name = p_consume_a(p, TK_IDENTIFIER)->value;
+            if (p_peek(p)->type == TK_EQ) {
+                p_consume(p);
+                f.const_expr = p_parse_expression(p, nm, 0);
             }
-            if (n->cast.from == n->type) {
-                *n = *n->cast.expr;
+            f._enum_t = ((void *)0);
+            append_enum_field(&enum_t, &f);
+            if (p_peek(p)->type == TK_COMMA) p_consume(p);
+            else break;
+        }
+        p_consume(p);
+        enum_t._enum.complete = 1;
+    }
+    Type *s = get_enum_type(enum_t._enum.name);
+    if (s) {
+        if (enum_t._enum.complete) {
+            if (s->_enum.complete) {
+                do { log_message(LOG_ERROR, "Redefinition of enum %s\n", enum_t._enum.name); exit(1); } while (0);
+            } else *s = enum_t;
+        }
+        return s;
+    } else {
+        Type *t = new_type();
+        for (int i = 0; i < enum_t._enum.fields_array.count; i++) {
+            EnumField *f = get_enum_field(&enum_t, i);
+            f->_enum_t = t;
+        }
+        *t = enum_t;
+        t->is_resolved = 0;
+        return t;
+    }
+}
+Type *p_parse_union(Parser *p, NodeManager *nm) {
+    Type union_t = union_type();
+    p_consume_a(p, TK_UNION);
+    if (p_peek(p)->type == TK_IDENTIFIER) {
+        union_t._union.name = p_consume(p)->value;
+    }
+    if (p_peek(p)->type == TK_OPEN_CURLY) {
+        array_init(&union_t._union.members_array, 4, sizeof(UnionMember));
+        p_consume(p);
+        while (p_peek(p)->type != TK_CLOSE_CURLY) {
+            UnionMember m;
+            m.name = ((void *)0);
+            Type *t = p_parse_type(p, nm, &m.name);
+            if (!(t->kind == T_STRUCT || t->kind == T_UNION)) if (!(m.name)) do { log_message(LOG_ERROR, "Scalar Union member must be named\n"); exit(1); } while (0);
+            m.type = t;
+            m.offset = 0;
+            append_union_member(&union_t, &m);
+            p_consume_semi(p);
+        }
+        p_consume(p);
+        union_t._union.complete = 1;
+    }
+    Type *u = get_union_type(union_t._union.name);
+    if (u) {
+        if (union_t._union.complete) {
+            if (u->_union.complete) {
+                do { log_message(LOG_ERROR, "Redefinition of union %s\n", union_t._union.name); exit(1); } while (0);
+            } else *u = union_t;
+        }
+        return u;
+    } else {
+        Type *t = new_type();
+        *t = union_t;
+        return t;
+    }
+}
+Type *p_parse_struct(Parser *p, NodeManager *nm) {
+    Type struct_t = struct_type();
+    p_consume_a(p, TK_STRUCT);
+    if (p_peek(p)->type == TK_IDENTIFIER) {
+        struct_t._struct.name = p_consume(p)->value;
+    }
+    if (p_peek(p)->type == TK_OPEN_CURLY) {
+        array_init(&struct_t._struct.members_array, 4, sizeof(StructMember));
+        p_consume(p);
+        while (p_peek(p)->type != TK_CLOSE_CURLY) {
+            StructMember f;
+            f.name = ((void *)0);
+            Type *t = p_parse_type(p, nm, &f.name);
+            if (!(t->kind == T_STRUCT || t->kind == T_UNION)) if (!(f.name)) do { log_message(LOG_ERROR, "Scalar Struct member must be named\n"); exit(1); } while (0);
+            f.type = t;
+            append_struct_member(&struct_t, &f);
+            p_consume_semi(p);
+        }
+        p_consume(p);
+        struct_t.size = align(struct_t.size, struct_t.align);
+        struct_t._struct.complete = 1;
+    }
+    Type *s = get_struct_type(struct_t._struct.name);
+    if (s) {
+        if (struct_t._struct.complete) {
+            if (s->_struct.complete) {
+                do { log_message(LOG_ERROR, "Redefinition of struct %s\n", struct_t._struct.name); exit(1); } while (0);
+            } else *s = struct_t;
+        }
+        return s;
+    } else {
+        Type *t = new_type();
+        *t = struct_t;
+        return t;
+    }
+}
+void p_append_block_item(Node *root, Node *item) {
+    if (item != ((void *)0)) append(&root->compound.items_array, &item);
+    else printf("Skipping empty node\n");
+}
+void p_append_param(Node *func, Node *param) {
+    if (param != ((void *)0)) {
+        append(&func->type->_func.params, &param);
+    } else {
+        do { log_message(LOG_ERROR, "Recieved a NULL param node to append\n"); exit(1); } while (0);
+    }
+}
+void p_append_call_param(Node *func_call, Node *param) { append(&func_call->func_call.params_array, &param); }
+Symbol *p_append_symbol(Array *st, const Symbol *s) { return *(Symbol **)append(st, &s); }
+Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind, const int same_depth) {
+    for (int i = p->scopes_array.count - 1; i >= 0; i--) {
+        Array *st = get_symbol_table(p, i);
+        for (int j = 0; j < st->count; j++) {
+            Symbol *symbol = get_symbol(st, j);
+            if (same_depth && symbol->scope_depth != p->current_scope_depth) continue;
+            if (symbol->scope_depth <= p->current_scope_depth && (kind == ANY || symbol->kind == kind) && strcmp(symbol->name, name) == 0) {
+                return symbol;
             }
         }
     }
+    return ((void *)0);
+}
+Typedef *p_get_typedef(const Parser *p, const char *name) {
+    Symbol *s = p_get_symbol(p, name, TYPEDEF, 0);
+    if (s) return &s->_typedef;
+    do { log_message(LOG_ERROR, "Tried to get the typedef of %s, which does not exist\n", name); exit(1); } while (0);
+}
+Node *p_get_func_def(const Parser *p, const char *name) { do { log_message(LOG_ERROR, "Tried to get function definition for '%s' which does not exist\n", name); exit(1); } while (0); }
+Symbol *p_new_symbol(Parser *p, const Symbol *s) { return arena_append(&p->symbols_arena, s); }
+void p_append_typedef(Parser *p, const Typedef *t) {
+    p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = t->new_def,
+                                                                           .kind = TYPEDEF,
+                                                                           .linkage = LINK_NONE,
+                                                                           .storage = STORAGE_NONE,
+                                                                           ._typedef = *t,
+                                                                           .type = t->type,
+                                                                           .scope_depth = p->current_scope_depth}));
+}
+Symbol *p_append_func_def(Parser *p, Node *f) {
+    if (p->scopes_array.count > 2) {
+        do { log_message(LOG_ERROR, "Declaring function inside a function???\n"); exit(1); } while (0);
+    }
+    Linkage linkage = f->func.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
+    Storage storage = STORAGE_TEXT;
+    return p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = f->func.name,
+                                                                                  .kind = FUNC,
+                                                                                  .linkage = linkage,
+                                                                                  .storage = storage,
+                                                                                  .func_def = f,
+                                                                                  .type = f->type,
+                                                                                  .scope_depth = p->current_scope_depth}));
+}
+void update_linkage_storage(Symbol *s, Node *v) {
+    if (!(v->kind == N_VAR_DECL)) do { log_message(LOG_ERROR, "Expected Var decl node to update symbol linkage and storage\n"); exit(1); } while (0);
+    Linkage linkage = LINK_NONE;
+    Storage storage = STORAGE_NONE;
+    if (v->var_decl.is_global) {
+        storage = v->var_decl.is_defined ? STORAGE_DATA : STORAGE_BSS;
+        linkage = v->var_decl.storage_class == STATIC ? LINK_INTERNAL : LINK_EXTERNAL;
+    } else {
+        storage = STORAGE_NONE;
+        if (v->var_decl.storage_class == NONE) linkage = LINK_NONE;
+        if (v->var_decl.storage_class == EXTERN) linkage = LINK_EXTERNAL;
+        if (v->var_decl.storage_class == STATIC) linkage = LINK_INTERNAL;
+    }
+    s->linkage = linkage;
+    s->storage = storage;
+}
+Symbol *p_append_var_decl_symbol(Parser *p, Node *v) {
+    Symbol *s = p_new_symbol(p, &(Symbol){.name = v->var_decl.identifier->identifier.name,
+                                          .kind = VAR,
+                                          .var_decl = v,
+                                          .type = v->type,
+                                          .scope_depth = p->current_scope_depth});
+    update_linkage_storage(s, v);
+    return p_append_symbol(get_current_symbol_table(p), s);
+}
+Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param) {
+    if (!(param->name)) do { log_message(LOG_ERROR, "Function parameter must be named\n"); exit(1); } while (0);
+    return p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = param->name,
+                                                                                  .kind = VAR,
+                                                                                  .linkage = LINK_NONE,
+                                                                                  .storage = STORAGE_NONE,
+                                                                                  .var_decl = ((void *)0),
+                                                                                  .type = param->type,
+                                                                                  .scope_depth = p->current_scope_depth}));
+}
+void p_append_enum_const(Parser *p, const EnumField *e) {
+    p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = e->name,
+                                                                           .kind = ENUM,
+                                                                           .linkage = LINK_NONE,
+                                                                           .storage = STORAGE_NONE,
+                                                                           .enum_field = e,
+                                                                           .type = type_i32,
+                                                                           .scope_depth = p->current_scope_depth}));
+}
+void p_append_element(Node *init_list, Node *element) { append(&init_list->init_list.elements_array, &element); }
+Node *p_get_var_decl(const Parser *p, const char *name) {
+    const Symbol *s = p_get_symbol(p, name, VAR, 0);
+    if (s) return s->var_decl;
+    do { log_message(LOG_ERROR, "Tried to find variable %s which does not exist\n", name); exit(1); } while (0);
+}
+const EnumField *p_get_enum_const(const Parser *p, const char *name) {
+    Symbol *s = p_get_symbol(p, name, ENUM, 0);
+    if (s) return s->enum_field;
+    do { log_message(LOG_ERROR, "Tried to find enum constant %s which does not exist\n", name); exit(1); } while (0);
+}
+Node *p_parse_if_statement(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_IF);
+    p_consume_a(p, TK_IF);
+    p_consume_a(p, TK_OPEN_PAREN);
+    node->_if.cond = p_parse_expression(p, nm, 0);
+    p_consume_a(p, TK_CLOSE_PAREN);
+    node->_if.if_true = p_parse_statement(p, nm);
+    if (p_peek(p)->type == TK_ELSE) {
+        p_consume(p);
+        if (p_peek(p)->type == TK_IF) {
+            node->_if.if_false = p_parse_if_statement(p, nm);
+        } else {
+            node->_if.if_false = p_parse_statement(p, nm);
+        }
+    } else {
+        node->_if.if_false = ((void *)0);
+    }
+    return node;
+}
+Node *p_parse_do_while_loop(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_WHILE);
+    node->_while.is_do_while = 1;
+    p_consume_a(p, TK_DO);
+    node->_while.block = p_parse_statement(p, nm);
+    p_consume_a(p, TK_WHILE);
+    p_consume_a(p, TK_OPEN_PAREN);
+    node->_while.cond = p_parse_expression(p, nm, 0);
+    p_consume_a(p, TK_CLOSE_PAREN);
+    p_consume_semi(p);
+    return node;
+}
+Node *p_parse_while_loop(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_WHILE);
+    node->_while.is_do_while = 0;
+    p_consume_a(p, TK_WHILE);
+    p_consume_a(p, TK_OPEN_PAREN);
+    node->_while.cond = p_parse_expression(p, nm, 0);
+    p_consume_a(p, TK_CLOSE_PAREN);
+    node->_while.block = p_parse_statement(p, nm);
+    return node;
+}
+Node *p_parse_case(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_CASE);
+    if (p_peek(p)->type == TK_CASE) {
+        p_consume_a(p, TK_CASE);
+        node->_case.const_expr = p_parse_expression(p, nm, 0);
+    } else {
+        p_consume_a(p, TK_DEFAULT);
+        node->_case.const_expr = ((void *)0);
+    }
+    p_consume_a(p, TK_COLON);
+    return node;
+}
+void p_append_case(Node *s, Node *c) {
+    c->_case.i = s->_switch.block->compound.items_array.count;
+    append(&s->_switch.cases_array, &c);
+}
+UnionMember *get_union_member_named(Type *union_t, const char *name) {
+    int found_member = 0;
+    for (int j = 0; j < union_t->_union.members_array.count; j++) {
+        UnionMember *member = get_union_member(union_t, j);
+        if (strcmp(member->name, name) == 0) {
+            found_member = 1;
+            return member;
+        }
+    }
+    if (!found_member) {
+        log_start(LOG_ERROR);
+        printf("No such member '%s' on ", name);
+        print_type(union_t);
+        printf("\n");
+        exit(1);
+    }
+    return ((void *)0);
+}
+StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index) {
+    int found_member = 0;
+    for (int j = 0; j < struct_t->_struct.members_array.count; j++) {
+        StructMember *member = get_struct_member(struct_t, j);
+        if (member->name) {
+            if (strcmp(member->name, name) == 0) {
+                found_member = 1;
+                *index = j;
+                return member;
+            }
+        } else {
+            StructMember *m = get_member(member->type, name, 0, 0);
+            if (m) {
+                *index = j;
+                return m;
+            }
+        }
+    }
+    if (!found_member) {
+        log_start(LOG_ERROR);
+        printf("No such member '%s' on ", name);
+        print_type(struct_t);
+        printf("\n");
+        exit(1);
+    }
+    return ((void *)0);
+}
+Node *p_parse_switch_statement(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_SWITCH);
+    array_init(&node->_switch.cases_array, 4, sizeof(Node *));
+    p_consume_a(p, TK_SWITCH);
+    p_consume_a(p, TK_OPEN_PAREN);
+    node->_switch.test = p_parse_expression(p, nm, 0);
+    p_consume_a(p, TK_CLOSE_PAREN);
+    node->_switch.block = new_compound_node(nm);
+    p_consume_a(p, TK_OPEN_CURLY);
+    while (p_peek(p)->type != TK_CLOSE_CURLY) {
+        Node *item;
+        if (p_peek(p)->type == TK_CASE || p_peek(p)->type == TK_DEFAULT) {
+            item = p_parse_case(p, nm);
+            p_append_case(node, item);
+        } else {
+            item = p_parse_block_item(p, nm);
+        }
+        p_append_block_item(node->_switch.block, item);
+    }
+    p_consume_a(p, TK_CLOSE_CURLY);
+    return node;
+}
+Node *p_parse_for_loop(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_FOR);
+    p_consume_a(p, TK_FOR);
+    p_consume_a(p, TK_OPEN_PAREN);
+    p->expect_semi = 0;
+    if (p_peek(p)->type != TK_SEMI) node->_for.init = p_parse_block_item(p, nm);
+    p_consume_a(p, TK_SEMI);
+    if (p_peek(p)->type != TK_SEMI) node->_for.cond = p_parse_expression(p, nm, 0);
+    p_consume_a(p, TK_SEMI);
+    if (p_peek(p)->type != TK_CLOSE_PAREN) node->_for.iter = p_parse_expression(p, nm, 0);
+    p->expect_semi = 1;
+    p_consume_a(p, TK_CLOSE_PAREN);
+    node->_for.block = p_parse_statement(p, nm);
+    return node;
+}
+Node *p_parse_return(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_RETURN);
+    p_consume(p);
+    if (p_peek(p)->type != TK_SEMI) {
+        node->_return.expr = p_parse_expression(p, nm, 0);
+        node->type = type_invalid;
+    }
+    p_consume_semi(p);
+    return node;
+}
+Node *p_parse_continue(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_CONTINUE);
+    p_consume(p);
+    p_consume_semi(p);
+    return node;
+}
+Node *p_parse_break(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_BREAK);
+    p_consume(p);
+    p_consume_semi(p);
+    return node;
+}
+Node *p_parse_statement(Parser *p, NodeManager *nm) {
+    switch (p_peek(p)->type) {
+    case TK_IF:
+        return p_parse_if_statement(p, nm);
+    case TK_DO:
+        return p_parse_do_while_loop(p, nm);
+    case TK_WHILE:
+        return p_parse_while_loop(p, nm);
+    case TK_FOR:
+        return p_parse_for_loop(p, nm);
+    case TK_SWITCH:
+        return p_parse_switch_statement(p, nm);
+    case TK_CONTINUE:
+        return p_parse_continue(p, nm);
+    case TK_BREAK:
+        return p_parse_break(p, nm);
+    case TK_RETURN:
+        return p_parse_return(p, nm);
+    case TK_MULTIPLY:
+    case TK_IDENTIFIER:
+        if (p_peek_next(p)->type == TK_COLON) return p_parse_label(p, nm);
+        Node *n = p_parse_expression(p, nm, 0);
+        p_consume_semi(p);
+        return n;
+    case TK_OPEN_CURLY:
+        return p_parse_compound(p, nm);
+    case TK_GOTO:
+        return p_parse_goto_statement(p, nm);
+    default:
+        return p_parse_expression(p, nm, 0);
+    }
+}
+void p_push_scope(Parser *p) {
+    p->current_scope_depth++;
+    p_append_symbol_table(p);
+}
+void p_pop_scope(Parser *p) {
+    p->current_scope_depth--;
+    array_free(get_current_symbol_table(p));
+    pop(&p->scopes_array);
+}
+Node *p_parse_compound(Parser *p, NodeManager *nm) {
+    Node *node = new_compound_node(nm);
+    p_consume_a(p, TK_OPEN_CURLY);
+    while (p_peek(p)->type != TK_CLOSE_CURLY && !p_is_last_token(p)) {
+        p_append_block_item(node, p_parse_block_item(p, nm));
+    }
+    p_consume_a(p, TK_CLOSE_CURLY);
+    return node;
+}
+Type *decay_array_type(Type *t) {
+    if (t->kind == T_ARRAY) return get_pointer_type(decay_array_type(t->base));
+    return t;
+}
+Modifier p_parse_parameter_list(Parser *p, NodeManager *nm) {
+    Modifier mod = {.kind = MOD_FUNCTION, .function = {.is_variadic = 0}};
+    array_init(&mod.function.params, 4, sizeof(ParamDecl));
+    p_consume_a(p, TK_OPEN_PAREN);
+    while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {
+        if (p_peek(p)->type == TK_ELLIPSES) {
+            p_consume(p);
+            mod.function.is_variadic = 1;
+            break;
+        }
+        const char *name = ((void *)0);
+        append(&mod.function.params, &(ParamDecl){.type = decay_array_type(p_parse_type(p, nm, &name)), .name = name});
+        if (p_peek(p)->type == TK_COMMA) p_consume(p);
+        else break;
+    }
+    p_consume_a(p, TK_CLOSE_PAREN);
+    return mod;
+}
+Node *p_parse_function(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, int is_inline) {
+    Node *node = new_function_node(nm);
+    if (!(name != ((void *)0))) do { log_message(LOG_ERROR, "Expected nonnull name of function\n"); exit(1); } while (0);
+    node->func.name = name;
+    node->func.is_inline = is_inline;
+    node->type = type;
+    if (p_peek(p)->type == TK_SEMI) {
+        p_consume(p);
+        node->func.is_defined = 0;
+    } else {
+        node->func.is_defined = 1;
+    }
+    node->func.storage_class = storage_class;
+    if (node->func.is_defined) node->func.body = p_parse_compound(p, nm);
+    return node;
+}
+Node *p_parse_decl_identifier(Parser *p, NodeManager *nm) {
+    Node *node = new_node(nm, N_IDENTIFIER);
+    const int expect_closing_paren = p_peek(p)->type == TK_OPEN_PAREN;
+    if (expect_closing_paren) p_consume(p);
+    const Token *t = p_consume_a(p, TK_IDENTIFIER);
+    node->identifier.name = t->value;
+    node->identifier.len = t->size;
+    if (expect_closing_paren) p_consume_a(p, TK_CLOSE_PAREN);
+    return node;
+}
+Node *p_parse_declaration(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, const int global) {
+    if (type->kind == T_STRUCT || type->kind == T_ENUM || type->kind == T_UNION) {
+        if (name == ((void *)0)) {
+            p_consume_semi(p);
+            Node *type_decl = new_node(nm, N_TYPE);
+            type_decl->type = type;
+            return type_decl;
+        }
+        if (!(type->_struct.complete)) do { log_message(LOG_ERROR, "Cannot instantiate an incomplete type\n"); exit(1); } while (0);
+    }
+    if (!(name != ((void *)0))) do { log_message(LOG_ERROR, "Expected non null name of variable\n"); exit(1); } while (0);
+    Node *ident = new_node(nm, N_IDENTIFIER);
+    ident->identifier.name = name;
+    Node *var_decl = new_node(nm, N_VAR_DECL);
+    var_decl->var_decl.identifier = ident;
+    var_decl->var_decl.is_global = global;
+    var_decl->type = type;
+    if (p_peek(p)->type == TK_EQ) {
+        p_consume(p);
+        var_decl->var_decl.expr = p_parse_expression(p, nm, 0);
+        var_decl->var_decl.is_defined = 1;
+    } else {
+        var_decl->var_decl.is_defined = 0;
+        var_decl->var_decl.expr = ((void *)0);
+    }
+    var_decl->var_decl.storage_class = storage_class;
+    p_consume_semi(p);
+    return var_decl;
+}
+Node *p_parse_external_declaration(Parser *p, NodeManager *nm) {
+    if (p_peek(p)->type == TK_TYPEDEF) return p_parse_typedef(p, nm);
+    StorageClass storage_class = NONE;
+    int is_inline = 0;
+    for (;;) {
+        if (p_peek(p)->type == TK_STATIC) storage_class = STATIC;
+        else if (p_peek(p)->type == TK_EXTERN) storage_class = EXTERN;
+        else if (p_peek(p)->type == TK_INLINE) is_inline = 1;
+        else break;
+        p_consume(p);
+    }
+    const char *name = ((void *)0);
+    Type *type = p_parse_type(p, nm, &name);
+    if (type->kind == T_FUNCTION) return p_parse_function(p, nm, type, name, storage_class, is_inline);
+    else return p_parse_declaration(p, nm, type, name, storage_class, 1);
+}
+Node *p_parse_typedef(Parser *p, NodeManager *nm) {
+    p_consume_a(p, TK_TYPEDEF);
+    Node *node = new_node(nm, N_TYPEDEF);
+    node->_typedef.name = ((void *)0);
+    node->type = p_parse_type(p, nm, &node->_typedef.name);
+    if (!(node->_typedef.name)) do { log_message(LOG_ERROR, "Missing typedef name\n"); exit(1); } while (0);
+    p_consume_semi(p);
+    p_append_typedef(p, &(Typedef){.type = node->type, .new_def = node->_typedef.name});
+    return node;
+}
+StorageClass p_parse_storage_classifier(Parser *p, NodeManager *nm) {
+    switch (p_peek(p)->type) {
+    case TK_EXTERN:
+        p_consume(p);
+        return EXTERN;
+    case TK_STATIC:
+        p_consume(p);
+        return STATIC;
+    default:
+        return NONE;
+    }
+}
+Node *p_parse_block_declaration(Parser *p, NodeManager *nm) {
+    if (p_peek(p)->type == TK_TYPEDEF) return p_parse_typedef(p, nm);
+    StorageClass storage_class = p_parse_storage_classifier(p, nm);
+    const char *name = ((void *)0);
+    Type *type = p_parse_type(p, nm, &name);
+    if (type->kind == T_FUNCTION) {
+        do { log_message(LOG_ERROR, "Function prototypes within block scope is unsupported\n"); exit(1); } while (0);
+    } else return p_parse_declaration(p, nm, type, name, storage_class, 0);
+}
+Node *p_parse_translation_unit(Parser *p, NodeManager *nm) {
+    Node *root = init_translation_unit(nm);
+    if (!(p->size > 0)) do { log_message(LOG_ERROR, "Tried to generate AST with empty token array."); exit(1); } while (0);
+    while (!p_is_last_token(p)) {
+        Node *decl = p_parse_external_declaration(p, nm);
+        append(&root->translation_unit.declarations_array, &decl);
+    }
+    return root;
+}
+int is_storage_classifier(const TokenType type) {
+    switch (type) {
+    case TK_STATIC:
+    case TK_EXTERN:
+        return 1;
+    default:
+        return 0;
+    }
+}
+int is_qualifier_token(const TokenType type) {
+    switch (type) {
+    case TK_CONST:
+    case TK_VOLATILE:
+        return 1;
+    default:
+        return 0;
+    }
+}
+int is_start_of_type(const Parser *p, const Token *tk) {
+    return tk->type == TK_UNSIGNED || tk->type == TK_SIGNED || is_type_token(p, tk) || is_qualifier_token(tk->type);
+}
+int is_type_token(const Parser *p, const Token *t) {
+    switch (t->type) {
+    case TK_CHAR:
+    case TK_SHORT:
+    case TK_INT:
+    case TK_LONG:
+    case TK_FLOAT:
+    case TK_DOUBLE:
+    case TK_VOID:
+    case TK_STRUCT:
+    case TK_ENUM:
+        return 1;
+    case TK_IDENTIFIER:
+        return p_get_symbol(p, t->value, TYPEDEF, 0) != ((void *)0);
+    default:
+        return 0;
+    }
+}
+Type *token_to_type(Parser *p, const Token *t) {
+    switch (t->type) {
+    case TK_CHAR:
+        return type_i8;
+    case TK_SHORT:
+        return type_i16;
+    case TK_INT:
+        return type_i32;
+    case TK_LONG:
+        return type_i64;
+    case TK_FLOAT:
+        return type_f32;
+    case TK_DOUBLE:
+        return type_f64;
+    case TK_VOID:
+        return type_void;
+    case TK_IDENTIFIER:
+        return p_get_typedef(p, t->value)->type;
+    default:
+        return type_invalid;
+    }
+}
+Type *parse_int_suffix(const char *raw, int *len) {
+    int i = *len - 1;
+    int l_count = 0;
+    int is_unsigned = 0;
+    for (;;) {
+        if (i <= 0) break;
+        char c = raw[i];
+        if (c == 'u' || c == 'U') is_unsigned = 1;
+        else if (c == 'l' || c == 'L') l_count++;
+        else break;
+        i--;
+    }
+    Type *type = type_i32;
+    *len -= *len - i - 1;
+    if (l_count > 0) type = type_i64;
+    if (is_unsigned) return get_unsigned_type(type);
+    return type;
+}
+Type *parse_float_suffix(const char *raw, int *len) {
+    Type *type = type_f64;
+    switch (raw[*len - 1]) {
+    case 'f':
+    case 'F':
+        type = type_f32;
+    case 'l':
+    case 'L':
+        *len -= 1;
+    default:
+        return type;
+    }
+}
+int64_t parse_int(const char *raw, int len) {
+    if (len > 20) {
+        do { log_message(LOG_ERROR, "Cannot parse an integer larger than 64 bytes\n"); exit(1); } while (0);
+    }
+    if (raw[0] == '-') return -parse_int(raw + 1, len - 1);
+    if (raw[0] == '0' && len > 1) {
+        switch (raw[1]) {
+        case 'x':
+        case 'X':
+            return parse_hex(raw + 2, len - 2);
+        case 'b':
+        case 'B':
+            return parse_binary(raw + 2, len - 2);
+        default:
+            return parse_oct(raw + 1, len - 1);
+        }
+    }
+    return parse_dec(raw, len);
+}
+int64_t parse_dec(const char *raw, int len) {
+    int64_t res = 0;
+    const char *start = raw;
+    while (raw < start + len) {
+        res = res * 10 + (*raw - '0');
+        raw++;
+    }
+    return res;
+}
+int64_t parse_binary(const char *raw, int len) {
+    int64_t res = 0;
+    const char *start = raw;
+    while (raw < start + len) {
+        int value = (*raw - '0');
+        if (value > 1) {
+            do { log_message(LOG_ERROR, "Parse Binary Failed: digit cannot be larger than 1\n"); exit(1); } while (0);
+        }
+        res = res * 2 + value;
+        raw++;
+    }
+    return res;
+}
+int64_t parse_oct(const char *raw, int len) {
+    int64_t res = 0;
+    const char *start = raw;
+    while (raw < start + len) {
+        int value = (*raw - '0');
+        if (value > 7) {
+            do { log_message(LOG_ERROR, "Parse Octal Failed: digit cannot be larger than 7\n"); exit(1); } while (0);
+        }
+        res = res * 8 + value;
+        raw++;
+    }
+    return res;
+}
+int64_t parse_hex(const char *raw, int len) {
+    int64_t res = 0;
+    const char *start = raw;
+    while (raw < start + len) {
+        int value;
+        if (is_num(*raw)) value = *raw - '0';
+        char c = *raw | 0x20;
+        if (c <= 'f' && c >= 'a') value = c - 'a' + 10;
+        if (c <= 'F' && c >= 'A') value = c - 'A' + 10;
+        res = res * 16 + value;
+        raw++;
+    }
+    return res;
+}
+int parse_multi_character(const char *raw, int len) {
+    int c = 0;
+    for (int i = 0; i < len && i < 4; i++) {
+        c |= (unsigned char)raw[i] << (i * 8);
+    }
+    return c;
+}
+double parse_float(const char *raw, int len) {
+    if (raw[0] == '-') return -parse_float(raw + 1, len - 1);
+    double res = 0;
+    const char *end = raw + len;
+    double m = 0;
+    while (raw < end) {
+        if (*raw == '.') {
+            m = 0.1;
+            raw++;
+            continue;
+        }
+        int digit = *raw - '0';
+        if (m) {
+            res += digit * m;
+            m *= 0.1;
+        } else {
+            res = res * 10.0 + digit;
+        }
+        raw++;
+    }
+    return res;
 }

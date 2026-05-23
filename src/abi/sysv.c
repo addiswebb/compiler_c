@@ -5,6 +5,7 @@
 #include <stdio.h>
 #ifdef __linux__
 
+#include "../libc/stdbool.h"
 #include <compiler_c/abi/abi.h>
 #include <compiler_c/analyse/analysis.h>
 #include <compiler_c/core/type.h>
@@ -13,7 +14,6 @@
 #include <compiler_c/ir/ir_module.h>
 #include <compiler_c/log/logger.h>
 #include <compiler_c/x86/x86.h>
-#include "../libc/stdbool.h"
 
 Arena _sret = {.count = 0};
 Symbol *_hidden_sret_ptr = NULL;
@@ -353,7 +353,7 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     sse_index = 0;
     gp_index = 0;
     const int variadic_space = instr->call.type->_func.is_variadic ? 176 : 0;
-    const int param_frame_size = 8 * spilled_count + variadic_space;
+    const int param_frame_size = (8 * spilled_count + variadic_space) | 8;
     int param_offset = 0;
     if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
