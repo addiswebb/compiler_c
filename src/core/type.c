@@ -410,26 +410,30 @@ Type enum_type() {
     return e;
 }
 
-AggrMember *get_member(Type *struct_t, const char *name, bool is_root, int *offset) {
+AggrMember *get_member(Type *struct_t, const char *name, bool is_root, int *offset, int *index) {
+    if (is_root) *index = 0;
+    // TODO make i = *index when is_root == true for optimisation
     for (int i = 0; i < struct_t->_struct.members_array.count; i++) {
         AggrMember *member = get_struct_member(struct_t, i);
         if (member->name) {
-            if (strcmp(name, member->name) == 0) return member;
+            if (strcmp(name, member->name) == 0) {
+                if (offset) *offset += member->offset;
+                return member;
+            }
         } else if (member->type->kind == T_STRUCT || member->type->kind == T_UNION) {
-            AggrMember *x = get_member(member->type, name, false, offset);
+            AggrMember *x = get_member(member->type, name, false, offset, index);
             if (x) {
                 if (offset) *offset += member->offset;
                 return x;
             }
         }
+        if (is_root) (*index)++;
     }
     if (is_root) PANIC("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
     else return NULL;
 }
 
-bool is_func_ptr(const Type *t) {
-    return t->kind == T_POINTER && t->base->kind == T_FUNCTION;
-}
+bool is_func_ptr(const Type *t) { return t->kind == T_POINTER && t->base->kind == T_FUNCTION; }
 
 bool is_scalar_type(const Type *t) { return t->kind == T_INT || t->kind == T_FLOAT || t->kind == T_ENUM || t->kind == T_POINTER; }
 

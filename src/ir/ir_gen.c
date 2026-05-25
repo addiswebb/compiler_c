@@ -16,6 +16,8 @@
 #include <compiler_c/ir/ir_builder.h>
 #include <compiler_c/ir/ir_gen.h>
 
+static void ir_gen_initializer(IR_Context *ctx, IR_Value dst, Node *l);
+
 IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
     case N_IDENTIFIER:
@@ -382,7 +384,7 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
         } else {
             Node *e = get_node(&l->init_list.elements_array, 0);
             type = e->type;
-            ir_v = ir_gen_rvalue(ctx, e->kind == N_DESIGNATED_INITIALIZER ? e->designated_init.value : e);
+            ir_v = ir_gen_rvalue(ctx, e->kind == N_DESIGNATOR ? e->designated_init.value : e);
         }
         ir_store(ctx, dst, ir_v, type);
         break;
@@ -404,10 +406,6 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
 
             // |vvvvvvvvvvvvvvvvvvvvvvvvvvvv| is same for both
             if (type->size > 8) {
-                continue;
-            }
-            if (type->kind == T_UNION) {
-                WARN("Skipping union in gen initlist\n");
                 continue;
             }
             // If the corresponding value was found in the init list, use that, otherwise use a zero,
@@ -432,21 +430,23 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
             for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
                 Node *e = get_node(&l->init_list.elements_array, j);
                 if (member->name && strcmp(member->name, e->designated_init._struct.name) == 0) {
+                    printf("%s - %s\n", member->name, e->designated_init._struct.name);
                     value = e->designated_init.value;
                     break;
                 }
             }
             type = member->type;
 
+            print("Got %s %t\n", member->name, member->type);
             member_offset = member->offset + offset;
             // |vvvvvvvvvvvvvvvvvvvvvvvvvvv|
             if (type->size > 8) {
                 continue;
             }
-            if (type->kind == T_UNION) {
-                WARN("Skipping union in gen initlist\n");
-                continue;
-            }
+            // if (type->kind == T_UNION) {
+            //     WARN("Skipping union in gen initlist\n");
+            //     continue;
+            // }
             if (value) {
                 // If the corresponding value was found in the init list, use that, otherwise use a zero,
                 if (value->kind == N_INIT_LIST) {
@@ -466,6 +466,135 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *no
         PANIC("Recieving unsupported type to lower var decl with initlist\n");
     }
     return;
+}
+
+static void ir_gen_scalar_init(IR_Context *ctx, IR_Value dst, Node *e) {
+    if (e->type->size > 8) {
+        WARN("Skipping > 8 byte scalar\n");
+        return;
+    }
+    if (ctx->init_ctx.offset)
+        dst = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), dst, ir_integer_literal(ctx->init_ctx.offset), type_u64);
+    ir_store(ctx, dst, ir_gen_rvalue(ctx, e), e->type);
+}
+
+static bool find_member_offset(Type *t, const char *name, int *offset) {
+    ASSERT(t->kind == T_STRUCT, "Expected struct type\n");
+    if (t->kind != T_STRUCT && t->kind != T_UNION) return false;
+    for (int i = 0; i < t->_struct.members_array.count; i++) {
+        StructMember *m = get_struct_member(t, i);
+        if (m->name && strcmp(m->name, name) == 0) {
+            *offset += m->offset;
+            return true;
+        }
+        if (!m->name && (m->type->kind == T_STRUCT || m->type->kind == T_UNION)) {
+            *offset += m->offset;
+            if (find_member_offset(m->type, name, offset)) return true;
+            *offset -= m->offset;
+        }
+    }
+    return false;
+}
+
+Node ir_zero(Type *t) {
+    Node zero = {.kind = N_LITERAL, .type = t};
+    switch (t->kind) {
+    case T_INT:
+    case T_ENUM:
+    case T_POINTER:
+        zero.literal.kind = L_INT;
+        zero.literal.i = 0;
+        break;
+    case T_FLOAT:
+        zero.literal.kind = L_FLOAT;
+        zero.literal.f = 0;
+        break;
+    case T_ARRAY:
+    case T_STRUCT:
+    case T_UNION:
+        WARN("Not zeroing structs, arrays or unions in initlist gen\n");
+        zero.literal.kind = L_INT;
+        zero.literal.i = 0;
+        break;
+    default:
+        PANIC("Invalid type for zeroing\n");
+    }
+    return zero;
+}
+
+static void ir_gen_aggregate_init(IR_Context *ctx, IR_Value dst, Node *l) {
+    int len = l->type->kind == T_ARRAY ? l->type->_array.array_len : l->type->_struct.members_array.count;
+    char *initialized = calloc(len, sizeof(char));
+    ASSERT(initialized, "Failed to calloc\n");
+    ctx->init_ctx.index = 0;
+    for (int i = 0; i < l->init_list.elements_array.count; i++) {
+        Node *e = get_node(&l->init_list.elements_array, i);
+        ctx->init_ctx.offset = 0;
+        if (e->kind == N_DESIGNATOR) {
+            if (l->type->kind == T_ARRAY) {
+                ctx->init_ctx.index = e->designated_init._array.index;
+                ctx->init_ctx.offset = ctx->init_ctx.index * l->type->base->size;
+            } else {
+                AggrMember *m = get_member(l->type, e->designated_init._struct.name, true, &ctx->init_ctx.offset, &ctx->init_ctx.index);
+            }
+        } else {
+            if (l->type->kind == T_ARRAY) {
+                ctx->init_ctx.offset = ctx->init_ctx.index * l->type->base->size;
+            } else {
+                AggrMember *m = get_struct_member(l->type, ctx->init_ctx.index);
+                ctx->init_ctx.offset = m->offset;
+            }
+        }
+
+        initialized[ctx->init_ctx.index] = true;
+
+        ir_gen_initializer(ctx, dst, e->kind == N_DESIGNATOR ? e->designated_init.value : e);
+        ctx->init_ctx.index++;
+    }
+    if (l->type->kind == T_UNION) len = 0;
+    // Todo fill empty union as largest size
+
+    IR_Value final_dst = dst;
+    for (int i = 0; i < len; i++) {
+        if (!initialized[i]) {
+            if (l->type->kind == T_ARRAY) {
+                ctx->init_ctx.offset = i * l->type->base->size;
+                ctx->init_ctx.type = l->type->base;
+            } else {
+                AggrMember *m = get_struct_member(l->type, i);
+                ctx->init_ctx.offset = m->offset;
+                ctx->init_ctx.type = m->type;
+            }
+            if (ctx->init_ctx.type->size > 8) continue;
+            else {
+                if (ctx->init_ctx.offset)
+                    final_dst =
+                        ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), dst, ir_integer_literal(ctx->init_ctx.offset), type_u64);
+                ir_store(ctx, final_dst, ir_integer_literal(0), ctx->init_ctx.type);
+            }
+        }
+    }
+    free(initialized);
+}
+
+static void ir_gen_initializer(IR_Context *ctx, IR_Value dst, Node *l) {
+    switch (l->type->kind) {
+    case T_ENUM:
+    case T_INT:
+    case T_FLOAT:
+    case T_POINTER:
+        if (l->kind == N_INIT_LIST) ir_gen_scalar_init(ctx, dst, get_node(&l->init_list.elements_array, 0));
+        else ir_gen_scalar_init(ctx, dst, l);
+        break;
+    case T_STRUCT:
+    case T_ARRAY:
+    case T_UNION:
+        ir_gen_aggregate_init(ctx, dst, l);
+        break;
+    default:
+        PANIC("Invalid init list type");
+        break;
+    }
 }
 
 ConstLiteral lower_const_literal(IR_Context *ctx, ConstLiteral *l) {
@@ -521,7 +650,7 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     // Handle locals
     IR_Value dst = ir_gen_lvalue(ctx, var_decl->var_decl.identifier);
 
-    if (var_decl->var_decl.expr->kind == N_INIT_LIST) return ir_gen_init_list(ctx, dst, 0, var_decl->type, var_decl->var_decl.expr);
+    if (var_decl->var_decl.expr->kind == N_INIT_LIST) return ir_gen_initializer(ctx, dst, var_decl->var_decl.expr);
 
     ABI_Result res = abi_classify(var_decl->type);
     if (var_decl->type->kind == T_ARRAY || res.memory) {

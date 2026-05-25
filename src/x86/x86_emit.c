@@ -16,7 +16,6 @@ const char *x86_reg(const IR_Value *v) {
 
 void x86_operand(const IR_Value *v, char *buf, const int n) {
     int len = 0;
-    // printf("kind %d\n", v->kind);
     switch (v->kind) {
     case IR_CONSTANT:
         // WARN("Not sure if ir const value in x86 is okay\n");

@@ -171,7 +171,7 @@ void print_node_type(const NodeKind type) {
     case N_COMPOUND_LITERAL:
         printf("Compound Literal");
         break;
-    case N_DESIGNATED_INITIALIZER:
+    case N_DESIGNATOR:
         printf("Designated Initializer");
         break;
     case N_BUILTIN:
@@ -421,7 +421,7 @@ void print_node(const Node *node, const int depth) {
         printf("]\n");
         print_node(node->compound_literal.value, depth + 1);
         break;
-    case N_DESIGNATED_INITIALIZER:
+    case N_DESIGNATOR:
         if (node->designated_init.kind == T_ARRAY) printf(": [index= %d]\n", node->designated_init._array.index);
         else printf(": [name= %s]\n", node->designated_init._struct.name);
         print_node(node->designated_init.value, depth + 1);
@@ -591,7 +591,7 @@ void free_node(Node *node) {
         free_node(node->compound_literal.value);
         node->compound_literal.value = NULL;
         break;
-    case N_DESIGNATED_INITIALIZER:
+    case N_DESIGNATOR:
         switch (node->designated_init.kind) {
         case T_ARRAY:
             break;

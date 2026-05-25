@@ -481,6 +481,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             PANIC("Failed to find symbol \"%s\"\n", node->identifier.name);
         }
         node->identifier.symbol = ident_symbol;
+
         switch (ident_symbol->kind) {
         case ENUM:
             node->kind = N_LITERAL;
@@ -626,7 +627,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             Node *e = get_node(&node->init_list.elements_array, 0);
             Type *target_type = node->type->kind == T_UNION ? get_union_member(node->type, 0)->type : node->type;
             Node *value = e;
-            if (e->kind == N_DESIGNATED_INITIALIZER) {
+            if (e->kind == N_DESIGNATOR) {
                 if (node->type->kind != T_UNION) {
                     log_start(LOG_ERROR);
                     printf("Cannot use designated initializers for type ");
@@ -663,7 +664,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
 
             for (int i = 0; i < node->init_list.elements_array.count; i++) {
                 Node *e = get_node(&node->init_list.elements_array, i);
-                bool is_designator = e->kind == N_DESIGNATED_INITIALIZER;
+                bool is_designator = e->kind == N_DESIGNATOR;
                 if (max_count && index >= max_count && !is_designator) PANIC("Too many initializers for %d\n", node->type);
 
                 StructMember *member = NULL;
@@ -689,7 +690,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
 
                 semantic_analysis(sema_ctx, p, nm, value);
                 if (!is_designator) {
-                    Node *de = new_node(nm, N_DESIGNATED_INITIALIZER);
+                    Node *de = new_node(nm, N_DESIGNATOR);
 
                     if (is_array) {
                         de->designated_init._array.index = index;
@@ -736,10 +737,10 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->member_access.identifier = deref;
             node->member_access.op = TK_DOT;
         }
-        int nested_offset = 0;
-        AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, true, &nested_offset);
+        int offset = 0;
+        AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, true, &offset, &(int){0});
         node->member_access.member->type = member_f->type;
-        node->member_access.offset = member_f->offset + nested_offset;
+        node->member_access.offset = offset;
         node->type = member_f->type;
 
         break;
@@ -822,7 +823,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_GOTO:
     case N_LABEL:
-    case N_DESIGNATED_INITIALIZER:
+    case N_DESIGNATOR:
         PANIC("Unreachable\n");
     }
 }

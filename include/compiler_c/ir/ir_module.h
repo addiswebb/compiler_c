@@ -313,6 +313,11 @@ typedef struct {
     int capacity;
 } IR_LoopStack;
 
+typedef struct IR_InitContext {
+    Type *type;
+    int offset;
+    int index;
+} IR_InitContext;
 /*
     Stores the current and in use module, function, block.
     Stores the true/false blocks to early jump out of (a && b) conditions.
@@ -327,6 +332,7 @@ typedef struct {
     IR_Block *false_block;
     Arena *symbol_table;
     bool func_not_address;
+    IR_InitContext init_ctx;
 } IR_Context;
 
 /* The IR_Value used for instructions which do not have a return value / destination register */
@@ -344,9 +350,6 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu);
 void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break_block);
 /* Pop off the top of the loopstack. */
 void ir_pop_loop_ctx(IR_Context *ctx);
-
-/* Returns an IR Const Value using the constant at `const_index`. */
-IR_Value ir_literal_value(int const_index);
 
 void ir_append_instruction(IR_Context *ctx, IR_Instruction *instr);
 void ir_free_module(IR_Module *module);

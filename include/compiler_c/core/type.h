@@ -260,7 +260,7 @@ Type struct_type();
 Type enum_type();
 
 /* Gets the struct member by name from a struct type */
-AggrMember *get_member(Type *struct_t, const char *name, bool is_root, int *offset);
+AggrMember *get_member(Type *struct_t, const char *name, bool is_root, int *offset, int *index);
 
 bool is_func_ptr(const Type *t);
 bool is_scalar_type(const Type *t);

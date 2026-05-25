@@ -35,7 +35,7 @@ typedef enum {
     N_GOTO,
     N_LABEL,
     N_COMPOUND_LITERAL,
-    N_DESIGNATED_INITIALIZER,
+    N_DESIGNATOR,
     N_BUILTIN,
     N_NULL,
 } NodeKind;

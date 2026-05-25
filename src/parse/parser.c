@@ -296,7 +296,7 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
             Token *token = p_consume_a(p, TK_IDENTIFIER);
             p_consume_a(p, TK_EQ);
 
-            Node *member_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+            Node *member_assign = new_node(nm, N_DESIGNATOR);
             member_assign->designated_init.kind = T_STRUCT; // Possibly also T_UNION
             member_assign->designated_init._struct.name = token->value;
             member_assign->designated_init.value = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
@@ -308,7 +308,7 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
             Node *index_expr = p_parse_expression(p, nm, 0);
             p_consume_a(p, TK_CLOSE_SQUARE);
             p_consume_a(p, TK_EQ);
-            Node *element_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+            Node *element_assign = new_node(nm, N_DESIGNATOR);
             // TODO investigate why this was commented, and uncomment if good
             // element_assign->designated_init.kind = T_ARRAY;
             element_assign->designated_init._array.const_expr = index_expr;
@@ -847,7 +847,7 @@ StructMember *get_struct_member_named(Type *struct_t, const char *name, int *ind
                 return member;
             }
         } else {
-            StructMember *m = get_member(member->type, name, 0, 0);
+            StructMember *m = get_member(member->type, name, 0, 0,0);
             if (m) {
                 *index = j;
                 return m;
@@ -1070,7 +1070,7 @@ Node *p_parse_declaration(Parser *p, NodeManager *nm, Type *type, const char *na
     var_decl->type = type;
 
     if (p_peek(p)->type == TK_EQ) {
-        p_consume(p);
+        p_consume(p); // =
         var_decl->var_decl.expr = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
         var_decl->var_decl.is_defined = true;
     } else {

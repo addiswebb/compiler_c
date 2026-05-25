@@ -210,7 +210,7 @@ void append_struct_member(Type *s, StructMember *f);
 Type union_type();
 Type struct_type();
 Type enum_type();
-AggrMember *get_member(Type *struct_t, const char *name, int is_root, int *offset);
+AggrMember *get_member(Type *struct_t, const char *name, int is_root, int *offset, int *index);
 int is_func_ptr(const Type *t);
 int is_scalar_type(const Type *t);
 void print_type(Type *type);
@@ -392,7 +392,7 @@ typedef enum {
     N_GOTO,
     N_LABEL,
     N_COMPOUND_LITERAL,
-    N_DESIGNATED_INITIALIZER,
+    N_DESIGNATOR,
     N_BUILTIN,
     N_NULL,
 } NodeKind;
@@ -1188,7 +1188,7 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
             p_consume(p);
             Token *token = p_consume_a(p, TK_IDENTIFIER);
             p_consume_a(p, TK_EQ);
-            Node *member_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+            Node *member_assign = new_node(nm, N_DESIGNATOR);
             member_assign->designated_init.kind = T_STRUCT;
             member_assign->designated_init._struct.name = token->value;
             member_assign->designated_init.value = p_parse_expression(p, nm, 0);
@@ -1198,7 +1198,7 @@ Node *p_parse_init_list(Parser *p, NodeManager *nm) {
             Node *index_expr = p_parse_expression(p, nm, 0);
             p_consume_a(p, TK_CLOSE_SQUARE);
             p_consume_a(p, TK_EQ);
-            Node *element_assign = new_node(nm, N_DESIGNATED_INITIALIZER);
+            Node *element_assign = new_node(nm, N_DESIGNATOR);
             element_assign->designated_init._array.const_expr = index_expr;
             element_assign->designated_init.value = p_parse_expression(p, nm, 0);
             p_append_element(node, element_assign);
@@ -1679,7 +1679,7 @@ StructMember *get_struct_member_named(Type *struct_t, const char *name, int *ind
                 return member;
             }
         } else {
-            StructMember *m = get_member(member->type, name, 0, 0);
+            StructMember *m = get_member(member->type, name, 0, 0,0);
             if (m) {
                 *index = j;
                 return m;
