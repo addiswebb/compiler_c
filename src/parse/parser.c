@@ -652,7 +652,13 @@ Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind, c
             Symbol *symbol = get_symbol(st, j);
             if (same_depth && symbol->scope_depth != p->current_scope_depth) continue;
             if (symbol->scope_depth <= p->current_scope_depth && (kind == ANY || symbol->kind == kind) && strcmp(symbol->name, name) == 0) {
+                // printf("\t%s %d %d %d %d\n", symbol->name, symbol->scope_depth, p->current_scope_depth, kind, symbol->kind);
+                // if (symbol->scope_depth <= p->current_scope_depth) {
+                //     if (kind == ANY || symbol->kind == kind) {
+                //         if (strcmp(symbol->name, name) == 0) {
                 return symbol;
+                //     }
+                // }
             }
         }
     }
@@ -668,13 +674,14 @@ Node *p_get_func_def(const Parser *p, const char *name) { PANIC("Tried to get fu
 
 Symbol *p_new_symbol(Parser *p, const Symbol *s) { return arena_append(&p->symbols_arena, s); }
 void p_append_typedef(Parser *p, const Typedef *t) {
-    p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &(Symbol){.name = t->new_def,
-                                                                           .kind = TYPEDEF,
-                                                                           .linkage = LINK_NONE,
-                                                                           .storage = STORAGE_NONE,
-                                                                           ._typedef = *t,
-                                                                           .type = t->type,
-                                                                           .scope_depth = p->current_scope_depth}));
+    Symbol s = (Symbol){.name = t->new_def,
+                        .kind = TYPEDEF,
+                        .linkage = LINK_NONE,
+                        .storage = STORAGE_NONE,
+                        ._typedef = *t,
+                        .type = t->type,
+                        .scope_depth = p->current_scope_depth};
+    p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &s));
 }
 Symbol *p_append_func_def(Parser *p, Node *f) {
     if (p->scopes_array.count > 2) {
@@ -847,7 +854,7 @@ StructMember *get_struct_member_named(Type *struct_t, const char *name, int *ind
                 return member;
             }
         } else {
-            StructMember *m = get_member(member->type, name, 0, 0,0);
+            StructMember *m = get_member(member->type, name, 0, 0, 0);
             if (m) {
                 *index = j;
                 return m;
@@ -997,6 +1004,9 @@ Type *decay_array_type(Type *t) {
 
 Modifier p_parse_parameter_list(Parser *p, NodeManager *nm) {
     Modifier mod = {.kind = MOD_FUNCTION, .function = {.is_variadic = false}};
+#ifdef __COMPILER_C__
+    mod.function.is_variadic = 0;
+#endif
     array_init(&mod.function.params, 4, sizeof(ParamDecl));
     p_consume_a(p, TK_OPEN_PAREN);
     while (p_peek(p)->type != TK_CLOSE_PAREN && !p_is_last_token(p)) {

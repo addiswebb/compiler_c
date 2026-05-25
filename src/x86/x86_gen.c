@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
+static void x86_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memset_instruction(fp, instr); }
 static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memcpy_instruction(fp, instr); }
 static void x86_gen_cmp_instruction(FILE *fp, const IR_Instruction *instr) {
     x86_emit_cmp(fp, instr->cmp.op, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->cmp.type);
@@ -79,6 +80,9 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         x86_gen_addr_instruction(fp, instr);
         break;
     case IR_ALLOCA:
+        break;
+    case IR_MEMSET:
+        x86_gen_memset_instruction(fp, instr);
         break;
     case IR_MEMCPY:
         x86_gen_memcpy_instruction(fp, instr);

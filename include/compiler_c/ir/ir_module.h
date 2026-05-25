@@ -64,6 +64,7 @@ typedef enum {
     IR_ADDR,
     /* No-op */
     IR_ALLOCA,
+    IR_MEMSET,
     IR_MEMCPY,
     IR_LABEL,
     IR_JMP,
@@ -184,6 +185,10 @@ typedef struct {
         struct {
             int size;
         } memcpy;
+        struct {
+            int size;
+            int c;
+        } memset;
         struct {
             const char *name;
         } label;

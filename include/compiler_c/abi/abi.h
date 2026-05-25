@@ -34,6 +34,7 @@ void abi_func_type_gen(Type *type);
 IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr);
 void abi_gen_params(IR_Context *ctx, IR_Function *f);
 
+void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr);
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
 
 extern Symbol *_hidden_sret_ptr;

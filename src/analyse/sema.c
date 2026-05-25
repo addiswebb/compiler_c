@@ -166,8 +166,11 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
 void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
     Node *ident = new_node(nm, N_IDENTIFIER);
     // TODO track compound literals and name accordingly.
-    ident->identifier.name = "__tmp_cl";
-    ident->identifier.len = 9;
+    char *name = malloc(sizeof(char) * 32);
+    ASSERT(name, "Failed to malloc _sret name\n");
+    snprintf(name, 32, "_cl_%lu", (unsigned long)node);
+    ident->identifier.name = name;
+    ident->identifier.len = strlen(name);
     ident->type = node->type;
     Node *d = new_node(nm, N_VAR_DECL);
     d->type = node->type;
@@ -506,9 +509,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_IF:
         p_push_scope(p);
         semantic_analysis(sema_ctx, p, nm, node->_if.cond);
-        if (node->_if.cond->type != type_i32) {
-            node->_if.cond = cast_node(nm, node->_if.cond, type_i32);
-        }
         semantic_analysis(sema_ctx, p, nm, node->_if.if_true);
         semantic_analysis(sema_ctx, p, nm, node->_if.if_false);
         p_pop_scope(p);

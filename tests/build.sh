@@ -26,9 +26,9 @@ done
 
 # Files to compile with GCC instead of compiler_c
 
-# Working on "parser"
+# Working on "ir_builder"
 GCC_COMPILE=()
-# GCC_COMPILE=("sysv" "analysis" "ir_builder" "ir_module" "ir_gen")
+# GCC_COMPILE=("sysv" "ir_builder" "ir_module" "ir_gen")
 
 # Files to skip completely (not compiled at all)
 SKIP=("win64")

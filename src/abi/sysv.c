@@ -41,7 +41,7 @@ void set_sret(Type *return_type) {
 
     char *name = malloc(sizeof(char) * 32);
     ASSERT(name, "Failed to malloc _sret name\n");
-    snprintf(name, sizeof(name), "_sret%d", _sret.count);
+    snprintf(name, 32, "_sret%d", _sret.count);
     arena_append(&_sret, &(Symbol){.name = name,
                                    .kind = VAR,
                                    .linkage = LINK_NONE,
@@ -282,9 +282,9 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
         set_hidden_sret_ptr(f->type->_func.return_type);
         append(&f->locals_array, &_hidden_sret_ptr);
         ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 1,
-                                                            .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
-                                                            .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
+                                                     .op_count = 1,
+                                                     .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
+                                                     .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
     }
 
     int integers_emitted = hidde_ptr_offset;
@@ -295,9 +295,9 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
         append(&f->locals_array, &d->symbol);
         const int param_index = d->type->kind == T_FLOAT ? floats_emitted++ : integers_emitted++;
         ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 1,
-                                                            .ops = {[0] = ir_symbol_value(d->symbol)},
-                                                            .param = {.param_index = param_index, .type = d->type}});
+                                                     .op_count = 1,
+                                                     .ops = {[0] = ir_symbol_value(d->symbol)},
+                                                     .param = {.param_index = param_index, .type = d->type}});
     }
     // TODO give more robust way of ensuring correct emission
     // integers_emitted includes all non-float, but gp_count is only non-float registers used.
@@ -305,11 +305,10 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
     if (f->type->_func.is_variadic) {
         // Space for this will be allocated later in x86 gen +176 bytes if variadic
         for (int i = integers_emitted; i < INTEGER_PARAM_REGISTERS; i++) {
-            ir_append_instruction(ctx,
-                                  &(IR_Instruction){.op = IR_PARAM,
-                                                    .op_count = 1,
-                                                    .ops = {[0] = ir_stack_value(8, 8, -8 * (INTEGER_PARAM_REGISTERS - i) - 128)},
-                                                    .param = {.param_index = i, .type = type_u64}});
+            ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
+                                                         .op_count = 1,
+                                                         .ops = {[0] = ir_stack_value(8, 8, -8 * (INTEGER_PARAM_REGISTERS - i) - 128)},
+                                                         .param = {.param_index = i, .type = type_u64}});
         }
         IR_Value al_equal_zero = ir_cmp(ctx, EQ,
                                         (IR_Value){.kind = IR_PHYS_REG,
@@ -330,9 +329,9 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
         // Todo use movaps or move this to x86 lowering
         for (int i = floats_emitted; i < FLOAT_PARAM_REGISTERS; i++) {
             ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
-                                                                .op_count = 1,
-                                                                .ops = {[0] = ir_stack_value(8, 8, -16 * (FLOAT_PARAM_REGISTERS - i))},
-                                                                .param = {.param_index = i, .type = type_f64}});
+                                                         .op_count = 1,
+                                                         .ops = {[0] = ir_stack_value(8, 8, -16 * (FLOAT_PARAM_REGISTERS - i))},
+                                                         .param = {.param_index = i, .type = type_f64}});
         }
         ir_append_block(ctx, skip_floats_block);
     }
@@ -448,6 +447,27 @@ void abi_func_type_gen(Type *type) {
     }
     type->abi.type = abi_type;
 }
+
+void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) {
+    // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
+    switch (instr->ops[0].kind) {
+    case IR_CONSTANT:
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rdi");
+        break;
+    case IR_PHYS_REG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rdi");
+        break;
+    case IR_SYMBOL:
+    case IR_INT_LITERAL:
+    case IR_VREG:
+    case IR_UNDEFINED:
+        PANIC("Sanity check failed\n");
+    }
+
+    fprintf(fp, "    movl $%d, %%esi\n", instr->memset.c);
+    fprintf(fp, "    movq $%d, %%rdx\n", instr->memset.size);
+    fprintf(fp, "    call memset\n");
+}
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
     switch (instr->ops[1].kind) {
@@ -477,7 +497,7 @@ void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     case IR_UNDEFINED:
         PANIC("Sanity check failed\n");
     }
-    fprintf(fp, "    mov $%d, %%rdx\n", instr->memcpy.size);
+    fprintf(fp, "    movq $%d, %%rdx\n", instr->memcpy.size);
     fprintf(fp, "    call memcpy\n");
 }
 

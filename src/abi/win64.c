@@ -150,9 +150,9 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
         set_hidden_sret_ptr(f->type->_func.return_type);
         append(&f->locals_array, &_hidden_sret_ptr);
         ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 1,
-                                                            .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
-                                                            .param = {.param_index = hidden_ptr_offset++, .type = _hidden_sret_ptr->type}});
+                                                     .op_count = 1,
+                                                     .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
+                                                     .param = {.param_index = hidden_ptr_offset++, .type = _hidden_sret_ptr->type}});
     }
 
     int params_emitted = hidden_ptr_offset;
@@ -161,16 +161,16 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
         d->symbol->type = d->type;
         append(&f->locals_array, &d->symbol);
         ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 1,
-                                                            .ops = {[0] = ir_symbol_value(d->symbol)},
-                                                            .param = {.param_index = params_emitted++, .type = d->type}});
+                                                     .op_count = 1,
+                                                     .ops = {[0] = ir_symbol_value(d->symbol)},
+                                                     .param = {.param_index = params_emitted++, .type = d->type}});
     }
     if (f->type->_func.is_variadic) {
         for (int i = params_emitted; i < PARAM_REGISTERS; i++) {
             ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
-                                                                .op_count = 1,
-                                                                .ops = {[0] = ir_stack_value(8, 8, 16 + i * 8)},
-                                                                .param = {.param_index = params_emitted++, .type = type_u64}});
+                                                         .op_count = 1,
+                                                         .ops = {[0] = ir_stack_value(8, 8, 16 + i * 8)},
+                                                         .param = {.param_index = params_emitted++, .type = type_u64}});
         }
     }
 }
@@ -310,14 +310,38 @@ Type *abi_func_type(Type *type) {
     return changed ? abi_type : type;
 }
 
-void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
+void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) {
     // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
-    switch (instr->ops[1].kind) {
+    switch (instr->ops[0].kind) {
     case IR_CONSTANT:
-        x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rdx");
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rcx");
         break;
     case IR_PHYS_REG:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rdx");
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rcx");
+        break;
+    case IR_SYMBOL:
+    case IR_INT_LITERAL:
+    case IR_VREG:
+    case IR_UNDEFINED:
+        PANIC("Sanity check failed\n");
+        break;
+    }
+
+    fprintf(fp, "    mov $%d, %%rdx\n", instr->memset.c);
+    fprintf(fp, "    movq $%d, %%r8\n", instr->memset.size);
+    fprintf(fp, "    sub $32, %%rsp\n");
+    fprintf(fp, "    call memcpy\n");
+    fprintf(fp, "    add $32, %%rsp\n");
+}
+void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
+    // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
+
+    switch (instr->ops[0].kind) {
+    case IR_CONSTANT:
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rcx");
+        break;
+    case IR_PHYS_REG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rcx");
         break;
     case IR_SYMBOL:
     case IR_INT_LITERAL:
@@ -329,10 +353,10 @@ void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
 
     switch (instr->ops[1].kind) {
     case IR_CONSTANT:
-        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rcx");
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rdx");
         break;
     case IR_PHYS_REG:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rcx");
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rdx");
         break;
     case IR_SYMBOL:
     case IR_INT_LITERAL:

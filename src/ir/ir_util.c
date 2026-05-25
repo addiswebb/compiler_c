@@ -348,6 +348,11 @@ static void print_ir_alloca(const IR_Instruction *instr) {
     printf(" = ALLOCA %d\n", instr->alloca.size);
 }
 
+static void print_ir_memset(const IR_Instruction *instr) {
+    printf("    MEMSET ");
+    print_ir_value(&instr->ops[0]);
+    printf(", %d %d\n", instr->memset.c, instr->memset.size);
+}
 static void print_ir_memcpy(const IR_Instruction *instr) {
     printf("    MEMCPY ");
     print_ir_value(&instr->ops[1]);
@@ -385,8 +390,7 @@ static void print_ir_builtin_va_arg(const IR_Instruction *instr) {
 }
 
 static void print_ir_move(const IR_Instruction *instr) {
-    printf("    ");
-    printf("MOVE ");
+    printf("    MOVE ");
     print_ir_value(&instr->ops[1]);
     printf(" -> ");
     print_ir_value(&instr->ops[0]);
@@ -453,6 +457,9 @@ void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr) {
         break;
     case IR_MOVE:
         print_ir_move(instr);
+        break;
+    case IR_MEMSET:
+        print_ir_memset(instr);
         break;
     }
 }

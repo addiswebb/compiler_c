@@ -29,6 +29,24 @@ IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
     ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
+void ir_zero(IR_Context *ctx, IR_Value dst, Type *type) {
+    switch (type->kind) {
+    case T_INT:
+    case T_ENUM:
+    case T_FLOAT:
+    case T_POINTER:
+        ir_store(ctx, dst, ir_integer_literal(0), ctx->init_ctx.type);
+        return;
+    case T_ARRAY:
+    case T_STRUCT:
+    case T_UNION:
+        if (type->size <= 8) ir_store(ctx, dst, ir_integer_literal(0), get_integer_type(type->size));
+        else ir_memset(ctx, dst, 0, type->size);
+        return;
+    default:
+        PANIC("Tried to zero invalid type %t\n", type);
+    }
+}
 IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     if (type->kind == T_UNION) {
         printf("union\n");
@@ -241,6 +259,16 @@ IR_Value ir_alloca(IR_Context *ctx, IR_Value dst, int size, int align) {
     return i.ops[0];
 }
 
+IR_Value ir_memset(IR_Context *ctx, IR_Value dst, int c, int size) {
+    IR_Instruction i;
+    i.op = IR_MEMSET;
+    i.memset.size = size;
+    i.memset.c = c;
+    i.ops[0] = dst;
+    i.op_count = 1;
+    ir_append_instruction(ctx, &i);
+    return i.ops[0];
+}
 IR_Value ir_memcpy(IR_Context *ctx, IR_Value from_reg, IR_Value to_reg, int size) {
     IR_Instruction i;
     i.op = IR_MEMCPY;

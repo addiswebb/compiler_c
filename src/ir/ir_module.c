@@ -22,6 +22,7 @@ IR_OpInfo op_info[] = {
     [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},
     [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},
     [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},
+    [IR_MEMSET] = {.def_mask = 0b000, .use_mask = 0b001},
     [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
     [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
