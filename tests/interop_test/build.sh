@@ -27,10 +27,8 @@ BASE2=$(basename "$FILE2")
 BASE2="${BASE2%.*}"
 
 echo "[1/5] Compiling $FILE1 [compiler_c] → $BASE1.s"
-compiler_c "$FILE1" -a
+compiler_c "$FILE1" -o $BASE1.o -c
 
-echo "[2/5] Assembling $BASE1.s [gcc] → $BASE1.o"
-gcc -c "$BASE1.s" -o "$BASE1.o"
 
 echo "[3/5] Compiling $FILE2 [gcc] → $BASE2.o"
 gcc -c "$FILE2" -o "$BASE2.o"

@@ -48,9 +48,6 @@ void ir_zero(IR_Context *ctx, IR_Value dst, Type *type) {
     }
 }
 IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
-    if (type->kind == T_UNION) {
-        printf("union\n");
-    }
     IR_Instruction i;
     i.op = IR_STORE;
     i.ops[1] = src;
@@ -223,10 +220,7 @@ IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, I
     return ir_no_value;
 }
 IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
-    // if (from->kind == T_STRUCT) {
-    if (to == get_qualified_type(from, to->qualifiers)) return src;
-    //     PANIC("\n%t\n%t\n", from, to);
-    // }
+    if (get_qualified_type(from, QUAL_NONE) == get_qualified_type(to, QUAL_NONE)) return src;
     if (src.kind == IR_INT_LITERAL && (to->kind == T_INT || to->kind == T_POINTER)) return src;
     if (from->kind == T_ARRAY && to->kind == T_POINTER && from->base->kind == to->base->kind) PANIC("HOW");
     IR_Instruction i;

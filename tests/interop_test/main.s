@@ -1,36 +1,49 @@
+.section .note.GNU-stack,"",@progbits
 
 .text
 .global main
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $48, %rsp
+    subq $72, %rsp
 main_0:
-    leaq -16(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
+    leaq -40(%rbp), %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
     movq $1, %rcx
     movq %rcx, (%rax)
-    movq -40(%rbp), %rax
+    movq -48(%rbp), %rax
     addq $8, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
     movq $2, %rcx
     movq %rcx, (%rax)
-    leaq -32(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
+    movq -48(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
     movq $3, %rcx
     movq %rcx, (%rax)
-    movq -40(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
+    movq -48(%rbp), %rax
+    addq $24, %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
     movq $4, %rcx
     movq %rcx, (%rax)
-    leaq -16(%rbp), %rax
-    movq %rax, -40(%rbp)
-    leaq -32(%rbp), %rax
+    movq -48(%rbp), %rax
+    addq $32, %rax
     movq %rax, -48(%rbp)
-    subq $32, %rsp
-    movl $2, %ecx
+    movq -48(%rbp), %rax
+    movq $5, %rcx
+    movq %rcx, (%rax)
+    leaq -40(%rbp), %rax
+    movq %rax, -48(%rbp)
+    subq $8, %rsp
+    movq -48(%rbp), %rdi
+    call foo
+    addq $8, %rsp
+    movl %eax, -48(%rbp)
+    movl -48(%rbp), %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
