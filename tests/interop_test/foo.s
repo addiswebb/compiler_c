@@ -5,38 +5,17 @@
 foo:
     push %rbp
     mov %rsp, %rbp
-    subq $72, %rsp
+    subq $24, %rsp
 foo_0:
-    leaq 16(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
+    movq %rdi, -8(%rbp)
+    leaq 56(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -48(%rbp)
-    leaq 16(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -48(%rbp), %rax
-    addq -56(%rbp), %rax
-    movq %rax, -48(%rbp)
-    leaq 16(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -48(%rbp), %rax
-    addq -56(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
-    movl %eax, -48(%rbp)
-    movl -48(%rbp), %eax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movl %eax, -16(%rbp)
+    movl -16(%rbp), %eax
     mov %rbp, %rsp
     pop %rbp
     ret

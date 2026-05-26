@@ -5,6 +5,7 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_gen.h"
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 
 void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src) {
@@ -13,6 +14,7 @@ void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src) {
     i.ops[1] = src;
     i.ops[0] = dst;
     i.op_count = 2;
+    printf("%d\n", src.kind);
     ir_append_instruction(ctx, &i);
 }
 
@@ -177,6 +179,7 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     i.op_count = 2;
     ir_append_instruction(ctx, &i);
     if (use_sret) ir_move(ctx, i.ops[0], sret);
+
     return i.ops[0];
 }
 IR_Value ir_return(IR_Context *ctx, IR_Value reg, Type *type) {

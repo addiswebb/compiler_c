@@ -5,4 +5,7 @@ typedef struct A {
     long d;
     long e;
 } A;
-int foo(A x) { return x.a + x.b + x.c; }
+int foo(int *z, A x, A y) {
+    // return x.a + x.b + x.c + y.d + y.e;
+    return y.a;
+}

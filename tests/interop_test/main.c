@@ -5,7 +5,7 @@ typedef struct A {
     long d;
     long e;
 } A;
-int foo(A x);
+int foo(int *z, A x, A y);
 int main() {
     A x; // ={.a = 1, .b = 2, .c = 3, .d = 4, .e = 5};
     x.a = 1;
@@ -13,5 +13,5 @@ int main() {
     x.c = 3;
     x.d = 4;
     x.e = 5;
-    return foo(x);
+    return foo((int *)123, x, x);
 }

@@ -131,12 +131,13 @@ IR_Value abi_lower_param_register(Type *type, int i) {
     IR_Value v = (IR_Value){.kind = IR_PHYS_REG,
                             .phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0}};
 #endif
+    // if(i < 0) return;
     if (type->kind == T_FLOAT) {
-        ASSERT(i >= 0 && i < FLOAT_PARAM_REGISTERS, "SysV ABI Invalid param arg index %d\n", i);
+        ASSERT(i >= 0 && i < FLOAT_PARAM_REGISTERS, "SysV ABI Invalid SSE param arg index %d\n", i);
         v.phys_reg.kind = REG_XMM;
         v.phys_reg.sse_reg = float_param_regs[i];
     } else {
-        ASSERT(i >= 0 && i < INTEGER_PARAM_REGISTERS, "SysV ABI Invalid param arg index %d\n", i);
+        ASSERT(i >= 0 && i < INTEGER_PARAM_REGISTERS, "SysV ABI Invalid GP param arg index %d\n", i);
         v.phys_reg.kind = REG_GP;
         v.phys_reg.gp_reg = int_param_regs[i];
     }
@@ -160,7 +161,7 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i,
     if (instr->param.param_index == -1) return;
     Type *type = instr->param.type;
     ABI_Result res = abi_classify(type);
-    if (res.memory) type = type_u64;
+    if (res.memory) return;
     instr->op_count = 2;
     int param_registers = type->kind == T_FLOAT ? FLOAT_PARAM_REGISTERS : INTEGER_PARAM_REGISTERS;
     const int variadic_space = f->type->_func.is_variadic ? 176 : 0;
@@ -168,12 +169,8 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i,
     else instr->ops[1] = ir_stack_value(8, 8, 8 * (instr->param.param_index - param_registers) - variadic_space);
 
     if (instr->param.type->kind == T_STRUCT) {
-        if (res.memory) {
-            return;
-        } else {
-            instr->param.type = type->kind == T_FLOAT ? get_float_type(instr->param.type->size) : get_integer_type(instr->param.type->size);
-            ASSERT(res.class[1] == ABI_NO_CLASS, "Structs sized [8 < size <= 16] are not handled yet\n");
-        }
+        instr->param.type = type->kind == T_FLOAT ? get_float_type(instr->param.type->size) : get_integer_type(instr->param.type->size);
+        ASSERT(res.class[1] == ABI_NO_CLASS, "Structs sized [8 < size <= 16] are not handled yet\n");
     }
 }
 
@@ -433,21 +430,20 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         case T_STRUCT:
         case T_UNION:
             ASSERT(res.memory, "Arg type should have been converted by gp/sse class %t\n", arg_type);
-            // x86_emit_xr(fp, "mov", "q", "", &v->v, "%rsi");
-            // fprintf(fp, "    leaq %d(%%rsp), %%rdi\n", param_offset);
-            // fprintf(fp, "    movq $%d, %%rdx\n", arg_type->size);
-            // fprintf(fp, "    call memcpy\n");
             IR_Value dst = {.kind = IR_PHYS_REG,
                             .size = 8,
                             .align = 8,
                             .phys_reg = (PhysReg){
                                 .kind = REG_GP,
                                 .gp_reg = RSP,
-                                .data_kind = REG_DATA_NONE,
+                                .data_kind = REG_DATA_OFFSET,
                                 .size = REG_64,
+                                .offset = param_offset,
                             }};
 
-            builtin_memcpy(fp, dst, v->v, arg_type->size);
+            IR_Value rax = ir_gp_register_value(RAX);
+            x86_emit_xx(fp, "lea", "q", "", &dst, &rax);
+            builtin_memcpy(fp, rax, v->v, arg_type->size);
             param_offset += arg_type->size;
             break;
         default:

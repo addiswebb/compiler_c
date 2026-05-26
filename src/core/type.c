@@ -267,7 +267,6 @@ Type *get_modified_type(Type *type, Declarator *decl) {
         else if (mod->kind == MOD_ARRAY) type = new_incomplete_array_type(type, mod->array_bounds);
         else if (mod->kind == MOD_FUNCTION) type = get_function_type(type, mod->function.params, mod->function.is_variadic);
     }
-    printf("3\n");
     return type;
 }
 
