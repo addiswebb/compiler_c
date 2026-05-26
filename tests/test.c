@@ -787,78 +787,6 @@ static inline UnionMember *get_union_member(const Type *union_t, int index) {
 }
 UnionMember *get_union_member_named(Type *union_t, const char *name);
 StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index);
-typedef struct {
-    char *output;
-    Array current_source;
-    Array current_output;
-    Array source_files;
-    Array passthrough_args;
-    char *src;
-    int src_size;
-    NodeManager nm;
-    Parser p;
-    Tokenizer tk;
-} Compiler;
-typedef enum {
-    CF_STOP_AFTER_AST,
-    CF_STOP_AFTER_IR,
-    CF_STOP_AFTER_COMPILE,
-    CF_STOP_AFTER_ASSEMBLE,
-    CF_DEBUG_TYPEPOOL,
-    CF_DEBUG_LIFETIMES,
-    CF_DEBUG_ENUM,
-    CF_DEBUG_STRUCT,
-    CF_DEBUG_UNION,
-    CF_DEBUG_LOWERED_IR,
-    CF_DEBUG_IR_INSTR,
-    CF_DEBUG_PARSER,
-    CF_DEBUG_TOKENIZER,
-    CF_DEBUG_SYMBOLS,
-    CF_COUNT,
-} CompilerFlag;
-extern unsigned int compiler_flags;
-extern const char *flag_strings[CF_COUNT];
-int has_flag(CompilerFlag f);
-Compiler begin_compiler(int argc, char *argv[]);
-void init_compiler(Compiler *compiler);
-void clear_compiler(Compiler *compiler);
-void free_compiler(Compiler *compiler);
-void drive(Compiler *c);
-void assemble(Compiler *c);
-void link(Compiler *c, Array *objs);
-int compile(Compiler *compiler);
-void free_compiler(Compiler *compiler);
-static int load_src_file(Compiler *compiler, const char *file);
-char *replace_extension(const char *path, const char *ext);
-typedef struct {
-    unsigned int gp_offset;
-    unsigned int fp_offset;
-    void *overflow_args;
-    void *reg_save_area;
-} va_list[1];
-typedef struct FILE FILE;
-extern FILE *stdin;
-extern FILE *stdout;
-extern FILE *stderr;
-FILE *fopen(const char *, const char *);
-FILE *fdopen(int, const char *);
-int fclose(FILE *);
-int fflush(FILE *);
-int fputc(int, FILE *);
-int putc(int, FILE *);
-int putchar(int);
-char *fgets(char *, int, FILE *);
-char fgetc(FILE *);
-char *gets(char *);
-int fputs(const char *, FILE *);
-int puts(const char *);
-int printf(const char *, ...);
-int fprintf(FILE *, const char *, ...);
-int sprintf(char *, const char *, ...);
-int snprintf(char *, size_t, const char *, ...);
-extern int vfprintf(FILE *, const char *, va_list);
-FILE *popen(const char *, const char *);
-int pclose(FILE *);
 typedef enum {
     LT,
     LE,
@@ -1170,6 +1098,35 @@ static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int in
     return (IR_LabeledBlock *)get(&module->labeled_block_array, index);
 }
 static inline IR_CallArg *get_call_arg(const IR_Instruction *call, int index) { return (IR_CallArg *)get(&call->call.arg_array, index); }
+typedef struct {
+    unsigned int gp_offset;
+    unsigned int fp_offset;
+    void *overflow_args;
+    void *reg_save_area;
+} va_list[1];
+typedef struct FILE FILE;
+extern FILE *stdin;
+extern FILE *stdout;
+extern FILE *stderr;
+FILE *fopen(const char *, const char *);
+FILE *fdopen(int, const char *);
+int fclose(FILE *);
+int fflush(FILE *);
+int fputc(int, FILE *);
+int putc(int, FILE *);
+int putchar(int);
+char *fgets(char *, int, FILE *);
+char fgetc(FILE *);
+char *gets(char *);
+int fputs(const char *, FILE *);
+int puts(const char *);
+int printf(const char *, ...);
+int fprintf(FILE *, const char *, ...);
+int sprintf(char *, const char *, ...);
+int snprintf(char *, size_t, const char *, ...);
+extern int vfprintf(FILE *, const char *, va_list);
+FILE *popen(const char *, const char *);
+int pclose(FILE *);
 typedef enum {
     ABI_NO_CLASS,
     ABI_MEMORY,
@@ -1239,6 +1196,49 @@ void bitset_copy(const BitSet *dst, const BitSet *src);
 int bitset_equal(const BitSet *a, const BitSet *b);
 void print_bitset(const BitSet *bs);
 void print_cfg(const IR_Function *func);
+typedef struct {
+    char *output;
+    Array current_source;
+    Array current_output;
+    Array source_files;
+    Array passthrough_args;
+    char *src;
+    int src_size;
+    NodeManager nm;
+    Parser p;
+    Tokenizer tk;
+} Compiler;
+typedef enum {
+    CF_STOP_AFTER_AST,
+    CF_STOP_AFTER_IR,
+    CF_STOP_AFTER_COMPILE,
+    CF_STOP_AFTER_ASSEMBLE,
+    CF_DEBUG_TYPEPOOL,
+    CF_DEBUG_LIFETIMES,
+    CF_DEBUG_ENUM,
+    CF_DEBUG_STRUCT,
+    CF_DEBUG_UNION,
+    CF_DEBUG_LOWERED_IR,
+    CF_DEBUG_IR_INSTR,
+    CF_DEBUG_PARSER,
+    CF_DEBUG_TOKENIZER,
+    CF_DEBUG_SYMBOLS,
+    CF_COUNT,
+} CompilerFlag;
+extern unsigned int compiler_flags;
+extern const char *flag_strings[CF_COUNT];
+int has_flag(CompilerFlag f);
+Compiler begin_compiler(int argc, char *argv[]);
+void init_compiler(Compiler *compiler);
+void clear_compiler(Compiler *compiler);
+void free_compiler(Compiler *compiler);
+void drive(Compiler *c);
+void assemble(Compiler *c);
+void link(Compiler *c, Array *objs);
+int compile(Compiler *compiler);
+void free_compiler(Compiler *compiler);
+static int load_src_file(Compiler *compiler, const char *file);
+char *replace_extension(const char *path, const char *ext);
 void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src);
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type);
 IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type);
@@ -1721,7 +1721,6 @@ void builtin_memcpy(FILE *fp, IR_Value dst, IR_Value src, int size) {
     if (!(size == 0)) do { log_message(LOG_ERROR, "Didnt copy everything\n"); exit(1); } while (0);
 }
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    printf("1\n");
     Type *t = instr->call.type->abi.type->_func.return_type;
     int gp_index = 0;
     int sse_index = 0;
@@ -1801,43 +1800,55 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         fprintf(fp, "    call *%%rax\n");
     }
     if (param_frame_size > 0) fprintf(fp, "    addq $%d, %%rsp\n", param_frame_size);
-    printf("2\n");
     if (t == type_void) return;
     x86_emit_rx(fp, "mov", x86_op_suffix(t), "", x86_rax_reg(t), &instr->ops[0]);
 }
 void abi_func_type_gen(Type *type) {
+    printf("1\n");
     if (!(type->kind == T_FUNCTION)) do { log_message(LOG_ERROR, "Invalid Func Type\n"); exit(1); } while (0);
     Type *abi_type = new_type();
     memcpy(abi_type, type, sizeof(Type));
     array_init(&abi_type->_func.params, type->_func.params.capacity, type->_func.params.element_size);
     memcpy(abi_type->_func.params.data, type->_func.params.data, type->_func.params.count * type->_func.params.element_size);
     abi_type->_func.params.count = type->_func.params.count;
+    printf("2\n");
     type->abi.fp_count = 0;
     type->abi.gp_count = 0;
     if (abi_type->_func.return_type->kind == T_STRUCT) {
+        printf("2.1\n");
         ABI_Result res = abi_classify(type->_func.return_type);
         if (res.memory) {
+            printf("2.1.1\n");
             set_sret(type->_func.return_type);
             Symbol *_sret = current_sret();
             insert(&abi_type->_func.params,
                    &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = _sret->name, .symbol = _sret}, 0);
             abi_type->_func.return_type = type_void;
         } else {
+            printf("2.1.2\n");
             compiler_flags |= (1u << CF_DEBUG_STRUCT);
             if (!(res.class[1] == ABI_NO_CLASS)) do { log_message(LOG_ERROR, "[SysV] Not handling tuple return type %t\n", type->_func.return_type); exit(1); } while (0);
             abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
         }
+        printf("2.2\n");
     }
+    printf("3\n");
     if (abi_type->_func.return_type->kind == T_ENUM) abi_type->_func.return_type = type_i32;
+    printf("4\n");
     for (int i = 0; i < abi_type->_func.params.count; i++) {
+        printf("4.1\n");
         ParamDecl *d = get(&abi_type->_func.params, i);
         ABI_Result res = abi_classify(d->type);
         if (!res.memory) {
+            printf("4.1.1\n");
             if (d->type->kind == T_FLOAT && type->abi.fp_count < 8) type->abi.fp_count++;
             else if (type->abi.gp_count < 6) type->abi.gp_count++;
         }
+        printf("4.2\n");
     }
+    printf("5\n");
     type->abi.type = abi_type;
+    printf("6\n");
 }
 void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) {
     switch (instr->ops[0].kind) {

@@ -627,16 +627,12 @@ void x86_emit_string(FILE *fp, const char *str) {
 void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
     switch (c->kind) {
     case CONST_INTEGER:
-        if (c->type == type_i8 || c->type == type_u8) {
-            fprintf(fp, "    .byte %d\n", (char)c->i);
-        } else if (c->type == type_i16 || c->type == type_u16) {
-            fprintf(fp, "    .word %d\n", (short)c->i);
-        } else if (c->type == type_i32 || c->type == type_u32) {
-            fprintf(fp, "    .long %d\n", (int)c->i);
-        } else if (c->type == type_i64 || c->type == type_u64) {
-            fprintf(fp, "    .quad %" PRId64 "\n", c->i);
-        }
-        break;
+        ASSERT(c->type->kind == T_INT || c->type->kind == T_POINTER, "Const literal of CONST_INTEGER but non INTEGER type %t\n", c->type);
+        if (c->type->size == 1) fprintf(fp, "    .byte %d\n", (char)c->i);
+        else if (c->type->size == 2) fprintf(fp, "    .word %d\n", (short)c->i);
+        else if (c->type->size == 4) fprintf(fp, "    .long %d\n", (int)c->i);
+        else if (c->type->size == 8) fprintf(fp, "    .quad %" PRId64 "\n", c->i);
+        return;
     case CONST_FLOAT:
         if (c->type == type_f64) {
             uint64_t bits;
@@ -648,23 +644,24 @@ void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
             memcpy(&bits, &f, sizeof(bits));
             fprintf(fp, "    .long 0x%08x\n", bits);
         }
-        break;
+        return;
     case CONST_STRING:
         x86_emit_string(fp, c->s.data);
-        break;
+        return;
     case CONST_ARRAY:
         for (int i = 0; i < c->arr.count; i++) {
             ConstLiteral *e = get(&c->arr, i);
             x86_emit_literal(fp, e);
         }
-        break;
+        return;
     case CONST_LABEL:
         fprintf(fp, "    .quad .LC%d\n", c->const_index);
-        break;
+        return;
     case CONST_REFERENCE:
         fprintf(fp, "    .quad %s", c->ref.symbol->name);
         if (c->ref.offset) fprintf(fp, " + %d", c->ref.offset);
         fprintf(fp, "\n");
-        break;
+        return;
     }
+    PANIC("Tried to emit invalid const literal\n");
 }

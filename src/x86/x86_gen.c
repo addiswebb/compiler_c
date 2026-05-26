@@ -1,6 +1,7 @@
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
+#include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/x86/x86.h"
@@ -177,6 +178,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
             x86_emit_literal(fp, c);
         }
     }
+
     for (int i = 0; i < ctx->module->global_array.count; i++) {
         const IR_Global *g = get_global(ctx, i);
         const ConstLiteral *c = &g->val;

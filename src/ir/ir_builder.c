@@ -14,7 +14,6 @@ void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src) {
     i.ops[1] = src;
     i.ops[0] = dst;
     i.op_count = 2;
-    printf("%d\n", src.kind);
     ir_append_instruction(ctx, &i);
 }
 

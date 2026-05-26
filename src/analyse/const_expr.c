@@ -181,25 +181,19 @@ ConstLiteral evaluate_const_cast(const Node *node) {
     e.type = node->type;
     switch (node->type->kind) {
     case T_INT:
-        if (node->cast.from->kind == T_INT) break;
+        if (node->cast.from->kind == T_INT || node->cast.from->kind == T_POINTER) break;
         e.i = (int)e.f;
         e.kind = CONST_INTEGER;
         break;
     case T_FLOAT:
-        e.f = (int)e.i;
+        e.f = (float)e.i;
         e.kind = CONST_FLOAT;
         break;
     case T_POINTER:
         if (node->cast.from->kind == T_ARRAY && node->cast.from->base == type_i8) break;
         if (node->cast.from->kind == T_INT || node->cast.from->kind == T_POINTER) break;
     default:
-        log_start(LOG_ERROR);
-        printf("Unsupported const expr cast from ");
-        print_type(node->cast.from);
-        printf(" to ");
-        print_type(node->type);
-        printf("\n");
-        exit_bp();
+        PANIC("Unsupported const expr cast from %t to %t\n", node->cast.from, node->type);
     }
     return e;
 }
@@ -209,7 +203,8 @@ ConstLiteral evaluate_const_init_list(const Node *node) {
         ConstLiteral l = {.type = node->type, .kind = CONST_ARRAY};
         array_init(&l.arr, node->type->_array.array_len, sizeof(ConstLiteral));
         // Fill with zeros
-        for (int i = 0; i < l.arr.capacity; i++) append(&l.arr, &(ConstLiteral){.type = l.type->base, .kind = CONST_INTEGER, .i = 0});
+        for (int i = 0; i < l.arr.capacity; i++)
+            append(&l.arr, &(ConstLiteral){.type = get_integer_type(l.type->base->size), .kind = CONST_INTEGER, .i = 0});
         // TODO dont forget to free this shi
         ConstLiteral *arr = l.arr.data;
         for (int i = 0; i < node->init_list.elements_array.count; i++) {
@@ -219,7 +214,8 @@ ConstLiteral evaluate_const_init_list(const Node *node) {
         }
         return l;
     } else if (node->type->kind == T_STRUCT) {
-        return (ConstLiteral){.kind = CONST_INTEGER, .type = node->type, .i = 0};
+        WARN("Skipped const literal init list for %t\n", node->type);
+        return (ConstLiteral){.kind = CONST_INTEGER, .type = type_i64, .i = 0};
     }
     PANIC("Invalid init_list node given to ConstLiteral evaluation\n");
 }
@@ -229,9 +225,10 @@ ConstLiteral evaluate_const_literal(const Node *node) {
     ConstLiteral l = {};
     l.type = node->type;
     switch (node->type->kind) {
-    case T_INT:
         // Enums are not decayed to integer until after sema, so we must allow them here
     case T_ENUM:
+        l.type = type_i32;
+    case T_INT:
         l.i = node->literal.i;
         l.kind = CONST_INTEGER;
         break;

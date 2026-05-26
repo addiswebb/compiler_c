@@ -87,155 +87,208 @@
 .LC42:
     .byte 'D', 'i', 'd', 'n', 't', ' ', 'c', 'o', 'p', 'y', ' ', 'e', 'v', 'e', 'r', 'y', 't', 'h', 'i', 'n', 'g', 0x0A, 0
 .LC43:
-    .byte '1', 0x0A, 0
-.LC44:
     .byte ' ', ' ', ' ', ' ', 's', 'u', 'b', 'q', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'r', 's', 'p', 0x0A, 0
+.LC44:
+    .byte 'm', 'o', 'v', 0
 .LC45:
-    .byte 'm', 'o', 'v', 0
+    .byte 0
 .LC46:
-    .byte 0
+    .byte 'm', 'o', 'v', 0
 .LC47:
-    .byte 'm', 'o', 'v', 0
+    .byte 0
 .LC48:
-    .byte 0
-.LC49:
     .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', '%', 's', ' ', '%', 's', ',', ' ', '%', 'd', '(', '%', '%', 'r', 's', 'p', ')', 0x0A, 0
+.LC49:
+    .byte 'm', 'o', 'v', 0
 .LC50:
-    .byte 'm', 'o', 'v', 0
+    .byte 0
 .LC51:
-    .byte 0
+    .byte 'm', 'o', 'v', 0
 .LC52:
-    .byte 'm', 'o', 'v', 0
+    .byte 0
 .LC53:
-    .byte 0
-.LC54:
     .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', '%', 's', ' ', '%', '%', 'x', 'm', 'm', '0', ',', ' ', '%', 'd', '(', '%', '%', 'r', 's', 'p', ')', 0x0A, 0
-.LC55:
+.LC54:
     .byte 'A', 'r', 'g', ' ', 't', 'y', 'p', 'e', ' ', 's', 'h', 'o', 'u', 'l', 'd', ' ', 'h', 'a', 'v', 'e', ' ', 'b', 'e', 'e', 'n', ' ', 'c', 'o', 'n', 'v', 'e', 'r', 't', 'e', 'd', ' ', 'b', 'y', ' ', 'g', 'p', '/', 's', 's', 'e', ' ', 'c', 'l', 'a', 's', 's', ' ', '%', 't', 0x0A, 0
+.LC55:
+    .byte 'l', 'e', 'a', 0
 .LC56:
-    .byte 'l', 'e', 'a', 0
+    .byte 'q', 0
 .LC57:
-    .byte 'q', 0
+    .byte 0
 .LC58:
-    .byte 0
-.LC59:
     .byte 'T', 'r', 'i', 'e', 'd', ' ', 't', 'o', ' ', 'e', 'm', 'i', 't', ' ', 'c', 'a', 'l', 'l', ' ', 'a', 'r', 'g', ' ', 'f', 'o', 'r', ' ', 'u', 'n', 's', 'u', 'p', 'p', 'o', 'r', 't', 'e', 'd', ' ', 't', 'y', 'p', 'e', 0x0A, 0
-.LC60:
+.LC59:
     .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', 'l', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'e', 'a', 'x', 0x0A, 0
-.LC61:
+.LC60:
     .byte ' ', ' ', ' ', ' ', 'x', 'o', 'r', ' ', '%', '%', 'e', 'a', 'x', ',', ' ', '%', '%', 'e', 'a', 'x', 0x0A, 0
-.LC62:
+.LC61:
     .byte ' ', ' ', ' ', ' ', 'c', 'a', 'l', 'l', ' ', '%', 's', 0x0A, 0
+.LC62:
+    .byte 'm', 'o', 'v', 0
 .LC63:
-    .byte 'm', 'o', 'v', 0
+    .byte 'q', 0
 .LC64:
-    .byte 'q', 0
+    .byte 0
 .LC65:
-    .byte 0
-.LC66:
     .byte '%', 'r', 'a', 'x', 0
-.LC67:
+.LC66:
     .byte ' ', ' ', ' ', ' ', 'c', 'a', 'l', 'l', ' ', '*', '%', '%', 'r', 'a', 'x', 0x0A, 0
-.LC68:
+.LC67:
     .byte ' ', ' ', ' ', ' ', 'a', 'd', 'd', 'q', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'r', 's', 'p', 0x0A, 0
+.LC68:
+    .byte 'm', 'o', 'v', 0
 .LC69:
-    .byte '2', 0x0A, 0
+    .byte 0
 .LC70:
-    .byte 'm', 'o', 'v', 0
+    .byte '1', 0x0A, 0
 .LC71:
-    .byte 0
-.LC72:
     .byte 'I', 'n', 'v', 'a', 'l', 'i', 'd', ' ', 'F', 'u', 'n', 'c', ' ', 'T', 'y', 'p', 'e', 0x0A, 0
+.LC72:
+    .byte '2', 0x0A, 0
 .LC73:
-    .byte '[', 'S', 'y', 's', 'V', ']', ' ', 'N', 'o', 't', ' ', 'h', 'a', 'n', 'd', 'l', 'i', 'n', 'g', ' ', 't', 'u', 'p', 'l', 'e', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'y', 'p', 'e', ' ', '%', 't', 0x0A, 0
+    .byte '2', '.', '1', 0x0A, 0
 .LC74:
-    .byte 'l', 'e', 'a', 0
+    .byte '2', '.', '1', '.', '1', 0x0A, 0
 .LC75:
-    .byte 0
+    .byte '2', '.', '1', '.', '2', 0x0A, 0
 .LC76:
-    .byte 0
+    .byte '[', 'S', 'y', 's', 'V', ']', ' ', 'N', 'o', 't', ' ', 'h', 'a', 'n', 'd', 'l', 'i', 'n', 'g', ' ', 't', 'u', 'p', 'l', 'e', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'y', 'p', 'e', ' ', '%', 't', 0x0A, 0
 .LC77:
-    .byte '%', 'r', 'd', 'i', 0
+    .byte '2', '.', '2', 0x0A, 0
 .LC78:
-    .byte 'm', 'o', 'v', 0
+    .byte '3', 0x0A, 0
 .LC79:
-    .byte 'q', 0
+    .byte '4', 0x0A, 0
 .LC80:
-    .byte 0
+    .byte '4', '.', '1', 0x0A, 0
 .LC81:
-    .byte '%', 'r', 'd', 'i', 0
+    .byte '4', '.', '1', '.', '1', 0x0A, 0
 .LC82:
-    .byte 'S', 'a', 'n', 'i', 't', 'y', ' ', 'c', 'h', 'e', 'c', 'k', ' ', 'f', 'a', 'i', 'l', 'e', 'd', 0x0A, 0
+    .byte '4', '.', '2', 0x0A, 0
 .LC83:
-    .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', 'l', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'e', 's', 'i', 0x0A, 0
+    .byte '5', 0x0A, 0
 .LC84:
-    .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', 'q', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'r', 'd', 'x', 0x0A, 0
+    .byte '6', 0x0A, 0
 .LC85:
-    .byte ' ', ' ', ' ', ' ', 'c', 'a', 'l', 'l', ' ', 'm', 'e', 'm', 's', 'e', 't', 0x0A, 0
-.LC86:
     .byte 'l', 'e', 'a', 0
+.LC86:
+    .byte 0
 .LC87:
     .byte 0
 .LC88:
-    .byte 0
+    .byte '%', 'r', 'd', 'i', 0
 .LC89:
-    .byte '%', 'r', 'd', 'i', 0
+    .byte 'm', 'o', 'v', 0
 .LC90:
-    .byte 'm', 'o', 'v', 0
+    .byte 'q', 0
 .LC91:
-    .byte 'q', 0
+    .byte 0
 .LC92:
-    .byte 0
-.LC93:
     .byte '%', 'r', 'd', 'i', 0
+.LC93:
+    .byte 'S', 'a', 'n', 'i', 't', 'y', ' ', 'c', 'h', 'e', 'c', 'k', ' ', 'f', 'a', 'i', 'l', 'e', 'd', 0x0A, 0
 .LC94:
-    .byte 'S', 'a', 'n', 'i', 't', 'y', ' ', 'c', 'h', 'e', 'c', 'k', ' ', 'f', 'a', 'i', 'l', 'e', 'd', 0x0A, 0
+    .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', 'l', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'e', 's', 'i', 0x0A, 0
 .LC95:
-    .byte 'l', 'e', 'a', 0
-.LC96:
-    .byte 0
-.LC97:
-    .byte 0
-.LC98:
-    .byte '%', 'r', 's', 'i', 0
-.LC99:
-    .byte 'm', 'o', 'v', 0
-.LC100:
-    .byte 'q', 0
-.LC101:
-    .byte 0
-.LC102:
-    .byte '%', 'r', 's', 'i', 0
-.LC103:
-    .byte 'S', 'a', 'n', 'i', 't', 'y', ' ', 'c', 'h', 'e', 'c', 'k', ' ', 'f', 'a', 'i', 'l', 'e', 'd', 0x0A, 0
-.LC104:
     .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', 'q', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'r', 'd', 'x', 0x0A, 0
+.LC96:
+    .byte ' ', ' ', ' ', ' ', 'c', 'a', 'l', 'l', ' ', 'm', 'e', 'm', 's', 'e', 't', 0x0A, 0
+.LC97:
+    .byte 'l', 'e', 'a', 0
+.LC98:
+    .byte 0
+.LC99:
+    .byte 0
+.LC100:
+    .byte '%', 'r', 'd', 'i', 0
+.LC101:
+    .byte 'm', 'o', 'v', 0
+.LC102:
+    .byte 'q', 0
+.LC103:
+    .byte 0
+.LC104:
+    .byte '%', 'r', 'd', 'i', 0
 .LC105:
+    .byte 'S', 'a', 'n', 'i', 't', 'y', ' ', 'c', 'h', 'e', 'c', 'k', ' ', 'f', 'a', 'i', 'l', 'e', 'd', 0x0A, 0
+.LC106:
+    .byte 'l', 'e', 'a', 0
+.LC107:
+    .byte 0
+.LC108:
+    .byte 0
+.LC109:
+    .byte '%', 'r', 's', 'i', 0
+.LC110:
+    .byte 'm', 'o', 'v', 0
+.LC111:
+    .byte 'q', 0
+.LC112:
+    .byte 0
+.LC113:
+    .byte '%', 'r', 's', 'i', 0
+.LC114:
+    .byte 'S', 'a', 'n', 'i', 't', 'y', ' ', 'c', 'h', 'e', 'c', 'k', ' ', 'f', 'a', 'i', 'l', 'e', 'd', 0x0A, 0
+.LC115:
+    .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', 'q', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'r', 'd', 'x', 0x0A, 0
+.LC116:
     .byte ' ', ' ', ' ', ' ', 'c', 'a', 'l', 'l', ' ', 'm', 'e', 'm', 'c', 'p', 'y', 0x0A, 0
 .global _sret
 .data
 .align 8
 _sret:
+    .quad 0
 .global _hidden_sret_ptr
 .data
 .align 8
 _hidden_sret_ptr:
+    .quad 0
 .global caller_saved_regs
 .data
 .align 4
 caller_saved_regs:
+    .long 0
+    .long 2
+    .long 3
+    .long 4
+    .long 5
+    .long 8
+    .long 9
+    .long 10
+    .long 11
 .global callee_saved_regs
 .data
 .align 4
 callee_saved_regs:
+    .long 1
+    .long 6
+    .long 12
+    .long 13
+    .long 14
+    .long 15
 .global int_param_regs
 .data
 .align 4
 int_param_regs:
+    .long 5
+    .long 4
+    .long 3
+    .long 2
+    .long 8
+    .long 9
 .global float_param_regs
 .data
 .align 4
 float_param_regs:
+    .long 0
+    .long 1
+    .long 2
+    .long 3
+    .long 4
+    .long 5
+    .long 6
+    .long 7
 
 .text
 align:
@@ -8715,14 +8768,6 @@ abi_emit_call_0:
     movq %rdi, -8(%rbp)
     movq %rsi, -16(%rbp)
     movq %rdx, -24(%rbp)
-    leaq .LC43(%rip), %rax
-    movq %rax, -384(%rbp)
-    subq $184, %rsp
-    movq -384(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $184, %rsp
-    movl %eax, -384(%rbp)
     leaq -32(%rbp), %rax
     movq %rax, -384(%rbp)
     leaq -24(%rbp), %rax
@@ -9122,7 +9167,7 @@ abi_emit_call_22:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC44(%rip), %rax
+    leaq .LC43(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -64(%rbp), %rax
     movq %rax, -400(%rbp)
@@ -9331,14 +9376,14 @@ abi_emit_call_29:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC45(%rip), %rax
+    leaq .LC44(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -216(%rbp), %rax
     movq %rax, -400(%rbp)
     movq -400(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -400(%rbp)
-    leaq .LC46(%rip), %rax
+    leaq .LC45(%rip), %rax
     movq %rax, -408(%rbp)
     leaq -152(%rbp), %rax
     movq %rax, -416(%rbp)
@@ -9440,14 +9485,14 @@ abi_emit_call_30:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC47(%rip), %rax
+    leaq .LC46(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -216(%rbp), %rax
     movq %rax, -400(%rbp)
     movq -400(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -400(%rbp)
-    leaq .LC48(%rip), %rax
+    leaq .LC47(%rip), %rax
     movq %rax, -408(%rbp)
     leaq -152(%rbp), %rax
     movq %rax, -416(%rbp)
@@ -9476,7 +9521,7 @@ abi_emit_call_30:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC49(%rip), %rax
+    leaq .LC48(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -216(%rbp), %rax
     movq %rax, -400(%rbp)
@@ -9552,14 +9597,14 @@ abi_emit_call_33:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC50(%rip), %rax
+    leaq .LC49(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -232(%rbp), %rax
     movq %rax, -400(%rbp)
     movq -400(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -400(%rbp)
-    leaq .LC51(%rip), %rax
+    leaq .LC50(%rip), %rax
     movq %rax, -408(%rbp)
     leaq -152(%rbp), %rax
     movq %rax, -416(%rbp)
@@ -9622,14 +9667,14 @@ abi_emit_call_34:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC52(%rip), %rax
+    leaq .LC51(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -232(%rbp), %rax
     movq %rax, -400(%rbp)
     movq -400(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -400(%rbp)
-    leaq .LC53(%rip), %rax
+    leaq .LC52(%rip), %rax
     movq %rax, -408(%rbp)
     leaq -152(%rbp), %rax
     movq %rax, -416(%rbp)
@@ -9664,7 +9709,7 @@ abi_emit_call_34:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC54(%rip), %rax
+    leaq .LC53(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -232(%rbp), %rax
     movq %rax, -400(%rbp)
@@ -9724,7 +9769,7 @@ abi_emit_call_39:
     testl %eax, %eax
     jz abi_emit_call_41
 abi_emit_call_40:
-    leaq .LC55(%rip), %rax
+    leaq .LC54(%rip), %rax
     movq %rax, -384(%rbp)
     leaq -208(%rbp), %rax
     movq %rax, -392(%rbp)
@@ -9826,11 +9871,11 @@ abi_emit_call_42:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC56(%rip), %rax
+    leaq .LC55(%rip), %rax
     movq %rax, -392(%rbp)
-    leaq .LC57(%rip), %rax
+    leaq .LC56(%rip), %rax
     movq %rax, -400(%rbp)
-    leaq .LC58(%rip), %rax
+    leaq .LC57(%rip), %rax
     movq %rax, -408(%rbp)
     leaq -296(%rbp), %rax
     movq %rax, -416(%rbp)
@@ -9932,7 +9977,7 @@ abi_emit_call_44:
     testl %eax, %eax
     jz abi_emit_call_46
 abi_emit_call_45:
-    leaq .LC59(%rip), %rax
+    leaq .LC58(%rip), %rax
     movq %rax, -384(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -10003,7 +10048,7 @@ abi_emit_call_51:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC60(%rip), %rax
+    leaq .LC59(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -48(%rbp), %rax
     movq %rax, -400(%rbp)
@@ -10025,7 +10070,7 @@ abi_emit_call_52:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC61(%rip), %rax
+    leaq .LC60(%rip), %rax
     movq %rax, -392(%rbp)
     subq $184, %rsp
     movq -384(%rbp), %rdi
@@ -10111,7 +10156,7 @@ abi_emit_call_58:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC62(%rip), %rax
+    leaq .LC61(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -24(%rbp), %rax
     movq %rax, -400(%rbp)
@@ -10151,11 +10196,11 @@ abi_emit_call_59:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC63(%rip), %rax
+    leaq .LC62(%rip), %rax
     movq %rax, -392(%rbp)
-    leaq .LC64(%rip), %rax
+    leaq .LC63(%rip), %rax
     movq %rax, -400(%rbp)
-    leaq .LC65(%rip), %rax
+    leaq .LC64(%rip), %rax
     movq %rax, -408(%rbp)
     leaq -24(%rbp), %rax
     movq %rax, -416(%rbp)
@@ -10171,7 +10216,7 @@ abi_emit_call_59:
     movq -416(%rbp), %rax
     addq -424(%rbp), %rax
     movq %rax, -416(%rbp)
-    leaq .LC66(%rip), %rax
+    leaq .LC65(%rip), %rax
     movq %rax, -424(%rbp)
     subq $8, %rsp
     movq -384(%rbp), %rdi
@@ -10187,7 +10232,7 @@ abi_emit_call_59:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC67(%rip), %rax
+    leaq .LC66(%rip), %rax
     movq %rax, -392(%rbp)
     subq $184, %rsp
     movq -384(%rbp), %rdi
@@ -10217,7 +10262,7 @@ abi_emit_call_61:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC68(%rip), %rax
+    leaq .LC67(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -64(%rbp), %rax
     movq %rax, -400(%rbp)
@@ -10234,14 +10279,6 @@ abi_emit_call_61:
     movl %eax, -384(%rbp)
     jmp abi_emit_call_62
 abi_emit_call_62:
-    leaq .LC69(%rip), %rax
-    movq %rax, -384(%rbp)
-    subq $184, %rsp
-    movq -384(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $184, %rsp
-    movl %eax, -384(%rbp)
     leaq -32(%rbp), %rax
     movq %rax, -384(%rbp)
     movq -384(%rbp), %rax
@@ -10272,7 +10309,7 @@ abi_emit_call_65:
     movq -384(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -384(%rbp)
-    leaq .LC70(%rip), %rax
+    leaq .LC68(%rip), %rax
     movq %rax, -392(%rbp)
     leaq -32(%rbp), %rax
     movq %rax, -400(%rbp)
@@ -10284,7 +10321,7 @@ abi_emit_call_65:
     call x86_op_suffix
     addq $8, %rsp
     movq %rax, -400(%rbp)
-    leaq .LC71(%rip), %rax
+    leaq .LC69(%rip), %rax
     movq %rax, -408(%rbp)
     leaq -32(%rbp), %rax
     movq %rax, -416(%rbp)
@@ -10329,6 +10366,14 @@ abi_func_type_gen:
     subq $200, %rsp
 abi_func_type_gen_0:
     movq %rdi, -8(%rbp)
+    leaq .LC70(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -168(%rbp)
     movq -168(%rbp), %rax
@@ -10357,7 +10402,7 @@ abi_func_type_gen_2:
     testl %eax, %eax
     jz abi_func_type_gen_4
 abi_func_type_gen_3:
-    leaq .LC72(%rip), %rax
+    leaq .LC71(%rip), %rax
     movq %rax, -168(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -10559,6 +10604,14 @@ abi_func_type_gen_5:
     movq -168(%rbp), %rax
     movl -176(%rbp), %ecx
     movl %ecx, (%rax)
+    leaq .LC72(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -168(%rbp)
     movq -168(%rbp), %rax
@@ -10610,6 +10663,14 @@ abi_func_type_gen_5:
     testl %eax, %eax
     jz abi_func_type_gen_17
 abi_func_type_gen_6:
+    leaq .LC73(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     leaq -40(%rbp), %rax
     movq %rax, -168(%rbp)
     leaq -64(%rbp), %rax
@@ -10648,6 +10709,14 @@ abi_func_type_gen_6:
     testl %eax, %eax
     jz abi_func_type_gen_8
 abi_func_type_gen_7:
+    leaq .LC74(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -168(%rbp)
     movq -168(%rbp), %rax
@@ -10758,6 +10827,14 @@ abi_func_type_gen_7:
     movq %rcx, (%rax)
     jmp abi_func_type_gen_16
 abi_func_type_gen_8:
+    leaq .LC75(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     leaq compiler_flags(%rip), %rax
     movq %rax, -168(%rbp)
     movl $1, %eax
@@ -10806,7 +10883,7 @@ abi_func_type_gen_10:
     testl %eax, %eax
     jz abi_func_type_gen_12
 abi_func_type_gen_11:
-    leaq .LC73(%rip), %rax
+    leaq .LC76(%rip), %rax
     movq %rax, -168(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -176(%rbp)
@@ -10888,8 +10965,24 @@ abi_func_type_gen_15:
     movq %rcx, (%rax)
     jmp abi_func_type_gen_16
 abi_func_type_gen_16:
+    leaq .LC77(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     jmp abi_func_type_gen_17
 abi_func_type_gen_17:
+    leaq .LC78(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -168(%rbp)
     movq -168(%rbp), %rax
@@ -10931,6 +11024,14 @@ abi_func_type_gen_18:
     movq %rcx, (%rax)
     jmp abi_func_type_gen_19
 abi_func_type_gen_19:
+    leaq .LC79(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     leaq -104(%rbp), %rax
     movq %rax, -168(%rbp)
     movq -168(%rbp), %rax
@@ -10965,6 +11066,14 @@ abi_func_type_gen_20:
     testl %eax, %eax
     jz abi_func_type_gen_33
 abi_func_type_gen_21:
+    leaq .LC80(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     leaq -112(%rbp), %rax
     movq %rax, -168(%rbp)
     leaq -16(%rbp), %rax
@@ -11034,6 +11143,14 @@ abi_func_type_gen_21:
     testl %eax, %eax
     jz abi_func_type_gen_31
 abi_func_type_gen_22:
+    leaq .LC81(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     leaq -112(%rbp), %rax
     movq %rax, -168(%rbp)
     movq -168(%rbp), %rax
@@ -11157,6 +11274,14 @@ abi_func_type_gen_29:
 abi_func_type_gen_30:
     jmp abi_func_type_gen_31
 abi_func_type_gen_31:
+    leaq .LC82(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     jmp abi_func_type_gen_32
 abi_func_type_gen_32:
     leaq -104(%rbp), %rax
@@ -11172,6 +11297,14 @@ abi_func_type_gen_32:
     movl %ecx, (%rax)
     jmp abi_func_type_gen_20
 abi_func_type_gen_33:
+    leaq .LC83(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -168(%rbp)
     movq -168(%rbp), %rax
@@ -11188,6 +11321,14 @@ abi_func_type_gen_33:
     movq -168(%rbp), %rax
     movq -176(%rbp), %rcx
     movq %rcx, (%rax)
+    leaq .LC84(%rip), %rax
+    movq %rax, -168(%rbp)
+    subq $184, %rsp
+    movq -168(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -168(%rbp)
     mov %rbp, %rsp
     pop %rbp
     ret
@@ -11271,11 +11412,11 @@ abi_gen_memset_instruction_1:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC74(%rip), %rax
+    leaq .LC85(%rip), %rax
     movq %rax, -32(%rbp)
-    leaq .LC75(%rip), %rax
+    leaq .LC86(%rip), %rax
     movq %rax, -40(%rbp)
-    leaq .LC76(%rip), %rax
+    leaq .LC87(%rip), %rax
     movq %rax, -48(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -56(%rbp)
@@ -11291,7 +11432,7 @@ abi_gen_memset_instruction_1:
     movq -56(%rbp), %rax
     addq -64(%rbp), %rax
     movq %rax, -56(%rbp)
-    leaq .LC77(%rip), %rax
+    leaq .LC88(%rip), %rax
     movq %rax, -64(%rbp)
     subq $8, %rsp
     movq -24(%rbp), %rdi
@@ -11309,11 +11450,11 @@ abi_gen_memset_instruction_2:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC78(%rip), %rax
+    leaq .LC89(%rip), %rax
     movq %rax, -32(%rbp)
-    leaq .LC79(%rip), %rax
+    leaq .LC90(%rip), %rax
     movq %rax, -40(%rbp)
-    leaq .LC80(%rip), %rax
+    leaq .LC91(%rip), %rax
     movq %rax, -48(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -56(%rbp)
@@ -11329,7 +11470,7 @@ abi_gen_memset_instruction_2:
     movq -56(%rbp), %rax
     addq -64(%rbp), %rax
     movq %rax, -56(%rbp)
-    leaq .LC81(%rip), %rax
+    leaq .LC92(%rip), %rax
     movq %rax, -64(%rbp)
     subq $8, %rsp
     movq -24(%rbp), %rdi
@@ -11351,7 +11492,7 @@ abi_gen_memset_instruction_7:
     testl %eax, %eax
     jz abi_gen_memset_instruction_9
 abi_gen_memset_instruction_8:
-    leaq .LC82(%rip), %rax
+    leaq .LC93(%rip), %rax
     movq %rax, -24(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -11371,7 +11512,7 @@ abi_gen_memset_instruction_10:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC83(%rip), %rax
+    leaq .LC94(%rip), %rax
     movq %rax, -32(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -40(%rbp)
@@ -11400,7 +11541,7 @@ abi_gen_memset_instruction_10:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC84(%rip), %rax
+    leaq .LC95(%rip), %rax
     movq %rax, -32(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -40(%rbp)
@@ -11426,7 +11567,7 @@ abi_gen_memset_instruction_10:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC85(%rip), %rax
+    leaq .LC96(%rip), %rax
     movq %rax, -32(%rbp)
     subq $184, %rsp
     movq -24(%rbp), %rdi
@@ -11518,11 +11659,11 @@ abi_gen_memcpy_instruction_1:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC86(%rip), %rax
+    leaq .LC97(%rip), %rax
     movq %rax, -32(%rbp)
-    leaq .LC87(%rip), %rax
+    leaq .LC98(%rip), %rax
     movq %rax, -40(%rbp)
-    leaq .LC88(%rip), %rax
+    leaq .LC99(%rip), %rax
     movq %rax, -48(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -56(%rbp)
@@ -11538,7 +11679,7 @@ abi_gen_memcpy_instruction_1:
     movq -56(%rbp), %rax
     addq -64(%rbp), %rax
     movq %rax, -56(%rbp)
-    leaq .LC89(%rip), %rax
+    leaq .LC100(%rip), %rax
     movq %rax, -64(%rbp)
     subq $8, %rsp
     movq -24(%rbp), %rdi
@@ -11556,11 +11697,11 @@ abi_gen_memcpy_instruction_2:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC90(%rip), %rax
+    leaq .LC101(%rip), %rax
     movq %rax, -32(%rbp)
-    leaq .LC91(%rip), %rax
+    leaq .LC102(%rip), %rax
     movq %rax, -40(%rbp)
-    leaq .LC92(%rip), %rax
+    leaq .LC103(%rip), %rax
     movq %rax, -48(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -56(%rbp)
@@ -11576,7 +11717,7 @@ abi_gen_memcpy_instruction_2:
     movq -56(%rbp), %rax
     addq -64(%rbp), %rax
     movq %rax, -56(%rbp)
-    leaq .LC93(%rip), %rax
+    leaq .LC104(%rip), %rax
     movq %rax, -64(%rbp)
     subq $8, %rsp
     movq -24(%rbp), %rdi
@@ -11598,7 +11739,7 @@ abi_gen_memcpy_instruction_7:
     testl %eax, %eax
     jz abi_gen_memcpy_instruction_9
 abi_gen_memcpy_instruction_8:
-    leaq .LC94(%rip), %rax
+    leaq .LC105(%rip), %rax
     movq %rax, -24(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -11685,11 +11826,11 @@ abi_gen_memcpy_instruction_11:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC95(%rip), %rax
+    leaq .LC106(%rip), %rax
     movq %rax, -32(%rbp)
-    leaq .LC96(%rip), %rax
+    leaq .LC107(%rip), %rax
     movq %rax, -40(%rbp)
-    leaq .LC97(%rip), %rax
+    leaq .LC108(%rip), %rax
     movq %rax, -48(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -56(%rbp)
@@ -11705,7 +11846,7 @@ abi_gen_memcpy_instruction_11:
     movq -56(%rbp), %rax
     addq -64(%rbp), %rax
     movq %rax, -56(%rbp)
-    leaq .LC98(%rip), %rax
+    leaq .LC109(%rip), %rax
     movq %rax, -64(%rbp)
     subq $8, %rsp
     movq -24(%rbp), %rdi
@@ -11723,11 +11864,11 @@ abi_gen_memcpy_instruction_12:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC99(%rip), %rax
+    leaq .LC110(%rip), %rax
     movq %rax, -32(%rbp)
-    leaq .LC100(%rip), %rax
+    leaq .LC111(%rip), %rax
     movq %rax, -40(%rbp)
-    leaq .LC101(%rip), %rax
+    leaq .LC112(%rip), %rax
     movq %rax, -48(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -56(%rbp)
@@ -11743,7 +11884,7 @@ abi_gen_memcpy_instruction_12:
     movq -56(%rbp), %rax
     addq -64(%rbp), %rax
     movq %rax, -56(%rbp)
-    leaq .LC102(%rip), %rax
+    leaq .LC113(%rip), %rax
     movq %rax, -64(%rbp)
     subq $8, %rsp
     movq -24(%rbp), %rdi
@@ -11765,7 +11906,7 @@ abi_gen_memcpy_instruction_17:
     testl %eax, %eax
     jz abi_gen_memcpy_instruction_19
 abi_gen_memcpy_instruction_18:
-    leaq .LC103(%rip), %rax
+    leaq .LC114(%rip), %rax
     movq %rax, -24(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -11785,7 +11926,7 @@ abi_gen_memcpy_instruction_20:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC104(%rip), %rax
+    leaq .LC115(%rip), %rax
     movq %rax, -32(%rbp)
     leaq -16(%rbp), %rax
     movq %rax, -40(%rbp)
@@ -11811,7 +11952,7 @@ abi_gen_memcpy_instruction_20:
     movq -24(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -24(%rbp)
-    leaq .LC105(%rip), %rax
+    leaq .LC116(%rip), %rax
     movq %rax, -32(%rbp)
     subq $184, %rsp
     movq -24(%rbp), %rdi

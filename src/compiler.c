@@ -231,8 +231,8 @@ int compile(Compiler *compiler) {
 
     array_free(&sema_ctx.i_array);
 
-    set_log_stage(STAGE_IR);
     generate_types();
+    set_log_stage(STAGE_IR);
     lower_nodes(&compiler->nm);
 
     IR_Context ctx = ir_init_ctx(&compiler->p);
@@ -253,6 +253,7 @@ int compile(Compiler *compiler) {
         print_ir_module(&ctx, module);
         printf("\n");
     }
+
     if (has_flag(CF_DEBUG_SYMBOLS)) {
         printf("---- Symbols ----\n");
         for (int i = 0; i < ctx.symbol_table->count; i++) {
@@ -260,6 +261,7 @@ int compile(Compiler *compiler) {
             print("%t %s\n", s->type, s->name);
         }
     }
+
     if (has_flag(CF_STOP_AFTER_IR)) return 1;
 
     set_log_stage(STAGE_X86_GEN);

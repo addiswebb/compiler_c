@@ -128,4 +128,7 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     if (__builtin_expect(!(cond), 0)) PANIC(fmt, ##__VA_ARGS__)
 #endif
 
+#define ASSERT_DB(cond, fmt, ...)                                                                                                          \
+    if (!(cond)) PANIC("[" #fmt "]" fmt, ##__VA_ARGS__)
+
 #endif // COMPILER_C_LOGGER_H

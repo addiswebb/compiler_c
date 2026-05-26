@@ -683,6 +683,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
             PANIC("Recieved an unexpected thing\n");
         }
     }
+
     return module;
 }
 
