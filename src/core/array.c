@@ -87,6 +87,7 @@ void ptr_array_free(Array *arr) {
 }
 
 void array_free(Array *arr) {
+    arr->capacity = 0;
     free(arr->data);
     arr->data = NULL;
 }

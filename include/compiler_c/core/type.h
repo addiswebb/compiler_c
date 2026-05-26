@@ -144,6 +144,7 @@ typedef enum {
     CONST_ARRAY,
     CONST_LABEL,
     CONST_REFERENCE,
+    CONST_ZERO,
 } ConstLiteralKind;
 
 typedef struct {
@@ -162,6 +163,7 @@ typedef struct {
             Symbol *symbol;
             int offset;
         } ref;
+        int zero_bytes;
     };
 } ConstLiteral;
 

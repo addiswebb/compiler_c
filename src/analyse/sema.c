@@ -361,18 +361,8 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         node->var_decl.identifier->identifier.symbol = var_symbol;
 
         if (!node->var_decl.expr) break;
-        if (node->var_decl.expr->kind == N_INIT_LIST) {
-            node->var_decl.expr->type = node->type;
-            semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
-            if (node->var_decl.is_global) {
-                ConstLiteral init_list = evaluate_const_expression(node->var_decl.expr);
-                node->var_decl.const_expr = malloc(sizeof(ConstLiteral));
-                ASSERT(node->var_decl.const_expr, "Failed to allocate for const expr");
-                *node->var_decl.const_expr = init_list;
-            }
-            Node *init_list = node->var_decl.expr;
-            break;
-        }
+        if (node->var_decl.expr->kind == N_INIT_LIST) node->var_decl.expr->type = node->type;
+
         semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
         if (node->var_decl.expr->kind == N_LITERAL && node->var_decl.expr->literal.kind == L_STRING) {
             if (node->var_decl.expr->literal.kind == L_STRING) {
@@ -635,11 +625,11 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                     printf("\n");
                     exit(1);
                 }
-                UnionMember *member = get_union_member_named(node->type, e->designated_init._union.name);
+                UnionMember *member = get_union_member_named(node->type, e->designator._union.name);
                 target_type = member->type;
                 e->type = target_type;
-                e->designated_init._union.member = member;
-                value = e->designated_init.value;
+                e->designator._union.member = member;
+                value = e->designator.value;
             }
             semantic_analysis(sema_ctx, p, nm, value);
 
@@ -670,21 +660,21 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 StructMember *member = NULL;
                 if (is_array) {
                     if (is_designator) {
-                        if (!e->designated_init._array.is_complete) {
-                            semantic_analysis(sema_ctx, p, nm, e->designated_init._array.const_expr);
-                            e->designated_init._array.index = evaluate_const_expression(e->designated_init._array.const_expr).i;
+                        if (!e->designator._array.is_complete) {
+                            semantic_analysis(sema_ctx, p, nm, e->designator._array.const_expr);
+                            e->designator._array.index = evaluate_const_expression(e->designator._array.const_expr).i;
                         }
-                        index = e->designated_init._array.index;
+                        index = e->designator._array.index;
                         if (node->type->_array.array_len == -1) {
                             infered_length = infered_length > index + 1 ? infered_length : index + 1;
                         }
                     }
                 } else
-                    member = is_designator ? get_struct_member_named(node->type, e->designated_init._struct.name, &index)
+                    member = is_designator ? get_struct_member_named(node->type, e->designator._struct.name, &index)
                                            : get_struct_member(node->type, index);
 
                 Type *target_type = is_array ? node->type->base : member->type;
-                Node *value = is_designator ? e->designated_init.value : e;
+                Node *value = is_designator ? e->designator.value : e;
 
                 if (value->kind == N_INIT_LIST) value->type = target_type;
 
@@ -693,19 +683,19 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                     Node *de = new_node(nm, N_DESIGNATOR);
 
                     if (is_array) {
-                        de->designated_init._array.index = index;
-                    } else de->designated_init._struct.name = member->name;
+                        de->designator._array.index = index;
+                    } else de->designator._struct.name = member->name;
 
-                    de->designated_init.value = e;
+                    de->designator.value = e;
                     set_node(&node->init_list.elements_array, &de, i);
                     e = de;
                 }
-                e->designated_init.kind = is_array ? T_ARRAY : T_STRUCT;
+                e->designator.kind = is_array ? T_ARRAY : T_STRUCT;
                 e->type = target_type;
 
-                if (is_array) e->designated_init._array.index = index;
-                else e->designated_init._struct.member = member;
-                if (value->type != target_type) e->designated_init.value = cast_node(nm, value, target_type);
+                if (is_array) e->designator._array.index = index;
+                else e->designator._struct.member = member;
+                if (value->type != target_type) e->designator.value = cast_node(nm, value, target_type);
 
                 index++;
             }

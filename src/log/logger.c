@@ -33,6 +33,9 @@ void vprint(const char *fmt, va_list ap) {
             case 's':
                 printf("%s", va_arg(ap, char *));
                 break;
+            case 'p':
+                printf("%p", va_arg(ap, void *));
+                break;
             case 'c':
                 char c = va_arg(ap, int);
                 putchar(c);

@@ -422,9 +422,9 @@ void print_node(const Node *node, const int depth) {
         print_node(node->compound_literal.value, depth + 1);
         break;
     case N_DESIGNATOR:
-        if (node->designated_init.kind == T_ARRAY) printf(": [index= %d]\n", node->designated_init._array.index);
-        else printf(": [name= %s]\n", node->designated_init._struct.name);
-        print_node(node->designated_init.value, depth + 1);
+        if (node->designator.kind == T_ARRAY) printf(": [index= %d]\n", node->designator._array.index);
+        else printf(": [name= %s]\n", node->designator._struct.name);
+        print_node(node->designator.value, depth + 1);
         break;
     case N_BUILTIN:
         printf(": [name= %s, param_count= %d]\n", builtin_names[node->_builtin.kind], node->_builtin.params.count);
@@ -469,9 +469,9 @@ void free_node(Node *node) {
         array_free(&node->compound.items_array);
         break;
     case N_VAR_DECL:
+        if (node->var_decl.is_global) free_const_literal(node->var_decl.const_expr);
         free_node(node->var_decl.identifier);
         node->var_decl.identifier = NULL;
-        if (node->var_decl.is_global) free_const_literal(node->var_decl.const_expr);
         node->var_decl.const_expr = NULL;
         free_node(node->var_decl.expr);
         node->var_decl.expr = NULL;
@@ -592,22 +592,22 @@ void free_node(Node *node) {
         node->compound_literal.value = NULL;
         break;
     case N_DESIGNATOR:
-        switch (node->designated_init.kind) {
+        switch (node->designator.kind) {
         case T_ARRAY:
             break;
         case T_STRUCT:
-            node->designated_init._struct.name = NULL;
-            node->designated_init._struct.member = NULL;
+            node->designator._struct.name = NULL;
+            node->designator._struct.member = NULL;
             break;
         case T_UNION:
-            node->designated_init._union.name = NULL;
-            node->designated_init._union.member = NULL;
+            node->designator._union.name = NULL;
+            node->designator._union.member = NULL;
             break;
         default:
             break;
         }
-        free_node(node->designated_init.value);
-        node->designated_init.value = NULL;
+        free_node(node->designator.value);
+        node->designator.value = NULL;
         break;
     case N_BUILTIN:
         for (int i = 0; i < node->_builtin.params.count; i++) {

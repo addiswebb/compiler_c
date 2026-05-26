@@ -662,6 +662,9 @@ void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
         if (c->ref.offset) fprintf(fp, " + %d", c->ref.offset);
         fprintf(fp, "\n");
         return;
+    case CONST_ZERO:
+        fprintf(fp, "    .zero %d\n", c->zero_bytes);
+        return;
     }
     PANIC("Tried to emit invalid const literal\n");
 }

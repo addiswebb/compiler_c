@@ -5,6 +5,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// extern void *free_check;
+// #define free(ptr) \
+//     do { \
+//         if (free_check && ptr == free_check) PANIC("Double free %p\n", ptr); \
+//         free(ptr); \
+//     } while (0)
+
 typedef enum {
     LOG_DEBUG,
     LOG_INFO,

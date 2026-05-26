@@ -421,10 +421,10 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, Node *l) {
         int offset = 0;
         if (e->kind == N_DESIGNATOR) {
             if (l->type->kind == T_ARRAY) {
-                ctx->init_ctx.index = e->designated_init._array.index;
+                ctx->init_ctx.index = e->designator._array.index;
                 offset = ctx->init_ctx.index * l->type->base->size;
             } else {
-                AggrMember *m = get_member(l->type, e->designated_init._struct.name, true, &offset, &ctx->init_ctx.index);
+                AggrMember *m = get_member(l->type, e->designator._struct.name, true, &offset, &ctx->init_ctx.index);
             }
         } else {
             if (l->type->kind == T_ARRAY) {
@@ -437,7 +437,7 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, Node *l) {
         ctx->init_ctx.offset = start_offset + offset;
         initialized[ctx->init_ctx.index] = true;
 
-        ir_gen_initializer(ctx, dst, e->kind == N_DESIGNATOR ? e->designated_init.value : e);
+        ir_gen_initializer(ctx, dst, e->kind == N_DESIGNATOR ? e->designator.value : e);
         ctx->init_ctx.index++;
     }
     if (l->type->kind == T_UNION) len = 0;

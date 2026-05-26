@@ -1,3 +1,4 @@
+#include "compiler_c/core/arena.h"
 #ifdef __linux__
 
 #include "../libc/stdbool.h"
@@ -112,11 +113,7 @@ ABI_Result abi_classify(Type *type) {
     case T_UNION:
         return classify_union(type);
     default:
-        log_start(LOG_ERROR);
-        printf("Classification failed on ");
-        print_type(type);
-        printf("\n");
-        exit(1);
+        PANIC("Classification failed on %t\n", type);
     }
 }
 IR_Value abi_lower_param_register(Type *type, int i) {
@@ -478,19 +475,16 @@ void abi_func_type_gen(Type *type) {
     if (abi_type->_func.return_type->kind == T_STRUCT) {
         ABI_Result res = abi_classify(type->_func.return_type);
         if (res.memory) {
-            printf("2.1.1\n");
             set_sret(type->_func.return_type);
             Symbol *_sret = current_sret();
             insert(&abi_type->_func.params,
                    &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = _sret->name, .symbol = _sret}, 0);
             abi_type->_func.return_type = type_void;
         } else {
-            printf("2.1.2\n");
             compiler_flags |= FLAG(CF_DEBUG_STRUCT);
             ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Not handling tuple return type %t\n", type->_func.return_type);
             abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
         }
-        printf("2.2\n");
     }
     if (abi_type->_func.return_type->kind == T_ENUM) abi_type->_func.return_type = type_i32;
     for (int i = 0; i < abi_type->_func.params.count; i++) {

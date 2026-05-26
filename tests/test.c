@@ -1,3 +1,32 @@
+typedef struct Array {
+    int count;
+    int capacity;
+    int element_size;
+    void *data;
+} Array;
+void array_init(Array *arr, int initial_capacity, int element_size);
+void array_free(Array *arr);
+void ptr_array_free(Array *arr);
+void *append(Array *arr, const void *element);
+void *insert(Array *arr, const void *element, int index);
+void pop(Array *arr);
+void array_str_cpy(Array *arr, const char *str);
+void array_str_catn(Array *arr, const char *str, int n);
+void *get(const Array *arr, int index);
+void set(const Array *arr, const void *element, int index);
+typedef struct {
+    Array blocks;
+    int element_size;
+    int block_capacity;
+    int count;
+} Arena;
+void arena_init(Arena *arena, int block_size, int element_size);
+static void arena_add_block(Arena *arena);
+void arena_free(Arena *arena);
+void *arena_append(Arena *arena, const void *element);
+Array *arena_get_block(const Arena *arena, int index);
+void *arena_get(const Arena *arena, int index);
+void arena_set(Arena *arena, const void *element, int index);
 typedef enum{
     RAX, RBX, RCX, RDX,
     RSI, RDI,
@@ -45,35 +74,6 @@ struct PhysReg{
     };
 };
 RegSize reg_size(int size);
-typedef struct Array {
-    int count;
-    int capacity;
-    int element_size;
-    void *data;
-} Array;
-void array_init(Array *arr, int initial_capacity, int element_size);
-void array_free(Array *arr);
-void ptr_array_free(Array *arr);
-void *append(Array *arr, const void *element);
-void *insert(Array *arr, const void *element, int index);
-void pop(Array *arr);
-void array_str_cpy(Array *arr, const char *str);
-void array_str_catn(Array *arr, const char *str, int n);
-void *get(const Array *arr, int index);
-void set(const Array *arr, const void *element, int index);
-typedef struct {
-    Array blocks;
-    int element_size;
-    int block_capacity;
-    int count;
-} Arena;
-void arena_init(Arena *arena, int block_size, int element_size);
-static void arena_add_block(Arena *arena);
-void arena_free(Arena *arena);
-void *arena_append(Arena *arena, const void *element);
-Array *arena_get_block(const Arena *arena, int index);
-void *arena_get(const Arena *arena, int index);
-void arena_set(Arena *arena, const void *element, int index);
 typedef char int8_t;
 typedef short int16_t;
 typedef int int32_t;
@@ -194,6 +194,7 @@ typedef enum {
     CONST_ARRAY,
     CONST_LABEL,
     CONST_REFERENCE,
+    CONST_ZERO,
 } ConstLiteralKind;
 typedef struct {
     Type *type;
@@ -211,6 +212,7 @@ typedef struct {
             Symbol *symbol;
             int offset;
         } ref;
+        int zero_bytes;
     };
 } ConstLiteral;
 extern Type *type_i8;
@@ -615,7 +617,7 @@ struct Node {
                 } _union;
             };
             Node *value;
-        } designated_init;
+        } designator;
         struct {
             BuiltinKind kind;
             Array params;
@@ -1804,51 +1806,38 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_rx(fp, "mov", x86_op_suffix(t), "", x86_rax_reg(t), &instr->ops[0]);
 }
 void abi_func_type_gen(Type *type) {
-    printf("1\n");
     if (!(type->kind == T_FUNCTION)) do { log_message(LOG_ERROR, "Invalid Func Type\n"); exit(1); } while (0);
     Type *abi_type = new_type();
     memcpy(abi_type, type, sizeof(Type));
     array_init(&abi_type->_func.params, type->_func.params.capacity, type->_func.params.element_size);
     memcpy(abi_type->_func.params.data, type->_func.params.data, type->_func.params.count * type->_func.params.element_size);
     abi_type->_func.params.count = type->_func.params.count;
-    printf("2\n");
     type->abi.fp_count = 0;
     type->abi.gp_count = 0;
     if (abi_type->_func.return_type->kind == T_STRUCT) {
-        printf("2.1\n");
         ABI_Result res = abi_classify(type->_func.return_type);
         if (res.memory) {
-            printf("2.1.1\n");
             set_sret(type->_func.return_type);
             Symbol *_sret = current_sret();
             insert(&abi_type->_func.params,
                    &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = _sret->name, .symbol = _sret}, 0);
             abi_type->_func.return_type = type_void;
         } else {
-            printf("2.1.2\n");
             compiler_flags |= (1u << CF_DEBUG_STRUCT);
             if (!(res.class[1] == ABI_NO_CLASS)) do { log_message(LOG_ERROR, "[SysV] Not handling tuple return type %t\n", type->_func.return_type); exit(1); } while (0);
             abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
         }
-        printf("2.2\n");
     }
-    printf("3\n");
     if (abi_type->_func.return_type->kind == T_ENUM) abi_type->_func.return_type = type_i32;
-    printf("4\n");
     for (int i = 0; i < abi_type->_func.params.count; i++) {
-        printf("4.1\n");
         ParamDecl *d = get(&abi_type->_func.params, i);
         ABI_Result res = abi_classify(d->type);
         if (!res.memory) {
-            printf("4.1.1\n");
             if (d->type->kind == T_FLOAT && type->abi.fp_count < 8) type->abi.fp_count++;
             else if (type->abi.gp_count < 6) type->abi.gp_count++;
         }
-        printf("4.2\n");
     }
-    printf("5\n");
     type->abi.type = abi_type;
-    printf("6\n");
 }
 void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) {
     switch (instr->ops[0].kind) {

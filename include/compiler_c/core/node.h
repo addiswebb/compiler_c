@@ -242,7 +242,7 @@ struct Node {
                 } _union;
             };
             Node *value;
-        } designated_init;
+        } designator;
         struct {
             BuiltinKind kind;
             Array params;
