@@ -161,10 +161,15 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
 
         IR_Value val;
         ABI_Result res = abi_classify(arg_type);
+        // #ifdef _WIN64
         if (res.memory) val = ir_gen_lvalue(ctx, param);
         else if (param->type->kind == T_FUNCTION || is_func_ptr(param->type)) val = ir_gen_lvalue(ctx, param);
         // else if (is_func_ptr(param->type)) val = ir_gen_rvalue(ctx, param);
         else val = ir_gen_rvalue(ctx, param);
+        // #else
+        //         if (param->type->kind == T_FUNCTION || is_func_ptr(param->type)) val = ir_gen_lvalue(ctx, param);
+        //         else val = ir_gen_rvalue(ctx, param);
+        // #endif
         append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg_type});
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);

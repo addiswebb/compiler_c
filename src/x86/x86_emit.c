@@ -207,8 +207,11 @@ const char *x86_integer_op_suffix(int size) {
 }
 const char *x86_op_suffix(const Type *t) {
     if (t->kind == T_FLOAT) return x86_float_op_suffix(t->size);
-    if (t->kind == T_INT || t->kind == T_ENUM) return x86_integer_op_suffix(t->size);
-    if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "q";
+    if (t->kind == T_INT || t->kind == T_ENUM || t->kind == T_POINTER) return x86_integer_op_suffix(t->size);
+    if (t->kind == T_ARRAY) return "q";
+    // TODO investigate if function actually needed?
+    WARN("T_FUNCTION Was needed\n");
+    if (t->kind == T_ARRAY || t->kind == T_FUNCTION) return "q";
     PANIC("Tried to op of unsupported type\n");
 }
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { abi_emit_call(fp, ctx, instr); }

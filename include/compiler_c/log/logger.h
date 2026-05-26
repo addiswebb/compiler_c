@@ -37,7 +37,8 @@ extern Logger logger;
 #define exit_bp() exit(1)
 #else
 // extern void exit_bp() __THROW __attribute__((__noreturn__));
-static inline void exit_bp() { exit(1); }
+
+__attribute__((noreturn)) static inline void exit_bp() { exit(1); }
 #define PRINTCC(s) ((void)0)
 #endif
 

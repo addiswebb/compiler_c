@@ -790,6 +790,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             Node *type_info = get_node(&node->_builtin.params, 1);
             semantic_analysis(sema_ctx, p, nm, dst_ap);
             semantic_analysis(sema_ctx, p, nm, type_info);
+            if (dst_ap->type->kind == T_ARRAY) {
+                dst_ap = cast_node(nm, dst_ap, get_pointer_type(dst_ap->type->base));
+            }
             ASSERT(is_va_list_type(dst_ap->type), "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]);
             ASSERT(type_info->kind == N_TYPE && type_info->type != type_invalid, "%s expects a type as second arg.",
                    builtin_names[node->_builtin.kind]);

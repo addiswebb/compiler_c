@@ -5,31 +5,39 @@
 main:
     push %rbp
     mov %rsp, %rbp
-    subq $72, %rsp
+    subq $56, %rsp
 main_0:
     leaq -40(%rbp), %rax
     movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     movq $1, %rcx
     movq %rcx, (%rax)
+    leaq -40(%rbp), %rax
+    movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
     movq $2, %rcx
     movq %rcx, (%rax)
+    leaq -40(%rbp), %rax
+    movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     addq $16, %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
     movq $3, %rcx
     movq %rcx, (%rax)
+    leaq -40(%rbp), %rax
+    movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     addq $24, %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
+    movq %rax, -48(%rbp)
+    movq -48(%rbp), %rax
     movq $4, %rcx
     movq %rcx, (%rax)
+    leaq -40(%rbp), %rax
+    movq %rax, -48(%rbp)
     movq -48(%rbp), %rax
     addq $32, %rax
     movq %rax, -48(%rbp)
@@ -38,10 +46,13 @@ main_0:
     movq %rcx, (%rax)
     leaq -40(%rbp), %rax
     movq %rax, -48(%rbp)
-    subq $8, %rsp
-    movq -48(%rbp), %rdi
+    subq $40, %rsp
+    movq -48(%rbp), %rsi
+    leaq 0(%rsp), %rdi
+    movq $40, %rdx
+    call memcpy
     call foo
-    addq $8, %rsp
+    addq $40, %rsp
     movl %eax, -48(%rbp)
     movl -48(%rbp), %eax
     mov %rbp, %rsp

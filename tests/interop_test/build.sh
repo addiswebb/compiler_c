@@ -37,8 +37,12 @@ echo "[4/5] Linking → a.out"
 gcc "$BASE1.o" "$BASE2.o" -o "a.out"
 
 echo "[5/5] Running a.out"
-./a.out
 
-echo "Exit Code: $?"
+set +e
+./a.out
+rc=$?
+set -e
+
+echo "Exit Code: $rc"
 
 echo "Done."

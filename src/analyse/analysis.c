@@ -426,12 +426,17 @@ void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *fr
         append(symbol_slots, &(RegisterSlot){.v = ir_symbol_value(global_symbol), .free_at = -1});
         append(symbol_map, &global_symbol);
     }
-
+    int stack_spilled = f->type->abi.type->_func.params.count - f->type->abi.gp_count - f->type->abi.fp_count;
+    int stack_offset = 16;
     for (int i = 0; i < f->locals_array.count; i++) {
         Symbol *local_symbol = get_local_symbol(f, i);
         int size = align(local_symbol->type->size, 8);
         // Todo track scopes on symbols, so that we can reuse slots for symbols aswell, (instead of '-1' currently)
         int offset = -(*frame_size) - size;
+        if (i < stack_spilled) {
+            offset = stack_offset;
+            stack_offset += size;
+        }
 
         append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
         append(symbol_map, &local_symbol);

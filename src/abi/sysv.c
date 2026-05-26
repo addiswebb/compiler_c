@@ -129,7 +129,9 @@ IR_Value abi_lower_param_register(Type *type, int i) {
 
 // Does not check members, only space
 // TODO: Check members also maybe?
-bool is_va_list_type(Type *type) { return type->kind == T_STRUCT && type->size == 24; }
+bool is_va_list_type(Type *type) {
+    return (type->kind == T_ARRAY || type->kind == T_POINTER) && type->base->kind == T_STRUCT && type->base->size == 24;
+}
 
 void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     if (instr->store.type->kind == T_STRUCT) {
@@ -151,25 +153,25 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i,
 
     if (instr->param.type->kind == T_STRUCT) {
         if (res.memory) {
-            IR_Value hidden_ptr = (IR_Value){.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
-            f->max_reg++;
-            IR_Value s_addr = (IR_Value){.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
-            f->max_reg++;
-            IR_Instruction param_instr = {.op = IR_PARAM,
-                                          .op_count = 2,
-                                          .ops = {[0] = hidden_ptr, [1] = instr->ops[1]},
-                                          .param = {.param_index = -1, .type = get_pointer_type(instr->param.type)}};
-            IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = s_addr, [1] = instr->ops[0]}};
-            IR_Instruction memcpy = {
-                .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = s_addr, [1] = hidden_ptr}, .memcpy = {.size = instr->param.type->size}};
+            // IR_Value hidden_ptr = (IR_Value){.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
+            // f->max_reg++;
+            // IR_Value s_addr = (IR_Value){.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
+            // f->max_reg++;
+            // IR_Instruction param_instr = {.op = IR_PARAM,
+            //                               .op_count = 2,
+            //                               .ops = {[0] = hidden_ptr, [1] = instr->ops[1]},
+            //                               .param = {.param_index = -1, .type = get_pointer_type(instr->param.type)}};
+            // IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = s_addr, [1] = instr->ops[0]}};
+            // IR_Instruction memcpy = {
+            //     .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = s_addr, [1] = hidden_ptr}, .memcpy = {.size = instr->param.type->size}};
 
-            set(&b->instruction_array, &param_instr, param_index);
-            insert(&b->instruction_array, &addr, *param_cursor);
-            (*i)++;
-            (*param_cursor)++;
-            insert(&b->instruction_array, &memcpy, *param_cursor);
-            (*i)++;
-            (*param_cursor)++;
+            // set(&b->instruction_array, &param_instr, param_index);
+            // insert(&b->instruction_array, &addr, *param_cursor);
+            // (*i)++;
+            // (*param_cursor)++;
+            // insert(&b->instruction_array, &memcpy, *param_cursor);
+            // (*i)++;
+            // (*param_cursor)++;
         } else {
             instr->param.type = type->kind == T_FLOAT ? get_float_type(instr->param.type->size) : get_integer_type(instr->param.type->size);
             ASSERT(res.class[1] == ABI_NO_CLASS, "Structs sized [8 < size <= 16] are not handled yet\n");
@@ -226,7 +228,8 @@ IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
     }
     case BUILTIN_VA_ARG: {
         Node *ap_node = get_node(&expr->_builtin.params, 0);
-        IR_Value ap_addr = ir_gen_lvalue(ctx, ap_node);
+        // IR_Value ap_addr = ir_gen_lvalue(ctx, ap_node);
+        IR_Value ap_addr = ir_gen_rvalue(ctx, ap_node);
         Type *arg_type = get_node(&expr->_builtin.params, 1)->type;
         if (arg_type->kind == T_FLOAT)
             ap_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr, ir_integer_literal(4), type_u32);
@@ -337,56 +340,82 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
     }
 }
 
+Type *to_arg_type(Type *t, ABI_Result *res) {
+    switch (t->kind) {
+    case T_INT:
+    case T_FLOAT:
+    case T_POINTER:
+    case T_ENUM:
+        return t;
+    case T_ARRAY:
+    case T_STRUCT:
+    case T_UNION:
+        if (res->memory) return t;
+        else return res->class[0] == ABI_INTEGER ? type_i64 : type_f64;
+    default:
+        PANIC("Invalid arg type %t\n", t);
+    }
+}
+
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     Type *t = instr->call.type->abi.type->_func.return_type;
 
     int gp_index = 0;
     int sse_index = 0;
 
+    const int variadic_space = instr->call.type->_func.is_variadic ? 176 : 0;
+    int param_frame_size = variadic_space;
     for (int i = 0; i < instr->call.arg_array.count; i++) {
         IR_CallArg *v = get_call_arg(instr, i);
-        if ((v->type->kind == T_INT || v->type->kind == T_POINTER) && gp_index < INTEGER_PARAM_REGISTERS) gp_index++;
-        if (v->type->kind == T_FLOAT && sse_index < FLOAT_PARAM_REGISTERS) sse_index++;
+        ABI_Result res = abi_classify(v->type);
+        if (res.class[0] == ABI_INTEGER && gp_index < INTEGER_PARAM_REGISTERS) gp_index++;
+        else if (res.class[0] == ABI_SSE && sse_index < FLOAT_PARAM_REGISTERS) sse_index++;
+        else if (res.memory) param_frame_size += v->type->size;
+        else param_frame_size += 8;
     }
-    const int spilled_count = instr->call.arg_array.count - (sse_index + gp_index);
+    param_frame_size |= 8; // = 16n + 8
     sse_index = 0;
     gp_index = 0;
-    const int variadic_space = instr->call.type->_func.is_variadic ? 176 : 0;
-    const int param_frame_size = (8 * spilled_count + variadic_space) | 8;
+    // const int param_frame_size = (8 * spilled_count + variadic_space) | 8;
     int param_offset = 0;
     if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
         IR_CallArg *v = get_call_arg(instr, i);
-        Type *arg_type = v->type;
-        if (arg_type->kind == T_STRUCT) {
-            ABI_Result res = abi_classify(arg_type);
-            if (res.memory) get_pointer_type(arg_type);
-            // else arg_type = res.class[0] == ABI_SSE ? get_float_type(arg_type->size) : get_integer_type(arg_type->size);
-            else arg_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
-        }
-        const char *suffix = x86_op_suffix(arg_type);
+        ABI_Result res = abi_classify(v->type);
+        Type *arg_type = to_arg_type(v->type, &res);
+
         switch (arg_type->kind) {
         case T_INT:
         case T_ENUM:
         case T_POINTER:
+            const char *gp_suffix = x86_op_suffix(arg_type);
             if (gp_index < INTEGER_PARAM_REGISTERS) {
-                x86_emit_xr(fp, "mov", x86_op_suffix(arg_type), "", &v->v,
-                            gp_register_str[int_param_regs[gp_index++]][reg_size(arg_type->size)]);
+                x86_emit_xr(fp, "mov", gp_suffix, "", &v->v, gp_register_str[int_param_regs[gp_index++]][reg_size(arg_type->size)]);
             } else {
                 const char *reg = x86_rax_reg(arg_type);
-                x86_emit_xr(fp, "mov", x86_op_suffix(arg_type), "", &v->v, reg);
-                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", x86_op_suffix(arg_type), reg, param_offset);
+                x86_emit_xr(fp, "mov", gp_suffix, "", &v->v, reg);
+                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", gp_suffix, reg, param_offset);
                 param_offset += 8;
             }
             break;
         case T_FLOAT:
+            const char *sse_suffix = x86_op_suffix(arg_type);
             if (sse_index < FLOAT_PARAM_REGISTERS) {
-                x86_emit_xr(fp, "mov", suffix, "", &v->v, sse_register_str[float_param_regs[sse_index++]]);
+                x86_emit_xr(fp, "mov", sse_suffix, "", &v->v, sse_register_str[float_param_regs[sse_index++]]);
             } else {
-                x86_emit_xr(fp, "mov", suffix, "", &v->v, sse_register_str[XMM0]);
-                fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", suffix, param_offset);
+                x86_emit_xr(fp, "mov", sse_suffix, "", &v->v, sse_register_str[XMM0]);
+                fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", sse_suffix, param_offset);
                 param_offset += 8;
             }
+            break;
+        case T_STRUCT:
+        case T_UNION:
+            ASSERT(res.memory, "Arg type should have been converted by gp/sse class %t\n", arg_type);
+            x86_emit_xr(fp, "mov", "q", "", &v->v, "%rsi");
+            fprintf(fp, "    leaq %d(%%rsp), %%rdi\n", param_offset);
+            fprintf(fp, "    movq $%d, %%rdx\n", arg_type->size);
+            fprintf(fp, "    call memcpy\n");
+            param_offset += arg_type->size;
             break;
         default:
             PANIC("Tried to emit call arg for unsupported type\n");
@@ -438,11 +467,11 @@ void abi_func_type_gen(Type *type) {
     if (abi_type->_func.return_type->kind == T_ENUM) abi_type->_func.return_type = type_i32;
     for (int i = 0; i < abi_type->_func.params.count; i++) {
         ParamDecl *d = get(&abi_type->_func.params, i);
-        if (d->type->kind == T_FLOAT && type->abi.fp_count < FLOAT_PARAM_REGISTERS) type->abi.fp_count++;
-        else if (type->abi.gp_count < INTEGER_PARAM_REGISTERS) type->abi.gp_count++;
         ABI_Result res = abi_classify(d->type);
-        if (res.memory) {
-            d->type = get_pointer_type(d->type);
+        //  MEMORY class args are placed in callee stackframe by caller (never actually passed)
+        if (!res.memory) {
+            if (d->type->kind == T_FLOAT && type->abi.fp_count < FLOAT_PARAM_REGISTERS) type->abi.fp_count++;
+            else if (type->abi.gp_count < INTEGER_PARAM_REGISTERS) type->abi.gp_count++;
         }
     }
     type->abi.type = abi_type;
@@ -470,12 +499,13 @@ void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) {
 }
 void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
-    switch (instr->ops[1].kind) {
+
+    switch (instr->ops[0].kind) {
     case IR_CONSTANT:
-        x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rsi");
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rdi");
         break;
     case IR_PHYS_REG:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rsi");
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rdi");
         break;
     case IR_SYMBOL:
     case IR_INT_LITERAL:
@@ -484,12 +514,12 @@ void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
         PANIC("Sanity check failed\n");
     }
 
-    switch (instr->ops[0].kind) {
+    switch (instr->ops[1].kind) {
     case IR_CONSTANT:
-        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rdi");
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rsi");
         break;
     case IR_PHYS_REG:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rdi");
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rsi");
         break;
     case IR_SYMBOL:
     case IR_INT_LITERAL:
