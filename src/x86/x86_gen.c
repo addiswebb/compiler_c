@@ -128,7 +128,7 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         x86_emit_rx(fp, "mov", "q", "", "%rcx", &instr->ops[0]);
         break;
     case IR_PARAM:
-        ASSERT(instr->op_count == 2, "Param instruction not correctly lowered\n");
+        if (instr->op_count == 1) break;
         if (instr->param.type->size > 8) break;
         if (!memcmp(&instr->ops[0], &instr->ops[1], sizeof(IR_Value))) break;
         const char *param_op_suffix = x86_op_suffix(instr->param.type);

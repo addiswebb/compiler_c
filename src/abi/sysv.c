@@ -2,6 +2,7 @@
 #include "compiler_c/compiler.h"
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
+#include "compiler_c/parse/parser.h"
 #include <stdio.h>
 #ifdef __linux__
 
@@ -64,6 +65,19 @@ ABI_TypeClass merge(ABI_TypeClass a, ABI_TypeClass b) {
     if (a == ABI_SSE && b == ABI_SSE) return ABI_SSE;
     PANIC("Invalid classification merge\n");
 }
+ABI_Result classify_union(Type *type) {
+    if (type->size > 16) return (ABI_Result){.memory = true};
+    ABI_Result res = {.class = {ABI_NO_CLASS, ABI_NO_CLASS}, .memory = false};
+    for (int i = 0; i < type->_union.members_array.count; i++) {
+        UnionMember *m = get_union_member(type, i);
+        ABI_Result field_res = abi_classify(m->type);
+        if (field_res.memory) return field_res;
+        for (int j = 0; j <= 2; j++) {
+            res.class[j] = merge(res.class[j], field_res.class[j]);
+        }
+    }
+    return res;
+}
 ABI_Result classify_struct(Type *type) {
     if (type->size > 16) return (ABI_Result){.memory = true};
     ABI_Result res = {.class = {ABI_NO_CLASS, ABI_NO_CLASS}, .memory = false};
@@ -99,6 +113,8 @@ ABI_Result abi_classify(Type *type) {
         return (ABI_Result){.class = {ABI_SSE, ABI_NO_CLASS}, 0};
     case T_STRUCT:
         return classify_struct(type);
+    case T_UNION:
+        return classify_union(type);
     default:
         log_start(LOG_ERROR);
         printf("Classification failed on ");
@@ -153,25 +169,7 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i,
 
     if (instr->param.type->kind == T_STRUCT) {
         if (res.memory) {
-            // IR_Value hidden_ptr = (IR_Value){.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
-            // f->max_reg++;
-            // IR_Value s_addr = (IR_Value){.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
-            // f->max_reg++;
-            // IR_Instruction param_instr = {.op = IR_PARAM,
-            //                               .op_count = 2,
-            //                               .ops = {[0] = hidden_ptr, [1] = instr->ops[1]},
-            //                               .param = {.param_index = -1, .type = get_pointer_type(instr->param.type)}};
-            // IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = s_addr, [1] = instr->ops[0]}};
-            // IR_Instruction memcpy = {
-            //     .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = s_addr, [1] = hidden_ptr}, .memcpy = {.size = instr->param.type->size}};
-
-            // set(&b->instruction_array, &param_instr, param_index);
-            // insert(&b->instruction_array, &addr, *param_cursor);
-            // (*i)++;
-            // (*param_cursor)++;
-            // insert(&b->instruction_array, &memcpy, *param_cursor);
-            // (*i)++;
-            // (*param_cursor)++;
+            return;
         } else {
             instr->param.type = type->kind == T_FLOAT ? get_float_type(instr->param.type->size) : get_integer_type(instr->param.type->size);
             ASSERT(res.class[1] == ABI_NO_CLASS, "Structs sized [8 < size <= 16] are not handled yet\n");
@@ -292,11 +290,13 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
 
     int integers_emitted = hidde_ptr_offset;
     int floats_emitted = 0;
+    int spilled = 0;
     for (int i = 0; i < f->type->_func.params.count; i++) {
         ParamDecl *d = get(&f->type->_func.params, i);
         d->symbol->type = d->type;
+        ABI_Result res = abi_classify(d->type);
         append(&f->locals_array, &d->symbol);
-        const int param_index = d->type->kind == T_FLOAT ? floats_emitted++ : integers_emitted++;
+        const int param_index = res.memory ? --spilled : res.class[0] == ABI_SSE ? floats_emitted++ : integers_emitted++;
         ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
                                                      .op_count = 1,
                                                      .ops = {[0] = ir_symbol_value(d->symbol)},
@@ -357,6 +357,28 @@ Type *to_arg_type(Type *t, ABI_Result *res) {
     }
 }
 
+void builtin_memcpy(FILE *fp, IR_Value dst, IR_Value src, int size) {
+    IR_Value v_dst = ir_gp_register_value(R10);
+    IR_Value v_src = ir_gp_register_value(R11);
+    x86_emit_xx(fp, "mov", "q", "", &dst, &v_dst);
+    x86_emit_xx(fp, "mov", "q", "", &src, &v_src);
+    v_dst.phys_reg.data_kind = REG_DATA_OFFSET;
+    v_src.phys_reg.data_kind = REG_DATA_OFFSET;
+    int x = 8;
+    for (;;) {
+        if (size == 0 || x == 0) break;
+        if ((size / x) == 0) x /= 2;
+        const char *suffix = x86_integer_op_suffix(x);
+        const char *rax = x86_rax_reg(get_integer_type(x));
+        x86_emit_xr(fp, "mov", suffix, "", &v_src, rax);
+        x86_emit_rx(fp, "mov", suffix, "", rax, &v_dst);
+        v_src.phys_reg.offset += x;
+        v_dst.phys_reg.offset += x;
+        size -= x;
+    }
+    ASSERT(size == 0, "Didnt copy everything\n");
+}
+
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     Type *t = instr->call.type->abi.type->_func.return_type;
 
@@ -411,10 +433,21 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         case T_STRUCT:
         case T_UNION:
             ASSERT(res.memory, "Arg type should have been converted by gp/sse class %t\n", arg_type);
-            x86_emit_xr(fp, "mov", "q", "", &v->v, "%rsi");
-            fprintf(fp, "    leaq %d(%%rsp), %%rdi\n", param_offset);
-            fprintf(fp, "    movq $%d, %%rdx\n", arg_type->size);
-            fprintf(fp, "    call memcpy\n");
+            // x86_emit_xr(fp, "mov", "q", "", &v->v, "%rsi");
+            // fprintf(fp, "    leaq %d(%%rsp), %%rdi\n", param_offset);
+            // fprintf(fp, "    movq $%d, %%rdx\n", arg_type->size);
+            // fprintf(fp, "    call memcpy\n");
+            IR_Value dst = {.kind = IR_PHYS_REG,
+                            .size = 8,
+                            .align = 8,
+                            .phys_reg = (PhysReg){
+                                .kind = REG_GP,
+                                .gp_reg = RSP,
+                                .data_kind = REG_DATA_NONE,
+                                .size = REG_64,
+                            }};
+
+            builtin_memcpy(fp, dst, v->v, arg_type->size);
             param_offset += arg_type->size;
             break;
         default:

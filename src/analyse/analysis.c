@@ -354,6 +354,30 @@ IR_Value ir_gp_register(GP_Reg reg) {
                           .size = REG_64,
                       }};
 }
+
+IR_Value ir_gp_register_value(GP_Reg reg) {
+    return (IR_Value){.kind = IR_PHYS_REG,
+                      .size = 8,
+                      .align = 8,
+                      .phys_reg = (PhysReg){
+                          .kind = REG_GP,
+                          .gp_reg = reg,
+                          .data_kind = REG_DATA_NONE,
+                          .size = REG_64,
+                      }};
+}
+IR_Value ir_gp_register_offset_value(GP_Reg reg, int offset) {
+    return (IR_Value){.kind = IR_PHYS_REG,
+                      .size = 8,
+                      .align = 8,
+                      .phys_reg = (PhysReg){
+                          .kind = REG_GP,
+                          .gp_reg = reg,
+                          .data_kind = REG_DATA_OFFSET,
+                          .size = REG_64,
+                          .offset = offset,
+                      }};
+}
 IR_Value ir_stack_value(int size, int align, int offset) {
     return (IR_Value){.kind = IR_PHYS_REG,
                       .size = size,
@@ -426,21 +450,27 @@ void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *fr
         append(symbol_slots, &(RegisterSlot){.v = ir_symbol_value(global_symbol), .free_at = -1});
         append(symbol_map, &global_symbol);
     }
-    int stack_spilled = f->type->abi.type->_func.params.count - f->type->abi.gp_count - f->type->abi.fp_count;
     int stack_offset = 16;
+    int offset = 0;
+    int gp_count = 0;
+    int fp_count = 0;
     for (int i = 0; i < f->locals_array.count; i++) {
         Symbol *local_symbol = get_local_symbol(f, i);
+        ABI_Result res = abi_classify(local_symbol->type);
         int size = align(local_symbol->type->size, 8);
         // Todo track scopes on symbols, so that we can reuse slots for symbols aswell, (instead of '-1' currently)
-        int offset = -(*frame_size) - size;
-        if (i < stack_spilled) {
+        // TODO making selecting these MORE ROBUST!!
+        /*
+            Track if a symbol is an arg, and track if it is gp, fp, or spilled so i can set offset correctly and easily
+        */
+        offset = -(*frame_size) - size;
+        if (local_symbol->scope_depth == 1 && res.memory) {
             offset = stack_offset;
             stack_offset += size;
-        }
+        } else *frame_size += size;
 
         append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
         append(symbol_map, &local_symbol);
-        *frame_size += size;
     }
 }
 

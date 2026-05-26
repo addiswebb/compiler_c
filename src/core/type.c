@@ -263,14 +263,11 @@ Type *get_modified_type(Type *type, Declarator *decl) {
     if (decl->modifiers.count == 0) return type;
     for (int i = decl->modifiers.count - 1; i >= 0; i--) {
         Modifier *mod = (Modifier *)get(&decl->modifiers, i);
-        if (mod->kind == MOD_POINTER) {
-            type = get_pointer_type(type);
-        } else if (mod->kind == MOD_ARRAY) {
-            type = new_incomplete_array_type(type, mod->array_bounds);
-        } else if (mod->kind == MOD_FUNCTION) {
-            type = get_function_type(type, mod->function.params, mod->function.is_variadic);
-        }
+        if (mod->kind == MOD_POINTER) type = get_pointer_type(type);
+        else if (mod->kind == MOD_ARRAY) type = new_incomplete_array_type(type, mod->array_bounds);
+        else if (mod->kind == MOD_FUNCTION) type = get_function_type(type, mod->function.params, mod->function.is_variadic);
     }
+    printf("3\n");
     return type;
 }
 

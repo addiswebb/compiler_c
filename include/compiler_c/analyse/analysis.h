@@ -3,6 +3,8 @@
 
 #include "compiler_c/ir/ir_module.h"
 
+IR_Value ir_gp_register_value(GP_Reg reg);
+IR_Value ir_gp_register_offset_value(GP_Reg reg, int offset);
 IR_Value ir_stack_value(int size, int align, int offset);
 
 /*
@@ -54,7 +56,8 @@ void lower_ir_for_asm(IR_Function *f);
     Converts function param slots to physical registers or offsets.
     Converts virtual mem slots to physical stack slots.
 */
-void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots, const Array *symbol_map);
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
+                              const Array *symbol_map);
 /*
     Add a successor block to the given `from` block.
 */
@@ -81,7 +84,6 @@ int cmp_lifetime(const void *a, const void *b);
     In the case where no stack slots are availible, or are unsuitable/too small, a new stack slot is added.
 */
 void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size);
-
 
 void bitset_init(BitSet *s, int reg_count);
 void bitset_expand(BitSet *s);

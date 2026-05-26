@@ -1,7 +1,7 @@
 #ifndef COMPILER_C_ARRAY_H
 #define COMPILER_C_ARRAY_H
 
-typedef struct {
+typedef struct Array {
     int count;
     int capacity;
     int element_size;

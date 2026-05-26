@@ -200,6 +200,7 @@ void free_compiler(Compiler *compiler) {
 
 int compile(Compiler *compiler) {
     set_log_stage(STAGE_COMPILER);
+
     ASSERT(compiler->current_source.count && compiler->current_output.count, "Source or output is not set for compile\n");
     INFO("Compiling %s to %s\n", (char *)compiler->current_source.data, (char *)compiler->current_output.data);
 

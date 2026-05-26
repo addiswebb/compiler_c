@@ -369,7 +369,8 @@ static void print_ir_param(const IR_Instruction *instr) {
 #ifdef _WIN64
     printf(" p%d\n", instr->param.param_index);
 #else
-    printf(" %s%d\n", instr->param.type->kind == T_FLOAT ? "FP" : "GP", instr->param.param_index);
+    if (instr->param.param_index < 0) printf("S%d\n", -instr->param.param_index);
+    else printf(" %s%d\n", instr->param.type->kind == T_FLOAT ? "FP" : "GP", instr->param.param_index);
 #endif
 }
 static void print_ir_builtin_va_start(const IR_Instruction *instr) {

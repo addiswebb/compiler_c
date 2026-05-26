@@ -28,6 +28,7 @@ void x86_operand(const IR_Value *v, char *buf, const int n) {
             len += snprintf(buf, n, "%s", r->label);
             break;
         case REG_DATA_OFFSET:
+            if (r->offset == 0) break;
             len += snprintf(buf, n, "%d", r->offset);
             break;
         case REG_DATA_CONST_INDEX:
