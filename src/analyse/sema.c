@@ -396,6 +396,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_UNARY:
         semantic_analysis(sema_ctx, p, nm, node->unary.expr);
         node->type = check_unary_op(nm, node);
+        if (node->unary.op == TK_L_NOT && node->unary.expr->type->kind == T_INT && node->unary.expr->type->size < 4) {
+            node->unary.expr = cast_node(nm, node->unary.expr, type_i32);
+        }
         break;
     case N_BINARY:
         semantic_analysis(sema_ctx, p, nm, node->binary.lhs);

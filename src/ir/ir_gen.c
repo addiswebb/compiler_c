@@ -436,10 +436,10 @@ static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, Node *l) {
         }
         ctx->init_ctx.offset = start_offset + offset;
         initialized[ctx->init_ctx.index] = true;
-
         ir_gen_initializer(ctx, dst, e->kind == N_DESIGNATOR ? e->designator.value : e);
         ctx->init_ctx.index++;
     }
+
     if (l->type->kind == T_UNION) len = 0;
     // Todo fill empty union as largest size
 
