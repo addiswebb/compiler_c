@@ -30,242 +30,172 @@
     .byte 'L', 'O', 'G', 0
 .LC14:
     .byte '[', '%', 's', ']', ' ', '%', 's', ':', ' ', 0
+.align 8
 .LC15:
-    .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 'a', 'l', 'l', 'o', 'c', 'a', 't', 'e', ' ', '_', 's', 'r', 'e', 't', ' ', 's', 'y', 'm', 'b', 'o', 'l', 0x0A, 0
+    .byte 'a', 's', 't', 0
+.align 8
 .LC16:
-    .byte '_', 'h', 'i', 'd', 'd', 'e', 'n', '_', 's', 'r', 'e', 't', '_', 'p', 't', 'r', 0
+    .byte 'i', 'r', 0
+.align 8
 .LC17:
-    .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 'm', 'a', 'l', 'l', 'o', 'c', ' ', '_', 's', 'r', 'e', 't', ' ', 'n', 'a', 'm', 'e', 0x0A, 0
+    .byte 'S', 0
+.align 8
 .LC18:
-    .byte '_', 's', 'r', 'e', 't', '%', 'd', 0
+    .byte 'c', 0
+.align 8
 .LC19:
-    .byte 'I', 'n', 'v', 'a', 'l', 'i', 'd', ' ', 'c', 'l', 'a', 's', 's', 'i', 'f', 'i', 'c', 'a', 't', 'i', 'o', 'n', ' ', 'm', 'e', 'r', 'g', 'e', 0x0A, 0
+    .byte 'g', 't', 'y', 'p', 'e', 'p', 'o', 'o', 'l', 0
+.align 8
 .LC20:
-    .byte 'C', 'l', 'a', 's', 's', 'i', 'f', 'i', 'c', 'a', 't', 'i', 'o', 'n', ' ', 'f', 'a', 'i', 'l', 'e', 'd', ' ', 'o', 'n', ' ', 0
+    .byte 'g', 'l', 'i', 'f', 'e', 't', 'i', 'm', 'e', 's', 0
+.align 8
 .LC21:
-    .byte 0x0A, 0
+    .byte 'g', 'e', 'n', 'u', 'm', 0
+.align 8
 .LC22:
-    .byte 'S', 'y', 's', 'V', ' ', 'A', 'B', 'I', ' ', 'I', 'n', 'v', 'a', 'l', 'i', 'd', ' ', 'S', 'S', 'E', ' ', 'p', 'a', 'r', 'a', 'm', ' ', 'a', 'r', 'g', ' ', 'i', 'n', 'd', 'e', 'x', ' ', '%', 'd', 0x0A, 0
+    .byte 'g', 's', 't', 'r', 'u', 'c', 't', 0
+.align 8
 .LC23:
-    .byte 'S', 'y', 's', 'V', ' ', 'A', 'B', 'I', ' ', 'I', 'n', 'v', 'a', 'l', 'i', 'd', ' ', 'G', 'P', ' ', 'p', 'a', 'r', 'a', 'm', ' ', 'a', 'r', 'g', ' ', 'i', 'n', 'd', 'e', 'x', ' ', '%', 'd', 0x0A, 0
+    .byte 'g', 'u', 'n', 'i', 'o', 'n', 0
+.align 8
 .LC24:
-    .byte '[', 'S', 'y', 's', 'V', ']', ' ', 'C', 'a', 'n', 'n', 'o', 't', ' ', 'I', 'R', '_', 'S', 'T', 'O', 'R', 'E', ' ', 's', 't', 'r', 'u', 'c', 't', 's', ' ', 'o', 'f', ' ', '1', '6', ' ', 'b', 'y', 't', 'e', 's', ' ', 'o', 'r', ' ', 'm', 'o', 'r', 'e', 0x0A, 0
+    .byte 'g', 'l', 'o', 'w', 'e', 'r', 'e', 'd', '-', 'i', 'r', 0
+.align 8
 .LC25:
-    .byte '[', 'S', 'y', 's', 'V', ']', ' ', 'N', 'o', 't', ' ', 'h', 'a', 'n', 'd', 'l', 'i', 'n', 'g', ' ', 't', 'u', 'p', 'l', 'e', ' ', 's', 'i', 'z', 'e', 'd', ' ', 's', 't', 'r', 'u', 'c', 't', 0
+    .byte 'g', 'i', 'r', '-', 'i', 'n', 's', 't', 'r', 0
+.align 8
 .LC26:
-    .byte 'S', 't', 'r', 'u', 'c', 't', 's', ' ', 's', 'i', 'z', 'e', 'd', ' ', '[', '8', ' ', '<', ' ', 's', 'i', 'z', 'e', ' ', '<', '=', ' ', '1', '6', ']', ' ', 'a', 'r', 'e', ' ', 'n', 'o', 't', ' ', 'h', 'a', 'n', 'd', 'l', 'e', 'd', ' ', 'y', 'e', 't', 0x0A, 0
+    .byte 'g', 'p', 'a', 'r', 's', 'e', 'r', 0
+.align 8
 .LC27:
-    .byte '[', 'S', 'y', 's', 'V', ']', ' ', 'M', 'u', 'l', 't', 'i', ' ', 'r', 'e', 'g', 'i', 's', 't', 'e', 'r', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'y', 'p', 'e', 's', ' ', 'a', 'r', 'e', ' ', 'n', 'o', 't', ' ', 'y', 'e', 't', ' ', 's', 'u', 'p', 'p', 'o', 'r', 't', 'e', 'd', 0x0A, 0
+    .byte 'g', 't', 'o', 'k', 'e', 'n', 'i', 'z', 'e', 'r', 0
+.align 8
 .LC28:
-    .byte 'E', 'x', 'p', 'e', 'c', 't', 'e', 'd', ' ', 'n', 'a', 'm', 'e', 'd', ' ', 'p', 'a', 'r', 'a', 'm', ',', ' ', 'g', 'o', 't', ' ', 'b', 's', '.', 0x0A, 0
+    .byte 'g', 's', 'y', 'm', 'b', 'o', 'l', 's', 0
 .LC29:
-    .byte 'B', 'u', 'i', 'l', 't', 'i', 'n', ' ', 'M', 'e', 'm', 'c', 'p', 'y', ' ', 'u', 'n', 'i', 'm', 'p', 'l', 'e', 'm', 'e', 'n', 't', 'e', 'd', 0x0A, 0
+    .byte '.', 'c', 0
 .LC30:
-    .byte 'B', 'u', 'i', 'l', 't', 'i', 'n', ' ', 'n', 'o', 'n', 'e', '!', 0x0A, 0
+    .byte '.', 's', 0
 .LC31:
-    .byte 'I', 'n', 'v', 'a', 'l', 'i', 'd', ' ', 'a', 'r', 'g', ' ', 't', 'y', 'p', 'e', ' ', '%', 't', 0x0A, 0
+    .byte '.', 'o', 0
+.align 8
 .LC32:
-    .byte 'm', 'o', 'v', 0
+    .quad 1
 .LC33:
-    .byte 'q', 0
+    .byte 'o', 0
 .LC34:
-    .byte 0
+    .byte 'I', 'm', 'p', 'r', 'o', 'p', 'e', 'r', ' ', 'U', 's', 'a', 'g', 'e', ',', 0x0A, ' ', ' ', 'c', 'o', 'm', 'p', 'i', 'l', 'e', 'r', '_', 'c', ' ', '[', 'i', 'n', 'p', 'u', 't', ']', ' ', '-', 'o', ' ', '[', 'o', 'u', 't', 'p', 'u', 't', ']', 0x0A, 0
 .LC35:
-    .byte 'm', 'o', 'v', 0
+    .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 's', 't', 'r', 'd', 'u', 'p', ' ', 'o', 'u', 't', 'p', 'u', 't', 0x0A, 0
 .LC36:
-    .byte 'q', 0
+    .byte 'I', 'm', 'p', 'r', 'o', 'p', 'e', 'r', ' ', 'U', 's', 'a', 'g', 'e', ',', 0x0A, ' ', ' ', 'c', 'o', 'm', 'p', 'i', 'l', 'e', 'r', '_', 'c', ' ', '[', 'i', 'n', 'p', 'u', 't', ']', ' ', '-', 'o', ' ', '[', 'o', 'u', 't', 'p', 'u', 't', ']', 0x0A, 0
 .LC37:
-    .byte 0
+    .byte 'S', 'o', 'u', 'r', 'c', 'e', ' ', 'o', 'r', ' ', 'o', 'u', 't', 'p', 'u', 't', ' ', 'i', 's', ' ', 'n', 'o', 't', ' ', 's', 'e', 't', ' ', 'f', 'o', 'r', ' ', 'a', 's', 's', 'e', 'm', 'b', 'l', 'e', 0x0A, 0
 .LC38:
-    .byte 'm', 'o', 'v', 0
+    .byte 'A', 's', 's', 'e', 'm', 'b', 'l', 'i', 'n', 'g', ' ', '%', 's', ' ', 't', 'o', ' ', '%', 's', 0x0A, 0
 .LC39:
-    .byte 0
+    .byte 'g', 'c', 'c', ' ', '-', 'c', ' ', '%', 's', ' ', '-', 'o', ' ', '%', 's', 0
 .LC40:
-    .byte 'm', 'o', 'v', 0
+    .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 'a', 's', 's', 'e', 'm', 'b', 'l', 'e', ' ', '%', 's', ' ', 't', 'o', ' ', '%', 's', 0x0A, 0
 .LC41:
-    .byte 0
+    .byte 'L', 'i', 'n', 'k', 'i', 'n', 'g', ' ', 0
 .LC42:
-    .byte 'D', 'i', 'd', 'n', 't', ' ', 'c', 'o', 'p', 'y', ' ', 'e', 'v', 'e', 'r', 'y', 't', 'h', 'i', 'n', 'g', 0x0A, 0
+    .byte 'g', 'c', 'c', ' ', '-', 'l', 'm', ' ', 0
 .LC43:
-    .byte ' ', ' ', ' ', ' ', 's', 'u', 'b', 'q', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'r', 's', 'p', 0x0A, 0
+    .byte '%', 's', 0
 .LC44:
-    .byte 'm', 'o', 'v', 0
+    .byte '%', 's', ' ', 0
 .LC45:
-    .byte 0
+    .byte ' ', 't', 'o', ' ', '%', 's', 0x0A, 0
 .LC46:
-    .byte 'm', 'o', 'v', 0
+    .byte '-', 'o', ' ', '%', 's', ' ', 0
 .LC47:
-    .byte 0
+    .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 'l', 'i', 'n', 'k', ' ', '%', 'd', ' ', 'o', 'b', 'j', 's', ' ', 't', 'o', ' ', '%', 's', 0x0A, 0
 .LC48:
-    .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', '%', 's', ' ', '%', 's', ',', ' ', '%', 'd', '(', '%', '%', 'r', 's', 'p', ')', 0x0A, 0
+    .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 'a', 'p', 'p', 'e', 'n', 'd', ' ', 0x27, '%', 's', 0x27, ' ', 't', 'o', ' ', '%', 's', 0x0A, 0
 .LC49:
-    .byte 'm', 'o', 'v', 0
+    .byte '-', 'o', ' ', 'i', 'g', 'n', 'o', 'r', 'e', 'd', ' ', 'w', 'i', 't', 'h', ' ', 'm', 'u', 'l', 't', 'i', 'p', 'l', 'e', ' ', 'i', 'n', 'p', 'u', 't', 's', ' ', '%', 'd', 0x0A, 0
 .LC50:
-    .byte 0
+    .byte '.', 's', 0
 .LC51:
-    .byte 'm', 'o', 'v', 0
+    .byte '.', 'o', 0
 .LC52:
-    .byte 0
+    .byte 'a', '.', 'o', 'u', 't', 0
 .LC53:
-    .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', '%', 's', ' ', '%', '%', 'x', 'm', 'm', '0', ',', ' ', '%', 'd', '(', '%', '%', 'r', 's', 'p', ')', 0x0A, 0
+    .byte 'N', 'o', ' ', 'o', 'b', 'j', 'e', 'c', 't', ' ', 'f', 'i', 'l', 'e', 's', ' ', 't', 'o', ' ', 'l', 'i', 'n', 'k', 0x0A, 0
 .LC54:
-    .byte 'A', 'r', 'g', ' ', 't', 'y', 'p', 'e', ' ', 's', 'h', 'o', 'u', 'l', 'd', ' ', 'h', 'a', 'v', 'e', ' ', 'b', 'e', 'e', 'n', ' ', 'c', 'o', 'n', 'v', 'e', 'r', 't', 'e', 'd', ' ', 'b', 'y', ' ', 'g', 'p', '/', 's', 's', 'e', ' ', 'c', 'l', 'a', 's', 's', ' ', '%', 't', 0x0A, 0
+    .byte 'D', 'o', 'n', 'e', '.', 0x0A, 0
 .LC55:
-    .byte 'l', 'e', 'a', 0
+    .byte '[', 0x1B, '[', '3', '4', 'm', 'C', 'o', 'm', 'p', 'i', 'l', 'e', 'r', '_', 'C', 0x1B, '[', '0', 'm', ']', 0x0A, 0
 .LC56:
-    .byte 'q', 0
+    .byte 'I', 'm', 'p', 'r', 'o', 'p', 'e', 'r', ' ', 'U', 's', 'a', 'g', 'e', ',', 0x0A, ' ', ' ', 'c', 'o', 'm', 'p', 'i', 'l', 'e', 'r', '_', 'c', ' ', '[', 'i', 'n', 'p', 'u', 't', ']', ' ', '-', 'o', ' ', '[', 'o', 'u', 't', 'p', 'u', 't', ']', 0x0A, 0
 .LC57:
-    .byte 0
+    .byte '-', 'h', 0
 .LC58:
-    .byte 'T', 'r', 'i', 'e', 'd', ' ', 't', 'o', ' ', 'e', 'm', 'i', 't', ' ', 'c', 'a', 'l', 'l', ' ', 'a', 'r', 'g', ' ', 'f', 'o', 'r', ' ', 'u', 'n', 's', 'u', 'p', 'p', 'o', 'r', 't', 'e', 'd', ' ', 't', 'y', 'p', 'e', 0x0A, 0
+    .byte 'c', 'o', 'm', 'p', 'i', 'l', 'e', 'r', ' ', '[', 'i', 'n', 'p', 'u', 't', ']', 0x0A, 0
 .LC59:
-    .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', 'l', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'e', 'a', 'x', 0x0A, 0
+    .byte 0x09, '-', 'o', ' ', '[', 'o', 'u', 't', 'p', 'u', 't', ']', ' ', ':', ' ', 'S', 'e', 't', ' ', 'o', 'u', 't', 'p', 'u', 't', ' ', 'f', 'i', 'l', 'e', ' ', 'p', 'a', 't', 'h', 0x0A, 0
 .LC60:
-    .byte ' ', ' ', ' ', ' ', 'x', 'o', 'r', ' ', '%', '%', 'e', 'a', 'x', ',', ' ', '%', '%', 'e', 'a', 'x', 0x0A, 0
+    .byte 0x09, '-', 'S', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 't', 'o', ' ', 'A', 's', 's', 'e', 'm', 'b', 'l', 'y', ' ', 'F', 'i', 'l', 'e', 0x0A, 0
 .LC61:
-    .byte ' ', ' ', ' ', ' ', 'c', 'a', 'l', 'l', ' ', '%', 's', 0x0A, 0
+    .byte 0x09, '-', 'c', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 't', 'o', ' ', 'O', 'b', 'j', 'e', 'c', 't', ' ', 'F', 'i', 'l', 'e', 0x0A, 0
 .LC62:
-    .byte 'm', 'o', 'v', 0
+    .byte 0x09, '-', 'i', 'r', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'C', 'o', 'm', 'p', 'i', 'l', 'e', ' ', 'a', 'n', 'd', ' ', 'p', 'r', 'i', 'n', 't', ' ', 'I', 'R', 0x0A, 0
 .LC63:
-    .byte 'q', 0
+    .byte 0x09, '-', 'a', 's', 't', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'P', 'r', 'i', 'n', 't', ' ', 'p', 'a', 'r', 's', 'e', ' ', 't', 'r', 'e', 'e', 0x0A, 0
 .LC64:
-    .byte 0
+    .byte 0x09, '-', 'h', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ':', ' ', 'G', 'e', 't', ' ', 'h', 'e', 'l', 'p', 0x0A, 0
 .LC65:
-    .byte '%', 'r', 'a', 'x', 0
+    .byte 'S', 'o', 'u', 'r', 'c', 'e', ' ', 'o', 'r', ' ', 'o', 'u', 't', 'p', 'u', 't', ' ', 'i', 's', ' ', 'n', 'o', 't', ' ', 's', 'e', 't', ' ', 'f', 'o', 'r', ' ', 'c', 'o', 'm', 'p', 'i', 'l', 'e', 0x0A, 0
 .LC66:
-    .byte ' ', ' ', ' ', ' ', 'c', 'a', 'l', 'l', ' ', '*', '%', '%', 'r', 'a', 'x', 0x0A, 0
+    .byte 'C', 'o', 'm', 'p', 'i', 'l', 'i', 'n', 'g', ' ', '%', 's', ' ', 't', 'o', ' ', '%', 's', 0x0A, 0
 .LC67:
-    .byte ' ', ' ', ' ', ' ', 'a', 'd', 'd', 'q', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'r', 's', 'p', 0x0A, 0
+    .byte '-', '-', '-', '-', ' ', 'I', 'R', ' ', '-', '-', '-', '-', 0x0A, 0
 .LC68:
-    .byte 'm', 'o', 'v', 0
+    .byte 0x0A, 0
 .LC69:
-    .byte 0
+    .byte '-', '-', '-', '-', ' ', 'L', 'o', 'w', 'e', 'r', 'e', 'd', ' ', 'I', 'R', ' ', '-', '-', '-', '-', 0x0A, 0
 .LC70:
-    .byte 'I', 'n', 'v', 'a', 'l', 'i', 'd', ' ', 'F', 'u', 'n', 'c', ' ', 'T', 'y', 'p', 'e', 0x0A, 0
+    .byte 0x0A, 0
 .LC71:
-    .byte '[', 'S', 'y', 's', 'V', ']', ' ', 'N', 'o', 't', ' ', 'h', 'a', 'n', 'd', 'l', 'i', 'n', 'g', ' ', 't', 'u', 'p', 'l', 'e', ' ', 'r', 'e', 't', 'u', 'r', 'n', ' ', 't', 'y', 'p', 'e', ' ', '%', 't', 0x0A, 0
+    .byte '-', '-', '-', '-', ' ', 'S', 'y', 'm', 'b', 'o', 'l', 's', ' ', '-', '-', '-', '-', 0x0A, 0
 .LC72:
-    .byte 'l', 'e', 'a', 0
+    .byte '%', 't', ' ', '%', 's', 0x0A, 0
 .LC73:
-    .byte 0
+    .byte 'w', 0
 .LC74:
-    .byte 0
+    .byte 'g', 'c', 'c', ' ', '-', 'E', ' ', '-', 'P', ' ', '-', 'n', 'o', 's', 't', 'd', 'i', 'n', 'c', ' ', '-', 'D', '_', '_', 'C', 'O', 'M', 'P', 'I', 'L', 'E', 'R', '_', 'C', '_', '_', ' ', '-', 'I', '.', '/', 'l', 'i', 'b', 'c', ' ', '-', 's', 't', 'd', '=', 'c', '1', '1', ' ', '%', 's', ' ', 0
 .LC75:
-    .byte '%', 'r', 'd', 'i', 0
+    .byte '%', 's', ' ', 0
 .LC76:
-    .byte 'm', 'o', 'v', 0
+    .byte 'r', 0
 .LC77:
-    .byte 'q', 0
+    .byte 'F', 'a', 'i', 'l', 'e', 'd', ' ', 't', 'o', ' ', 'o', 'p', 'e', 'n', ' ', '%', 's', 0x0A, 0
 .LC78:
-    .byte 0
-.LC79:
-    .byte '%', 'r', 'd', 'i', 0
-.LC80:
-    .byte 'S', 'a', 'n', 'i', 't', 'y', ' ', 'c', 'h', 'e', 'c', 'k', ' ', 'f', 'a', 'i', 'l', 'e', 'd', 0x0A, 0
-.LC81:
-    .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', 'l', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'e', 's', 'i', 0x0A, 0
-.LC82:
-    .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', 'q', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'r', 'd', 'x', 0x0A, 0
-.LC83:
-    .byte ' ', ' ', ' ', ' ', 'c', 'a', 'l', 'l', ' ', 'm', 'e', 'm', 's', 'e', 't', 0x0A, 0
-.LC84:
-    .byte 'l', 'e', 'a', 0
-.LC85:
-    .byte 0
-.LC86:
-    .byte 0
-.LC87:
-    .byte '%', 'r', 'd', 'i', 0
-.LC88:
-    .byte 'm', 'o', 'v', 0
-.LC89:
-    .byte 'q', 0
-.LC90:
-    .byte 0
-.LC91:
-    .byte '%', 'r', 'd', 'i', 0
-.LC92:
-    .byte 'S', 'a', 'n', 'i', 't', 'y', ' ', 'c', 'h', 'e', 'c', 'k', ' ', 'f', 'a', 'i', 'l', 'e', 'd', 0x0A, 0
-.LC93:
-    .byte 'l', 'e', 'a', 0
-.LC94:
-    .byte 0
-.LC95:
-    .byte 0
-.LC96:
-    .byte '%', 'r', 's', 'i', 0
-.LC97:
-    .byte 'm', 'o', 'v', 0
-.LC98:
-    .byte 'q', 0
-.LC99:
-    .byte 0
-.LC100:
-    .byte '%', 'r', 's', 'i', 0
-.LC101:
-    .byte 'S', 'a', 'n', 'i', 't', 'y', ' ', 'c', 'h', 'e', 'c', 'k', ' ', 'f', 'a', 'i', 'l', 'e', 'd', 0x0A, 0
-.LC102:
-    .byte ' ', ' ', ' ', ' ', 'm', 'o', 'v', 'q', ' ', '$', '%', 'd', ',', ' ', '%', '%', 'r', 'd', 'x', 0x0A, 0
-.LC103:
-    .byte ' ', ' ', ' ', ' ', 'c', 'a', 'l', 'l', ' ', 'm', 'e', 'm', 'c', 'p', 'y', 0x0A, 0
-.global _sret
+    .byte 'L', 'o', 'a', 'd', 'e', 'd', ' ', 'a', 'n', ' ', 'e', 'm', 'p', 't', 'y', ' ', 's', 'o', 'u', 'r', 'c', 'e', ' ', 'f', 'i', 'l', 'e', 0x0A, 0
+.global compiler_flags
+.data
+.align 4
+compiler_flags:
+    .long 0
+.global flag_strings
 .data
 .align 8
-_sret:
-    .zero 24
-    .zero 4
-    .zero 4
-    .long 0
-.global _hidden_sret_ptr
-.data
-.align 8
-_hidden_sret_ptr:
-    .quad 0
-.global caller_saved_regs
-.data
-.align 4
-caller_saved_regs:
-    .long 0
-    .long 2
-    .long 3
-    .long 4
-    .long 5
-    .long 8
-    .long 9
-    .long 10
-    .long 11
-.global callee_saved_regs
-.data
-.align 4
-callee_saved_regs:
-    .long 1
-    .long 6
-    .long 12
-    .long 13
-    .long 14
-    .long 15
-.global int_param_regs
-.data
-.align 4
-int_param_regs:
-    .long 5
-    .long 4
-    .long 3
-    .long 2
-    .long 8
-    .long 9
-.global float_param_regs
-.data
-.align 4
-float_param_regs:
-    .long 0
-    .long 1
-    .long 2
-    .long 3
-    .long 4
-    .long 5
-    .long 6
-    .long 7
+flag_strings:
+    .quad .LC15
+    .quad .LC16
+    .quad .LC17
+    .quad .LC18
+    .quad .LC19
+    .quad .LC20
+    .quad .LC21
+    .quad .LC22
+    .quad .LC23
+    .quad .LC24
+    .quad .LC25
+    .quad .LC26
+    .quad .LC27
+    .quad .LC28
 
 .text
 align:
@@ -1638,102 +1568,465 @@ log_message_6:
     mov %rbp, %rsp
     pop %rbp
     ret
-.global set_hidden_sret_ptr
-set_hidden_sret_ptr:
+get_i:
     push %rbp
     mov %rsp, %rbp
-    subq $88, %rsp
-set_hidden_sret_ptr_0:
+    subq $40, %rsp
+get_i_0:
     movq %rdi, -8(%rbp)
-    leaq _hidden_sret_ptr(%rip), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -64(%rbp)
-    movl -64(%rbp), %eax
-    testl %eax, %eax
-    jz set_hidden_sret_ptr_2
-    leaq _hidden_sret_ptr(%rip), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -64(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -80(%rbp)
-    movq -80(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -80(%rbp)
-    movq -64(%rbp), %rax
-    cmpq -80(%rbp), %rax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -64(%rbp)
-    movslq -64(%rbp), %rax
-    movq %rax, -64(%rbp)
-    movl -64(%rbp), %eax
-    testl %eax, %eax
-    jz set_hidden_sret_ptr_2
-set_hidden_sret_ptr_1:
-    movq $1, %rax
-    movq %rax, -72(%rbp)
-    jmp set_hidden_sret_ptr_3
-set_hidden_sret_ptr_2:
-    movq $0, %rax
-    movq %rax, -72(%rbp)
-set_hidden_sret_ptr_3:
-    movl -72(%rbp), %eax
-    testl %eax, %eax
-    jz set_hidden_sret_ptr_6
-set_hidden_sret_ptr_4:
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -16(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    subl $1, %eax
+    movl %eax, -24(%rbp)
+    subq $8, %rsp
+    movq -16(%rbp), %rdi
+    movl -24(%rbp), %esi
+    call get
+    addq $8, %rsp
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
     mov %rbp, %rsp
     pop %rbp
     ret
-set_hidden_sret_ptr_5:
-    jmp set_hidden_sret_ptr_6
-set_hidden_sret_ptr_6:
-    leaq _hidden_sret_ptr(%rip), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
+.global has_flag
+has_flag:
+    push %rbp
+    mov %rsp, %rbp
+    subq $40, %rsp
+has_flag_0:
+    movl %edi, -8(%rbp)
+    leaq compiler_flags(%rip), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -16(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    movl %eax, -24(%rbp)
+    movl $1, %eax
+    movl -24(%rbp), %ecx
+    shll %cl, %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    movl %eax, -24(%rbp)
+    movl -16(%rbp), %eax
+    andl -24(%rbp), %eax
+    movl %eax, -16(%rbp)
+    movl -16(%rbp), %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global is_source_file
+is_source_file:
+    push %rbp
+    mov %rsp, %rbp
+    subq $56, %rsp
+is_source_file_0:
+    movq %rdi, -8(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -64(%rbp)
-    movl -64(%rbp), %eax
+    movq %rax, -24(%rbp)
+    movq $0, %rax
+    imulq $1, %rax
+    movq %rax, -32(%rbp)
+    movq -24(%rbp), %rax
+    addq -32(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    movb (%rax), %al
+    movb %al, -24(%rbp)
+    movsbl -24(%rbp), %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    cmpl $45, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    testl %eax, %eax
+    jz is_source_file_3
+is_source_file_1:
+    movl $0, %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+is_source_file_2:
+    jmp is_source_file_3
+is_source_file_3:
+    leaq -16(%rbp), %rax
+    movq %rax, -24(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -32(%rbp)
+    subq $8, %rsp
+    movq -32(%rbp), %rdi
+    movl $46, %esi
+    call strrchr
+    addq $8, %rsp
+    movq %rax, -32(%rbp)
+    movq -24(%rbp), %rax
+    movq -32(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -16(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    movl -24(%rbp), %eax
     testl %eax, %eax
     sete %al
+    movzbl %al, %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    testl %eax, %eax
+    jz is_source_file_6
+is_source_file_4:
+    movl $0, %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+is_source_file_5:
+    jmp is_source_file_6
+is_source_file_6:
+    leaq -16(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    leaq .LC29(%rip), %rax
+    movq %rax, -32(%rbp)
+    subq $8, %rsp
+    movq -24(%rbp), %rdi
+    movq -32(%rbp), %rsi
+    call strcmp
+    addq $8, %rsp
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    testl %eax, %eax
+    jnz is_source_file_7
+    leaq -16(%rbp), %rax
+    movq %rax, -24(%rbp)
+    movq -24(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -24(%rbp)
+    leaq .LC30(%rip), %rax
+    movq %rax, -40(%rbp)
+    subq $8, %rsp
+    movq -24(%rbp), %rdi
+    movq -40(%rbp), %rsi
+    call strcmp
+    addq $8, %rsp
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -24(%rbp)
+    movl -24(%rbp), %eax
+    testl %eax, %eax
+    jz is_source_file_8
+is_source_file_7:
+    movq $1, %rax
+    movq %rax, -32(%rbp)
+    jmp is_source_file_9
+is_source_file_8:
+    movq $0, %rax
+    movq %rax, -32(%rbp)
+is_source_file_9:
+    movl -32(%rbp), %eax
+    testl %eax, %eax
+    jnz is_source_file_10
+    leaq -16(%rbp), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -32(%rbp)
+    leaq .LC31(%rip), %rax
+    movq %rax, -40(%rbp)
+    subq $8, %rsp
+    movq -32(%rbp), %rdi
+    movq -40(%rbp), %rsi
+    call strcmp
+    addq $8, %rsp
+    movl %eax, -32(%rbp)
+    movl -32(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -32(%rbp)
+    movl -32(%rbp), %eax
+    testl %eax, %eax
+    jz is_source_file_11
+is_source_file_10:
+    movq $1, %rax
+    movq %rax, -24(%rbp)
+    jmp is_source_file_12
+is_source_file_11:
+    movq $0, %rax
+    movq %rax, -24(%rbp)
+is_source_file_12:
+    movl -24(%rbp), %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global read_args
+read_args:
+    push %rbp
+    mov %rsp, %rbp
+    subq $104, %rsp
+read_args_0:
+    movq %rdi, -8(%rbp)
+    movl %esi, -16(%rbp)
+    movq %rdx, -24(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl $1, %ecx
+    movl %ecx, (%rax)
+read_args_1:
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -64(%rbp)
+    leaq -16(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -64(%rbp), %eax
+    cmpl -72(%rbp), %eax
+    setl %al
     movzbl %al, %eax
     movl %eax, -64(%rbp)
     movl -64(%rbp), %eax
     testl %eax, %eax
-    jz set_hidden_sret_ptr_13
-set_hidden_sret_ptr_7:
-    leaq _hidden_sret_ptr(%rip), %rax
+    jz read_args_40
+read_args_2:
+    leaq -40(%rbp), %rax
     movq %rax, -64(%rbp)
-    subq $8, %rsp
-    movq $48, %rdi
-    call malloc
-    addq $8, %rsp
+    leaq -24(%rbp), %rax
     movq %rax, -72(%rbp)
     movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -80(%rbp)
+    movslq -80(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    imulq $8, %rax
+    movq %rax, -80(%rbp)
+    movq -72(%rbp), %rax
+    addq -80(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
     movq %rax, -72(%rbp)
     movq -64(%rbp), %rax
     movq -72(%rbp), %rcx
     movq %rcx, (%rax)
-    leaq _hidden_sret_ptr(%rip), %rax
+    leaq -40(%rbp), %rax
     movq %rax, -64(%rbp)
     movq -64(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -64(%rbp)
+    movq $0, %rax
+    imulq $1, %rax
+    movq %rax, -72(%rbp)
+    movq -64(%rbp), %rax
+    addq -72(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movb (%rax), %al
+    movb %al, -64(%rbp)
+    movsbl -64(%rbp), %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    cmpl $45, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz read_args_35
+read_args_3:
+    leaq -40(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movl $1, %eax
+    movq %rax, -80(%rbp)
+    movq -72(%rbp), %rax
+    addq -80(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movq -72(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -40(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    leaq .LC33(%rip), %rax
+    movq %rax, -72(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movq -72(%rbp), %rsi
+    call strcmp
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz read_args_24
+read_args_4:
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -64(%rbp)
+    leaq -16(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -64(%rbp), %eax
+    cmpl -72(%rbp), %eax
+    setl %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz read_args_6
+    leaq -24(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -80(%rbp)
+    movl -80(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -80(%rbp)
+    movslq -80(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    imulq $8, %rax
+    movq %rax, -80(%rbp)
+    movq -64(%rbp), %rax
+    addq -80(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    cmpq $0, %rax
+    setne %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz read_args_6
+read_args_5:
+    movq $1, %rax
+    movq %rax, -72(%rbp)
+    jmp read_args_7
+read_args_6:
+    movq $0, %rax
+    movq %rax, -72(%rbp)
+read_args_7:
+    movl -72(%rbp), %eax
+    testl %eax, %eax
+    jz read_args_20
+read_args_8:
+    leaq -24(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -72(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -72(%rbp)
+    movslq -72(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    imulq $8, %rax
+    movq %rax, -72(%rbp)
+    movq -64(%rbp), %rax
+    addq -72(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq $0, %rax
+    imulq $1, %rax
+    movq %rax, -72(%rbp)
+    movq -64(%rbp), %rax
+    addq -72(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movb (%rax), %al
+    movb %al, -64(%rbp)
+    movsbl -64(%rbp), %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    cmpl $45, %eax
+    setne %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
     movl -64(%rbp), %eax
     testl %eax, %eax
     sete %al
@@ -1741,15 +2034,15 @@ set_hidden_sret_ptr_7:
     movl %eax, -64(%rbp)
     movl -64(%rbp), %eax
     testl %eax, %eax
-    jz set_hidden_sret_ptr_12
-set_hidden_sret_ptr_8:
-    jmp set_hidden_sret_ptr_10
-set_hidden_sret_ptr_9:
+    jz read_args_13
+read_args_9:
+    jmp read_args_11
+read_args_10:
     movl $0, %eax
     testl %eax, %eax
-    jz set_hidden_sret_ptr_11
-set_hidden_sret_ptr_10:
-    leaq .LC15(%rip), %rax
+    jz read_args_12
+read_args_11:
+    leaq .LC34(%rip), %rax
     movq %rax, -64(%rbp)
     subq $184, %rsp
     movl $3, %edi
@@ -1761,243 +2054,422 @@ set_hidden_sret_ptr_10:
     movl $1, %edi
     call exit
     addq $8, %rsp
-    jmp set_hidden_sret_ptr_9
-set_hidden_sret_ptr_11:
-    jmp set_hidden_sret_ptr_12
-set_hidden_sret_ptr_12:
-    jmp set_hidden_sret_ptr_13
-set_hidden_sret_ptr_13:
-    leaq -56(%rbp), %rax
+    jmp read_args_10
+read_args_12:
+    jmp read_args_13
+read_args_13:
+    leaq -8(%rbp), %rax
     movq %rax, -64(%rbp)
-    leaq .LC16(%rip), %rax
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    leaq -24(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -88(%rbp)
+    movl -88(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -88(%rbp)
+    movq -80(%rbp), %rax
+    movl -88(%rbp), %ecx
+    movl %ecx, (%rax)
+    movslq -88(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    imulq $8, %rax
+    movq %rax, -80(%rbp)
+    movq -72(%rbp), %rax
+    addq -80(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
     movq %rax, -72(%rbp)
     movq -64(%rbp), %rax
     movq -72(%rbp), %rcx
     movq %rcx, (%rax)
-    movq -64(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    movq -64(%rbp), %rax
-    addq $20, %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -64(%rbp), %rax
-    addq $24, %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -64(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    movq -64(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -72(%rbp)
     leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz read_args_18
+read_args_14:
+    jmp read_args_16
+read_args_15:
+    movl $0, %eax
+    testl %eax, %eax
+    jz read_args_17
+read_args_16:
+    leaq .LC35(%rip), %rax
+    movq %rax, -64(%rbp)
+    subq $184, %rsp
+    movl $3, %edi
+    movq -64(%rbp), %rsi
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    subq $8, %rsp
+    movl $1, %edi
+    call exit
+    addq $8, %rsp
+    jmp read_args_15
+read_args_17:
+    jmp read_args_18
+read_args_18:
+    jmp read_args_39
+read_args_19:
+    jmp read_args_20
+read_args_20:
+    jmp read_args_22
+read_args_21:
+    movl $0, %eax
+    testl %eax, %eax
+    jz read_args_23
+read_args_22:
+    leaq .LC36(%rip), %rax
+    movq %rax, -64(%rbp)
+    subq $184, %rsp
+    movl $3, %edi
+    movq -64(%rbp), %rsi
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    subq $8, %rsp
+    movl $1, %edi
+    call exit
+    addq $8, %rsp
+    jmp read_args_21
+read_args_23:
+    jmp read_args_24
+read_args_24:
+    leaq -48(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl $0, %ecx
+    movl %ecx, (%rax)
+    leaq -56(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl $0, %ecx
+    movl %ecx, (%rax)
+read_args_25:
+    leaq -56(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    cmpl $14, %eax
+    setl %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz read_args_31
+read_args_26:
+    leaq -40(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    leaq flag_strings(%rip), %rax
+    movq %rax, -72(%rbp)
+    leaq -56(%rbp), %rax
     movq %rax, -80(%rbp)
     movq -80(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -80(%rbp)
-    subq $8, %rsp
-    movq -80(%rbp), %rdi
-    call get_pointer_type
-    addq $8, %rsp
-    movq %rax, -80(%rbp)
-    movq -72(%rbp), %rax
-    movq -80(%rbp), %rcx
-    movq %rcx, (%rax)
-    movq -64(%rbp), %rax
-    addq $28, %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq _hidden_sret_ptr(%rip), %rax
-    movq %rax, -64(%rbp)
-    movq -64(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -64(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -72(%rbp)
-    movq -64(%rbp), %rdi
-    movq -72(%rbp), %rsi
-    movq $48, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global current_sret
-current_sret:
-    push %rbp
-    mov %rsp, %rbp
-    subq $24, %rsp
-current_sret_0:
-    leaq _sret(%rip), %rax
-    movq %rax, -8(%rbp)
-    leaq _sret(%rip), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
-    subl $1, %eax
-    movl %eax, -16(%rbp)
-    subq $8, %rsp
-    movq -8(%rbp), %rdi
-    movl -16(%rbp), %esi
-    call arena_get
-    addq $8, %rsp
-    movq %rax, -8(%rbp)
-    movq -8(%rbp), %rax
-    movq %rax, -8(%rbp)
-    movq -8(%rbp), %rax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global set_sret
-set_sret:
-    push %rbp
-    mov %rsp, %rbp
-    subq $104, %rsp
-set_sret_0:
-    movq %rdi, -8(%rbp)
-    leaq _sret(%rip), %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -72(%rbp)
-    movl -72(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -72(%rbp)
-    movl -72(%rbp), %eax
-    testl %eax, %eax
-    jz set_sret_2
-set_sret_1:
-    leaq _sret(%rip), %rax
-    movq %rax, -72(%rbp)
-    subq $8, %rsp
-    movq -72(%rbp), %rdi
-    movl $4, %esi
-    movl $48, %edx
-    call arena_init
-    addq $8, %rsp
-    jmp set_sret_2
-set_sret_2:
-    leaq _sret(%rip), %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -72(%rbp)
-    movl -72(%rbp), %eax
-    cmpl $0, %eax
-    setg %al
-    movzbl %al, %eax
-    movl %eax, -72(%rbp)
-    movl -72(%rbp), %eax
-    testl %eax, %eax
-    jz set_sret_4
-    subq $8, %rsp
-    call current_sret
-    addq $8, %rsp
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -72(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -88(%rbp)
-    movq -72(%rbp), %rax
-    cmpq -88(%rbp), %rax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -72(%rbp)
-    movl -72(%rbp), %eax
-    testl %eax, %eax
-    jz set_sret_4
-set_sret_3:
-    movq $1, %rax
-    movq %rax, -80(%rbp)
-    jmp set_sret_5
-set_sret_4:
-    movq $0, %rax
-    movq %rax, -80(%rbp)
-set_sret_5:
-    movl -80(%rbp), %eax
-    testl %eax, %eax
-    jz set_sret_8
-set_sret_6:
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-set_sret_7:
-    jmp set_sret_8
-set_sret_8:
-    leaq -16(%rbp), %rax
-    movq %rax, -72(%rbp)
-    movl $1, %eax
-    imull $32, %eax
     movl %eax, -80(%rbp)
     movslq -80(%rbp), %rax
     movq %rax, -80(%rbp)
-    subq $8, %rsp
-    movq -80(%rbp), %rdi
-    call malloc
-    addq $8, %rsp
-    movq %rax, -80(%rbp)
     movq -80(%rbp), %rax
+    imulq $8, %rax
     movq %rax, -80(%rbp)
     movq -72(%rbp), %rax
-    movq -80(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -16(%rbp), %rax
+    addq -80(%rbp), %rax
     movq %rax, -72(%rbp)
     movq -72(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -72(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movq -72(%rbp), %rsi
+    call strcmp
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz read_args_29
+read_args_27:
+    leaq compiler_flags(%rip), %rax
+    movq %rax, -64(%rbp)
+    leaq -56(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
     movl -72(%rbp), %eax
+    movl %eax, -72(%rbp)
+    movl $1, %eax
+    movl -72(%rbp), %ecx
+    shll %cl, %eax
+    movl %eax, -72(%rbp)
+    movl -72(%rbp), %eax
+    movl %eax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -80(%rbp)
+    movl -80(%rbp), %eax
+    orl -72(%rbp), %eax
+    movl %eax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movl -72(%rbp), %ecx
+    movl %ecx, (%rax)
+    leaq -48(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl $1, %ecx
+    movl %ecx, (%rax)
+    jmp read_args_31
+read_args_28:
+    jmp read_args_29
+read_args_29:
+    jmp read_args_30
+read_args_30:
+    leaq -56(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -72(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movl -72(%rbp), %ecx
+    movl %ecx, (%rax)
+    jmp read_args_25
+read_args_31:
+    leaq -48(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz read_args_34
+read_args_32:
+    jmp read_args_39
+read_args_33:
+    jmp read_args_34
+read_args_34:
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -64(%rbp)
+    leaq -24(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -80(%rbp)
+    movslq -80(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    imulq $8, %rax
+    movq %rax, -80(%rbp)
+    movq -72(%rbp), %rax
+    addq -80(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq %rax, -72(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movq -72(%rbp), %rsi
+    call append
+    addq $8, %rsp
+    movq %rax, -64(%rbp)
+    jmp read_args_38
+read_args_35:
+    leaq -24(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movslq -72(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    imulq $8, %rax
+    movq %rax, -72(%rbp)
+    movq -64(%rbp), %rax
+    addq -72(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    call is_source_file
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz read_args_37
+read_args_36:
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -64(%rbp)
+    leaq -24(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -80(%rbp)
+    movslq -80(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    imulq $8, %rax
+    movq %rax, -80(%rbp)
+    movq -72(%rbp), %rax
+    addq -80(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq %rax, -72(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movq -72(%rbp), %rsi
+    call append
+    addq $8, %rsp
+    movq %rax, -64(%rbp)
+    jmp read_args_37
+read_args_37:
+read_args_38:
+    jmp read_args_39
+read_args_39:
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -72(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movl -72(%rbp), %ecx
+    movl %ecx, (%rax)
+    jmp read_args_1
+read_args_40:
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global assemble
+assemble:
+    push %rbp
+    mov %rsp, %rbp
+    subq $568, %rsp
+assemble_0:
+    movq %rdi, -8(%rbp)
+    subq $8, %rsp
+    movl $6, %edi
+    call set_log_stage
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -536(%rbp)
+    movq -536(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -536(%rbp)
+    movq -536(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -536(%rbp)
+    movq -536(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -536(%rbp)
+    movl -536(%rbp), %eax
+    testl %eax, %eax
+    jz assemble_2
+    leaq -8(%rbp), %rax
+    movq %rax, -536(%rbp)
+    movq -536(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -536(%rbp)
+    movq -536(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -536(%rbp)
+    movq -536(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -536(%rbp)
+    movl -536(%rbp), %eax
+    testl %eax, %eax
+    jz assemble_2
+assemble_1:
+    movq $1, %rax
+    movq %rax, -544(%rbp)
+    jmp assemble_3
+assemble_2:
+    movq $0, %rax
+    movq %rax, -544(%rbp)
+assemble_3:
+    movl -544(%rbp), %eax
     testl %eax, %eax
     sete %al
     movzbl %al, %eax
-    movl %eax, -72(%rbp)
-    movl -72(%rbp), %eax
+    movl %eax, -536(%rbp)
+    movl -536(%rbp), %eax
     testl %eax, %eax
-    jz set_sret_13
-set_sret_9:
-    jmp set_sret_11
-set_sret_10:
+    jz assemble_8
+assemble_4:
+    jmp assemble_6
+assemble_5:
     movl $0, %eax
     testl %eax, %eax
-    jz set_sret_12
-set_sret_11:
-    leaq .LC17(%rip), %rax
-    movq %rax, -72(%rbp)
+    jz assemble_7
+assemble_6:
+    leaq .LC37(%rip), %rax
+    movq %rax, -536(%rbp)
     subq $184, %rsp
     movl $3, %edi
-    movq -72(%rbp), %rsi
+    movq -536(%rbp), %rsi
     xor %eax, %eax
     call log_message
     addq $184, %rsp
@@ -2005,5678 +2477,4471 @@ set_sret_11:
     movl $1, %edi
     call exit
     addq $8, %rsp
-    jmp set_sret_10
-set_sret_12:
-    jmp set_sret_13
-set_sret_13:
-    leaq -16(%rbp), %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
+    jmp assemble_5
+assemble_7:
+    jmp assemble_8
+assemble_8:
+    leaq .LC38(%rip), %rax
+    movq %rax, -536(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -544(%rbp)
+    movq -544(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -72(%rbp)
-    leaq .LC18(%rip), %rax
-    movq %rax, -80(%rbp)
-    leaq _sret(%rip), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
+    movq %rax, -544(%rbp)
+    movq -544(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -544(%rbp)
+    movq -544(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -544(%rbp)
+    movq -544(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -544(%rbp)
+    movq -544(%rbp), %rax
+    movq %rax, -544(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
     addq $32, %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -88(%rbp)
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    movq %rax, -552(%rbp)
     subq $184, %rsp
-    movq -72(%rbp), %rdi
-    movq $32, %rsi
-    movq -80(%rbp), %rdx
-    movl -88(%rbp), %ecx
+    movl $1, %edi
+    movq -536(%rbp), %rsi
+    movq -544(%rbp), %rdx
+    movq -552(%rbp), %rcx
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    leaq -520(%rbp), %rax
+    movq %rax, -536(%rbp)
+    leaq .LC39(%rip), %rax
+    movq %rax, -544(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    movq %rax, -552(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -560(%rbp)
+    movq -560(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -560(%rbp)
+    movq -560(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -560(%rbp)
+    movq -560(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -560(%rbp)
+    movq -560(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -560(%rbp)
+    movq -560(%rbp), %rax
+    movq %rax, -560(%rbp)
+    subq $184, %rsp
+    movq -536(%rbp), %rdi
+    movq $512, %rsi
+    movq -544(%rbp), %rdx
+    movq -552(%rbp), %rcx
+    movq -560(%rbp), %r8
     xor %eax, %eax
     call snprintf
     addq $184, %rsp
-    movl %eax, -72(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -72(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -80(%rbp)
-    movq -80(%rbp), %rax
+    movl %eax, -536(%rbp)
+    leaq -528(%rbp), %rax
+    movq %rax, -536(%rbp)
+    leaq -520(%rbp), %rax
+    movq %rax, -544(%rbp)
+    subq $8, %rsp
+    movq -544(%rbp), %rdi
+    call system
+    addq $8, %rsp
+    movl %eax, -544(%rbp)
+    movq -536(%rbp), %rax
+    movl -544(%rbp), %ecx
+    movl %ecx, (%rax)
+    leaq -528(%rbp), %rax
+    movq %rax, -536(%rbp)
+    movq -536(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -536(%rbp)
+    movl -536(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -536(%rbp)
+    movl -536(%rbp), %eax
+    testl %eax, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -536(%rbp)
+    movl -536(%rbp), %eax
+    testl %eax, %eax
+    jz assemble_13
+assemble_9:
+    jmp assemble_11
+assemble_10:
+    movl $0, %eax
+    testl %eax, %eax
+    jz assemble_12
+assemble_11:
+    leaq .LC40(%rip), %rax
+    movq %rax, -536(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -544(%rbp)
+    movq -544(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -80(%rbp)
-    movq -72(%rbp), %rax
-    movq -80(%rbp), %rcx
-    movq %rcx, (%rax)
-    movq -72(%rbp), %rax
+    movq %rax, -544(%rbp)
+    movq -544(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -544(%rbp)
+    movq -544(%rbp), %rax
     addq $16, %rax
-    movq %rax, -80(%rbp)
-    movq -80(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    movq -72(%rbp), %rax
+    movq %rax, -544(%rbp)
+    movq -544(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -544(%rbp)
+    movq -544(%rbp), %rax
+    movq %rax, -544(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -552(%rbp)
+    movq -552(%rbp), %rax
+    movq %rax, -552(%rbp)
+    subq $184, %rsp
+    movl $3, %edi
+    movq -536(%rbp), %rsi
+    movq -544(%rbp), %rdx
+    movq -552(%rbp), %rcx
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    subq $8, %rsp
+    movl $1, %edi
+    call exit
+    addq $8, %rsp
+    jmp assemble_10
+assemble_12:
+    jmp assemble_13
+assemble_13:
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global link
+link:
+    push %rbp
+    mov %rsp, %rbp
+    subq $616, %rsp
+link_0:
+    movq %rdi, -8(%rbp)
+    movq %rsi, -16(%rbp)
+    subq $8, %rsp
+    movl $7, %edi
+    call set_log_stage
+    addq $8, %rsp
+    leaq .LC41(%rip), %rax
+    movq %rax, -568(%rbp)
+    subq $184, %rsp
+    movl $1, %edi
+    movq -568(%rbp), %rsi
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    leaq -528(%rbp), %rax
+    movq %rax, -568(%rbp)
+    movq -568(%rbp), %rdi
+    movl $0, %esi
+    movq $512, %rdx
+    call memset
+    movq -568(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $1, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $2, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $3, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $4, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $5, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $6, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $7, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $9, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $10, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $11, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $12, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $13, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $14, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $15, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $17, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $18, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $19, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
     addq $20, %rax
-    movq %rax, -80(%rbp)
-    movq -80(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -72(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $21, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $22, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $23, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
     addq $24, %rax
-    movq %rax, -80(%rbp)
-    movq -80(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -72(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -80(%rbp)
-    movq -80(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    movq -72(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -80(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -88(%rbp)
-    movq -88(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -88(%rbp)
-    movq -80(%rbp), %rax
-    movq -88(%rbp), %rcx
-    movq %rcx, (%rax)
-    movq -72(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $25, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $26, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $27, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
     addq $28, %rax
-    movq %rax, -72(%rbp)
-    movq -72(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq _sret(%rip), %rax
-    movq %rax, -72(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -80(%rbp)
-    movq -80(%rbp), %rax
-    movq %rax, -80(%rbp)
-    subq $8, %rsp
-    movq -72(%rbp), %rdi
-    movq -80(%rbp), %rsi
-    call arena_append
-    addq $8, %rsp
-    movq %rax, -72(%rbp)
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global merge
-merge:
-    push %rbp
-    mov %rsp, %rbp
-    subq $40, %rsp
-merge_0:
-    movl %edi, -8(%rbp)
-    movl %esi, -16(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -32(%rbp)
-    movq -32(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -32(%rbp)
-    movl -24(%rbp), %eax
-    cmpl -32(%rbp), %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz merge_3
-merge_1:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-merge_2:
-    jmp merge_3
-merge_3:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz merge_6
-merge_4:
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-merge_5:
-    jmp merge_6
-merge_6:
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz merge_9
-merge_7:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-merge_8:
-    jmp merge_9
-merge_9:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jnz merge_10
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz merge_11
-merge_10:
-    movq $1, %rax
-    movq %rax, -32(%rbp)
-    jmp merge_12
-merge_11:
-    movq $0, %rax
-    movq %rax, -32(%rbp)
-merge_12:
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz merge_15
-merge_13:
-    movl $2, %eax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-merge_14:
-    jmp merge_15
-merge_15:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $3, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz merge_17
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $3, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz merge_17
-merge_16:
-    movq $1, %rax
-    movq %rax, -32(%rbp)
-    jmp merge_18
-merge_17:
-    movq $0, %rax
-    movq %rax, -32(%rbp)
-merge_18:
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz merge_21
-merge_19:
-    movl $3, %eax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-merge_20:
-    jmp merge_21
-merge_21:
-    jmp merge_23
-merge_22:
-    movl $0, %eax
-    testl %eax, %eax
-    jz merge_24
-merge_23:
-    leaq .LC19(%rip), %rax
-    movq %rax, -24(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -24(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp merge_22
-merge_24:
-.global classify_union
-classify_union:
-    push %rbp
-    mov %rsp, %rbp
-    subq $184, %rsp
-classify_union_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    leaq -40(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    movq -144(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    leaq -16(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -144(%rbp)
-    movl -144(%rbp), %eax
-    cmpl $16, %eax
-    setg %al
-    movzbl %al, %eax
-    movl %eax, -144(%rbp)
-    movl -144(%rbp), %eax
-    testl %eax, %eax
-    jz classify_union_3
-classify_union_1:
-    leaq -40(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -8(%rbp), %rdi
-    movq -144(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-classify_union_2:
-    jmp classify_union_3
-classify_union_3:
-    leaq -64(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    leaq -72(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-classify_union_4:
-    leaq -72(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -144(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -152(%rbp)
-    movl -144(%rbp), %eax
-    cmpl -152(%rbp), %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -144(%rbp)
-    movl -144(%rbp), %eax
-    testl %eax, %eax
-    jz classify_union_14
-classify_union_5:
-    leaq -80(%rbp), %rax
-    movq %rax, -144(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -152(%rbp)
-    leaq -72(%rbp), %rax
-    movq %rax, -160(%rbp)
-    movq -160(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -160(%rbp)
-    subq $8, %rsp
-    movq -152(%rbp), %rdi
-    movl -160(%rbp), %esi
-    call get_union_member
-    addq $8, %rsp
-    movq %rax, -152(%rbp)
-    movq -144(%rbp), %rax
-    movq -152(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -104(%rbp), %rax
-    movq %rax, -144(%rbp)
-    leaq -128(%rbp), %rax
-    movq %rax, -152(%rbp)
-    leaq -80(%rbp), %rax
-    movq %rax, -160(%rbp)
-    movq -160(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -160(%rbp)
-    movq -160(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -160(%rbp)
-    movq -160(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -160(%rbp)
-    subq $8, %rsp
-    movq -152(%rbp), %rdi
-    movq -160(%rbp), %rsi
-    call abi_classify
-    addq $8, %rsp
-    movq -152(%rbp), %rax
-    movq %rax, -160(%rbp)
-    movq -144(%rbp), %rdi
-    movq -160(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    leaq -104(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -144(%rbp)
-    movl -144(%rbp), %eax
-    testl %eax, %eax
-    jz classify_union_8
-classify_union_6:
-    leaq -104(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -8(%rbp), %rdi
-    movq -144(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-classify_union_7:
-    jmp classify_union_8
-classify_union_8:
-    leaq -136(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-classify_union_9:
-    leaq -136(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -144(%rbp)
-    movl -144(%rbp), %eax
-    cmpl $2, %eax
-    setle %al
-    movzbl %al, %eax
-    movl %eax, -144(%rbp)
-    movl -144(%rbp), %eax
-    testl %eax, %eax
-    jz classify_union_12
-classify_union_10:
-    leaq -64(%rbp), %rax
-    movq %rax, -144(%rbp)
-    leaq -136(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -152(%rbp)
-    movslq -152(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    imulq $4, %rax
-    movq %rax, -152(%rbp)
-    movq -144(%rbp), %rax
-    addq -152(%rbp), %rax
-    movq %rax, -144(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -152(%rbp)
-    leaq -136(%rbp), %rax
-    movq %rax, -160(%rbp)
-    movq -160(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -160(%rbp)
-    movslq -160(%rbp), %rax
-    movq %rax, -160(%rbp)
-    movq -160(%rbp), %rax
-    imulq $4, %rax
-    movq %rax, -160(%rbp)
-    movq -152(%rbp), %rax
-    addq -160(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -152(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -160(%rbp)
-    leaq -136(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    movslq -168(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    imulq $4, %rax
-    movq %rax, -168(%rbp)
-    movq -160(%rbp), %rax
-    addq -168(%rbp), %rax
-    movq %rax, -160(%rbp)
-    movq -160(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -160(%rbp)
-    subq $8, %rsp
-    movl -152(%rbp), %edi
-    movl -160(%rbp), %esi
-    call merge
-    addq $8, %rsp
-    movl %eax, -152(%rbp)
-    movq -144(%rbp), %rax
-    movl -152(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp classify_union_11
-classify_union_11:
-    leaq -136(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -152(%rbp)
-    movl -152(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -152(%rbp)
-    movq -144(%rbp), %rax
-    movl -152(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp classify_union_9
-classify_union_12:
-    jmp classify_union_13
-classify_union_13:
-    leaq -72(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -152(%rbp)
-    movl -152(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -152(%rbp)
-    movq -144(%rbp), %rax
-    movl -152(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp classify_union_4
-classify_union_14:
-    leaq -64(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -8(%rbp), %rdi
-    movq -144(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global classify_struct
-classify_struct:
-    push %rbp
-    mov %rsp, %rbp
-    subq $216, %rsp
-classify_struct_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    leaq -40(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    movq -176(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    movq -176(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    leaq -16(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    cmpl $16, %eax
-    setg %al
-    movzbl %al, %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    testl %eax, %eax
-    jz classify_struct_3
-classify_struct_1:
-    leaq -40(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -8(%rbp), %rdi
-    movq -176(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-classify_struct_2:
-    jmp classify_struct_3
-classify_struct_3:
-    leaq -64(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -176(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -176(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -176(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    leaq -72(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-classify_struct_4:
-    leaq -72(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    movl -176(%rbp), %eax
-    cmpl -184(%rbp), %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    testl %eax, %eax
-    jz classify_struct_17
-classify_struct_5:
-    leaq -80(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    leaq -72(%rbp), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -192(%rbp)
-    subq $8, %rsp
-    movq -184(%rbp), %rdi
-    movl -192(%rbp), %esi
-    call get_struct_member
-    addq $8, %rsp
-    movq %rax, -184(%rbp)
-    movq -176(%rbp), %rax
-    movq -184(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -104(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -128(%rbp), %rax
-    movq %rax, -184(%rbp)
-    leaq -80(%rbp), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -192(%rbp)
-    subq $8, %rsp
-    movq -184(%rbp), %rdi
-    movq -192(%rbp), %rsi
-    call abi_classify
-    addq $8, %rsp
-    movq -184(%rbp), %rax
-    movq %rax, -192(%rbp)
-    movq -176(%rbp), %rdi
-    movq -192(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    leaq -104(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    testl %eax, %eax
-    jz classify_struct_8
-classify_struct_6:
-    leaq -104(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -8(%rbp), %rdi
-    movq -176(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-classify_struct_7:
-    jmp classify_struct_8
-classify_struct_8:
-    leaq -136(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -80(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    movq -176(%rbp), %rax
-    movl -184(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -144(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -80(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    leaq -80(%rbp), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -192(%rbp)
-    movl -184(%rbp), %eax
-    addl -192(%rbp), %eax
-    movl %eax, -184(%rbp)
-    movl -184(%rbp), %eax
-    subl $1, %eax
-    movl %eax, -184(%rbp)
-    movq -176(%rbp), %rax
-    movl -184(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -152(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -136(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    movl -184(%rbp), %eax
-    cltd
-    movl $8, %ecx
-    idivl %ecx
-    movl %eax, -184(%rbp)
-    movq -176(%rbp), %rax
-    movl -184(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -160(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    movl -184(%rbp), %eax
-    cltd
-    movl $8, %ecx
-    idivl %ecx
-    movl %eax, -184(%rbp)
-    movq -176(%rbp), %rax
-    movl -184(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -104(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    testl %eax, %eax
-    jz classify_struct_11
-classify_struct_9:
-    leaq -104(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -8(%rbp), %rdi
-    movq -176(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-classify_struct_10:
-    jmp classify_struct_11
-classify_struct_11:
-    leaq -168(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -152(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    movq -176(%rbp), %rax
-    movl -184(%rbp), %ecx
-    movl %ecx, (%rax)
-classify_struct_12:
-    leaq -168(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    leaq -160(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    movl -176(%rbp), %eax
-    cmpl -184(%rbp), %eax
-    setle %al
-    movzbl %al, %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    testl %eax, %eax
-    jz classify_struct_15
-classify_struct_13:
-    leaq -64(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -168(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    movslq -184(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    imulq $4, %rax
-    movq %rax, -184(%rbp)
-    movq -176(%rbp), %rax
-    addq -184(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -184(%rbp)
-    leaq -168(%rbp), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -192(%rbp)
-    movslq -192(%rbp), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    imulq $4, %rax
-    movq %rax, -192(%rbp)
-    movq -184(%rbp), %rax
-    addq -192(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -192(%rbp)
-    leaq -168(%rbp), %rax
-    movq %rax, -200(%rbp)
-    movq -200(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -200(%rbp)
-    leaq -152(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -208(%rbp)
-    movl -200(%rbp), %eax
-    subl -208(%rbp), %eax
-    movl %eax, -200(%rbp)
-    movslq -200(%rbp), %rax
-    movq %rax, -200(%rbp)
-    movq -200(%rbp), %rax
-    imulq $4, %rax
-    movq %rax, -200(%rbp)
-    movq -192(%rbp), %rax
-    addq -200(%rbp), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -192(%rbp)
-    subq $8, %rsp
-    movl -184(%rbp), %edi
-    movl -192(%rbp), %esi
-    call merge
-    addq $8, %rsp
-    movl %eax, -184(%rbp)
-    movq -176(%rbp), %rax
-    movl -184(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp classify_struct_14
-classify_struct_14:
-    leaq -168(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    movl -184(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -184(%rbp)
-    movq -176(%rbp), %rax
-    movl -184(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp classify_struct_12
-classify_struct_15:
-    jmp classify_struct_16
-classify_struct_16:
-    leaq -72(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    movl -184(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -184(%rbp)
-    movq -176(%rbp), %rax
-    movl -184(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp classify_struct_4
-classify_struct_17:
-    leaq -64(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -8(%rbp), %rdi
-    movq -176(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global abi_classify
-abi_classify:
-    push %rbp
-    mov %rsp, %rbp
-    subq $168, %rsp
-abi_classify_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    leaq -40(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rdi
-    movl $0, %esi
-    movq $8, %rdx
-    call memset
-    movq -144(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    leaq -16(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -144(%rbp)
-    movl -144(%rbp), %eax
-    cmpl $16, %eax
-    setg %al
-    movzbl %al, %eax
-    movl %eax, -144(%rbp)
-    movl -144(%rbp), %eax
-    testl %eax, %eax
-    jz abi_classify_3
-abi_classify_1:
-    leaq -40(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -8(%rbp), %rdi
-    movq -144(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_classify_2:
-    jmp abi_classify_3
-abi_classify_3:
-    leaq -16(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -144(%rbp)
-    movl -144(%rbp), %eax
-    cmpl $6, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -152(%rbp)
-    movl -152(%rbp), %eax
-    testl %eax, %eax
-    jz abi_classify_4
-    movl -144(%rbp), %eax
-    cmpl $1, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -152(%rbp)
-    movl -152(%rbp), %eax
-    testl %eax, %eax
-    jz abi_classify_5
-    movl -144(%rbp), %eax
-    cmpl $3, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -152(%rbp)
-    movl -152(%rbp), %eax
-    testl %eax, %eax
-    jz abi_classify_6
-    movl -144(%rbp), %eax
-    cmpl $0, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -152(%rbp)
-    movl -152(%rbp), %eax
-    testl %eax, %eax
-    jz abi_classify_7
-    movl -144(%rbp), %eax
-    cmpl $4, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -152(%rbp)
-    movl -152(%rbp), %eax
-    testl %eax, %eax
-    jz abi_classify_8
-    movl -144(%rbp), %eax
-    cmpl $2, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -152(%rbp)
-    movl -152(%rbp), %eax
-    testl %eax, %eax
-    jz abi_classify_9
-    movl -144(%rbp), %eax
-    cmpl $5, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -152(%rbp)
-    movl -152(%rbp), %eax
-    testl %eax, %eax
-    jz abi_classify_10
-    movl -144(%rbp), %eax
-    cmpl $7, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -144(%rbp)
-    movl -144(%rbp), %eax
-    testl %eax, %eax
-    jz abi_classify_11
-    jmp abi_classify_12
-abi_classify_4:
-abi_classify_5:
-abi_classify_6:
-abi_classify_7:
-abi_classify_8:
-    leaq -64(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl $2, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    leaq -64(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -8(%rbp), %rdi
-    movq -144(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_classify_9:
-    leaq -88(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl $3, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -144(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    leaq -88(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -8(%rbp), %rdi
-    movq -144(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_classify_10:
-    leaq -112(%rbp), %rax
-    movq %rax, -144(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -152(%rbp)
-    subq $8, %rsp
-    movq -144(%rbp), %rdi
-    movq -152(%rbp), %rsi
-    call classify_struct
-    addq $8, %rsp
-    movq -144(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -8(%rbp), %rdi
-    movq -152(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_classify_11:
-    leaq -112(%rbp), %rax
-    movq %rax, -144(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -152(%rbp)
-    subq $8, %rsp
-    movq -144(%rbp), %rdi
-    movq -152(%rbp), %rsi
-    call classify_union
-    addq $8, %rsp
-    movq -144(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -8(%rbp), %rdi
-    movq -152(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_classify_12:
-    subq $8, %rsp
-    movl $3, %edi
-    call log_start
-    addq $8, %rsp
-    leaq .LC20(%rip), %rax
-    movq %rax, -144(%rbp)
-    subq $184, %rsp
-    movq -144(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $184, %rsp
-    movl %eax, -144(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -144(%rbp)
-    subq $8, %rsp
-    movq -144(%rbp), %rdi
-    call print_type
-    addq $8, %rsp
-    leaq .LC21(%rip), %rax
-    movq %rax, -144(%rbp)
-    subq $184, %rsp
-    movq -144(%rbp), %rdi
-    xor %eax, %eax
-    call printf
-    addq $184, %rsp
-    movl %eax, -144(%rbp)
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-abi_classify_13:
-.global abi_lower_param_register
-abi_lower_param_register:
-    push %rbp
-    mov %rsp, %rbp
-    subq $168, %rsp
-abi_lower_param_register_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    movl %edx, -24(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    movl $4, %ecx
-    movl %ecx, (%rax)
-    movq -136(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -136(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -136(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rdi
-    movl $0, %esi
-    movq $24, %rdx
-    call memset
-    leaq -104(%rbp), %rax
-    movq %rax, -136(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -136(%rbp), %rdi
-    movq -144(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -128(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl $3, %ecx
-    movl %ecx, (%rax)
-    movq -136(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -144(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -152(%rbp)
-    subq $8, %rsp
-    movl -152(%rbp), %edi
-    call reg_size
-    addq $8, %rsp
-    movl %eax, -152(%rbp)
-    movq -144(%rbp), %rax
-    movl -152(%rbp), %ecx
-    movl %ecx, (%rax)
-    movq -136(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -136(%rbp), %rax
-    addq $20, %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -136(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -136(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -104(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -136(%rbp)
-    leaq -128(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -136(%rbp), %rdi
-    movq -144(%rbp), %rsi
-    movq $24, %rdx
-    call memcpy
-    leaq -16(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_register_10
-abi_lower_param_register_1:
-    leaq -24(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    cmpl $0, %eax
-    setge %al
-    movzbl %al, %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_register_3
-    leaq -24(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    cmpl $8, %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_register_3
-abi_lower_param_register_2:
-    movq $1, %rax
-    movq %rax, -144(%rbp)
-    jmp abi_lower_param_register_4
-abi_lower_param_register_3:
-    movq $0, %rax
-    movq %rax, -144(%rbp)
-abi_lower_param_register_4:
-    movl -144(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_register_9
-abi_lower_param_register_5:
-    jmp abi_lower_param_register_7
-abi_lower_param_register_6:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_lower_param_register_8
-abi_lower_param_register_7:
-    leaq .LC22(%rip), %rax
-    movq %rax, -136(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -144(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -136(%rbp), %rsi
-    movl -144(%rbp), %edx
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_lower_param_register_6
-abi_lower_param_register_8:
-    jmp abi_lower_param_register_9
-abi_lower_param_register_9:
-    leaq -104(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    leaq -104(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -136(%rbp)
-    leaq float_param_regs(%rip), %rax
-    movq %rax, -144(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -152(%rbp)
-    movslq -152(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    imulq $4, %rax
-    movq %rax, -152(%rbp)
-    movq -144(%rbp), %rax
-    addq -152(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -144(%rbp)
-    movq -136(%rbp), %rax
-    movl -144(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_lower_param_register_19
-abi_lower_param_register_10:
-    leaq -24(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    cmpl $0, %eax
-    setge %al
-    movzbl %al, %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_register_12
-    leaq -24(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    cmpl $6, %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_register_12
-abi_lower_param_register_11:
-    movq $1, %rax
-    movq %rax, -144(%rbp)
-    jmp abi_lower_param_register_13
-abi_lower_param_register_12:
-    movq $0, %rax
-    movq %rax, -144(%rbp)
-abi_lower_param_register_13:
-    movl -144(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -136(%rbp)
-    movl -136(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_register_18
-abi_lower_param_register_14:
-    jmp abi_lower_param_register_16
-abi_lower_param_register_15:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_lower_param_register_17
-abi_lower_param_register_16:
-    leaq .LC23(%rip), %rax
-    movq %rax, -136(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -144(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -136(%rbp), %rsi
-    movl -144(%rbp), %edx
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_lower_param_register_15
-abi_lower_param_register_17:
-    jmp abi_lower_param_register_18
-abi_lower_param_register_18:
-    leaq -104(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -104(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -136(%rbp)
-    movq -136(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -136(%rbp)
-    leaq int_param_regs(%rip), %rax
-    movq %rax, -144(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -152(%rbp)
-    movslq -152(%rbp), %rax
-    movq %rax, -152(%rbp)
-    movq -152(%rbp), %rax
-    imulq $4, %rax
-    movq %rax, -152(%rbp)
-    movq -144(%rbp), %rax
-    addq -152(%rbp), %rax
-    movq %rax, -144(%rbp)
-    movq -144(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -144(%rbp)
-    movq -136(%rbp), %rax
-    movl -144(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_lower_param_register_19
-abi_lower_param_register_19:
-    leaq -104(%rbp), %rax
-    movq %rax, -136(%rbp)
-    movq -8(%rbp), %rdi
-    movq -136(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global is_va_list_type
-is_va_list_type:
-    push %rbp
-    mov %rsp, %rbp
-    subq $40, %rsp
-is_va_list_type_0:
-    movq %rdi, -8(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
-    cmpl $4, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
-    testl %eax, %eax
-    jnz is_va_list_type_1
-    leaq -8(%rbp), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
-    cmpl $3, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
-    testl %eax, %eax
-    jz is_va_list_type_2
-is_va_list_type_1:
-    movq $1, %rax
-    movq %rax, -24(%rbp)
-    jmp is_va_list_type_3
-is_va_list_type_2:
-    movq $0, %rax
-    movq %rax, -24(%rbp)
-is_va_list_type_3:
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz is_va_list_type_5
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $29, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $30, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $31, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
     addq $32, %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $5, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz is_va_list_type_5
-is_va_list_type_4:
-    movq $1, %rax
-    movq %rax, -16(%rbp)
-    jmp is_va_list_type_6
-is_va_list_type_5:
-    movq $0, %rax
-    movq %rax, -16(%rbp)
-is_va_list_type_6:
-    movl -16(%rbp), %eax
-    testl %eax, %eax
-    jz is_va_list_type_8
-    leaq -8(%rbp), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -16(%rbp)
-    movq -16(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
-    cmpl $24, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -16(%rbp)
-    movl -16(%rbp), %eax
-    testl %eax, %eax
-    jz is_va_list_type_8
-is_va_list_type_7:
-    movq $1, %rax
-    movq %rax, -24(%rbp)
-    jmp is_va_list_type_9
-is_va_list_type_8:
-    movq $0, %rax
-    movq %rax, -24(%rbp)
-is_va_list_type_9:
-    movl -24(%rbp), %eax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global abi_lower_store
-abi_lower_store:
-    push %rbp
-    mov %rsp, %rbp
-    subq $56, %rsp
-abi_lower_store_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    movq %rdx, -24(%rbp)
-    movq %rcx, -32(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    cmpl $5, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_store_12
-abi_lower_store_1:
-    leaq -24(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    cmpl $16, %eax
-    setle %al
-    movzbl %al, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_store_6
-abi_lower_store_2:
-    jmp abi_lower_store_4
-abi_lower_store_3:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_lower_store_5
-abi_lower_store_4:
-    leaq .LC24(%rip), %rax
-    movq %rax, -40(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -40(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_lower_store_3
-abi_lower_store_5:
-    jmp abi_lower_store_6
-abi_lower_store_6:
-    leaq -24(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    cmpl $8, %eax
-    setle %al
-    movzbl %al, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -40(%rbp)
-    movl -40(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_store_11
-abi_lower_store_7:
-    jmp abi_lower_store_9
-abi_lower_store_8:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_lower_store_10
-abi_lower_store_9:
-    leaq .LC25(%rip), %rax
-    movq %rax, -40(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -40(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_lower_store_8
-abi_lower_store_10:
-    jmp abi_lower_store_11
-abi_lower_store_11:
-    leaq -24(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -40(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -48(%rbp)
-    movq -48(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -48(%rbp)
-    subq $8, %rsp
-    movl -48(%rbp), %edi
-    call get_integer_type
-    addq $8, %rsp
-    movq %rax, -48(%rbp)
-    movq -40(%rbp), %rax
-    movq -48(%rbp), %rcx
-    movq %rcx, (%rax)
-    jmp abi_lower_store_12
-abi_lower_store_12:
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global abi_lower_param
-abi_lower_param:
-    push %rbp
-    mov %rsp, %rbp
-    subq $248, %rsp
-abi_lower_param_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    movq %rdx, -24(%rbp)
-    movq %rcx, -32(%rbp)
-    movl %r8d, -40(%rbp)
-    movq %r9, -48(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    cmpl $-1, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_3
-abi_lower_param_1:
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_lower_param_2:
-    jmp abi_lower_param_3
-abi_lower_param_3:
-    leaq -56(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -216(%rbp)
-    movq -208(%rbp), %rax
-    movq -216(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -80(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -216(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -224(%rbp)
-    movq -224(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -224(%rbp)
-    subq $8, %rsp
-    movq -216(%rbp), %rdi
-    movq -224(%rbp), %rsi
-    call abi_classify
-    addq $8, %rsp
-    movq -216(%rbp), %rax
-    movq %rax, -224(%rbp)
-    movq -208(%rbp), %rdi
-    movq -224(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    leaq -80(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_6
-abi_lower_param_4:
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_lower_param_5:
-    jmp abi_lower_param_6
-abi_lower_param_6:
-    leaq -24(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $128, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl $2, %ecx
-    movl %ecx, (%rax)
-    leaq -112(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    movl -216(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -216(%rbp)
-    movl -216(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -216(%rbp)
-    movl -216(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_lower_param_7
-    movq $8, %rax
-    movq %rax, -224(%rbp)
-    jmp abi_lower_param_8
-abi_lower_param_7:
-    movq $6, %rax
-    movq %rax, -224(%rbp)
-abi_lower_param_8:
-    movq -208(%rbp), %rax
-    movl -224(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -120(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    addq $112, %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $33, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $34, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $35, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $36, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $37, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $38, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $39, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $40, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $41, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $42, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $43, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $44, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $45, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $46, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $47, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
     addq $48, %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    movl -216(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -216(%rbp)
-    movl -216(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_lower_param_9
-    movq $176, %rax
-    movq %rax, -224(%rbp)
-    jmp abi_lower_param_10
-abi_lower_param_9:
-    movq $0, %rax
-    movq %rax, -224(%rbp)
-abi_lower_param_10:
-    movq -208(%rbp), %rax
-    movl -224(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -24(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -208(%rbp)
-    leaq -112(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    movl -208(%rbp), %eax
-    cmpl -216(%rbp), %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_12
-abi_lower_param_11:
-    leaq -24(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -208(%rbp)
-    movq $1, %rax
-    imulq $40, %rax
-    movq %rax, -216(%rbp)
-    movq -208(%rbp), %rax
-    addq -216(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -160(%rbp), %rax
-    movq %rax, -216(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -224(%rbp)
-    movq -224(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -224(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -232(%rbp)
-    movq -232(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -232(%rbp)
-    movq -232(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -232(%rbp)
-    movq -232(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -232(%rbp)
-    movq -232(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -232(%rbp)
-    subq $8, %rsp
-    movq -216(%rbp), %rdi
-    movq -224(%rbp), %rsi
-    movl -232(%rbp), %edx
-    call abi_lower_param_register
-    addq $8, %rsp
-    movq -216(%rbp), %rax
-    movq %rax, -224(%rbp)
-    movq -208(%rbp), %rdi
-    movq -224(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    jmp abi_lower_param_13
-abi_lower_param_12:
-    leaq -24(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -208(%rbp)
-    movq $1, %rax
-    imulq $40, %rax
-    movq %rax, -216(%rbp)
-    movq -208(%rbp), %rax
-    addq -216(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -160(%rbp), %rax
-    movq %rax, -216(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -224(%rbp)
-    movq -224(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -224(%rbp)
-    movq -224(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -224(%rbp)
-    movq -224(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -224(%rbp)
-    movq -224(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -224(%rbp)
-    leaq -112(%rbp), %rax
-    movq %rax, -232(%rbp)
-    movq -232(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -232(%rbp)
-    movl -224(%rbp), %eax
-    subl -232(%rbp), %eax
-    movl %eax, -224(%rbp)
-    movl $8, %eax
-    imull -224(%rbp)
-    movl %eax, -224(%rbp)
-    leaq -120(%rbp), %rax
-    movq %rax, -232(%rbp)
-    movq -232(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -232(%rbp)
-    movl -224(%rbp), %eax
-    subl -232(%rbp), %eax
-    movl %eax, -224(%rbp)
-    subq $8, %rsp
-    movq -216(%rbp), %rdi
-    movl $8, %esi
-    movl $8, %edx
-    movl -224(%rbp), %ecx
-    call ir_stack_value
-    addq $8, %rsp
-    movq -216(%rbp), %rax
-    movq %rax, -224(%rbp)
-    movq -208(%rbp), %rdi
-    movq -224(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    jmp abi_lower_param_13
-abi_lower_param_13:
-    leaq -24(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    cmpl $5, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_22
-abi_lower_param_14:
-    leaq -24(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -208(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    movl -216(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -216(%rbp)
-    movl -216(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -216(%rbp)
-    movl -216(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_lower_param_15
-    leaq -24(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    subq $8, %rsp
-    movl -216(%rbp), %edi
-    call get_float_type
-    addq $8, %rsp
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq %rax, -224(%rbp)
-    jmp abi_lower_param_16
-abi_lower_param_15:
-    leaq -24(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    subq $8, %rsp
-    movl -216(%rbp), %edi
-    call get_integer_type
-    addq $8, %rsp
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movq %rax, -224(%rbp)
-abi_lower_param_16:
-    movq -208(%rbp), %rax
-    movq -224(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -80(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq $1, %rax
-    imulq $4, %rax
-    movq %rax, -216(%rbp)
-    movq -208(%rbp), %rax
-    addq -216(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_param_21
-abi_lower_param_17:
-    jmp abi_lower_param_19
-abi_lower_param_18:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_lower_param_20
-abi_lower_param_19:
-    leaq .LC26(%rip), %rax
-    movq %rax, -208(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -208(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_lower_param_18
-abi_lower_param_20:
-    jmp abi_lower_param_21
-abi_lower_param_21:
-    jmp abi_lower_param_22
-abi_lower_param_22:
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global abi_lower_ret
-abi_lower_ret:
-    push %rbp
-    mov %rsp, %rbp
-    subq $392, %rsp
-abi_lower_ret_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    movq %rdx, -24(%rbp)
-    movq %rcx, -32(%rbp)
-    leaq -40(%rbp), %rax
-    movq %rax, -344(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -352(%rbp)
-    movq -344(%rbp), %rax
-    movq -352(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -40(%rbp), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -344(%rbp)
-    movl -344(%rbp), %eax
-    cmpl $5, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -344(%rbp)
-    movl -344(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_ret_12
-abi_lower_ret_1:
-    leaq -64(%rbp), %rax
-    movq %rax, -344(%rbp)
-    leaq -88(%rbp), %rax
-    movq %rax, -352(%rbp)
-    leaq -40(%rbp), %rax
-    movq %rax, -360(%rbp)
-    movq -360(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -360(%rbp)
-    subq $8, %rsp
-    movq -352(%rbp), %rdi
-    movq -360(%rbp), %rsi
-    call abi_classify
-    addq $8, %rsp
-    movq -352(%rbp), %rax
-    movq %rax, -360(%rbp)
-    movq -344(%rbp), %rdi
-    movq -360(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    leaq -64(%rbp), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -344(%rbp)
-    movl -344(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_ret_3
-abi_lower_ret_2:
-    leaq -128(%rbp), %rax
-    movq %rax, -344(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -352(%rbp)
-    movq $0, %rax
-    imulq $40, %rax
-    movq %rax, -360(%rbp)
-    movq -352(%rbp), %rax
-    addq -360(%rbp), %rax
-    movq %rax, -352(%rbp)
-    movq -344(%rbp), %rdi
-    movq -352(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -24(%rbp), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -344(%rbp)
-    movq $0, %rax
-    imulq $40, %rax
-    movq %rax, -352(%rbp)
-    movq -344(%rbp), %rax
-    addq -352(%rbp), %rax
-    movq %rax, -344(%rbp)
-    leaq ir_no_value(%rip), %rax
-    movq %rax, -352(%rbp)
-    movq -344(%rbp), %rdi
-    movq -352(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -40(%rbp), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -344(%rbp)
-    subq $8, %rsp
-    movq -344(%rbp), %rdi
-    call set_hidden_sret_ptr
-    addq $8, %rsp
-    leaq -24(%rbp), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -344(%rbp)
-    leaq type_void(%rip), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -352(%rbp)
-    movq -344(%rbp), %rax
-    movq -352(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -296(%rbp), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    movl $15, %ecx
-    movl %ecx, (%rax)
-    movq -344(%rbp), %rax
-    addq $128, %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movl $2, %ecx
-    movl %ecx, (%rax)
-    movq -344(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -352(%rbp)
-    leaq -336(%rbp), %rax
-    movq %rax, -360(%rbp)
-    leaq _hidden_sret_ptr(%rip), %rax
-    movq %rax, -368(%rbp)
-    movq -368(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -368(%rbp)
-    subq $8, %rsp
-    movq -360(%rbp), %rdi
-    movq -368(%rbp), %rsi
-    call ir_symbol_value
-    addq $8, %rsp
-    movq -360(%rbp), %rax
-    movq %rax, -368(%rbp)
-    movq -352(%rbp), %rdi
-    movq -368(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    movq -344(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -352(%rbp)
-    leaq -128(%rbp), %rax
-    movq %rax, -360(%rbp)
-    movq -352(%rbp), %rdi
-    movq -360(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    movq -344(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $49, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $50, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $51, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $52, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $53, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $54, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $55, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $57, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $58, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $59, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $60, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $61, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $62, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $63, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $64, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $65, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $66, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $67, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $68, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $69, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $70, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $71, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $72, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $73, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $74, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $75, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $76, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $77, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $78, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $79, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $81, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $82, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $83, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $84, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $85, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $86, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $87, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
     addq $88, %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rdi
-    movl $0, %esi
-    movq $40, %rdx
-    call memset
-    movq -344(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -344(%rbp)
-    leaq -40(%rbp), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -352(%rbp)
-    movq -344(%rbp), %rax
-    movl -352(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -16(%rbp), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -344(%rbp)
-    leaq -296(%rbp), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movq %rax, -352(%rbp)
-    leaq -32(%rbp), %rax
-    movq %rax, -360(%rbp)
-    movq -360(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -360(%rbp)
-    movq -360(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -368(%rbp)
-    movl -368(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -376(%rbp)
-    movq -360(%rbp), %rax
-    movl -376(%rbp), %ecx
-    movl %ecx, (%rax)
-    subq $8, %rsp
-    movq -344(%rbp), %rdi
-    movq -352(%rbp), %rsi
-    movl -368(%rbp), %edx
-    call insert
-    addq $8, %rsp
-    movq %rax, -344(%rbp)
-    jmp abi_lower_ret_11
-abi_lower_ret_3:
-    leaq -24(%rbp), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -344(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -352(%rbp)
-    movq $0, %rax
-    imulq $4, %rax
-    movq %rax, -360(%rbp)
-    movq -352(%rbp), %rax
-    addq -360(%rbp), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -352(%rbp)
-    movl -352(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -352(%rbp)
-    movl -352(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -352(%rbp)
-    movl -352(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_lower_ret_4
-    leaq type_u64(%rip), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movq %rax, -360(%rbp)
-    jmp abi_lower_ret_5
-abi_lower_ret_4:
-    leaq type_f64(%rip), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -352(%rbp)
-    movq -352(%rbp), %rax
-    movq %rax, -360(%rbp)
-abi_lower_ret_5:
-    movq -344(%rbp), %rax
-    movq -360(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -64(%rbp), %rax
-    movq %rax, -344(%rbp)
-    movq $1, %rax
-    imulq $4, %rax
-    movq %rax, -352(%rbp)
-    movq -344(%rbp), %rax
-    addq -352(%rbp), %rax
-    movq %rax, -344(%rbp)
-    movq -344(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -344(%rbp)
-    movl -344(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -344(%rbp)
-    movl -344(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -344(%rbp)
-    movl -344(%rbp), %eax
-    testl %eax, %eax
-    jz abi_lower_ret_10
-abi_lower_ret_6:
-    jmp abi_lower_ret_8
-abi_lower_ret_7:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_lower_ret_9
-abi_lower_ret_8:
-    leaq .LC27(%rip), %rax
-    movq %rax, -344(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -344(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_lower_ret_7
-abi_lower_ret_9:
-    jmp abi_lower_ret_10
-abi_lower_ret_10:
-    jmp abi_lower_ret_11
-abi_lower_ret_11:
-    jmp abi_lower_ret_12
-abi_lower_ret_12:
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_lower_ret_13:
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global abi_gen_builtin
-abi_gen_builtin:
-    push %rbp
-    mov %rsp, %rbp
-    subq $2696, %rsp
-abi_gen_builtin_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    movq %rdx, -24(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2624(%rbp)
-    movl -2624(%rbp), %eax
-    cmpl $1, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -2632(%rbp)
-    movl -2632(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_1
-    movl -2624(%rbp), %eax
-    cmpl $2, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -2632(%rbp)
-    movl -2632(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_13
-    movl -2624(%rbp), %eax
-    cmpl $3, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -2632(%rbp)
-    movl -2632(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_24
-    movl -2624(%rbp), %eax
-    cmpl $0, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -2632(%rbp)
-    movl -2632(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_25
-    movl -2624(%rbp), %eax
-    cmpl $4, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -2624(%rbp)
-    movl -2624(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_29
-    jmp abi_gen_builtin_33
-abi_gen_builtin_1:
-    leaq -32(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2632(%rbp)
-    subq $8, %rsp
-    movq -2632(%rbp), %rdi
-    movl $1, %esi
-    call get_node
-    addq $8, %rsp
-    movq %rax, -2632(%rbp)
-    movq -2624(%rbp), %rax
-    movq -2632(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -40(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movl $-1, %ecx
-    movl %ecx, (%rax)
-    leaq -48(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-abi_gen_builtin_2:
-    leaq -48(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2624(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2632(%rbp)
-    movl -2624(%rbp), %eax
-    cmpl -2632(%rbp), %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -2624(%rbp)
-    movl -2624(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_7
-abi_gen_builtin_3:
-    leaq -56(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    leaq -48(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2640(%rbp)
-    subq $8, %rsp
-    movq -2632(%rbp), %rdi
-    movl -2640(%rbp), %esi
-    call get_local_symbol
-    addq $8, %rsp
-    movq %rax, -2632(%rbp)
-    movq -2624(%rbp), %rax
-    movq -2632(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -32(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2624(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    movq -2624(%rbp), %rax
-    cmpq -2632(%rbp), %rax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2624(%rbp)
-    movl -2624(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_5
-abi_gen_builtin_4:
-    leaq -40(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -48(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2632(%rbp)
-    movq -2624(%rbp), %rax
-    movl -2632(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_gen_builtin_5
-abi_gen_builtin_5:
-    jmp abi_gen_builtin_6
-abi_gen_builtin_6:
-    leaq -48(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2632(%rbp)
-    movl -2632(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -2632(%rbp)
-    movq -2624(%rbp), %rax
-    movl -2632(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_gen_builtin_2
-abi_gen_builtin_7:
-    leaq -40(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2624(%rbp)
-    movl -2624(%rbp), %eax
-    cmpl $-1, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -2624(%rbp)
-    movl -2624(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2624(%rbp)
-    movl -2624(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_12
-abi_gen_builtin_8:
-    jmp abi_gen_builtin_10
-abi_gen_builtin_9:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_11
-abi_gen_builtin_10:
-    leaq .LC28(%rip), %rax
-    movq %rax, -2624(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -2624(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_gen_builtin_9
-abi_gen_builtin_11:
-    jmp abi_gen_builtin_12
-abi_gen_builtin_12:
-    leaq -64(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2632(%rbp)
-    subq $8, %rsp
-    movq -2632(%rbp), %rdi
-    movl $0, %esi
-    call get_node
-    addq $8, %rsp
-    movq %rax, -2632(%rbp)
-    movq -2624(%rbp), %rax
-    movq -2632(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -104(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    movq -2648(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2648(%rbp)
-    subq $8, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq -2648(%rbp), %rdx
-    call ir_gen_lvalue
-    addq $8, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -144(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $89, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $90, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $91, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $92, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $93, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $94, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $95, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $96, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $97, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $98, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $99, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $100, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $101, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $102, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $103, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $104, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $105, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $106, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $107, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $108, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $109, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $110, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $111, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
     addq $112, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2656(%rbp)
-    movl -2656(%rbp), %eax
-    imull $8, %eax
-    movl %eax, -2656(%rbp)
-    movslq -2656(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq type_u32(%rip), %rax
-    movq %rax, -2648(%rbp)
-    movq -2648(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2648(%rbp)
-    subq $88, %rsp
-    movq -2624(%rbp), %rdi
-    movq -2632(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2640(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2648(%rbp), %rdx
-    call ir_store
-    addq $88, %rsp
-    movq -2624(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_next_virtual_reg
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    subq $8, %rsp
-    movq -2664(%rbp), %rdi
-    movq $4, %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2664(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    leaq type_void_ptr(%rip), %rax
-    movq %rax, -2664(%rbp)
-    movq -2664(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2664(%rbp)
-    subq $120, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movl $0, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 80(%rsp), %rax
-    movq %rax, %r10
-    movq -2672(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2664(%rbp), %rcx
-    call ir_binary
-    addq $120, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -144(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $112, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2656(%rbp)
-    movl -2656(%rbp), %eax
-    imull $16, %eax
-    movl %eax, -2656(%rbp)
-    movl $48, %eax
-    addl -2656(%rbp), %eax
-    movl %eax, -2656(%rbp)
-    movslq -2656(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq type_u32(%rip), %rax
-    movq %rax, -2648(%rbp)
-    movq -2648(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2648(%rbp)
-    subq $88, %rsp
-    movq -2624(%rbp), %rdi
-    movq -2632(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2640(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2648(%rbp), %rdx
-    call ir_store
-    addq $88, %rsp
-    movq -2624(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_next_virtual_reg
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    subq $8, %rsp
-    movq -2664(%rbp), %rdi
-    movq $4, %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2664(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    leaq type_void_ptr(%rip), %rax
-    movq %rax, -2664(%rbp)
-    movq -2664(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2664(%rbp)
-    subq $120, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movl $0, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 80(%rsp), %rax
-    movq %rax, %r10
-    movq -2672(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2664(%rbp), %rcx
-    call ir_binary
-    addq $120, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -584(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movl $8, %esi
-    movl $8, %edx
-    movl $16, %ecx
-    call ir_stack_value
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    subq $40, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movl $0, %edx
-    call ir_address
-    addq $40, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -144(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    leaq -584(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq type_void_ptr(%rip), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $88, %rsp
-    movq -2624(%rbp), %rdi
-    movq -2632(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2640(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2656(%rbp), %rdx
-    call ir_store
-    addq $88, %rsp
-    movq -2624(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_next_virtual_reg
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    subq $8, %rsp
-    movq -2664(%rbp), %rdi
-    movq $8, %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2664(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    leaq type_void_ptr(%rip), %rax
-    movq %rax, -2664(%rbp)
-    movq -2664(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2664(%rbp)
-    subq $120, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movl $0, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 80(%rsp), %rax
-    movq %rax, %r10
-    movq -2672(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2664(%rbp), %rcx
-    call ir_binary
-    addq $120, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -144(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    subq $8, %rsp
-    movq -2664(%rbp), %rdi
-    movl $8, %esi
-    movl $8, %edx
-    movl $-176, %ecx
-    call ir_stack_value
-    addq $8, %rsp
-    movq -2664(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    subq $40, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2672(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movl $0, %edx
-    call ir_address
-    addq $40, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq type_void_ptr(%rip), %rax
-    movq %rax, -2648(%rbp)
-    movq -2648(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2648(%rbp)
-    subq $88, %rsp
-    movq -2624(%rbp), %rdi
-    movq -2632(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2640(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2648(%rbp), %rdx
-    call ir_store
-    addq $88, %rsp
-    movq -2624(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq ir_no_value(%rip), %rax
-    movq %rax, -2624(%rbp)
-    movq -8(%rbp), %rdi
-    movq -2624(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_gen_builtin_13:
-    leaq -952(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2632(%rbp)
-    subq $8, %rsp
-    movq -2632(%rbp), %rdi
-    movl $0, %esi
-    call get_node
-    addq $8, %rsp
-    movq %rax, -2632(%rbp)
-    movq -2624(%rbp), %rax
-    movq -2632(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -992(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -952(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    movq -2648(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2648(%rbp)
-    subq $8, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq -2648(%rbp), %rdx
-    call ir_gen_rvalue
-    addq $8, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -1040(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2632(%rbp)
-    subq $8, %rsp
-    movq -2632(%rbp), %rdi
-    movl $1, %esi
-    call get_node
-    addq $8, %rsp
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    movq -2624(%rbp), %rax
-    movq -2632(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -1040(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2624(%rbp)
-    movl -2624(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2624(%rbp)
-    movl -2624(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_15
-abi_gen_builtin_14:
-    leaq -992(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_next_virtual_reg
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq -992(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    subq $8, %rsp
-    movq -2664(%rbp), %rdi
-    movq $4, %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2664(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    leaq type_u32(%rip), %rax
-    movq %rax, -2664(%rbp)
-    movq -2664(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2664(%rbp)
-    subq $120, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movl $0, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 80(%rsp), %rax
-    movq %rax, %r10
-    movq -2672(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2664(%rbp), %rcx
-    call ir_binary
-    addq $120, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    jmp abi_gen_builtin_15
-abi_gen_builtin_15:
-    leaq -1200(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -992(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq type_u32(%rip), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $40, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2656(%rbp), %rdx
-    call ir_load
-    addq $40, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -1280(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -1200(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq -1040(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    movq -2664(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2664(%rbp)
-    movq -2664(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2664(%rbp)
-    movl -2664(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2664(%rbp)
-    movl -2664(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2664(%rbp)
-    movl -2664(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_gen_builtin_16
-    movq $176, %rax
-    movq %rax, -2672(%rbp)
-    jmp abi_gen_builtin_17
-abi_gen_builtin_16:
-    movq $48, %rax
-    movq %rax, -2672(%rbp)
-abi_gen_builtin_17:
-    movslq -2672(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    subq $8, %rsp
-    movq -2656(%rbp), %rdi
-    movq -2664(%rbp), %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2656(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    leaq type_i32(%rip), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $88, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movl $0, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2664(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2656(%rbp), %rcx
-    call ir_cmp
-    addq $88, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -1368(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    subq $8, %rsp
-    call ir_new_block
-    addq $8, %rsp
-    movq %rax, -2632(%rbp)
-    movq -2624(%rbp), %rax
-    movq -2632(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -1376(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    subq $8, %rsp
-    call ir_new_block
-    addq $8, %rsp
-    movq %rax, -2632(%rbp)
-    movq -2624(%rbp), %rax
-    movq -2632(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -144(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    leaq -1280(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    leaq -1368(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    movq -2648(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2648(%rbp)
-    subq $40, %rsp
-    movq -2624(%rbp), %rdi
-    movq -2632(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2640(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq $0, %rdx
-    movq -2648(%rbp), %rcx
-    call ir_branch_cond
-    addq $40, %rsp
-    movq -2624(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -1456(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_next_virtual_reg
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq -992(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    leaq -1040(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    movq -2672(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2672(%rbp)
-    movq -2672(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2672(%rbp)
-    movl -2672(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2672(%rbp)
-    movl -2672(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2672(%rbp)
-    movl -2672(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_gen_builtin_18
-    movq $12, %rax
-    movq %rax, -2680(%rbp)
-    jmp abi_gen_builtin_19
-abi_gen_builtin_18:
-    movq $16, %rax
-    movq %rax, -2680(%rbp)
-abi_gen_builtin_19:
-    movslq -2680(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    subq $8, %rsp
-    movq -2664(%rbp), %rdi
-    movq -2672(%rbp), %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2664(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    leaq type_u64(%rip), %rax
-    movq %rax, -2664(%rbp)
-    movq -2664(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2664(%rbp)
-    subq $120, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movl $0, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 80(%rsp), %rax
-    movq %rax, %r10
-    movq -2672(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2664(%rbp), %rcx
-    call ir_binary
-    addq $120, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -1616(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -1456(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq type_void_ptr(%rip), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $40, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2656(%rbp), %rdx
-    call ir_load
-    addq $40, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -1696(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_next_virtual_reg
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq -1616(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -1200(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    leaq type_u32(%rip), %rax
-    movq %rax, -2672(%rbp)
-    movq -2672(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2672(%rbp)
-    subq $120, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movl $0, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 80(%rsp), %rax
-    movq %rax, %r10
-    movq -2664(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2672(%rbp), %rcx
-    call ir_binary
-    addq $120, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -1816(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -1696(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -1040(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $40, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2656(%rbp), %rdx
-    call ir_load
-    addq $40, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -1896(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_next_virtual_reg
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq -1200(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    leaq -1040(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    movq -2672(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2672(%rbp)
-    movq -2672(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2672(%rbp)
-    movl -2672(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2672(%rbp)
-    movl -2672(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2672(%rbp)
-    movl -2672(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_gen_builtin_20
-    movq $16, %rax
-    movq %rax, -2680(%rbp)
-    jmp abi_gen_builtin_21
-abi_gen_builtin_20:
-    movq $8, %rax
-    movq %rax, -2680(%rbp)
-abi_gen_builtin_21:
-    movslq -2680(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    subq $8, %rsp
-    movq -2664(%rbp), %rdi
-    movq -2672(%rbp), %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2664(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    leaq type_u32(%rip), %rax
-    movq %rax, -2664(%rbp)
-    movq -2664(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2664(%rbp)
-    subq $120, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movl $0, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 80(%rsp), %rax
-    movq %rax, %r10
-    movq -2672(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2664(%rbp), %rcx
-    call ir_binary
-    addq $120, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -144(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    leaq -992(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    leaq -1896(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq type_u32(%rip), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $88, %rsp
-    movq -2624(%rbp), %rdi
-    movq -2632(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2640(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2656(%rbp), %rdx
-    call ir_store
-    addq $88, %rsp
-    movq -2624(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    leaq -1376(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    subq $8, %rsp
-    movq -2624(%rbp), %rdi
-    movq -2632(%rbp), %rsi
-    movq -2640(%rbp), %rdx
-    call ir_branch
-    addq $8, %rsp
-    movq -2624(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2624(%rbp)
-    leaq -1368(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    subq $8, %rsp
-    movq -2624(%rbp), %rdi
-    movq -2632(%rbp), %rsi
-    call ir_append_block
-    addq $8, %rsp
-    movq %rax, -2624(%rbp)
-    leaq -2136(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_next_virtual_reg
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq -992(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    leaq -1040(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    movq -2672(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2672(%rbp)
-    movq -2672(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -2672(%rbp)
-    movl -2672(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2672(%rbp)
-    movl -2672(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -2672(%rbp)
-    movl -2672(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_gen_builtin_22
-    movq $4, %rax
-    movq %rax, -2680(%rbp)
-    jmp abi_gen_builtin_23
-abi_gen_builtin_22:
-    movq $8, %rax
-    movq %rax, -2680(%rbp)
-abi_gen_builtin_23:
-    movslq -2680(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    subq $8, %rsp
-    movq -2664(%rbp), %rdi
-    movq -2672(%rbp), %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2664(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    leaq type_void_ptr(%rip), %rax
-    movq %rax, -2664(%rbp)
-    movq -2664(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2664(%rbp)
-    subq $120, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movl $0, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 80(%rsp), %rax
-    movq %rax, %r10
-    movq -2672(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2664(%rbp), %rcx
-    call ir_binary
-    addq $120, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -2296(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -2136(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq type_void_ptr(%rip), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $40, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2656(%rbp), %rdx
-    call ir_load
-    addq $40, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -2376(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -2296(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -1040(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $40, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2656(%rbp), %rdx
-    call ir_load
-    addq $40, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -2456(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2640(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2640(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $8, %rsp
-    movq -2648(%rbp), %rdi
-    movq -2656(%rbp), %rsi
-    call ir_next_virtual_reg
-    addq $8, %rsp
-    movq -2648(%rbp), %rax
-    movq %rax, -2656(%rbp)
-    leaq -2296(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -2664(%rbp)
-    subq $8, %rsp
-    movq -2664(%rbp), %rdi
-    movq $8, %rsi
-    call ir_integer_literal
-    addq $8, %rsp
-    movq -2664(%rbp), %rax
-    movq %rax, -2672(%rbp)
-    leaq type_void_ptr(%rip), %rax
-    movq %rax, -2664(%rbp)
-    movq -2664(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2664(%rbp)
-    subq $120, %rsp
-    movq -2632(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movl $0, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2656(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 80(%rsp), %rax
-    movq %rax, %r10
-    movq -2672(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2664(%rbp), %rcx
-    call ir_binary
-    addq $120, %rsp
-    movq -2632(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    movq -2624(%rbp), %rdi
-    movq -2640(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -144(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    leaq -2136(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    leaq -2456(%rbp), %rax
-    movq %rax, -2648(%rbp)
-    leaq type_void_ptr(%rip), %rax
-    movq %rax, -2656(%rbp)
-    movq -2656(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2656(%rbp)
-    subq $88, %rsp
-    movq -2624(%rbp), %rdi
-    movq -2632(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2640(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2648(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -2656(%rbp), %rdx
-    call ir_store
-    addq $88, %rsp
-    movq -2624(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2624(%rbp)
-    leaq -1816(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    leaq -2376(%rbp), %rax
-    movq %rax, -2640(%rbp)
-    subq $88, %rsp
-    movq -2624(%rbp), %rdi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -2632(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -2640(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    call ir_move
-    addq $88, %rsp
-    leaq -16(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -2624(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2624(%rbp)
-    leaq -1376(%rbp), %rax
-    movq %rax, -2632(%rbp)
-    movq -2632(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -2632(%rbp)
-    subq $8, %rsp
-    movq -2624(%rbp), %rdi
-    movq -2632(%rbp), %rsi
-    call ir_append_block
-    addq $8, %rsp
-    movq %rax, -2624(%rbp)
-    leaq -1816(%rbp), %rax
-    movq %rax, -2624(%rbp)
-    movq -8(%rbp), %rdi
-    movq -2624(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_gen_builtin_24:
-    leaq ir_no_value(%rip), %rax
-    movq %rax, -2624(%rbp)
-    movq -8(%rbp), %rdi
-    movq -2624(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_gen_builtin_25:
-    jmp abi_gen_builtin_27
-abi_gen_builtin_26:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_28
-abi_gen_builtin_27:
-    leaq .LC29(%rip), %rax
-    movq %rax, -2624(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -2624(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_gen_builtin_26
-abi_gen_builtin_28:
-abi_gen_builtin_29:
-    jmp abi_gen_builtin_31
-abi_gen_builtin_30:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_gen_builtin_32
-abi_gen_builtin_31:
-    leaq .LC30(%rip), %rax
-    movq %rax, -2624(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -2624(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_gen_builtin_30
-abi_gen_builtin_32:
-abi_gen_builtin_33:
-.global abi_gen_params
-abi_gen_params:
-    push %rbp
-    mov %rsp, %rbp
-    subq $1304, %rsp
-abi_gen_params_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -48(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    leaq -72(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    addq $112, %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1272(%rbp)
-    subq $8, %rsp
-    movq -1264(%rbp), %rdi
-    movq -1272(%rbp), %rsi
-    call abi_classify
-    addq $8, %rsp
-    movq -1264(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1256(%rbp), %rdi
-    movq -1272(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    leaq -48(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1256(%rbp)
-    movl -1256(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_params_2
-abi_gen_params_1:
-    leaq -16(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    addq $112, %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    subq $8, %rsp
-    movq -1256(%rbp), %rdi
-    call set_hidden_sret_ptr
-    addq $8, %rsp
-    leaq -16(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1256(%rbp)
-    leaq _hidden_sret_ptr(%rip), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    subq $8, %rsp
-    movq -1256(%rbp), %rdi
-    movq -1264(%rbp), %rsi
-    call append
-    addq $8, %rsp
-    movq %rax, -1256(%rbp)
-    leaq -240(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl $18, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $113, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $114, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $115, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $116, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $117, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $118, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $119, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $121, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $122, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $123, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $124, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $125, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $126, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $127, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
     addq $128, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1264(%rbp)
-    leaq -280(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    leaq _hidden_sret_ptr(%rip), %rax
-    movq %rax, -1280(%rbp)
-    movq -1280(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1280(%rbp)
-    subq $8, %rsp
-    movq -1272(%rbp), %rdi
-    movq -1280(%rbp), %rsi
-    call ir_symbol_value
-    addq $8, %rsp
-    movq -1272(%rbp), %rax
-    movq %rax, -1280(%rbp)
-    movq -1264(%rbp), %rdi
-    movq -1280(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    movq -1256(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rdi
-    movl $0, %esi
-    movq $40, %rdx
-    call memset
-    movq -1256(%rbp), %rax
-    addq $88, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rdi
-    movl $0, %esi
-    movq $40, %rdx
-    call memset
-    movq -1256(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $129, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $130, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $131, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $132, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $133, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $134, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $135, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $136, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $137, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $138, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $139, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $140, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $141, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $142, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $143, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
     addq $144, %rax
-    movq %rax, -1264(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1280(%rbp)
-    movl -1280(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -1288(%rbp)
-    movq -1272(%rbp), %rax
-    movl -1288(%rbp), %ecx
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $145, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $146, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $147, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $148, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $149, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $150, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $151, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $152, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $153, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $154, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $155, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $156, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $157, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $158, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $159, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $160, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $161, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $162, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $163, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $164, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $165, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $166, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $167, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $168, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $169, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $170, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $171, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $172, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $173, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $174, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $175, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $176, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $177, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $178, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $179, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $180, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $181, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $182, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $183, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $184, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $185, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $186, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $187, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $188, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $189, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $190, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $191, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $192, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $193, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $194, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $195, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $196, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $197, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $198, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $199, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $200, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $201, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $202, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $203, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $204, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $205, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $206, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $207, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $208, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $209, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $210, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $211, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $212, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $213, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $214, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $215, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $216, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $217, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $218, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $219, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $220, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $221, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $222, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $223, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $224, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $225, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $226, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $227, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $228, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $229, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $230, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $231, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $232, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $233, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $234, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $235, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $236, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $237, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $238, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $239, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $240, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $241, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $242, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $243, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $244, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $245, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $246, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $247, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $248, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $249, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $250, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $251, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $252, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $253, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $254, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $255, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $256, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $257, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $258, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $259, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $260, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $261, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $262, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $263, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $264, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $265, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $266, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $267, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $268, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $269, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $270, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $271, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $272, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $273, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $274, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $275, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $276, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $277, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $278, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $279, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $280, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $281, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $282, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $283, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $284, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $285, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $286, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $287, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $288, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $289, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $290, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $291, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $292, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $293, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $294, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $295, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $296, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $297, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $298, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $299, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $300, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $301, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $302, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $303, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $304, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $305, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $306, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $307, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $308, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $309, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $310, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $311, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $312, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $313, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $314, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $315, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $316, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $317, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $318, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $319, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $320, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $321, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $322, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $323, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $324, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $325, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $326, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $327, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $328, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $329, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $330, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $331, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $332, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $333, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $334, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $335, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $336, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $337, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $338, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $339, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $340, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $341, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $342, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $343, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $344, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $345, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $346, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $347, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $348, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $349, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $350, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $351, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $352, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $353, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $354, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $355, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $356, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $357, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $358, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $359, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $360, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $361, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $362, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $363, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $364, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $365, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $366, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $367, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $368, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $369, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $370, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $371, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $372, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $373, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $374, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $375, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $376, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $377, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $378, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $379, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $380, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $381, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $382, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $383, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $384, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $385, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $386, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $387, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $388, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $389, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $390, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $391, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $392, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $393, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $394, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $395, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $396, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $397, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $398, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $399, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $400, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $401, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $402, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $403, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $404, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $405, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $406, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $407, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $408, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $409, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $410, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $411, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $412, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $413, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $414, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $415, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $416, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $417, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $418, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $419, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $420, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $421, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $422, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $423, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $424, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $425, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $426, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $427, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $428, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $429, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $430, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $431, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $432, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $433, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $434, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $435, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $436, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $437, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $438, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $439, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $440, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $441, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $442, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $443, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $444, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $445, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $446, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $447, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $448, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $449, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $450, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $451, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $452, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $453, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $454, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $455, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $456, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $457, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $458, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $459, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $460, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $461, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $462, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $463, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $464, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $465, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $466, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $467, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $468, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $469, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $470, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $471, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $472, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $473, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $474, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $475, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $476, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $477, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $478, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $479, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $480, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $481, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $482, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $483, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $484, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $485, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $486, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $487, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $488, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $489, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $490, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $491, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $492, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $493, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $494, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $495, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $496, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $497, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $498, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $499, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $500, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $501, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $502, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $503, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $504, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $505, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $506, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $507, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $508, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $509, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $510, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    movq -568(%rbp), %rax
+    addq $511, %rax
+    movq %rax, -568(%rbp)
+    movq -568(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    leaq -536(%rbp), %rax
+    movq %rax, -568(%rbp)
+    leaq -528(%rbp), %rax
+    movq %rax, -576(%rbp)
+    leaq .LC42(%rip), %rax
+    movq %rax, -584(%rbp)
+    subq $184, %rsp
+    movq -576(%rbp), %rdi
+    movq $512, %rsi
+    movq -584(%rbp), %rdx
+    xor %eax, %eax
+    call snprintf
+    addq $184, %rsp
+    movl %eax, -576(%rbp)
+    movq -568(%rbp), %rax
+    movl -576(%rbp), %ecx
     movl %ecx, (%rax)
-    movq -1264(%rbp), %rax
-    movl -1280(%rbp), %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -1256(%rbp)
-    leaq _hidden_sret_ptr(%rip), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movq -1264(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -8(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    leaq -240(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    subq $8, %rsp
-    movq -1256(%rbp), %rdi
-    movq -1264(%rbp), %rsi
-    call ir_append_instruction
-    addq $8, %rsp
-    jmp abi_gen_params_2
-abi_gen_params_2:
-    leaq -288(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movl -1264(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -296(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
+    leaq -544(%rbp), %rax
+    movq %rax, -568(%rbp)
+    movq -568(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
-    leaq -304(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -312(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-abi_gen_params_3:
-    leaq -312(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
+link_1:
+    leaq -544(%rbp), %rax
+    movq %rax, -568(%rbp)
+    movq -568(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -1256(%rbp)
+    movl %eax, -568(%rbp)
     leaq -16(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    addq $112, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -1264(%rbp)
-    movl -1256(%rbp), %eax
-    cmpl -1264(%rbp), %eax
+    movl %eax, -576(%rbp)
+    movl -568(%rbp), %eax
+    cmpl -576(%rbp), %eax
     setl %al
     movzbl %al, %eax
-    movl %eax, -1256(%rbp)
-    movl -1256(%rbp), %eax
+    movl %eax, -568(%rbp)
+    movl -568(%rbp), %eax
     testl %eax, %eax
-    jz abi_gen_params_10
-abi_gen_params_4:
-    leaq -320(%rbp), %rax
-    movq %rax, -1256(%rbp)
+    jz link_6
+link_2:
+    leaq -552(%rbp), %rax
+    movq %rax, -568(%rbp)
     leaq -16(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    addq $112, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1264(%rbp)
-    leaq -312(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
+    movq %rax, -576(%rbp)
+    leaq -544(%rbp), %rax
+    movq %rax, -584(%rbp)
+    movq -584(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -1272(%rbp)
+    movl %eax, -584(%rbp)
     subq $8, %rsp
-    movq -1264(%rbp), %rdi
-    movl -1272(%rbp), %esi
+    movq -576(%rbp), %rdi
+    movl -584(%rbp), %esi
     call get
     addq $8, %rsp
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movq -1264(%rbp), %rcx
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -576(%rbp)
+    movq -568(%rbp), %rax
+    movq -576(%rbp), %rcx
     movq %rcx, (%rax)
-    leaq -320(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
+    leaq .LC43(%rip), %rax
+    movq %rax, -568(%rbp)
+    leaq -552(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1256(%rbp)
-    leaq -320(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movq -1264(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -344(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    leaq -368(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    leaq -320(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1272(%rbp)
-    subq $8, %rsp
-    movq -1264(%rbp), %rdi
-    movq -1272(%rbp), %rsi
-    call abi_classify
-    addq $8, %rsp
-    movq -1264(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1256(%rbp), %rdi
-    movq -1272(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    leaq -16(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1256(%rbp)
-    leaq -320(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    subq $8, %rsp
-    movq -1256(%rbp), %rdi
-    movq -1264(%rbp), %rsi
-    call append
-    addq $8, %rsp
-    movq %rax, -1256(%rbp)
-    leaq -376(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    leaq -344(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
+    movq %rax, -576(%rbp)
+    subq $184, %rsp
+    movq -568(%rbp), %rdi
+    movq -576(%rbp), %rsi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -568(%rbp)
+    leaq -536(%rbp), %rax
+    movq %rax, -568(%rbp)
+    leaq -528(%rbp), %rax
+    movq %rax, -576(%rbp)
+    leaq -536(%rbp), %rax
+    movq %rax, -584(%rbp)
+    movq -584(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -1264(%rbp)
-    movl -1264(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -1264(%rbp)
-    movl -1264(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_gen_params_5
-    leaq -304(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
+    movl %eax, -584(%rbp)
+    movslq -584(%rbp), %rax
+    movq %rax, -584(%rbp)
+    movq -584(%rbp), %rax
+    imulq $1, %rax
+    movq %rax, -584(%rbp)
+    movq -576(%rbp), %rax
+    addq -584(%rbp), %rax
+    movq %rax, -576(%rbp)
+    leaq -536(%rbp), %rax
+    movq %rax, -584(%rbp)
+    movq -584(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -1280(%rbp)
-    movl -1280(%rbp), %eax
-    subl $1, %eax
-    movl %eax, -1280(%rbp)
-    movq -1264(%rbp), %rax
-    movl -1280(%rbp), %ecx
-    movl %ecx, (%rax)
-    movq -1280(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    jmp abi_gen_params_8
-abi_gen_params_5:
-    leaq -344(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq $0, %rax
-    imulq $4, %rax
-    movq %rax, -1280(%rbp)
-    movq -1264(%rbp), %rax
-    addq -1280(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
+    movl %eax, -584(%rbp)
+    movl $512, %eax
+    subl -584(%rbp), %eax
+    movl %eax, -584(%rbp)
+    movslq -584(%rbp), %rax
+    movq %rax, -584(%rbp)
+    leaq .LC44(%rip), %rax
+    movq %rax, -592(%rbp)
+    leaq -552(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -600(%rbp)
+    subq $184, %rsp
+    movq -576(%rbp), %rdi
+    movq -584(%rbp), %rsi
+    movq -592(%rbp), %rdx
+    movq -600(%rbp), %rcx
+    xor %eax, %eax
+    call snprintf
+    addq $184, %rsp
+    movl %eax, -576(%rbp)
+    movq -568(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -1264(%rbp)
-    movl -1264(%rbp), %eax
-    cmpl $3, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -1264(%rbp)
-    movl -1264(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -1264(%rbp)
-    movl -1264(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_gen_params_6
-    leaq -296(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1288(%rbp)
-    movl -1288(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -1296(%rbp)
-    movq -1264(%rbp), %rax
-    movl -1296(%rbp), %ecx
-    movl %ecx, (%rax)
-    movq -1288(%rbp), %rax
-    movq %rax, -1280(%rbp)
-    jmp abi_gen_params_7
-abi_gen_params_6:
-    leaq -288(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1288(%rbp)
-    movl -1288(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -1296(%rbp)
-    movq -1264(%rbp), %rax
-    movl -1296(%rbp), %ecx
-    movl %ecx, (%rax)
-    movq -1288(%rbp), %rax
-    movq %rax, -1280(%rbp)
-abi_gen_params_7:
-    movq -1280(%rbp), %rax
-    movq %rax, -1272(%rbp)
-abi_gen_params_8:
-    movq -1256(%rbp), %rax
-    movl -1272(%rbp), %ecx
+    movl %eax, -584(%rbp)
+    movl -584(%rbp), %eax
+    addl -576(%rbp), %eax
+    movl %eax, -576(%rbp)
+    movq -568(%rbp), %rax
+    movl -576(%rbp), %ecx
     movl %ecx, (%rax)
     leaq -544(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl $18, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $128, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1264(%rbp)
-    leaq -584(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    leaq -320(%rbp), %rax
-    movq %rax, -1280(%rbp)
-    movq -1280(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1280(%rbp)
-    movq -1280(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -1280(%rbp)
-    movq -1280(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1280(%rbp)
-    subq $8, %rsp
-    movq -1272(%rbp), %rdi
-    movq -1280(%rbp), %rsi
-    call ir_symbol_value
-    addq $8, %rsp
-    movq -1272(%rbp), %rax
-    movq %rax, -1280(%rbp)
-    movq -1264(%rbp), %rdi
-    movq -1280(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    movq -1256(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rdi
-    movl $0, %esi
-    movq $40, %rdx
-    call memset
-    movq -1256(%rbp), %rax
-    addq $88, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rdi
-    movl $0, %esi
-    movq $40, %rdx
-    call memset
-    movq -1256(%rbp), %rax
-    addq $144, %rax
-    movq %rax, -1264(%rbp)
-    leaq -376(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
+    movq %rax, -568(%rbp)
+    movq -568(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -1272(%rbp)
-    movq -1264(%rbp), %rax
-    movl -1272(%rbp), %ecx
+    movl %eax, -568(%rbp)
+    leaq -16(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -576(%rbp)
+    movl -576(%rbp), %eax
+    subl $1, %eax
+    movl %eax, -576(%rbp)
+    movl -568(%rbp), %eax
+    cmpl -576(%rbp), %eax
+    setl %al
+    movzbl %al, %eax
+    movl %eax, -568(%rbp)
+    movl -568(%rbp), %eax
+    testl %eax, %eax
+    jz link_4
+link_3:
+    subq $8, %rsp
+    movl $32, %edi
+    call putchar
+    addq $8, %rsp
+    movl %eax, -568(%rbp)
+    jmp link_4
+link_4:
+    jmp link_5
+link_5:
+    leaq -544(%rbp), %rax
+    movq %rax, -568(%rbp)
+    movq -568(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -576(%rbp)
+    movl -576(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -576(%rbp)
+    movq -568(%rbp), %rax
+    movl -576(%rbp), %ecx
     movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -1256(%rbp)
-    leaq -320(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
+    jmp link_1
+link_6:
+    leaq .LC45(%rip), %rax
+    movq %rax, -568(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movq -1264(%rbp), %rcx
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movq %rax, -576(%rbp)
+    subq $184, %rsp
+    movq -568(%rbp), %rdi
+    movq -576(%rbp), %rsi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -568(%rbp)
+    leaq -528(%rbp), %rax
+    movq %rax, -568(%rbp)
+    leaq -536(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -576(%rbp)
+    movslq -576(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    imulq $1, %rax
+    movq %rax, -576(%rbp)
+    movq -568(%rbp), %rax
+    addq -576(%rbp), %rax
+    movq %rax, -568(%rbp)
+    leaq -536(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -576(%rbp)
+    movl $512, %eax
+    subl -576(%rbp), %eax
+    movl %eax, -576(%rbp)
+    movslq -576(%rbp), %rax
+    movq %rax, -576(%rbp)
+    leaq .LC46(%rip), %rax
+    movq %rax, -584(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -592(%rbp)
+    movq -592(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -592(%rbp)
+    movq -592(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -592(%rbp)
+    movq -592(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -592(%rbp)
+    movq -592(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -592(%rbp)
+    movq -592(%rbp), %rax
+    movq %rax, -592(%rbp)
+    subq $184, %rsp
+    movq -568(%rbp), %rdi
+    movq -576(%rbp), %rsi
+    movq -584(%rbp), %rdx
+    movq -592(%rbp), %rcx
+    xor %eax, %eax
+    call snprintf
+    addq $184, %rsp
+    movl %eax, -568(%rbp)
+    leaq -560(%rbp), %rax
+    movq %rax, -568(%rbp)
+    leaq -528(%rbp), %rax
+    movq %rax, -576(%rbp)
+    subq $8, %rsp
+    movq -576(%rbp), %rdi
+    call system
+    addq $8, %rsp
+    movl %eax, -576(%rbp)
+    movq -568(%rbp), %rax
+    movl -576(%rbp), %ecx
+    movl %ecx, (%rax)
+    leaq -560(%rbp), %rax
+    movq %rax, -568(%rbp)
+    movq -568(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -568(%rbp)
+    movl -568(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -568(%rbp)
+    movl -568(%rbp), %eax
+    testl %eax, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -568(%rbp)
+    movl -568(%rbp), %eax
+    testl %eax, %eax
+    jz link_11
+link_7:
+    jmp link_9
+link_8:
+    movl $0, %eax
+    testl %eax, %eax
+    jz link_10
+link_9:
+    leaq .LC47(%rip), %rax
+    movq %rax, -568(%rbp)
+    leaq -16(%rbp), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -576(%rbp)
+    movq -576(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -576(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -584(%rbp)
+    movq -584(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -584(%rbp)
+    movq -584(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -584(%rbp)
+    movq -584(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -584(%rbp)
+    movq -584(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -584(%rbp)
+    movq -584(%rbp), %rax
+    movq %rax, -584(%rbp)
+    subq $184, %rsp
+    movl $3, %edi
+    movq -568(%rbp), %rsi
+    movl -576(%rbp), %edx
+    movq -584(%rbp), %rcx
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    subq $8, %rsp
+    movl $1, %edi
+    call exit
+    addq $8, %rsp
+    jmp link_8
+link_10:
+    jmp link_11
+link_11:
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global update_current_output
+update_current_output:
+    push %rbp
+    mov %rsp, %rbp
+    subq $88, %rsp
+update_current_output_0:
+    movq %rdi, -8(%rbp)
+    movl %esi, -16(%rbp)
+    movq %rdx, -24(%rbp)
+    movq %rcx, -32(%rbp)
+    leaq -16(%rbp), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -56(%rbp)
+    movslq -56(%rbp), %rax
+    movq %rax, -56(%rbp)
+    movl -56(%rbp), %eax
+    testl %eax, %eax
+    jz update_current_output_2
+    leaq -8(%rbp), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movl -56(%rbp), %eax
+    testl %eax, %eax
+    jz update_current_output_2
+update_current_output_1:
+    movq $1, %rax
+    movq %rax, -64(%rbp)
+    jmp update_current_output_3
+update_current_output_2:
+    movq $0, %rax
+    movq %rax, -64(%rbp)
+update_current_output_3:
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz update_current_output_5
+update_current_output_4:
+    leaq -8(%rbp), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -56(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -56(%rbp), %rdi
+    movq -64(%rbp), %rsi
+    call array_str_cpy
+    addq $8, %rsp
+    jmp update_current_output_12
+update_current_output_5:
+    leaq -40(%rbp), %rax
+    movq %rax, -56(%rbp)
+    leaq -24(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    call strdup
+    addq $8, %rsp
+    movq %rax, -64(%rbp)
+    movq -56(%rbp), %rax
+    movq -64(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -48(%rbp), %rax
+    movq %rax, -56(%rbp)
+    leaq -40(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movl $46, %esi
+    call strrchr
+    addq $8, %rsp
+    movq %rax, -64(%rbp)
+    movq -56(%rbp), %rax
+    movq -64(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -48(%rbp), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movl -56(%rbp), %eax
+    testl %eax, %eax
+    jz update_current_output_7
+update_current_output_6:
+    leaq -48(%rbp), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -56(%rbp), %rdi
+    movq -64(%rbp), %rsi
+    call strcpy
+    addq $8, %rsp
+    movq %rax, -56(%rbp)
+    jmp update_current_output_11
+update_current_output_7:
+    jmp update_current_output_9
+update_current_output_8:
+    movl $0, %eax
+    testl %eax, %eax
+    jz update_current_output_10
+update_current_output_9:
+    leaq .LC48(%rip), %rax
+    movq %rax, -56(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    leaq -24(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    subq $184, %rsp
+    movl $3, %edi
+    movq -56(%rbp), %rsi
+    movq -64(%rbp), %rdx
+    movq -72(%rbp), %rcx
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    subq $8, %rsp
+    movl $1, %edi
+    call exit
+    addq $8, %rsp
+    jmp update_current_output_8
+update_current_output_10:
+    jmp update_current_output_11
+update_current_output_11:
+    leaq -8(%rbp), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -56(%rbp)
+    leaq -40(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -56(%rbp), %rdi
+    movq -64(%rbp), %rsi
+    call array_str_cpy
+    addq $8, %rsp
+    leaq -40(%rbp), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -56(%rbp)
+    movq -56(%rbp), %rax
+    movq %rax, -56(%rbp)
+    subq $8, %rsp
+    movq -56(%rbp), %rdi
+    call free
+    addq $8, %rsp
+    jmp update_current_output_12
+update_current_output_12:
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global drive
+drive:
+    push %rbp
+    mov %rsp, %rbp
+    subq $104, %rsp
+drive_0:
+    movq %rdi, -8(%rbp)
+    subq $8, %rsp
+    movl $2, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jnz drive_1
+    subq $8, %rsp
+    movl $3, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz drive_2
+drive_1:
+    movq $1, %rax
+    movq %rax, -72(%rbp)
+    jmp drive_3
+drive_2:
+    movq $0, %rax
+    movq %rax, -72(%rbp)
+drive_3:
+    movl -72(%rbp), %eax
+    testl %eax, %eax
+    jz drive_5
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -72(%rbp), %eax
+    cmpl $1, %eax
+    setg %al
+    movzbl %al, %eax
+    movl %eax, -72(%rbp)
+    movl -72(%rbp), %eax
+    testl %eax, %eax
+    jz drive_5
+drive_4:
+    movq $1, %rax
+    movq %rax, -64(%rbp)
+    jmp drive_6
+drive_5:
+    movq $0, %rax
+    movq %rax, -64(%rbp)
+drive_6:
+    movslq -64(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz drive_8
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz drive_8
+drive_7:
+    movq $1, %rax
+    movq %rax, -72(%rbp)
+    jmp drive_9
+drive_8:
+    movq $0, %rax
+    movq %rax, -72(%rbp)
+drive_9:
+    movl -72(%rbp), %eax
+    testl %eax, %eax
+    jz drive_11
+drive_10:
+    leaq .LC49(%rip), %rax
+    movq %rax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    subq $184, %rsp
+    movl $2, %edi
+    movq -64(%rbp), %rsi
+    movl -72(%rbp), %edx
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq $0, %rcx
+    movq %rcx, (%rax)
+    jmp drive_11
+drive_11:
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movl -72(%rbp), %esi
+    movl $8, %edx
+    call array_init
+    addq $8, %rsp
+    leaq -40(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl $0, %ecx
+    movl %ecx, (%rax)
+drive_12:
+    leaq -40(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -72(%rbp)
+    movl -64(%rbp), %eax
+    cmpl -72(%rbp), %eax
+    setl %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz drive_27
+drive_13:
+    leaq -48(%rbp), %rax
+    movq %rax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -72(%rbp)
+    leaq -40(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -80(%rbp)
+    subq $8, %rsp
+    movq -72(%rbp), %rdi
+    movl -80(%rbp), %esi
+    call get
+    addq $8, %rsp
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movq -72(%rbp), %rcx
     movq %rcx, (%rax)
     leaq -8(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    leaq -544(%rbp), %rax
-    movq %rax, -1264(%rbp)
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -64(%rbp)
+    leaq -48(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
     subq $8, %rsp
-    movq -1256(%rbp), %rdi
-    movq -1264(%rbp), %rsi
-    call ir_append_instruction
+    movq -64(%rbp), %rdi
+    movq -72(%rbp), %rsi
+    call array_str_cpy
     addq $8, %rsp
-    jmp abi_gen_params_9
-abi_gen_params_9:
-    leaq -312(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movl $2, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -72(%rbp)
+    leaq -48(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -80(%rbp)
+    leaq .LC50(%rip), %rax
+    movq %rax, -88(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movl -72(%rbp), %esi
+    movq -80(%rbp), %rdx
+    movq -88(%rbp), %rcx
+    call update_current_output
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq %rax, -72(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movq -72(%rbp), %rsi
+    call load_src_file
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    call init_compiler
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    call compile
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    call clear_compiler
+    addq $8, %rsp
+    subq $8, %rsp
+    movl $0, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jnz drive_14
+    subq $8, %rsp
+    movl $1, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz drive_15
+drive_14:
+    movq $1, %rax
+    movq %rax, -72(%rbp)
+    jmp drive_16
+drive_15:
+    movq $0, %rax
+    movq %rax, -72(%rbp)
+drive_16:
+    movl -72(%rbp), %eax
+    testl %eax, %eax
+    jz drive_19
+drive_17:
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+drive_18:
+    jmp drive_19
+drive_19:
+    subq $8, %rsp
+    movl $2, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz drive_22
+drive_20:
+    jmp drive_26
+drive_21:
+    jmp drive_22
+drive_22:
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq %rax, -72(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movq -72(%rbp), %rsi
+    call array_str_cpy
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movl $3, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -72(%rbp)
+    leaq -48(%rbp), %rax
+    movq %rax, -80(%rbp)
+    movq -80(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -80(%rbp)
+    leaq .LC51(%rip), %rax
+    movq %rax, -88(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movl -72(%rbp), %esi
+    movq -80(%rbp), %rdx
+    movq -88(%rbp), %rcx
+    call update_current_output
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    call assemble
+    addq $8, %rsp
+    subq $8, %rsp
+    movl $3, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz drive_25
+drive_23:
+    jmp drive_26
+drive_24:
+    jmp drive_25
+drive_25:
+    leaq -56(%rbp), %rax
+    movq %rax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq %rax, -72(%rbp)
+    subq $8, %rsp
+    movq -72(%rbp), %rdi
+    call strdup
+    addq $8, %rsp
+    movq %rax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movq -72(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    leaq -56(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq %rax, -72(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movq -72(%rbp), %rsi
+    call append
+    addq $8, %rsp
+    movq %rax, -64(%rbp)
+    jmp drive_26
+drive_26:
+    leaq -40(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -1264(%rbp)
-    movl -1264(%rbp), %eax
+    movl %eax, -72(%rbp)
+    movl -72(%rbp), %eax
     addl $1, %eax
-    movl %eax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movl -1264(%rbp), %ecx
+    movl %eax, -72(%rbp)
+    movq -64(%rbp), %rax
+    movl -72(%rbp), %ecx
     movl %ecx, (%rax)
-    jmp abi_gen_params_3
-abi_gen_params_10:
-    leaq -16(%rbp), %rax
+    jmp drive_12
+drive_27:
+    subq $8, %rsp
+    movl $2, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jnz drive_28
+    subq $8, %rsp
+    movl $3, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz drive_29
+drive_28:
+    movq $1, %rax
+    movq %rax, -72(%rbp)
+    jmp drive_30
+drive_29:
+    movq $0, %rax
+    movq %rax, -72(%rbp)
+drive_30:
+    movl -72(%rbp), %eax
+    testl %eax, %eax
+    jz drive_33
+drive_31:
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+drive_32:
+    jmp drive_33
+drive_33:
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -64(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    cmpq $0, %rax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -72(%rbp)
+    movl -72(%rbp), %eax
+    testl %eax, %eax
+    jnz drive_34
+    leaq -8(%rbp), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq %rax, -80(%rbp)
+    jmp drive_35
+drive_34:
+    leaq .LC52(%rip), %rax
+    movq %rax, -72(%rbp)
+    movq -72(%rbp), %rax
+    movq %rax, -80(%rbp)
+drive_35:
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movq -80(%rbp), %rsi
+    call array_str_cpy
+    addq $8, %rsp
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    cmpl $0, %eax
+    setg %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -64(%rbp)
+    movl -64(%rbp), %eax
+    testl %eax, %eax
+    jz drive_40
+drive_36:
+    jmp drive_38
+drive_37:
+    movl $0, %eax
+    testl %eax, %eax
+    jz drive_39
+drive_38:
+    leaq .LC53(%rip), %rax
+    movq %rax, -64(%rbp)
+    subq $184, %rsp
+    movl $3, %edi
+    movq -64(%rbp), %rsi
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    subq $8, %rsp
+    movl $1, %edi
+    call exit
+    addq $8, %rsp
+    jmp drive_37
+drive_39:
+    jmp drive_40
+drive_40:
+    leaq -8(%rbp), %rax
+    movq %rax, -64(%rbp)
+    movq -64(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -64(%rbp)
+    leaq -32(%rbp), %rax
+    movq %rax, -72(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    movq -72(%rbp), %rsi
+    call link
+    addq $8, %rsp
+    leaq -32(%rbp), %rax
+    movq %rax, -64(%rbp)
+    subq $8, %rsp
+    movq -64(%rbp), %rdi
+    call ptr_array_free
+    addq $8, %rsp
+    subq $8, %rsp
+    movl $0, %edi
+    call set_log_stage
+    addq $8, %rsp
+    leaq .LC54(%rip), %rax
+    movq %rax, -64(%rbp)
+    subq $184, %rsp
+    movl $1, %edi
+    movq -64(%rbp), %rsi
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global init_compiler
+init_compiler:
+    push %rbp
+    mov %rsp, %rbp
+    subq $1272, %rsp
+init_compiler_0:
+    movq %rdi, -8(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -1232(%rbp)
+    movq -1232(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1232(%rbp)
+    movq -1232(%rbp), %rax
+    addq $256, %rax
+    movq %rax, -1232(%rbp)
+    leaq -1088(%rbp), %rax
+    movq %rax, -1240(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -1248(%rbp)
+    movq -1248(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1248(%rbp)
+    movq -1248(%rbp), %rax
+    addq $104, %rax
+    movq %rax, -1248(%rbp)
+    movq -1248(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1248(%rbp)
+    leaq -8(%rbp), %rax
     movq %rax, -1256(%rbp)
     movq -1256(%rbp), %rax
     movq (%rax), %rax
@@ -7685,1043 +6950,112 @@ abi_gen_params_10:
     addq $112, %rax
     movq %rax, -1256(%rbp)
     movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
     movl (%rax), %eax
     movl %eax, -1256(%rbp)
-    movl -1256(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_params_20
-abi_gen_params_11:
-    leaq -592(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    leaq -288(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movl -1264(%rbp), %ecx
-    movl %ecx, (%rax)
-abi_gen_params_12:
-    leaq -592(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1256(%rbp)
-    movl -1256(%rbp), %eax
-    cmpl $6, %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -1256(%rbp)
-    movl -1256(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_params_15
-abi_gen_params_13:
-    leaq -760(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl $18, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $128, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1264(%rbp)
-    leaq -584(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    leaq -592(%rbp), %rax
-    movq %rax, -1280(%rbp)
-    movq -1280(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1280(%rbp)
-    movl $6, %eax
-    subl -1280(%rbp), %eax
-    movl %eax, -1280(%rbp)
-    movl $-8, %eax
-    imull -1280(%rbp)
-    movl %eax, -1280(%rbp)
-    movl -1280(%rbp), %eax
-    subl $128, %eax
-    movl %eax, -1280(%rbp)
     subq $8, %rsp
-    movq -1272(%rbp), %rdi
-    movl $8, %esi
-    movl $8, %edx
-    movl -1280(%rbp), %ecx
-    call ir_stack_value
+    movq -1240(%rbp), %rdi
+    movq -1248(%rbp), %rsi
+    movl -1256(%rbp), %edx
+    call t_new_tokenizer
     addq $8, %rsp
-    movq -1272(%rbp), %rax
-    movq %rax, -1280(%rbp)
-    movq -1264(%rbp), %rdi
-    movq -1280(%rbp), %rsi
+    movq -1240(%rbp), %rax
+    movq %rax, -1248(%rbp)
+    movq -1232(%rbp), %rdi
+    movq -1248(%rbp), %rsi
+    movq $1080, %rdx
+    call memcpy
+    leaq -8(%rbp), %rax
+    movq %rax, -1232(%rbp)
+    movq -1232(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1232(%rbp)
+    movq -1232(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -1232(%rbp)
+    leaq -1128(%rbp), %rax
+    movq %rax, -1240(%rbp)
+    subq $8, %rsp
+    movq -1240(%rbp), %rdi
+    call new_node_manager
+    addq $8, %rsp
+    movq -1240(%rbp), %rax
+    movq %rax, -1248(%rbp)
+    movq -1232(%rbp), %rdi
+    movq -1248(%rbp), %rsi
     movq $40, %rdx
     call memcpy
-    movq -1256(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rdi
-    movl $0, %esi
-    movq $40, %rdx
-    call memset
-    movq -1256(%rbp), %rax
-    addq $88, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rdi
-    movl $0, %esi
-    movq $40, %rdx
-    call memset
-    movq -1256(%rbp), %rax
-    addq $144, %rax
-    movq %rax, -1264(%rbp)
-    leaq -592(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1272(%rbp)
-    movq -1264(%rbp), %rax
-    movl -1272(%rbp), %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -1256(%rbp)
-    leaq type_u64(%rip), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movq -1264(%rbp), %rcx
-    movq %rcx, (%rax)
     leaq -8(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
+    movq %rax, -1232(%rbp)
+    movq -1232(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    leaq -760(%rbp), %rax
-    movq %rax, -1264(%rbp)
+    movq %rax, -1232(%rbp)
+    movq -1232(%rbp), %rax
+    addq $160, %rax
+    movq %rax, -1232(%rbp)
+    leaq -1224(%rbp), %rax
+    movq %rax, -1240(%rbp)
     subq $8, %rsp
-    movq -1256(%rbp), %rdi
-    movq -1264(%rbp), %rsi
-    call ir_append_instruction
+    movq -1240(%rbp), %rdi
+    call new_parser
     addq $8, %rsp
-    jmp abi_gen_params_14
-abi_gen_params_14:
-    leaq -592(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1264(%rbp)
-    movl -1264(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movl -1264(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_gen_params_12
-abi_gen_params_15:
-    leaq -824(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl $3, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq $0, %rcx
-    movq %rcx, (%rax)
-    leaq -864(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl $4, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl $8, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl $8, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -1256(%rbp)
-    leaq -824(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1256(%rbp), %rdi
-    movq -1264(%rbp), %rsi
-    movq $24, %rdx
+    movq -1240(%rbp), %rax
+    movq %rax, -1248(%rbp)
+    movq -1232(%rbp), %rdi
+    movq -1248(%rbp), %rsi
+    movq $96, %rdx
     call memcpy
-    leaq -904(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    leaq -584(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1272(%rbp)
-    leaq -864(%rbp), %rax
-    movq %rax, -1280(%rbp)
-    leaq -584(%rbp), %rax
-    movq %rax, -1288(%rbp)
     subq $8, %rsp
-    movq -1288(%rbp), %rdi
-    movq $0, %rsi
-    call ir_integer_literal
+    call init_typepool
     addq $8, %rsp
-    movq -1288(%rbp), %rax
-    movq %rax, -1296(%rbp)
-    leaq type_u8(%rip), %rax
-    movq %rax, -1288(%rbp)
-    movq -1288(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1288(%rbp)
-    subq $88, %rsp
-    movq -1264(%rbp), %rdi
-    movq -1272(%rbp), %rsi
-    movl $4, %edx
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -1280(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -1296(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -1288(%rbp), %rcx
-    call ir_cmp
-    addq $88, %rsp
-    movq -1264(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1256(%rbp), %rdi
-    movq -1272(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -992(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    subq $8, %rsp
-    call ir_new_block
-    addq $8, %rsp
-    movq %rax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movq -1264(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -584(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    leaq -904(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    leaq -992(%rbp), %rax
-    movq %rax, -1280(%rbp)
-    movq -1280(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1280(%rbp)
-    subq $40, %rsp
-    movq -1256(%rbp), %rdi
-    movq -1264(%rbp), %rsi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -1272(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movq -1280(%rbp), %rdx
-    movq $0, %rcx
-    call ir_branch_cond
-    addq $40, %rsp
-    movq -1256(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    leaq -1040(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    leaq -296(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movl -1264(%rbp), %ecx
-    movl %ecx, (%rax)
-abi_gen_params_16:
-    leaq -1040(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1256(%rbp)
-    movl -1256(%rbp), %eax
-    cmpl $8, %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -1256(%rbp)
-    movl -1256(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_params_19
-abi_gen_params_17:
-    leaq -1208(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl $18, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $128, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -1264(%rbp)
-    leaq -584(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    leaq -1040(%rbp), %rax
-    movq %rax, -1280(%rbp)
-    movq -1280(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1280(%rbp)
-    movl $8, %eax
-    subl -1280(%rbp), %eax
-    movl %eax, -1280(%rbp)
-    movl $-16, %eax
-    imull -1280(%rbp)
-    movl %eax, -1280(%rbp)
-    subq $8, %rsp
-    movq -1272(%rbp), %rdi
-    movl $8, %esi
-    movl $8, %edx
-    movl -1280(%rbp), %ecx
-    call ir_stack_value
-    addq $8, %rsp
-    movq -1272(%rbp), %rax
-    movq %rax, -1280(%rbp)
-    movq -1264(%rbp), %rdi
-    movq -1280(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    movq -1256(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rdi
-    movl $0, %esi
-    movq $40, %rdx
-    call memset
-    movq -1256(%rbp), %rax
-    addq $88, %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rdi
-    movl $0, %esi
-    movq $40, %rdx
-    call memset
-    movq -1256(%rbp), %rax
-    addq $144, %rax
-    movq %rax, -1264(%rbp)
-    leaq -1040(%rbp), %rax
-    movq %rax, -1272(%rbp)
-    movq -1272(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1272(%rbp)
-    movq -1264(%rbp), %rax
-    movl -1272(%rbp), %ecx
-    movl %ecx, (%rax)
-    movq -1256(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -1256(%rbp)
-    leaq type_f64(%rip), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movq -1264(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -8(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    leaq -1208(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    subq $8, %rsp
-    movq -1256(%rbp), %rdi
-    movq -1264(%rbp), %rsi
-    call ir_append_instruction
-    addq $8, %rsp
-    jmp abi_gen_params_18
-abi_gen_params_18:
-    leaq -1040(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1264(%rbp)
-    movl -1264(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -1264(%rbp)
-    movq -1256(%rbp), %rax
-    movl -1264(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_gen_params_16
-abi_gen_params_19:
-    leaq -8(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    leaq -992(%rbp), %rax
-    movq %rax, -1264(%rbp)
-    movq -1264(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1264(%rbp)
-    subq $8, %rsp
-    movq -1256(%rbp), %rdi
-    movq -1264(%rbp), %rsi
-    call ir_append_block
-    addq $8, %rsp
-    movq %rax, -1256(%rbp)
-    jmp abi_gen_params_20
-abi_gen_params_20:
     mov %rbp, %rsp
     pop %rbp
     ret
-.global to_arg_type
-to_arg_type:
+init_compiler_1:
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global begin_compiler
+begin_compiler:
     push %rbp
     mov %rsp, %rbp
-    subq $40, %rsp
-to_arg_type_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $1, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz to_arg_type_1
-    movl -24(%rbp), %eax
-    cmpl $2, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz to_arg_type_2
-    movl -24(%rbp), %eax
-    cmpl $3, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz to_arg_type_3
-    movl -24(%rbp), %eax
-    cmpl $6, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz to_arg_type_4
-    movl -24(%rbp), %eax
-    cmpl $4, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz to_arg_type_5
-    movl -24(%rbp), %eax
-    cmpl $5, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz to_arg_type_6
-    movl -24(%rbp), %eax
-    cmpl $7, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz to_arg_type_7
-    jmp to_arg_type_15
-to_arg_type_1:
-to_arg_type_2:
-to_arg_type_3:
-to_arg_type_4:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-to_arg_type_5:
-to_arg_type_6:
-to_arg_type_7:
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz to_arg_type_10
-to_arg_type_8:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-to_arg_type_9:
-    jmp to_arg_type_14
-to_arg_type_10:
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq $0, %rax
-    imulq $4, %rax
-    movq %rax, -32(%rbp)
-    movq -24(%rbp), %rax
-    addq -32(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jnz to_arg_type_11
-    leaq type_i64(%rip), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq %rax, -32(%rbp)
-    jmp to_arg_type_12
-to_arg_type_11:
-    leaq type_f64(%rip), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq %rax, -32(%rbp)
-to_arg_type_12:
-    movq -32(%rbp), %rax
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-to_arg_type_13:
-    jmp to_arg_type_14
-to_arg_type_14:
-to_arg_type_15:
-    jmp to_arg_type_17
-to_arg_type_16:
-    movl $0, %eax
-    testl %eax, %eax
-    jz to_arg_type_18
-to_arg_type_17:
-    leaq .LC31(%rip), %rax
-    movq %rax, -24(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -32(%rbp)
-    movq -32(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -32(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -24(%rbp), %rsi
-    movq -32(%rbp), %rdx
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp to_arg_type_16
-to_arg_type_18:
-to_arg_type_19:
-.global builtin_memcpy
-builtin_memcpy:
-    push %rbp
-    mov %rsp, %rbp
-    subq $264, %rsp
-builtin_memcpy_0:
+    subq $1400, %rsp
+begin_compiler_0:
     movq %rdi, -8(%rbp)
     movl %esi, -16(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -96(%rbp), %rax
-    movq %rax, -216(%rbp)
-    subq $8, %rsp
-    movq -216(%rbp), %rdi
-    movl $10, %esi
-    call ir_gp_register_value
-    addq $8, %rsp
-    movq -216(%rbp), %rax
-    movq %rax, -224(%rbp)
-    movq -208(%rbp), %rdi
-    movq -224(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -136(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -96(%rbp), %rax
-    movq %rax, -216(%rbp)
-    subq $8, %rsp
-    movq -216(%rbp), %rdi
-    movl $11, %esi
-    call ir_gp_register_value
-    addq $8, %rsp
-    movq -216(%rbp), %rax
-    movq %rax, -224(%rbp)
-    movq -208(%rbp), %rdi
-    movq -224(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -8(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    leaq .LC32(%rip), %rax
-    movq %rax, -216(%rbp)
-    leaq .LC33(%rip), %rax
-    movq %rax, -224(%rbp)
-    leaq .LC34(%rip), %rax
-    movq %rax, -232(%rbp)
-    leaq 16(%rbp), %rax
-    movq %rax, -240(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -248(%rbp)
-    subq $8, %rsp
-    movq -208(%rbp), %rdi
-    movq -216(%rbp), %rsi
-    movq -224(%rbp), %rdx
-    movq -232(%rbp), %rcx
-    movq -240(%rbp), %r8
-    movq -248(%rbp), %r9
-    call x86_emit_xx
-    addq $8, %rsp
-    leaq -8(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    leaq .LC35(%rip), %rax
-    movq %rax, -216(%rbp)
-    leaq .LC36(%rip), %rax
-    movq %rax, -224(%rbp)
-    leaq .LC37(%rip), %rax
-    movq %rax, -232(%rbp)
-    leaq 56(%rbp), %rax
-    movq %rax, -240(%rbp)
-    leaq -136(%rbp), %rax
-    movq %rax, -248(%rbp)
-    subq $8, %rsp
-    movq -208(%rbp), %rdi
-    movq -216(%rbp), %rsi
-    movq -224(%rbp), %rdx
-    movq -232(%rbp), %rcx
-    movq -240(%rbp), %r8
-    movq -248(%rbp), %r9
-    call x86_emit_xx
-    addq $8, %rsp
-    leaq -56(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    leaq -136(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    leaq -184(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl $8, %ecx
-    movl %ecx, (%rax)
-builtin_memcpy_1:
+    movq %rdx, -24(%rbp)
+    leaq .LC55(%rip), %rax
+    movq %rax, -1368(%rbp)
+    subq $184, %rsp
+    movq -1368(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -1368(%rbp)
     leaq -16(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
+    movl %eax, -1368(%rbp)
+    movl -1368(%rbp), %eax
+    cmpl $2, %eax
+    setl %al
     movzbl %al, %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
+    movl %eax, -1368(%rbp)
+    movl -1368(%rbp), %eax
     testl %eax, %eax
-    jnz builtin_memcpy_2
-    leaq -184(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    testl %eax, %eax
-    jz builtin_memcpy_3
-builtin_memcpy_2:
-    movq $1, %rax
-    movq %rax, -216(%rbp)
-    jmp builtin_memcpy_4
-builtin_memcpy_3:
-    movq $0, %rax
-    movq %rax, -216(%rbp)
-builtin_memcpy_4:
-    movl -216(%rbp), %eax
-    testl %eax, %eax
-    jz builtin_memcpy_7
-builtin_memcpy_5:
-    jmp builtin_memcpy_11
-builtin_memcpy_6:
-    jmp builtin_memcpy_7
-builtin_memcpy_7:
-    leaq -16(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -208(%rbp)
-    leaq -184(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    movl -208(%rbp), %eax
-    cltd
-    idivl -216(%rbp)
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    testl %eax, %eax
-    jz builtin_memcpy_9
-builtin_memcpy_8:
-    leaq -184(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    movl -216(%rbp), %eax
-    cltd
-    movl $2, %ecx
-    idivl %ecx
-    movl %eax, -216(%rbp)
-    movq -208(%rbp), %rax
-    movl -216(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp builtin_memcpy_9
-builtin_memcpy_9:
-    leaq -192(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -184(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    subq $8, %rsp
-    movl -216(%rbp), %edi
-    call x86_integer_op_suffix
-    addq $8, %rsp
-    movq %rax, -216(%rbp)
-    movq -208(%rbp), %rax
-    movq -216(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -200(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -184(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    subq $8, %rsp
-    movl -216(%rbp), %edi
-    call get_integer_type
-    addq $8, %rsp
-    movq %rax, -216(%rbp)
-    subq $8, %rsp
-    movq -216(%rbp), %rdi
-    call x86_rax_reg
-    addq $8, %rsp
-    movq %rax, -216(%rbp)
-    movq -208(%rbp), %rax
-    movq -216(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -8(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    leaq .LC38(%rip), %rax
-    movq %rax, -216(%rbp)
-    leaq -192(%rbp), %rax
-    movq %rax, -224(%rbp)
-    movq -224(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -224(%rbp)
-    leaq .LC39(%rip), %rax
-    movq %rax, -232(%rbp)
-    leaq -136(%rbp), %rax
-    movq %rax, -240(%rbp)
-    leaq -200(%rbp), %rax
-    movq %rax, -248(%rbp)
-    movq -248(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -248(%rbp)
-    subq $8, %rsp
-    movq -208(%rbp), %rdi
-    movq -216(%rbp), %rsi
-    movq -224(%rbp), %rdx
-    movq -232(%rbp), %rcx
-    movq -240(%rbp), %r8
-    movq -248(%rbp), %r9
-    call x86_emit_xr
-    addq $8, %rsp
-    leaq -8(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -208(%rbp)
-    leaq .LC40(%rip), %rax
-    movq %rax, -216(%rbp)
-    leaq -192(%rbp), %rax
-    movq %rax, -224(%rbp)
-    movq -224(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -224(%rbp)
-    leaq .LC41(%rip), %rax
-    movq %rax, -232(%rbp)
-    leaq -200(%rbp), %rax
-    movq %rax, -240(%rbp)
-    movq -240(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -240(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -248(%rbp)
-    subq $8, %rsp
-    movq -208(%rbp), %rdi
-    movq -216(%rbp), %rsi
-    movq -224(%rbp), %rdx
-    movq -232(%rbp), %rcx
-    movq -240(%rbp), %r8
-    movq -248(%rbp), %r9
-    call x86_emit_rx
-    addq $8, %rsp
-    leaq -136(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -208(%rbp)
-    leaq -184(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -224(%rbp)
-    movl -224(%rbp), %eax
-    addl -216(%rbp), %eax
-    movl %eax, -216(%rbp)
-    movq -208(%rbp), %rax
-    movl -216(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -56(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -208(%rbp)
-    leaq -184(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -224(%rbp)
-    movl -224(%rbp), %eax
-    addl -216(%rbp), %eax
-    movl %eax, -216(%rbp)
-    movq -208(%rbp), %rax
-    movl -216(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -16(%rbp), %rax
-    movq %rax, -208(%rbp)
-    leaq -184(%rbp), %rax
-    movq %rax, -216(%rbp)
-    movq -216(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -216(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -224(%rbp)
-    movl -224(%rbp), %eax
-    subl -216(%rbp), %eax
-    movl %eax, -216(%rbp)
-    movq -208(%rbp), %rax
-    movl -216(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp builtin_memcpy_10
-builtin_memcpy_10:
-    jmp builtin_memcpy_1
-builtin_memcpy_11:
-    leaq -16(%rbp), %rax
-    movq %rax, -208(%rbp)
-    movq -208(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -208(%rbp)
-    movl -208(%rbp), %eax
-    testl %eax, %eax
-    jz builtin_memcpy_16
-builtin_memcpy_12:
-    jmp builtin_memcpy_14
-builtin_memcpy_13:
+    jz begin_compiler_5
+begin_compiler_1:
+    jmp begin_compiler_3
+begin_compiler_2:
     movl $0, %eax
     testl %eax, %eax
-    jz builtin_memcpy_15
-builtin_memcpy_14:
-    leaq .LC42(%rip), %rax
-    movq %rax, -208(%rbp)
+    jz begin_compiler_4
+begin_compiler_3:
+    leaq .LC56(%rip), %rax
+    movq %rax, -1368(%rbp)
     subq $184, %rsp
     movl $3, %edi
-    movq -208(%rbp), %rsi
+    movq -1368(%rbp), %rsi
     xor %eax, %eax
     call log_message
     addq $184, %rsp
@@ -8729,3111 +7063,1606 @@ builtin_memcpy_14:
     movl $1, %edi
     call exit
     addq $8, %rsp
-    jmp builtin_memcpy_13
-builtin_memcpy_15:
-    jmp builtin_memcpy_16
-builtin_memcpy_16:
+    jmp begin_compiler_2
+begin_compiler_4:
+    jmp begin_compiler_5
+begin_compiler_5:
+    leaq -16(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -1368(%rbp)
+    movl -1368(%rbp), %eax
+    cmpl $2, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -1368(%rbp)
+    movl -1368(%rbp), %eax
+    testl %eax, %eax
+    jz begin_compiler_7
+    leaq -24(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1368(%rbp)
+    movq $1, %rax
+    imulq $8, %rax
+    movq %rax, -1384(%rbp)
+    movq -1368(%rbp), %rax
+    addq -1384(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1368(%rbp)
+    leaq .LC57(%rip), %rax
+    movq %rax, -1384(%rbp)
+    subq $8, %rsp
+    movq -1368(%rbp), %rdi
+    movq -1384(%rbp), %rsi
+    call strcmp
+    addq $8, %rsp
+    movl %eax, -1368(%rbp)
+    movl -1368(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -1368(%rbp)
+    movl -1368(%rbp), %eax
+    testl %eax, %eax
+    jz begin_compiler_7
+begin_compiler_6:
+    movq $1, %rax
+    movq %rax, -1376(%rbp)
+    jmp begin_compiler_8
+begin_compiler_7:
+    movq $0, %rax
+    movq %rax, -1376(%rbp)
+begin_compiler_8:
+    movl -1376(%rbp), %eax
+    testl %eax, %eax
+    jz begin_compiler_10
+begin_compiler_9:
+    leaq .LC58(%rip), %rax
+    movq %rax, -1368(%rbp)
+    subq $184, %rsp
+    movq -1368(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -1368(%rbp)
+    leaq .LC59(%rip), %rax
+    movq %rax, -1368(%rbp)
+    subq $184, %rsp
+    movq -1368(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -1368(%rbp)
+    leaq .LC60(%rip), %rax
+    movq %rax, -1368(%rbp)
+    subq $184, %rsp
+    movq -1368(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -1368(%rbp)
+    leaq .LC61(%rip), %rax
+    movq %rax, -1368(%rbp)
+    subq $184, %rsp
+    movq -1368(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -1368(%rbp)
+    leaq .LC62(%rip), %rax
+    movq %rax, -1368(%rbp)
+    subq $184, %rsp
+    movq -1368(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -1368(%rbp)
+    leaq .LC63(%rip), %rax
+    movq %rax, -1368(%rbp)
+    subq $184, %rsp
+    movq -1368(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -1368(%rbp)
+    leaq .LC64(%rip), %rax
+    movq %rax, -1368(%rbp)
+    subq $184, %rsp
+    movq -1368(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -1368(%rbp)
+    subq $8, %rsp
+    movl $0, %edi
+    call exit
+    addq $8, %rsp
+    jmp begin_compiler_10
+begin_compiler_10:
+    leaq -1360(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rdi
+    movl $0, %esi
+    movq $1336, %rdx
+    call memset
+    movq -1368(%rbp), %rax
+    movq $0, %rcx
+    movq %rcx, (%rax)
+    movq -1368(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -1376(%rbp)
+    movq -1376(%rbp), %rdi
+    movl $0, %esi
+    movq $24, %rdx
+    call memset
+    movq -1368(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -1376(%rbp)
+    movq -1376(%rbp), %rdi
+    movl $0, %esi
+    movq $24, %rdx
+    call memset
+    movq -1368(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -1376(%rbp)
+    movq -1376(%rbp), %rdi
+    movl $0, %esi
+    movq $24, %rdx
+    call memset
+    movq -1368(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -1376(%rbp)
+    movq -1376(%rbp), %rdi
+    movl $0, %esi
+    movq $24, %rdx
+    call memset
+    movq -1368(%rbp), %rax
+    addq $104, %rax
+    movq %rax, -1376(%rbp)
+    movq -1376(%rbp), %rax
+    movq $0, %rcx
+    movq %rcx, (%rax)
+    movq -1368(%rbp), %rax
+    addq $112, %rax
+    movq %rax, -1376(%rbp)
+    movq -1376(%rbp), %rax
+    movl $0, %ecx
+    movl %ecx, (%rax)
+    movq -1368(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -1376(%rbp)
+    movq -1376(%rbp), %rdi
+    movl $0, %esi
+    movq $40, %rdx
+    call memset
+    movq -1368(%rbp), %rax
+    addq $160, %rax
+    movq %rax, -1376(%rbp)
+    movq -1376(%rbp), %rdi
+    movl $0, %esi
+    movq $96, %rdx
+    call memset
+    movq -1368(%rbp), %rax
+    addq $256, %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rdi
+    movl $0, %esi
+    movq $1080, %rdx
+    call memset
+    leaq -1360(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rax
+    movq $0, %rcx
+    movq %rcx, (%rax)
+    leaq compiler_flags(%rip), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rax
+    movl $0, %ecx
+    movl %ecx, (%rax)
+    leaq -1360(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -1368(%rbp)
+    subq $8, %rsp
+    movq -1368(%rbp), %rdi
+    movl $4, %esi
+    movl $8, %edx
+    call array_init
+    addq $8, %rsp
+    leaq -1360(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -1368(%rbp)
+    subq $8, %rsp
+    movq -1368(%rbp), %rdi
+    movl $4, %esi
+    movl $8, %edx
+    call array_init
+    addq $8, %rsp
+    leaq -1360(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -1368(%rbp)
+    subq $8, %rsp
+    movq -1368(%rbp), %rdi
+    movl $4, %esi
+    movl $1, %edx
+    call array_init
+    addq $8, %rsp
+    leaq -1360(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -1368(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -1368(%rbp)
+    subq $8, %rsp
+    movq -1368(%rbp), %rdi
+    movl $4, %esi
+    movl $1, %edx
+    call array_init
+    addq $8, %rsp
+    leaq -1360(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    leaq -16(%rbp), %rax
+    movq %rax, -1376(%rbp)
+    movq -1376(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -1376(%rbp)
+    leaq -24(%rbp), %rax
+    movq %rax, -1384(%rbp)
+    movq -1384(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1384(%rbp)
+    subq $8, %rsp
+    movq -1368(%rbp), %rdi
+    movl -1376(%rbp), %esi
+    movq -1384(%rbp), %rdx
+    call read_args
+    addq $8, %rsp
+    leaq -1360(%rbp), %rax
+    movq %rax, -1368(%rbp)
+    movq -8(%rbp), %rdi
+    movq -1368(%rbp), %rsi
+    movq $1336, %rdx
+    call memcpy
     mov %rbp, %rsp
     pop %rbp
     ret
-.global abi_emit_call
-abi_emit_call:
+.global clear_compiler
+clear_compiler:
     push %rbp
     mov %rsp, %rbp
-    subq $472, %rsp
-abi_emit_call_0:
+    subq $24, %rsp
+clear_compiler_0:
     movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    movq %rdx, -24(%rbp)
-    leaq -32(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
+    subq $8, %rsp
+    call free_typepool
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $24, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -16(%rbp)
+    subq $8, %rsp
+    movq -16(%rbp), %rdi
+    movl $0, %esi
+    call arena_get
+    addq $8, %rsp
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq %rax, -16(%rbp)
+    subq $8, %rsp
+    movq -16(%rbp), %rdi
+    call free_node
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -16(%rbp)
+    subq $8, %rsp
+    movq -16(%rbp), %rdi
+    call arena_free
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    addq $160, %rax
+    movq %rax, -16(%rbp)
+    subq $8, %rsp
+    movq -16(%rbp), %rdi
+    call free_parser
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    addq $256, %rax
+    movq %rax, -16(%rbp)
+    subq $8, %rsp
+    movq -16(%rbp), %rdi
+    call t_free
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    addq $104, %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq %rax, -16(%rbp)
+    subq $8, %rsp
+    movq -16(%rbp), %rdi
+    call free
+    addq $8, %rsp
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global free_compiler
+free_compiler:
+    push %rbp
+    mov %rsp, %rbp
+    subq $24, %rsp
+free_compiler_0:
+    movq %rdi, -8(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -16(%rbp)
+    subq $8, %rsp
+    movq -16(%rbp), %rdi
+    call array_free
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -16(%rbp)
+    subq $8, %rsp
+    movq -16(%rbp), %rdi
+    call array_free
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -16(%rbp)
+    subq $8, %rsp
+    movq -16(%rbp), %rdi
+    call array_free
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
     addq $32, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movq -392(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -40(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -48(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -56(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $24, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_emit_call_1
-    movq $176, %rax
-    movq %rax, -400(%rbp)
-    jmp abi_emit_call_2
-abi_emit_call_1:
-    movq $0, %rax
-    movq %rax, -400(%rbp)
-abi_emit_call_2:
-    movq -384(%rbp), %rax
-    movl -400(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -64(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -56(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -72(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-abi_emit_call_3:
-    leaq -72(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -384(%rbp), %eax
-    cmpl -392(%rbp), %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_21
-abi_emit_call_4:
-    leaq -80(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq %rax, -392(%rbp)
-    leaq -72(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -400(%rbp)
+    movq %rax, -16(%rbp)
     subq $8, %rsp
-    movq -392(%rbp), %rdi
-    movl -400(%rbp), %esi
-    call get_call_arg
-    addq $8, %rsp
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movq -392(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -104(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -128(%rbp), %rax
-    movq %rax, -392(%rbp)
-    leaq -80(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    subq $8, %rsp
-    movq -392(%rbp), %rdi
-    movq -400(%rbp), %rsi
-    call abi_classify
-    addq $8, %rsp
-    movq -392(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -384(%rbp), %rdi
-    movq -400(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    leaq -104(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq $0, %rax
-    imulq $4, %rax
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    addq -392(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_6
-    leaq -40(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $6, %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_6
-abi_emit_call_5:
-    movq $1, %rax
-    movq %rax, -392(%rbp)
-    jmp abi_emit_call_7
-abi_emit_call_6:
-    movq $0, %rax
-    movq %rax, -392(%rbp)
-abi_emit_call_7:
-    movl -392(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_9
-abi_emit_call_8:
-    leaq -40(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_emit_call_19
-abi_emit_call_9:
-    leaq -104(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq $0, %rax
-    imulq $4, %rax
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    addq -392(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $3, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_11
-    leaq -48(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $8, %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_11
-abi_emit_call_10:
-    movq $1, %rax
-    movq %rax, -392(%rbp)
-    jmp abi_emit_call_12
-abi_emit_call_11:
-    movq $0, %rax
-    movq %rax, -392(%rbp)
-abi_emit_call_12:
-    movl -392(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_14
-abi_emit_call_13:
-    leaq -48(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_emit_call_18
-abi_emit_call_14:
-    leaq -104(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_16
-abi_emit_call_15:
-    leaq -64(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -80(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -400(%rbp)
-    movl -400(%rbp), %eax
-    addl -392(%rbp), %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_emit_call_17
-abi_emit_call_16:
-    leaq -64(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    addl $8, %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_emit_call_17
-abi_emit_call_17:
-abi_emit_call_18:
-abi_emit_call_19:
-    jmp abi_emit_call_20
-abi_emit_call_20:
-    leaq -72(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_emit_call_3
-abi_emit_call_21:
-    leaq -64(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    orl $8, %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -48(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -40(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -136(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -64(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $0, %eax
-    setg %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_23
-abi_emit_call_22:
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC43(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -400(%rbp)
-    subq $184, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movl -400(%rbp), %edx
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -384(%rbp)
-    jmp abi_emit_call_23
-abi_emit_call_23:
-    leaq -144(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-abi_emit_call_24:
-    leaq -144(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -384(%rbp), %eax
-    cmpl -392(%rbp), %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_49
-abi_emit_call_25:
-    leaq -152(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq %rax, -392(%rbp)
-    leaq -144(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -400(%rbp)
-    subq $8, %rsp
-    movq -392(%rbp), %rdi
-    movl -400(%rbp), %esi
-    call get_call_arg
-    addq $8, %rsp
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movq -392(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -176(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -128(%rbp), %rax
-    movq %rax, -392(%rbp)
-    leaq -152(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    subq $8, %rsp
-    movq -392(%rbp), %rdi
-    movq -400(%rbp), %rsi
-    call abi_classify
-    addq $8, %rsp
-    movq -392(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -384(%rbp), %rdi
-    movq -400(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    leaq -208(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -152(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    leaq -176(%rbp), %rax
-    movq %rax, -400(%rbp)
-    subq $8, %rsp
-    movq -392(%rbp), %rdi
-    movq -400(%rbp), %rsi
-    call to_arg_type
-    addq $8, %rsp
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movq -392(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -208(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $1, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_26
-    movl -384(%rbp), %eax
-    cmpl $6, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_27
-    movl -384(%rbp), %eax
-    cmpl $3, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_28
-    movl -384(%rbp), %eax
-    cmpl $2, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_32
-    movl -384(%rbp), %eax
-    cmpl $5, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_36
-    movl -384(%rbp), %eax
-    cmpl $7, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_37
-    jmp abi_emit_call_43
-abi_emit_call_26:
-abi_emit_call_27:
-abi_emit_call_28:
-    leaq -216(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -208(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    subq $8, %rsp
-    movq -392(%rbp), %rdi
-    call x86_op_suffix
-    addq $8, %rsp
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movq -392(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -40(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $6, %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_30
-abi_emit_call_29:
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC44(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -216(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    leaq .LC45(%rip), %rax
-    movq %rax, -408(%rbp)
-    leaq -152(%rbp), %rax
-    movq %rax, -416(%rbp)
-    movq -416(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -416(%rbp)
-    movq -416(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -416(%rbp)
-    leaq gp_register_str(%rip), %rax
-    movq %rax, -424(%rbp)
-    leaq int_param_regs(%rip), %rax
-    movq %rax, -432(%rbp)
-    leaq -40(%rbp), %rax
-    movq %rax, -440(%rbp)
-    movq -440(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -448(%rbp)
-    movl -448(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -456(%rbp)
-    movq -440(%rbp), %rax
-    movl -456(%rbp), %ecx
-    movl %ecx, (%rax)
-    movslq -448(%rbp), %rax
-    movq %rax, -440(%rbp)
-    movq -440(%rbp), %rax
-    imulq $4, %rax
-    movq %rax, -440(%rbp)
-    movq -432(%rbp), %rax
-    addq -440(%rbp), %rax
-    movq %rax, -432(%rbp)
-    movq -432(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -432(%rbp)
-    movslq -432(%rbp), %rax
-    movq %rax, -432(%rbp)
-    movq -432(%rbp), %rax
-    imulq $32, %rax
-    movq %rax, -432(%rbp)
-    movq -424(%rbp), %rax
-    addq -432(%rbp), %rax
-    movq %rax, -424(%rbp)
-    leaq -208(%rbp), %rax
-    movq %rax, -432(%rbp)
-    movq -432(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -432(%rbp)
-    movq -432(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -432(%rbp)
-    movq -432(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -432(%rbp)
-    subq $8, %rsp
-    movl -432(%rbp), %edi
-    call reg_size
-    addq $8, %rsp
-    movl %eax, -432(%rbp)
-    movslq -432(%rbp), %rax
-    movq %rax, -432(%rbp)
-    movq -432(%rbp), %rax
-    imulq $8, %rax
-    movq %rax, -432(%rbp)
-    movq -424(%rbp), %rax
-    addq -432(%rbp), %rax
-    movq %rax, -424(%rbp)
-    movq -424(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -424(%rbp)
-    subq $8, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq -400(%rbp), %rdx
-    movq -408(%rbp), %rcx
-    movq -416(%rbp), %r8
-    movq -424(%rbp), %r9
-    call x86_emit_xr
-    addq $8, %rsp
-    jmp abi_emit_call_31
-abi_emit_call_30:
-    leaq -224(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -208(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    subq $8, %rsp
-    movq -392(%rbp), %rdi
-    call x86_rax_reg
-    addq $8, %rsp
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movq -392(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC46(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -216(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    leaq .LC47(%rip), %rax
-    movq %rax, -408(%rbp)
-    leaq -152(%rbp), %rax
-    movq %rax, -416(%rbp)
-    movq -416(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -416(%rbp)
-    movq -416(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -416(%rbp)
-    leaq -224(%rbp), %rax
-    movq %rax, -424(%rbp)
-    movq -424(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -424(%rbp)
-    subq $8, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq -400(%rbp), %rdx
-    movq -408(%rbp), %rcx
-    movq -416(%rbp), %r8
-    movq -424(%rbp), %r9
-    call x86_emit_xr
+    movq -16(%rbp), %rdi
+    call array_free
     addq $8, %rsp
     leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC48(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -216(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    leaq -224(%rbp), %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    addq $104, %rax
+    movq %rax, -16(%rbp)
+    movq -16(%rbp), %rax
+    movq $0, %rcx
+    movq %rcx, (%rax)
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+.global compile
+compile:
+    push %rbp
+    mov %rsp, %rbp
+    subq $440, %rsp
+compile_0:
+    movq %rdi, -8(%rbp)
+    subq $8, %rsp
+    movl $0, %edi
+    call set_log_stage
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
     movq %rax, -408(%rbp)
     movq -408(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -408(%rbp)
-    leaq -136(%rbp), %rax
+    movq -408(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
+    testl %eax, %eax
+    jz compile_2
+    leaq -8(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
+    testl %eax, %eax
+    jz compile_2
+compile_1:
+    movq $1, %rax
+    movq %rax, -416(%rbp)
+    jmp compile_3
+compile_2:
+    movq $0, %rax
+    movq %rax, -416(%rbp)
+compile_3:
+    movl -416(%rbp), %eax
+    testl %eax, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
+    testl %eax, %eax
+    jz compile_8
+compile_4:
+    jmp compile_6
+compile_5:
+    movl $0, %eax
+    testl %eax, %eax
+    jz compile_7
+compile_6:
+    leaq .LC65(%rip), %rax
+    movq %rax, -408(%rbp)
+    subq $184, %rsp
+    movl $3, %edi
+    movq -408(%rbp), %rsi
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    subq $8, %rsp
+    movl $1, %edi
+    call exit
+    addq $8, %rsp
+    jmp compile_5
+compile_7:
+    jmp compile_8
+compile_8:
+    leaq .LC66(%rip), %rax
+    movq %rax, -408(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq %rax, -416(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    movq %rax, -424(%rbp)
+    subq $184, %rsp
+    movl $1, %edi
+    movq -408(%rbp), %rsi
+    movq -416(%rbp), %rdx
+    movq -424(%rbp), %rcx
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    subq $8, %rsp
+    movl $1, %edi
+    call set_log_stage
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    addq $256, %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    call t_tokenize
+    addq $8, %rsp
+    subq $8, %rsp
+    movl $2, %edi
+    call set_log_stage
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    addq $160, %rax
+    movq %rax, -408(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $256, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $24, %rax
+    movq %rax, -416(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    addq $256, %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    addq $24, %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -424(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    movq -416(%rbp), %rsi
+    movl -424(%rbp), %edx
+    call init_parser
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    addq $160, %rax
+    movq %rax, -408(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -416(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    movq -416(%rbp), %rsi
+    call p_parse_translation_unit
+    addq $8, %rsp
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movl $3, %edi
+    call set_log_stage
+    addq $8, %rsp
+    leaq -88(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq $0, %rcx
+    movq %rcx, (%rax)
+    movq -408(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rdi
+    movl $0, %esi
+    movq $24, %rdx
+    call memset
+    movq -408(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rdi
+    movl $0, %esi
+    movq $24, %rdx
+    call memset
+    movq -408(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rdi
+    movl $0, %esi
+    movq $24, %rdx
+    call memset
+    leaq -168(%rbp), %rax
+    movq %rax, -408(%rbp)
+    leaq -88(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -408(%rbp), %rdi
+    movq -416(%rbp), %rsi
+    movq $80, %rdx
+    call memcpy
+    leaq -168(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    movl $4, %esi
+    movl $4, %edx
+    call array_init
+    addq $8, %rsp
+    leaq -168(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    movl $4, %esi
+    movl $8, %edx
+    call array_init
+    addq $8, %rsp
+    leaq -168(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    movl $4, %esi
+    movl $8, %edx
+    call array_init
+    addq $8, %rsp
+    subq $8, %rsp
+    movl $4, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
+    testl %eax, %eax
+    jz compile_10
+compile_9:
+    subq $8, %rsp
+    call print_typepool
+    addq $8, %rsp
+    jmp compile_10
+compile_10:
+    leaq -168(%rbp), %rax
+    movq %rax, -408(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $160, %rax
+    movq %rax, -416(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -424(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -432(%rbp)
+    movq -432(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -432(%rbp)
+    movq -432(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -432(%rbp)
+    subq $8, %rsp
+    movq -432(%rbp), %rdi
+    movl $0, %esi
+    call arena_get
+    addq $8, %rsp
+    movq %rax, -432(%rbp)
+    movq -432(%rbp), %rax
+    movq %rax, -432(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    movq -416(%rbp), %rsi
+    movq -424(%rbp), %rdx
+    movq -432(%rbp), %rcx
+    call semantic_analysis
+    addq $8, %rsp
+    subq $8, %rsp
+    movl $0, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
+    testl %eax, %eax
+    jz compile_13
+compile_11:
+    leaq -8(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    call print_ast
+    addq $8, %rsp
+    movl $1, %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+compile_12:
+    jmp compile_13
+compile_13:
+    leaq -168(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    addq $56, %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    call array_free
+    addq $8, %rsp
+    subq $8, %rsp
+    call generate_types
+    addq $8, %rsp
+    subq $8, %rsp
+    movl $4, %edi
+    call set_log_stage
+    addq $8, %rsp
+    leaq -8(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    call lower_nodes
+    addq $8, %rsp
+    leaq -264(%rbp), %rax
+    movq %rax, -408(%rbp)
+    leaq -360(%rbp), %rax
+    movq %rax, -416(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    addq $160, %rax
+    movq %rax, -424(%rbp)
+    subq $8, %rsp
+    movq -416(%rbp), %rdi
+    movq -424(%rbp), %rsi
+    call ir_init_ctx
+    addq $8, %rsp
+    movq -416(%rbp), %rax
+    movq %rax, -424(%rbp)
+    movq -408(%rbp), %rdi
+    movq -424(%rbp), %rsi
+    movq $96, %rdx
+    call memcpy
+    leaq -368(%rbp), %rax
+    movq %rax, -408(%rbp)
+    leaq -264(%rbp), %rax
+    movq %rax, -416(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    addq $120, %rax
+    movq %rax, -424(%rbp)
+    subq $8, %rsp
+    movq -424(%rbp), %rdi
+    movl $0, %esi
+    call arena_get
+    addq $8, %rsp
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    movq %rax, -424(%rbp)
+    subq $8, %rsp
+    movq -416(%rbp), %rdi
+    movq -424(%rbp), %rsi
+    call ir_gen_translation_unit
+    addq $8, %rsp
+    movq %rax, -416(%rbp)
+    movq -408(%rbp), %rax
+    movq -416(%rbp), %rcx
+    movq %rcx, (%rax)
+    subq $8, %rsp
+    movl $1, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
+    testl %eax, %eax
+    jz compile_15
+compile_14:
+    leaq .LC67(%rip), %rax
+    movq %rax, -408(%rbp)
+    subq $184, %rsp
+    movq -408(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -408(%rbp)
+    leaq -264(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq %rax, -408(%rbp)
+    leaq -368(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    movq -416(%rbp), %rsi
+    call print_ir_module
+    addq $8, %rsp
+    leaq .LC68(%rip), %rax
+    movq %rax, -408(%rbp)
+    subq $184, %rsp
+    movq -408(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -408(%rbp)
+    jmp compile_15
+compile_15:
+    leaq -264(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    call analysis
+    addq $8, %rsp
+    subq $8, %rsp
+    movl $5, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
+    testl %eax, %eax
+    jz compile_21
+compile_16:
+    leaq -376(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movl $0, %ecx
+    movl %ecx, (%rax)
+compile_17:
+    leaq -376(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -408(%rbp)
+    leaq -368(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
     movq %rax, -416(%rbp)
     movq -416(%rbp), %rax
     movl (%rax), %eax
     movl %eax, -416(%rbp)
-    subq $184, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq -400(%rbp), %rdx
-    movq -408(%rbp), %rcx
-    movl -416(%rbp), %r8d
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -384(%rbp)
-    leaq -136(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    addl $8, %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_emit_call_31
-abi_emit_call_31:
-    jmp abi_emit_call_47
-abi_emit_call_32:
-    leaq -232(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -208(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    subq $8, %rsp
-    movq -392(%rbp), %rdi
-    call x86_op_suffix
-    addq $8, %rsp
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movq -392(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -48(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $8, %eax
+    movl -408(%rbp), %eax
+    cmpl -416(%rbp), %eax
     setl %al
     movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
     testl %eax, %eax
-    jz abi_emit_call_34
-abi_emit_call_33:
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC49(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -232(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    leaq .LC50(%rip), %rax
-    movq %rax, -408(%rbp)
-    leaq -152(%rbp), %rax
-    movq %rax, -416(%rbp)
-    movq -416(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -416(%rbp)
-    movq -416(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -416(%rbp)
-    leaq sse_register_str(%rip), %rax
-    movq %rax, -424(%rbp)
-    leaq float_param_regs(%rip), %rax
-    movq %rax, -432(%rbp)
-    leaq -48(%rbp), %rax
-    movq %rax, -440(%rbp)
-    movq -440(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -448(%rbp)
-    movl -448(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -456(%rbp)
-    movq -440(%rbp), %rax
-    movl -456(%rbp), %ecx
-    movl %ecx, (%rax)
-    movslq -448(%rbp), %rax
-    movq %rax, -440(%rbp)
-    movq -440(%rbp), %rax
-    imulq $4, %rax
-    movq %rax, -440(%rbp)
-    movq -432(%rbp), %rax
-    addq -440(%rbp), %rax
-    movq %rax, -432(%rbp)
-    movq -432(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -432(%rbp)
-    movslq -432(%rbp), %rax
-    movq %rax, -432(%rbp)
-    movq -432(%rbp), %rax
-    imulq $8, %rax
-    movq %rax, -432(%rbp)
-    movq -424(%rbp), %rax
-    addq -432(%rbp), %rax
-    movq %rax, -424(%rbp)
-    movq -424(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -424(%rbp)
-    subq $8, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq -400(%rbp), %rdx
-    movq -408(%rbp), %rcx
-    movq -416(%rbp), %r8
-    movq -424(%rbp), %r9
-    call x86_emit_xr
-    addq $8, %rsp
-    jmp abi_emit_call_35
-abi_emit_call_34:
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC51(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -232(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    leaq .LC52(%rip), %rax
-    movq %rax, -408(%rbp)
-    leaq -152(%rbp), %rax
-    movq %rax, -416(%rbp)
-    movq -416(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -416(%rbp)
-    movq -416(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -416(%rbp)
-    leaq sse_register_str(%rip), %rax
-    movq %rax, -424(%rbp)
-    movq $0, %rax
-    imulq $8, %rax
-    movq %rax, -432(%rbp)
-    movq -424(%rbp), %rax
-    addq -432(%rbp), %rax
-    movq %rax, -424(%rbp)
-    movq -424(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -424(%rbp)
-    subq $8, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq -400(%rbp), %rdx
-    movq -408(%rbp), %rcx
-    movq -416(%rbp), %r8
-    movq -424(%rbp), %r9
-    call x86_emit_xr
-    addq $8, %rsp
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC53(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -232(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    leaq -136(%rbp), %rax
+    jz compile_20
+compile_18:
+    leaq -368(%rbp), %rax
     movq %rax, -408(%rbp)
     movq -408(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -408(%rbp)
-    subq $184, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq -400(%rbp), %rdx
-    movl -408(%rbp), %ecx
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -384(%rbp)
-    leaq -136(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
-    addl $8, %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_emit_call_35
-abi_emit_call_35:
-    jmp abi_emit_call_47
-abi_emit_call_36:
-abi_emit_call_37:
-    leaq -176(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_42
-abi_emit_call_38:
-    jmp abi_emit_call_40
-abi_emit_call_39:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_emit_call_41
-abi_emit_call_40:
-    leaq .LC54(%rip), %rax
-    movq %rax, -384(%rbp)
-    leaq -208(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -384(%rbp), %rsi
-    movq -392(%rbp), %rdx
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_emit_call_39
-abi_emit_call_41:
-    jmp abi_emit_call_42
-abi_emit_call_42:
-    leaq -256(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    movq -384(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl $7, %ecx
-    movl %ecx, (%rax)
-    movq -384(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl $1, %ecx
-    movl %ecx, (%rax)
-    movq -384(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl $3, %ecx
-    movl %ecx, (%rax)
-    movq -384(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -384(%rbp)
-    leaq -136(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -296(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl $4, %ecx
-    movl %ecx, (%rax)
-    movq -384(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl $8, %ecx
-    movl %ecx, (%rax)
-    movq -384(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl $8, %ecx
-    movl %ecx, (%rax)
-    movq -384(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -384(%rbp)
-    leaq -256(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq $24, %rdx
-    call memcpy
-    leaq -336(%rbp), %rax
-    movq %rax, -384(%rbp)
+    movq %rax, -408(%rbp)
     leaq -376(%rbp), %rax
-    movq %rax, -392(%rbp)
-    subq $8, %rsp
-    movq -392(%rbp), %rdi
-    movl $0, %esi
-    call ir_gp_register_value
-    addq $8, %rsp
-    movq -392(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -384(%rbp), %rdi
-    movq -400(%rbp), %rsi
-    movq $40, %rdx
-    call memcpy
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC55(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq .LC56(%rip), %rax
-    movq %rax, -400(%rbp)
-    leaq .LC57(%rip), %rax
-    movq %rax, -408(%rbp)
-    leaq -296(%rbp), %rax
     movq %rax, -416(%rbp)
-    leaq -336(%rbp), %rax
-    movq %rax, -424(%rbp)
+    movq -416(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -416(%rbp)
     subq $8, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq -400(%rbp), %rdx
-    movq -408(%rbp), %rcx
-    movq -416(%rbp), %r8
-    movq -424(%rbp), %r9
-    call x86_emit_xx
+    movq -408(%rbp), %rdi
+    movl -416(%rbp), %esi
+    call get_func
     addq $8, %rsp
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq -336(%rbp), %rax
-    movq %rax, -392(%rbp)
-    leaq -152(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -400(%rbp)
-    leaq -208(%rbp), %rax
     movq %rax, -408(%rbp)
-    movq -408(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -408(%rbp)
-    movq -408(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -408(%rbp)
-    movq -408(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -408(%rbp)
-    subq $88, %rsp
-    movq -384(%rbp), %rdi
-    leaq (%rsp), %rax
-    movq %rax, %r10
-    movq -392(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    leaq 40(%rsp), %rax
-    movq %rax, %r10
-    movq -400(%rbp), %r11
-    movq (%r11), %rax
-    movq %rax, (%r10)
-    movq 8(%r11), %rax
-    movq %rax, 8(%r10)
-    movq 16(%r11), %rax
-    movq %rax, 16(%r10)
-    movq 24(%r11), %rax
-    movq %rax, 24(%r10)
-    movq 32(%r11), %rax
-    movq %rax, 32(%r10)
-    movl -408(%rbp), %esi
-    call builtin_memcpy
-    addq $88, %rsp
-    leaq -136(%rbp), %rax
-    movq %rax, -384(%rbp)
-    leaq -208(%rbp), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -400(%rbp)
-    movl -400(%rbp), %eax
-    addl -392(%rbp), %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_emit_call_47
-abi_emit_call_43:
-    jmp abi_emit_call_45
-abi_emit_call_44:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_emit_call_46
-abi_emit_call_45:
-    leaq .LC58(%rip), %rax
-    movq %rax, -384(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -384(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
     subq $8, %rsp
-    movl $1, %edi
-    call exit
+    movq -408(%rbp), %rdi
+    call print_cfg
     addq $8, %rsp
-    jmp abi_emit_call_44
-abi_emit_call_46:
-abi_emit_call_47:
-    jmp abi_emit_call_48
-abi_emit_call_48:
-    leaq -144(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
+    jmp compile_19
+compile_19:
+    leaq -376(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -392(%rbp)
-    movl -392(%rbp), %eax
+    movl %eax, -416(%rbp)
+    movl -416(%rbp), %eax
     addl $1, %eax
-    movl %eax, -392(%rbp)
-    movq -384(%rbp), %rax
-    movl -392(%rbp), %ecx
+    movl %eax, -416(%rbp)
+    movq -408(%rbp), %rax
+    movl -416(%rbp), %ecx
     movl %ecx, (%rax)
-    jmp abi_emit_call_24
-abi_emit_call_49:
-    leaq -24(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    addq $24, %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_54
-abi_emit_call_50:
-    leaq -48(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_52
-abi_emit_call_51:
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC59(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -48(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -400(%rbp)
-    subq $184, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movl -400(%rbp), %edx
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -384(%rbp)
-    jmp abi_emit_call_53
-abi_emit_call_52:
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC60(%rip), %rax
-    movq %rax, -392(%rbp)
-    subq $184, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -384(%rbp)
-    jmp abi_emit_call_53
-abi_emit_call_53:
-    jmp abi_emit_call_54
-abi_emit_call_54:
-    leaq -24(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -384(%rbp)
-    movq $1, %rax
-    imulq $40, %rax
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    addq -392(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $4, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_56
-    leaq -24(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -384(%rbp)
-    movq $1, %rax
-    imulq $40, %rax
-    movq %rax, -400(%rbp)
-    movq -384(%rbp), %rax
-    addq -400(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_56
-abi_emit_call_55:
-    movq $1, %rax
-    movq %rax, -392(%rbp)
-    jmp abi_emit_call_57
-abi_emit_call_56:
-    movq $0, %rax
-    movq %rax, -392(%rbp)
-abi_emit_call_57:
-    movl -392(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_59
-abi_emit_call_58:
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC61(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -400(%rbp)
-    movq $1, %rax
-    imulq $40, %rax
-    movq %rax, -408(%rbp)
-    movq -400(%rbp), %rax
-    addq -408(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    subq $184, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq -400(%rbp), %rdx
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -384(%rbp)
-    jmp abi_emit_call_60
-abi_emit_call_59:
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC62(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq .LC63(%rip), %rax
-    movq %rax, -400(%rbp)
-    leaq .LC64(%rip), %rax
-    movq %rax, -408(%rbp)
-    leaq -24(%rbp), %rax
-    movq %rax, -416(%rbp)
-    movq -416(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -416(%rbp)
-    movq -416(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -416(%rbp)
-    movq $1, %rax
-    imulq $40, %rax
-    movq %rax, -424(%rbp)
-    movq -416(%rbp), %rax
-    addq -424(%rbp), %rax
-    movq %rax, -416(%rbp)
-    leaq .LC65(%rip), %rax
-    movq %rax, -424(%rbp)
+    jmp compile_17
+compile_20:
+    jmp compile_21
+compile_21:
     subq $8, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq -400(%rbp), %rdx
-    movq -408(%rbp), %rcx
-    movq -416(%rbp), %r8
-    movq -424(%rbp), %r9
-    call x86_emit_xr
+    movl $9, %edi
+    call has_flag
     addq $8, %rsp
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC66(%rip), %rax
-    movq %rax, -392(%rbp)
-    subq $184, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -384(%rbp)
-    jmp abi_emit_call_60
-abi_emit_call_60:
-    leaq -64(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    cmpl $0, %eax
-    setg %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
     testl %eax, %eax
-    jz abi_emit_call_62
-abi_emit_call_61:
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC67(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -400(%rbp)
-    subq $184, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movl -400(%rbp), %edx
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -384(%rbp)
-    jmp abi_emit_call_62
-abi_emit_call_62:
-    leaq -32(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq type_void(%rip), %rax
-    movq %rax, -392(%rbp)
-    movq -392(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -392(%rbp)
-    movq -384(%rbp), %rax
-    cmpq -392(%rbp), %rax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -384(%rbp)
-    movl -384(%rbp), %eax
-    testl %eax, %eax
-    jz abi_emit_call_65
-abi_emit_call_63:
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-abi_emit_call_64:
-    jmp abi_emit_call_65
-abi_emit_call_65:
-    leaq -8(%rbp), %rax
-    movq %rax, -384(%rbp)
-    movq -384(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -384(%rbp)
-    leaq .LC68(%rip), %rax
-    movq %rax, -392(%rbp)
-    leaq -32(%rbp), %rax
-    movq %rax, -400(%rbp)
-    movq -400(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -400(%rbp)
-    subq $8, %rsp
-    movq -400(%rbp), %rdi
-    call x86_op_suffix
-    addq $8, %rsp
-    movq %rax, -400(%rbp)
+    jz compile_23
+compile_22:
     leaq .LC69(%rip), %rax
     movq %rax, -408(%rbp)
-    leaq -32(%rbp), %rax
+    subq $184, %rsp
+    movq -408(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -408(%rbp)
+    leaq -264(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq %rax, -408(%rbp)
+    leaq -368(%rbp), %rax
     movq %rax, -416(%rbp)
     movq -416(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -416(%rbp)
     subq $8, %rsp
+    movq -408(%rbp), %rdi
+    movq -416(%rbp), %rsi
+    call print_ir_module
+    addq $8, %rsp
+    leaq .LC70(%rip), %rax
+    movq %rax, -408(%rbp)
+    subq $184, %rsp
+    movq -408(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -408(%rbp)
+    jmp compile_23
+compile_23:
+    subq $8, %rsp
+    movl $13, %edi
+    call has_flag
+    addq $8, %rsp
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
+    testl %eax, %eax
+    jz compile_29
+compile_24:
+    leaq .LC71(%rip), %rax
+    movq %rax, -408(%rbp)
+    subq $184, %rsp
+    movq -408(%rbp), %rdi
+    xor %eax, %eax
+    call printf
+    addq $184, %rsp
+    movl %eax, -408(%rbp)
+    leaq -384(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movl $0, %ecx
+    movl %ecx, (%rax)
+compile_25:
+    leaq -384(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -408(%rbp)
+    leaq -264(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $64, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -416(%rbp)
+    movl -408(%rbp), %eax
+    cmpl -416(%rbp), %eax
+    setl %al
+    movzbl %al, %eax
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
+    testl %eax, %eax
+    jz compile_28
+compile_26:
+    leaq -392(%rbp), %rax
+    movq %rax, -408(%rbp)
+    leaq -264(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $64, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    leaq -384(%rbp), %rax
+    movq %rax, -424(%rbp)
+    movq -424(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -424(%rbp)
+    subq $8, %rsp
     movq -416(%rbp), %rdi
-    call x86_rax_reg
+    movl -424(%rbp), %esi
+    call arena_get
     addq $8, %rsp
     movq %rax, -416(%rbp)
-    leaq -24(%rbp), %rax
+    movq -416(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -408(%rbp), %rax
+    movq -416(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq .LC72(%rip), %rax
+    movq %rax, -408(%rbp)
+    leaq -392(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    leaq -392(%rbp), %rax
     movq %rax, -424(%rbp)
     movq -424(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -424(%rbp)
     movq -424(%rbp), %rax
-    addq $8, %rax
+    movq (%rax), %rax
     movq %rax, -424(%rbp)
-    movq $0, %rax
-    imulq $40, %rax
-    movq %rax, -432(%rbp)
-    movq -424(%rbp), %rax
-    addq -432(%rbp), %rax
-    movq %rax, -424(%rbp)
+    subq $184, %rsp
+    movq -408(%rbp), %rdi
+    movq -416(%rbp), %rsi
+    movq -424(%rbp), %rdx
+    xor %eax, %eax
+    call print
+    addq $184, %rsp
+    jmp compile_27
+compile_27:
+    leaq -384(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -416(%rbp)
+    movl -416(%rbp), %eax
+    addl $1, %eax
+    movl %eax, -416(%rbp)
+    movq -408(%rbp), %rax
+    movl -416(%rbp), %ecx
+    movl %ecx, (%rax)
+    jmp compile_25
+compile_28:
+    jmp compile_29
+compile_29:
     subq $8, %rsp
-    movq -384(%rbp), %rdi
-    movq -392(%rbp), %rsi
-    movq -400(%rbp), %rdx
-    movq -408(%rbp), %rcx
-    movq -416(%rbp), %r8
-    movq -424(%rbp), %r9
-    call x86_emit_rx
+    movl $1, %edi
+    call has_flag
     addq $8, %rsp
+    movl %eax, -408(%rbp)
+    movl -408(%rbp), %eax
+    testl %eax, %eax
+    jz compile_32
+compile_30:
+    movl $1, %eax
     mov %rbp, %rsp
     pop %rbp
     ret
-.global abi_func_type_gen
-abi_func_type_gen:
+compile_31:
+    jmp compile_32
+compile_32:
+    subq $8, %rsp
+    movl $5, %edi
+    call set_log_stage
+    addq $8, %rsp
+    leaq -400(%rbp), %rax
+    movq %rax, -408(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $32, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -416(%rbp)
+    movq -416(%rbp), %rax
+    movq %rax, -416(%rbp)
+    leaq .LC73(%rip), %rax
+    movq %rax, -424(%rbp)
+    subq $8, %rsp
+    movq -416(%rbp), %rdi
+    movq -424(%rbp), %rsi
+    call fopen
+    addq $8, %rsp
+    movq %rax, -416(%rbp)
+    movq -408(%rbp), %rax
+    movq -416(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -400(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -408(%rbp)
+    leaq -264(%rbp), %rax
+    movq %rax, -416(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    movq -416(%rbp), %rsi
+    call x86_gen_module
+    addq $8, %rsp
+    leaq -400(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    call fclose
+    addq $8, %rsp
+    movl %eax, -408(%rbp)
+    leaq -368(%rbp), %rax
+    movq %rax, -408(%rbp)
+    movq -408(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    call ir_free_module
+    addq $8, %rsp
+    leaq -264(%rbp), %rax
+    movq %rax, -408(%rbp)
+    subq $8, %rsp
+    movq -408(%rbp), %rdi
+    call free_ir_ctx
+    addq $8, %rsp
+    movl $1, %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret
+load_src_file:
     push %rbp
     mov %rsp, %rbp
-    subq $200, %rsp
-abi_func_type_gen_0:
+    subq $648, %rsp
+load_src_file_0:
     movq %rdi, -8(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
+    movq %rsi, -16(%rbp)
+    leaq -536(%rbp), %rax
+    movq %rax, -600(%rbp)
+    leaq -528(%rbp), %rax
+    movq %rax, -608(%rbp)
+    leaq .LC74(%rip), %rax
+    movq %rax, -616(%rbp)
+    leaq -16(%rbp), %rax
+    movq %rax, -624(%rbp)
+    movq -624(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    cmpl $8, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_5
-abi_func_type_gen_1:
-    jmp abi_func_type_gen_3
-abi_func_type_gen_2:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_4
-abi_func_type_gen_3:
-    leaq .LC70(%rip), %rax
-    movq %rax, -168(%rbp)
+    movq %rax, -624(%rbp)
     subq $184, %rsp
-    movl $3, %edi
-    movq -168(%rbp), %rsi
+    movq -608(%rbp), %rdi
+    movq $512, %rsi
+    movq -616(%rbp), %rdx
+    movq -624(%rbp), %rcx
     xor %eax, %eax
-    call log_message
+    call snprintf
     addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_func_type_gen_2
-abi_func_type_gen_4:
-    jmp abi_func_type_gen_5
-abi_func_type_gen_5:
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    subq $8, %rsp
-    call new_type
-    addq $8, %rsp
-    movq %rax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movq -176(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq %rax, -168(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq %rax, -176(%rbp)
-    subq $8, %rsp
-    movq -168(%rbp), %rdi
-    movq -176(%rbp), %rsi
-    movq $88, %rdx
-    call memcpy
-    addq $8, %rsp
-    movq %rax, -168(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -168(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    subq $8, %rsp
-    movq -168(%rbp), %rdi
-    movl -176(%rbp), %esi
-    movl -184(%rbp), %edx
-    call array_init
-    addq $8, %rsp
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -192(%rbp)
-    movq -192(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -192(%rbp)
-    movl -184(%rbp), %eax
-    imull -192(%rbp)
-    movl %eax, -184(%rbp)
-    movslq -184(%rbp), %rax
-    movq %rax, -184(%rbp)
-    subq $8, %rsp
-    movq -168(%rbp), %rdi
-    movq -176(%rbp), %rsi
-    movq -184(%rbp), %rdx
-    call memcpy
-    addq $8, %rsp
-    movq %rax, -168(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -168(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movl -176(%rbp), %ecx
+    movl %eax, -608(%rbp)
+    movq -600(%rbp), %rax
+    movl -608(%rbp), %ecx
     movl %ecx, (%rax)
-    leaq -8(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
+    leaq -544(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
     movl $0, %ecx
     movl %ecx, (%rax)
+load_src_file_1:
+    leaq -544(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -600(%rbp)
     leaq -8(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    cmpl $5, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_17
-abi_func_type_gen_6:
-    leaq -40(%rbp), %rax
-    movq %rax, -168(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    subq $8, %rsp
-    movq -176(%rbp), %rdi
-    movq -184(%rbp), %rsi
-    call abi_classify
-    addq $8, %rsp
-    movq -176(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -168(%rbp), %rdi
-    movq -184(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    leaq -40(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_8
-abi_func_type_gen_7:
-    leaq -8(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    subq $8, %rsp
-    movq -168(%rbp), %rdi
-    call set_sret
-    addq $8, %rsp
-    leaq -72(%rbp), %rax
-    movq %rax, -168(%rbp)
-    subq $8, %rsp
-    call current_sret
-    addq $8, %rsp
-    movq %rax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movq -176(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -96(%rbp), %rax
-    movq %rax, -168(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    subq $8, %rsp
-    movq -176(%rbp), %rdi
-    call get_pointer_type
-    addq $8, %rsp
-    movq %rax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movq -176(%rbp), %rcx
-    movq %rcx, (%rax)
-    movq -168(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -176(%rbp)
-    leaq -72(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    movq -176(%rbp), %rax
-    movq -184(%rbp), %rcx
-    movq %rcx, (%rax)
-    movq -168(%rbp), %rax
-    addq $16, %rax
-    movq %rax, -168(%rbp)
-    leaq -72(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movq -176(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -168(%rbp)
-    leaq -96(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq %rax, -176(%rbp)
-    subq $8, %rsp
-    movq -168(%rbp), %rdi
-    movq -176(%rbp), %rsi
-    movl $0, %edx
-    call insert
-    addq $8, %rsp
-    movq %rax, -168(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -168(%rbp)
-    leaq type_void(%rip), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movq -176(%rbp), %rcx
-    movq %rcx, (%rax)
-    jmp abi_func_type_gen_16
-abi_func_type_gen_8:
-    leaq compiler_flags(%rip), %rax
-    movq %rax, -168(%rbp)
-    movl $1, %eax
-    movl $7, %ecx
-    shll %cl, %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    movl %eax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -184(%rbp)
-    movl -184(%rbp), %eax
-    orl -176(%rbp), %eax
-    movl %eax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movl -176(%rbp), %ecx
-    movl %ecx, (%rax)
-    leaq -40(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq $1, %rax
-    imulq $4, %rax
-    movq %rax, -176(%rbp)
-    movq -168(%rbp), %rax
-    addq -176(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_13
-abi_func_type_gen_9:
-    jmp abi_func_type_gen_11
-abi_func_type_gen_10:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_12
-abi_func_type_gen_11:
-    leaq .LC71(%rip), %rax
-    movq %rax, -168(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -168(%rbp), %rsi
-    movq -176(%rbp), %rdx
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_func_type_gen_10
-abi_func_type_gen_12:
-    jmp abi_func_type_gen_13
-abi_func_type_gen_13:
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -168(%rbp)
-    leaq -40(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq $0, %rax
-    imulq $4, %rax
-    movq %rax, -184(%rbp)
-    movq -176(%rbp), %rax
-    addq -184(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    cmpl $0, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    testl %eax, %eax
-    jnz abi_func_type_gen_14
-    leaq type_u64(%rip), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq %rax, -184(%rbp)
-    jmp abi_func_type_gen_15
-abi_func_type_gen_14:
-    leaq type_f64(%rip), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq %rax, -184(%rbp)
-abi_func_type_gen_15:
-    movq -168(%rbp), %rax
-    movq -184(%rbp), %rcx
-    movq %rcx, (%rax)
-    jmp abi_func_type_gen_16
-abi_func_type_gen_16:
-    jmp abi_func_type_gen_17
-abi_func_type_gen_17:
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    cmpl $6, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_19
-abi_func_type_gen_18:
-    leaq -16(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -168(%rbp)
-    leaq type_i32(%rip), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movq -176(%rbp), %rcx
-    movq %rcx, (%rax)
-    jmp abi_func_type_gen_19
-abi_func_type_gen_19:
-    leaq -104(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl $0, %ecx
-    movl %ecx, (%rax)
-abi_func_type_gen_20:
-    leaq -104(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    movl -168(%rbp), %eax
-    cmpl -176(%rbp), %eax
+    movl %eax, -608(%rbp)
+    movl -600(%rbp), %eax
+    cmpl -608(%rbp), %eax
     setl %al
     movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
+    movl %eax, -600(%rbp)
+    movl -600(%rbp), %eax
     testl %eax, %eax
-    jz abi_func_type_gen_33
-abi_func_type_gen_21:
-    leaq -112(%rbp), %rax
-    movq %rax, -168(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $48, %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -176(%rbp)
-    leaq -104(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
+    jz load_src_file_4
+load_src_file_2:
+    leaq -536(%rbp), %rax
+    movq %rax, -600(%rbp)
+    leaq -528(%rbp), %rax
+    movq %rax, -608(%rbp)
+    leaq -536(%rbp), %rax
+    movq %rax, -616(%rbp)
+    movq -616(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -184(%rbp)
+    movl %eax, -616(%rbp)
+    movslq -616(%rbp), %rax
+    movq %rax, -616(%rbp)
+    movq -616(%rbp), %rax
+    imulq $1, %rax
+    movq %rax, -616(%rbp)
+    movq -608(%rbp), %rax
+    addq -616(%rbp), %rax
+    movq %rax, -608(%rbp)
+    leaq -536(%rbp), %rax
+    movq %rax, -616(%rbp)
+    movq -616(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -616(%rbp)
+    movl $512, %eax
+    subl -616(%rbp), %eax
+    movl %eax, -616(%rbp)
+    movslq -616(%rbp), %rax
+    movq %rax, -616(%rbp)
+    leaq .LC75(%rip), %rax
+    movq %rax, -624(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -632(%rbp)
+    movq -632(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -632(%rbp)
+    movq -632(%rbp), %rax
+    addq $80, %rax
+    movq %rax, -632(%rbp)
+    leaq -544(%rbp), %rax
+    movq %rax, -640(%rbp)
+    movq -640(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -640(%rbp)
     subq $8, %rsp
-    movq -176(%rbp), %rdi
-    movl -184(%rbp), %esi
+    movq -632(%rbp), %rdi
+    movl -640(%rbp), %esi
     call get
     addq $8, %rsp
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movq -176(%rbp), %rcx
-    movq %rcx, (%rax)
-    leaq -136(%rbp), %rax
-    movq %rax, -168(%rbp)
-    leaq -64(%rbp), %rax
-    movq %rax, -176(%rbp)
-    leaq -112(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
+    movq %rax, -632(%rbp)
+    movq -632(%rbp), %rax
+    movq %rax, -632(%rbp)
+    movq -632(%rbp), %rax
     movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    movq -184(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -184(%rbp)
-    subq $8, %rsp
-    movq -176(%rbp), %rdi
-    movq -184(%rbp), %rsi
-    call abi_classify
-    addq $8, %rsp
-    movq -176(%rbp), %rax
-    movq %rax, -184(%rbp)
-    movq -168(%rbp), %rdi
-    movq -184(%rbp), %rsi
-    movq $20, %rdx
-    call memcpy
-    leaq -136(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
+    movq %rax, -632(%rbp)
+    subq $184, %rsp
+    movq -608(%rbp), %rdi
+    movq -616(%rbp), %rsi
+    movq -624(%rbp), %rdx
+    movq -632(%rbp), %rcx
+    xor %eax, %eax
+    call snprintf
+    addq $184, %rsp
+    movl %eax, -608(%rbp)
+    movq -600(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_31
-abi_func_type_gen_22:
-    leaq -112(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    cmpl $2, %eax
-    sete %al
-    movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_24
-    leaq -8(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    cmpl $8, %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_24
-abi_func_type_gen_23:
-    movq $1, %rax
-    movq %rax, -176(%rbp)
-    jmp abi_func_type_gen_25
-abi_func_type_gen_24:
-    movq $0, %rax
-    movq %rax, -176(%rbp)
-abi_func_type_gen_25:
-    movl -176(%rbp), %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_27
-abi_func_type_gen_26:
-    leaq -8(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $12, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movl -176(%rbp), %ecx
+    movl %eax, -616(%rbp)
+    movl -616(%rbp), %eax
+    addl -608(%rbp), %eax
+    movl %eax, -608(%rbp)
+    movq -600(%rbp), %rax
+    movl -608(%rbp), %ecx
     movl %ecx, (%rax)
-    jmp abi_func_type_gen_30
-abi_func_type_gen_27:
-    leaq -8(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
+    jmp load_src_file_3
+load_src_file_3:
+    leaq -544(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
     movl (%rax), %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    cmpl $6, %eax
-    setl %al
-    movzbl %al, %eax
-    movl %eax, -168(%rbp)
-    movl -168(%rbp), %eax
-    testl %eax, %eax
-    jz abi_func_type_gen_29
-abi_func_type_gen_28:
-    leaq -8(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
+    movl %eax, -608(%rbp)
+    movl -608(%rbp), %eax
     addl $1, %eax
-    movl %eax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movl -176(%rbp), %ecx
+    movl %eax, -608(%rbp)
+    movq -600(%rbp), %rax
+    movl -608(%rbp), %ecx
     movl %ecx, (%rax)
-    jmp abi_func_type_gen_29
-abi_func_type_gen_29:
-abi_func_type_gen_30:
-    jmp abi_func_type_gen_31
-abi_func_type_gen_31:
-    jmp abi_func_type_gen_32
-abi_func_type_gen_32:
-    leaq -104(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -176(%rbp)
-    movl -176(%rbp), %eax
-    addl $1, %eax
-    movl %eax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movl -176(%rbp), %ecx
-    movl %ecx, (%rax)
-    jmp abi_func_type_gen_20
-abi_func_type_gen_33:
-    leaq -8(%rbp), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -168(%rbp)
-    movq -168(%rbp), %rax
-    addq $32, %rax
-    movq %rax, -168(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -176(%rbp)
-    movq -176(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -176(%rbp)
-    movq -168(%rbp), %rax
-    movq -176(%rbp), %rcx
-    movq %rcx, (%rax)
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global abi_gen_memset_instruction
-abi_gen_memset_instruction:
-    push %rbp
-    mov %rsp, %rbp
-    subq $72, %rsp
-abi_gen_memset_instruction_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -24(%rbp)
-    movq $0, %rax
-    imulq $40, %rax
-    movq %rax, -32(%rbp)
-    movq -24(%rbp), %rax
-    addq -32(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $3, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memset_instruction_1
-    movl -24(%rbp), %eax
-    cmpl $4, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memset_instruction_2
-    movl -24(%rbp), %eax
-    cmpl $1, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memset_instruction_3
-    movl -24(%rbp), %eax
-    cmpl $5, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memset_instruction_4
-    movl -24(%rbp), %eax
-    cmpl $2, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memset_instruction_5
-    movl -24(%rbp), %eax
-    cmpl $0, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memset_instruction_6
-    jmp abi_gen_memset_instruction_10
-abi_gen_memset_instruction_1:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    leaq .LC72(%rip), %rax
-    movq %rax, -32(%rbp)
-    leaq .LC73(%rip), %rax
-    movq %rax, -40(%rbp)
-    leaq .LC74(%rip), %rax
-    movq %rax, -48(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq $0, %rax
-    imulq $40, %rax
-    movq %rax, -64(%rbp)
-    movq -56(%rbp), %rax
-    addq -64(%rbp), %rax
-    movq %rax, -56(%rbp)
-    leaq .LC75(%rip), %rax
-    movq %rax, -64(%rbp)
-    subq $8, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    movq -40(%rbp), %rdx
-    movq -48(%rbp), %rcx
-    movq -56(%rbp), %r8
-    movq -64(%rbp), %r9
-    call x86_emit_xr
-    addq $8, %rsp
-    jmp abi_gen_memset_instruction_10
-abi_gen_memset_instruction_2:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
+    jmp load_src_file_1
+load_src_file_4:
+    leaq -552(%rbp), %rax
+    movq %rax, -600(%rbp)
+    leaq -528(%rbp), %rax
+    movq %rax, -608(%rbp)
     leaq .LC76(%rip), %rax
-    movq %rax, -32(%rbp)
+    movq %rax, -616(%rbp)
+    subq $8, %rsp
+    movq -608(%rbp), %rdi
+    movq -616(%rbp), %rsi
+    call popen
+    addq $8, %rsp
+    movq %rax, -608(%rbp)
+    movq -600(%rbp), %rax
+    movq -608(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -552(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -600(%rbp)
+    movl -600(%rbp), %eax
+    testl %eax, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -600(%rbp)
+    movl -600(%rbp), %eax
+    testl %eax, %eax
+    jz load_src_file_9
+load_src_file_5:
+    jmp load_src_file_7
+load_src_file_6:
+    movl $0, %eax
+    testl %eax, %eax
+    jz load_src_file_8
+load_src_file_7:
     leaq .LC77(%rip), %rax
-    movq %rax, -40(%rbp)
+    movq %rax, -600(%rbp)
+    leaq -16(%rbp), %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -608(%rbp)
+    subq $184, %rsp
+    movl $3, %edi
+    movq -600(%rbp), %rsi
+    movq -608(%rbp), %rdx
+    xor %eax, %eax
+    call log_message
+    addq $184, %rsp
+    subq $8, %rsp
+    movl $1, %edi
+    call exit
+    addq $8, %rsp
+    jmp load_src_file_6
+load_src_file_8:
+    jmp load_src_file_9
+load_src_file_9:
+    leaq -576(%rbp), %rax
+    movq %rax, -600(%rbp)
+    subq $8, %rsp
+    movq -600(%rbp), %rdi
+    movl $1024, %esi
+    movl $1, %edx
+    call array_init
+    addq $8, %rsp
+load_src_file_10:
+    leaq -584(%rbp), %rax
+    movq %rax, -600(%rbp)
+    leaq -552(%rbp), %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -608(%rbp)
+    subq $8, %rsp
+    movq -608(%rbp), %rdi
+    call fgetc
+    addq $8, %rsp
+    movb %al, -608(%rbp)
+    movq -600(%rbp), %rax
+    movb -608(%rbp), %cl
+    movb %cl, (%rax)
+    leaq -584(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    movb (%rax), %al
+    movb %al, -600(%rbp)
+    movsbl -600(%rbp), %eax
+    movl %eax, -600(%rbp)
+    movl -600(%rbp), %eax
+    cmpl $-1, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -600(%rbp)
+    movl -600(%rbp), %eax
+    testl %eax, %eax
+    jz load_src_file_13
+load_src_file_11:
+    jmp load_src_file_15
+load_src_file_12:
+    jmp load_src_file_13
+load_src_file_13:
+    leaq -576(%rbp), %rax
+    movq %rax, -600(%rbp)
+    leaq -584(%rbp), %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
+    movq %rax, -608(%rbp)
+    subq $8, %rsp
+    movq -600(%rbp), %rdi
+    movq -608(%rbp), %rsi
+    call append
+    addq $8, %rsp
+    movq %rax, -600(%rbp)
+    jmp load_src_file_14
+load_src_file_14:
+    jmp load_src_file_10
+load_src_file_15:
+    leaq -552(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -600(%rbp)
+    subq $8, %rsp
+    movq -600(%rbp), %rdi
+    call pclose
+    addq $8, %rsp
+    movl %eax, -600(%rbp)
+    leaq -592(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    movb $0, %cl
+    movb %cl, (%rax)
+    leaq -576(%rbp), %rax
+    movq %rax, -600(%rbp)
+    leaq -592(%rbp), %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
+    movq %rax, -608(%rbp)
+    subq $8, %rsp
+    movq -600(%rbp), %rdi
+    movq -608(%rbp), %rsi
+    call append
+    addq $8, %rsp
+    movq %rax, -600(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    addq $104, %rax
+    movq %rax, -600(%rbp)
+    leaq -576(%rbp), %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
+    movq %rax, -608(%rbp)
+    movq -600(%rbp), %rax
+    movq -608(%rbp), %rcx
+    movq %rcx, (%rax)
+    leaq -8(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    addq $112, %rax
+    movq %rax, -600(%rbp)
+    leaq -576(%rbp), %rax
+    movq %rax, -608(%rbp)
+    movq -608(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -608(%rbp)
+    movl -608(%rbp), %eax
+    subl $1, %eax
+    movl %eax, -608(%rbp)
+    movq -600(%rbp), %rax
+    movl -608(%rbp), %ecx
+    movl %ecx, (%rax)
+    leaq -8(%rbp), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    addq $112, %rax
+    movq %rax, -600(%rbp)
+    movq -600(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -600(%rbp)
+    movl -600(%rbp), %eax
+    cmpl $0, %eax
+    sete %al
+    movzbl %al, %eax
+    movl %eax, -600(%rbp)
+    movl -600(%rbp), %eax
+    testl %eax, %eax
+    jz load_src_file_17
+load_src_file_16:
     leaq .LC78(%rip), %rax
-    movq %rax, -48(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq $0, %rax
-    imulq $40, %rax
-    movq %rax, -64(%rbp)
-    movq -56(%rbp), %rax
-    addq -64(%rbp), %rax
-    movq %rax, -56(%rbp)
-    leaq .LC79(%rip), %rax
-    movq %rax, -64(%rbp)
-    subq $8, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    movq -40(%rbp), %rdx
-    movq -48(%rbp), %rcx
-    movq -56(%rbp), %r8
-    movq -64(%rbp), %r9
-    call x86_emit_xr
-    addq $8, %rsp
-    jmp abi_gen_memset_instruction_10
-abi_gen_memset_instruction_3:
-abi_gen_memset_instruction_4:
-abi_gen_memset_instruction_5:
-abi_gen_memset_instruction_6:
-    jmp abi_gen_memset_instruction_8
-abi_gen_memset_instruction_7:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_gen_memset_instruction_9
-abi_gen_memset_instruction_8:
-    leaq .LC80(%rip), %rax
-    movq %rax, -24(%rbp)
+    movq %rax, -600(%rbp)
     subq $184, %rsp
-    movl $3, %edi
-    movq -24(%rbp), %rsi
+    movl $2, %edi
+    movq -600(%rbp), %rsi
     xor %eax, %eax
     call log_message
     addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_gen_memset_instruction_7
-abi_gen_memset_instruction_9:
-abi_gen_memset_instruction_10:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    leaq .LC81(%rip), %rax
-    movq %rax, -32(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    addq $4, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -40(%rbp)
-    subq $184, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    movl -40(%rbp), %edx
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -24(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    leaq .LC82(%rip), %rax
-    movq %rax, -32(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -40(%rbp)
-    subq $184, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    movl -40(%rbp), %edx
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -24(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    leaq .LC83(%rip), %rax
-    movq %rax, -32(%rbp)
-    subq $184, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -24(%rbp)
-    mov %rbp, %rsp
-    pop %rbp
-    ret
-.global abi_gen_memcpy_instruction
-abi_gen_memcpy_instruction:
-    push %rbp
-    mov %rsp, %rbp
-    subq $72, %rsp
-abi_gen_memcpy_instruction_0:
-    movq %rdi, -8(%rbp)
-    movq %rsi, -16(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -24(%rbp)
-    movq $0, %rax
-    imulq $40, %rax
-    movq %rax, -32(%rbp)
-    movq -24(%rbp), %rax
-    addq -32(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $3, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_1
-    movl -24(%rbp), %eax
-    cmpl $4, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_2
-    movl -24(%rbp), %eax
-    cmpl $1, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_3
-    movl -24(%rbp), %eax
-    cmpl $5, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_4
-    movl -24(%rbp), %eax
-    cmpl $2, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_5
-    movl -24(%rbp), %eax
-    cmpl $0, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_6
-    jmp abi_gen_memcpy_instruction_10
-abi_gen_memcpy_instruction_1:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    leaq .LC84(%rip), %rax
-    movq %rax, -32(%rbp)
-    leaq .LC85(%rip), %rax
-    movq %rax, -40(%rbp)
-    leaq .LC86(%rip), %rax
-    movq %rax, -48(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq $0, %rax
-    imulq $40, %rax
-    movq %rax, -64(%rbp)
-    movq -56(%rbp), %rax
-    addq -64(%rbp), %rax
-    movq %rax, -56(%rbp)
-    leaq .LC87(%rip), %rax
-    movq %rax, -64(%rbp)
-    subq $8, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    movq -40(%rbp), %rdx
-    movq -48(%rbp), %rcx
-    movq -56(%rbp), %r8
-    movq -64(%rbp), %r9
-    call x86_emit_xr
-    addq $8, %rsp
-    jmp abi_gen_memcpy_instruction_10
-abi_gen_memcpy_instruction_2:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    leaq .LC88(%rip), %rax
-    movq %rax, -32(%rbp)
-    leaq .LC89(%rip), %rax
-    movq %rax, -40(%rbp)
-    leaq .LC90(%rip), %rax
-    movq %rax, -48(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq $0, %rax
-    imulq $40, %rax
-    movq %rax, -64(%rbp)
-    movq -56(%rbp), %rax
-    addq -64(%rbp), %rax
-    movq %rax, -56(%rbp)
-    leaq .LC91(%rip), %rax
-    movq %rax, -64(%rbp)
-    subq $8, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    movq -40(%rbp), %rdx
-    movq -48(%rbp), %rcx
-    movq -56(%rbp), %r8
-    movq -64(%rbp), %r9
-    call x86_emit_xr
-    addq $8, %rsp
-    jmp abi_gen_memcpy_instruction_10
-abi_gen_memcpy_instruction_3:
-abi_gen_memcpy_instruction_4:
-abi_gen_memcpy_instruction_5:
-abi_gen_memcpy_instruction_6:
-    jmp abi_gen_memcpy_instruction_8
-abi_gen_memcpy_instruction_7:
+    jmp load_src_file_17
+load_src_file_17:
     movl $0, %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_9
-abi_gen_memcpy_instruction_8:
-    leaq .LC92(%rip), %rax
-    movq %rax, -24(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -24(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_gen_memcpy_instruction_7
-abi_gen_memcpy_instruction_9:
-abi_gen_memcpy_instruction_10:
-    leaq -16(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -24(%rbp)
-    movq $1, %rax
-    imulq $40, %rax
-    movq %rax, -32(%rbp)
-    movq -24(%rbp), %rax
-    addq -32(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    cmpl $3, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_11
-    movl -24(%rbp), %eax
-    cmpl $4, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_12
-    movl -24(%rbp), %eax
-    cmpl $1, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_13
-    movl -24(%rbp), %eax
-    cmpl $5, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_14
-    movl -24(%rbp), %eax
-    cmpl $2, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -32(%rbp)
-    movl -32(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_15
-    movl -24(%rbp), %eax
-    cmpl $0, %eax
-    setne %al
-    movzbl %al, %eax
-    movl %eax, -24(%rbp)
-    movl -24(%rbp), %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_16
-    jmp abi_gen_memcpy_instruction_20
-abi_gen_memcpy_instruction_11:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    leaq .LC93(%rip), %rax
-    movq %rax, -32(%rbp)
-    leaq .LC94(%rip), %rax
-    movq %rax, -40(%rbp)
-    leaq .LC95(%rip), %rax
-    movq %rax, -48(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq $1, %rax
-    imulq $40, %rax
-    movq %rax, -64(%rbp)
-    movq -56(%rbp), %rax
-    addq -64(%rbp), %rax
-    movq %rax, -56(%rbp)
-    leaq .LC96(%rip), %rax
-    movq %rax, -64(%rbp)
-    subq $8, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    movq -40(%rbp), %rdx
-    movq -48(%rbp), %rcx
-    movq -56(%rbp), %r8
-    movq -64(%rbp), %r9
-    call x86_emit_xr
-    addq $8, %rsp
-    jmp abi_gen_memcpy_instruction_20
-abi_gen_memcpy_instruction_12:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    leaq .LC97(%rip), %rax
-    movq %rax, -32(%rbp)
-    leaq .LC98(%rip), %rax
-    movq %rax, -40(%rbp)
-    leaq .LC99(%rip), %rax
-    movq %rax, -48(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -56(%rbp)
-    movq -56(%rbp), %rax
-    addq $8, %rax
-    movq %rax, -56(%rbp)
-    movq $1, %rax
-    imulq $40, %rax
-    movq %rax, -64(%rbp)
-    movq -56(%rbp), %rax
-    addq -64(%rbp), %rax
-    movq %rax, -56(%rbp)
-    leaq .LC100(%rip), %rax
-    movq %rax, -64(%rbp)
-    subq $8, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    movq -40(%rbp), %rdx
-    movq -48(%rbp), %rcx
-    movq -56(%rbp), %r8
-    movq -64(%rbp), %r9
-    call x86_emit_xr
-    addq $8, %rsp
-    jmp abi_gen_memcpy_instruction_20
-abi_gen_memcpy_instruction_13:
-abi_gen_memcpy_instruction_14:
-abi_gen_memcpy_instruction_15:
-abi_gen_memcpy_instruction_16:
-    jmp abi_gen_memcpy_instruction_18
-abi_gen_memcpy_instruction_17:
-    movl $0, %eax
-    testl %eax, %eax
-    jz abi_gen_memcpy_instruction_19
-abi_gen_memcpy_instruction_18:
-    leaq .LC101(%rip), %rax
-    movq %rax, -24(%rbp)
-    subq $184, %rsp
-    movl $3, %edi
-    movq -24(%rbp), %rsi
-    xor %eax, %eax
-    call log_message
-    addq $184, %rsp
-    subq $8, %rsp
-    movl $1, %edi
-    call exit
-    addq $8, %rsp
-    jmp abi_gen_memcpy_instruction_17
-abi_gen_memcpy_instruction_19:
-abi_gen_memcpy_instruction_20:
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    leaq .LC102(%rip), %rax
-    movq %rax, -32(%rbp)
-    leaq -16(%rbp), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    addq $136, %rax
-    movq %rax, -40(%rbp)
-    movq -40(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -40(%rbp)
-    subq $184, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    movl -40(%rbp), %edx
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -24(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -24(%rbp)
-    movq -24(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -24(%rbp)
-    leaq .LC103(%rip), %rax
-    movq %rax, -32(%rbp)
-    subq $184, %rsp
-    movq -24(%rbp), %rdi
-    movq -32(%rbp), %rsi
-    xor %eax, %eax
-    call fprintf
-    addq $184, %rsp
-    movl %eax, -24(%rbp)
     mov %rbp, %rsp
     pop %rbp
     ret

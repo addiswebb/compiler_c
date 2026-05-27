@@ -6,6 +6,7 @@
 #include "compiler_c/tokenize/tokenizer.h"
 #include <compiler_c/analyse/const_expr.h>
 #include <inttypes.h>
+#include <stdint.h>
 
 ConstLiteral evaluate_const_unary(const Node *node) {
     ConstLiteral e = evaluate_const_expression(node->unary.expr);
@@ -182,11 +183,11 @@ ConstLiteral evaluate_const_cast(const Node *node) {
     switch (node->type->kind) {
     case T_INT:
         if (node->cast.from->kind == T_INT || node->cast.from->kind == T_POINTER) break;
-        e.i = (int)e.f;
+        e.i = (int64_t)e.f;
         e.kind = CONST_INTEGER;
         break;
     case T_FLOAT:
-        e.f = (float)e.i;
+        e.f = (double)e.i;
         e.kind = CONST_FLOAT;
         break;
     case T_POINTER:
@@ -204,7 +205,7 @@ ConstLiteral evaluate_const_init_list(const Node *node) {
         array_init(&l.arr, node->type->_array.array_len, sizeof(ConstLiteral));
         // Fill with zeros
         for (int i = 0; i < l.arr.capacity; i++)
-            append(&l.arr, &(ConstLiteral){.type = get_integer_type(l.type->base->size), .kind = CONST_INTEGER, .i = 0});
+            append(&l.arr, &(ConstLiteral){.type = type_i64, .kind = CONST_ZERO, .zero_bytes = l.type->base->size});
         // TODO dont forget to free this shi
         for (int i = 0; i < node->init_list.elements_array.count; i++) {
             Node *designator = get_node(&node->init_list.elements_array, i);

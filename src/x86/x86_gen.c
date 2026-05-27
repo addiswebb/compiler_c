@@ -1,7 +1,6 @@
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
-#include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/x86/x86.h"

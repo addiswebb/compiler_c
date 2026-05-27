@@ -396,16 +396,6 @@ void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count) {
     *v = ir_stack_value(v->size, v->align, get_lifetime(lts, lts_count, v->vreg)->stack_offset);
 }
 
-void ir_lower_const_value(IR_Value *v) {
-    return;
-    // IR_Value old = *v;
-    // v->kind = IR_PHYS_REG;
-    // v->phys_reg.kind = REG_IP;
-    // v->phys_reg.size = REG_64;
-    // v->phys_reg.data_kind = REG_DATA_CONST_INDEX;
-    // v->phys_reg.const_index = old.const_index;
-}
-
 void verify_completion(const IR_Function *f) {
     for (int i = 0; i < f->blocks_array.count; i++) {
         const IR_Block *b = get_block(f, i);
@@ -502,8 +492,6 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
                     ir_lower_symbol_value(a, symbol_slots, symbol_map);
                     break;
                 case IR_CONSTANT:
-                    ir_lower_const_value(a);
-                    break;
                 case IR_PHYS_REG:
                 case IR_INT_LITERAL:
                     break;
@@ -539,6 +527,7 @@ void lower_ir_for_asm(IR_Function *f) {
                 // Will fail if size > 8 bytes
                 ASSERT(instr->load.type->size <= 8, " : ir_load of type sized %d is larger than 8 bytes %t\n", instr->load.type->size,
                        instr->load.type);
+
                 if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
             } else if (instr->op == IR_STORE) {
                 abi_lower_store(f, b, instr, &j);

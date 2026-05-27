@@ -478,8 +478,7 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
             x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", from_reg, to_reg);
             x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         } else {
-            x86_emit_xr(fp, "movs", from_op_suffix, "q", src, "%rax");
-            x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
+            x86_emit_xr(fp, "cvtsi2", to_op_suffix, "", src, to_reg);
         }
         x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         return;
@@ -487,7 +486,7 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
     // float/double -> char/short/int/long
     if (from->kind == T_FLOAT && to->kind == T_INT) {
         if (to->size == 8) {
-            x86_emit_xr(fp, "cvtt", from_op_suffix, "2sq", src, "%rax");
+            x86_emit_xr(fp, "cvtt", from_op_suffix, "2si", src, "%rax");
             x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
         } else {
             x86_emit_xr(fp, "cvtt", from_op_suffix, "2si", src, "%eax");
@@ -518,6 +517,7 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *
             fprintf(fp, "    movl $%d, %%eax\n", (int)c->i);
             break;
         case 8:
+            // TODO why not q?
             fprintf(fp, "    movl $%" PRId64 ", %%eax\n", c->i);
             break;
         default:
@@ -539,7 +539,9 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *
     case CONST_ARRAY:
     case CONST_LABEL:
     case CONST_REFERENCE:
+    case CONST_ZERO:
         PANIC("Tried to emit const of unsupported type\n");
+        break;
     }
     x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
 }

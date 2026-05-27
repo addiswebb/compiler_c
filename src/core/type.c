@@ -208,7 +208,7 @@ Type *get_integer_type(int size) {
     case 8:
         return type_i64;
     default:
-        PANIC("Invalid integer size\n");
+        PANIC("Invalid integer size %d\n", size);
     }
 }
 

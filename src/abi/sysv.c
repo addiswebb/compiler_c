@@ -34,7 +34,6 @@ Symbol *current_sret() { return arena_get(&_sret, _sret.count - 1); }
 
 void set_sret(Type *return_type) {
     if (_sret.count == 0) arena_init(&_sret, 4, sizeof(Symbol));
-    if (_sret.count > 0 && current_sret()->type == return_type) return;
 
     char *name = malloc(sizeof(char) * 32);
     ASSERT(name, "Failed to malloc _sret name\n");
@@ -117,6 +116,7 @@ ABI_Result abi_classify(Type *type) {
     }
 }
 IR_Value abi_lower_param_register(Type *type, int i) {
+    // TODO investigate if below is still needed after rework
 #ifdef __COMPILER_C__
     IR_Value v = (IR_Value){.kind = IR_PHYS_REG};
     v.phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0};
@@ -437,7 +437,7 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             IR_Value rax = ir_gp_register_value(RAX);
             x86_emit_xx(fp, "lea", "q", "", &dst, &rax);
             builtin_memcpy(fp, rax, v->v, arg_type->size);
-            param_offset += arg_type->size;
+            param_offset += align(arg_type->size, 8);
             break;
         default:
             PANIC("Tried to emit call arg for unsupported type\n");
