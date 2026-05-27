@@ -6,8 +6,6 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-cmake --build build
-
 # Expand directory to .c files recursively
 INPUTS=()
 for ARG in "$@"; do

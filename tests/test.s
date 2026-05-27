@@ -6917,9 +6917,41 @@ drive_40:
 init_compiler:
     push %rbp
     mov %rsp, %rbp
-    subq $1272, %rsp
+    subq $1256, %rsp
 init_compiler_0:
     movq %rdi, -8(%rbp)
+    leaq -1088(%rbp), %rax
+    movq %rax, -1232(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -1240(%rbp)
+    movq -1240(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1240(%rbp)
+    movq -1240(%rbp), %rax
+    addq $104, %rax
+    movq %rax, -1240(%rbp)
+    movq -1240(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1240(%rbp)
+    leaq -8(%rbp), %rax
+    movq %rax, -1248(%rbp)
+    movq -1248(%rbp), %rax
+    movq (%rax), %rax
+    movq %rax, -1248(%rbp)
+    movq -1248(%rbp), %rax
+    addq $112, %rax
+    movq %rax, -1248(%rbp)
+    movq -1248(%rbp), %rax
+    movl (%rax), %eax
+    movl %eax, -1248(%rbp)
+    subq $8, %rsp
+    movq -1232(%rbp), %rdi
+    movq -1240(%rbp), %rsi
+    movl -1248(%rbp), %edx
+    call t_new_tokenizer
+    addq $8, %rsp
+    movq -1232(%rbp), %rax
+    movq %rax, -1240(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -1232(%rbp)
     movq -1232(%rbp), %rax
@@ -6928,42 +6960,18 @@ init_compiler_0:
     movq -1232(%rbp), %rax
     addq $256, %rax
     movq %rax, -1232(%rbp)
-    leaq -1088(%rbp), %rax
-    movq %rax, -1240(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -1248(%rbp)
-    movq -1248(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1248(%rbp)
-    movq -1248(%rbp), %rax
-    addq $104, %rax
-    movq %rax, -1248(%rbp)
-    movq -1248(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1248(%rbp)
-    leaq -8(%rbp), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movq (%rax), %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    addq $112, %rax
-    movq %rax, -1256(%rbp)
-    movq -1256(%rbp), %rax
-    movl (%rax), %eax
-    movl %eax, -1256(%rbp)
-    subq $8, %rsp
-    movq -1240(%rbp), %rdi
-    movq -1248(%rbp), %rsi
-    movl -1256(%rbp), %edx
-    call t_new_tokenizer
-    addq $8, %rsp
-    movq -1240(%rbp), %rax
-    movq %rax, -1248(%rbp)
     movq -1232(%rbp), %rdi
-    movq -1248(%rbp), %rsi
+    movq -1240(%rbp), %rsi
     movq $1080, %rdx
     call memcpy
+    leaq -1128(%rbp), %rax
+    movq %rax, -1232(%rbp)
+    subq $8, %rsp
+    movq -1232(%rbp), %rdi
+    call new_node_manager
+    addq $8, %rsp
+    movq -1232(%rbp), %rax
+    movq %rax, -1240(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -1232(%rbp)
     movq -1232(%rbp), %rax
@@ -6972,18 +6980,18 @@ init_compiler_0:
     movq -1232(%rbp), %rax
     addq $120, %rax
     movq %rax, -1232(%rbp)
-    leaq -1128(%rbp), %rax
-    movq %rax, -1240(%rbp)
-    subq $8, %rsp
-    movq -1240(%rbp), %rdi
-    call new_node_manager
-    addq $8, %rsp
-    movq -1240(%rbp), %rax
-    movq %rax, -1248(%rbp)
     movq -1232(%rbp), %rdi
-    movq -1248(%rbp), %rsi
+    movq -1240(%rbp), %rsi
     movq $40, %rdx
     call memcpy
+    leaq -1224(%rbp), %rax
+    movq %rax, -1232(%rbp)
+    subq $8, %rsp
+    movq -1232(%rbp), %rdi
+    call new_parser
+    addq $8, %rsp
+    movq -1232(%rbp), %rax
+    movq %rax, -1240(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -1232(%rbp)
     movq -1232(%rbp), %rax
@@ -6992,16 +7000,8 @@ init_compiler_0:
     movq -1232(%rbp), %rax
     addq $160, %rax
     movq %rax, -1232(%rbp)
-    leaq -1224(%rbp), %rax
-    movq %rax, -1240(%rbp)
-    subq $8, %rsp
-    movq -1240(%rbp), %rdi
-    call new_parser
-    addq $8, %rsp
-    movq -1240(%rbp), %rax
-    movq %rax, -1248(%rbp)
     movq -1232(%rbp), %rdi
-    movq -1248(%rbp), %rsi
+    movq -1240(%rbp), %rsi
     movq $96, %rdx
     call memcpy
     subq $8, %rsp

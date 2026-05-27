@@ -215,7 +215,6 @@ ConstLiteral evaluate_const_init_list(const Node *node) {
         }
         return l;
     } else if (node->type->kind == T_STRUCT) {
-        WARN("Skipped const literal init list for %t\n", node->type);
         ConstLiteral l = {.type = node->type, .kind = CONST_ARRAY};
         array_init(&l.arr, node->type->_struct.members_array.count, sizeof(ConstLiteral));
         // Fill with zeros
