@@ -163,12 +163,13 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     return common;
 }
 
+#include <inttypes.h>
 void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
     Node *ident = new_node(nm, N_IDENTIFIER);
     // TODO track compound literals and name accordingly.
     char *name = malloc(sizeof(char) * 32);
     ASSERT(name, "Failed to malloc _sret name\n");
-    snprintf(name, 32, "_cl_%lu", (unsigned long)node);
+    snprintf(name, 32, "_cl_%" PRIu64, (uint64_t)node);
     ident->identifier.name = name;
     ident->identifier.len = strlen(name);
     ident->type = node->type;

@@ -1,7 +1,7 @@
-#include "compiler_c/core/arena.h"
 #ifdef __linux__
 
 #include "../libc/stdbool.h"
+#include "compiler_c/core/arena.h"
 #include <compiler_c/abi/abi.h>
 #include <compiler_c/analyse/analysis.h>
 #include <compiler_c/compiler.h>
@@ -35,7 +35,7 @@ Symbol *current_sret() { return arena_get(&_sret, _sret.count - 1); }
 void set_sret(Type *return_type) {
     if (_sret.count == 0) arena_init(&_sret, 4, sizeof(Symbol));
 
-    char *name = malloc(sizeof(char) * 32);
+    char *name = malloc(32);
     ASSERT(name, "Failed to malloc _sret name\n");
     snprintf(name, 32, "_sret%d", _sret.count);
     arena_append(&_sret, &(Symbol){.name = name,
@@ -145,8 +145,7 @@ bool is_va_list_type(Type *type) {
 
 void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
     if (instr->store.type->kind == T_STRUCT) {
-        ASSERT(instr->store.type->size <= MAX_STRUCT_SIZE, "[SysV] Cannot IR_STORE structs of 16 bytes or more\n");
-        ASSERT(instr->store.type->size <= 8, "[SysV] Not handling tuple sized struct");
+        ASSERT(instr->store.type->size <= 8, "[SysV] IR_STORE only for 8 bytes or less given %d", instr->store.type->size);
         instr->store.type = get_integer_type(instr->store.type->size);
     }
 }
@@ -388,7 +387,6 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     param_frame_size |= 8; // = 16n + 8
     sse_index = 0;
     gp_index = 0;
-    // const int param_frame_size = (8 * spilled_count + variadic_space) | 8;
     int param_offset = 0;
     if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
@@ -481,7 +479,6 @@ void abi_func_type_gen(Type *type) {
                    &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = _sret->name, .symbol = _sret}, 0);
             abi_type->_func.return_type = type_void;
         } else {
-            compiler_flags |= FLAG(CF_DEBUG_STRUCT);
             ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Not handling tuple return type %t\n", type->_func.return_type);
             abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
         }

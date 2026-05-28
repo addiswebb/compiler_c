@@ -6,6 +6,8 @@
 
 Logger logger = {};
 
+// #if defined(__COMPILER_C__) && defined(_WIN64)
+
 void vprint(const char *fmt, va_list ap) {
     while (*fmt != '\0') {
         if (*fmt == '%') {

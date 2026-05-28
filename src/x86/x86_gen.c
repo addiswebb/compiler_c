@@ -149,8 +149,7 @@ static void x86_gen_block(FILE *fp, IR_Context *ctx) {
 }
 static void x86_gen_function(FILE *fp, IR_Context *ctx) {
     const int stack_size = ctx->func->stack_size;
-    // Ensure stack size = (16n + 8)
-    const int aligned_stack_size = ((stack_size + 15) & ~15) | 8;
+    const int aligned_stack_size = STACK_ALIGN(stack_size);
 
     if (ctx->func->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", ctx->func->name);
     fprintf(fp, "%s:\n", ctx->func->name);

@@ -37,7 +37,12 @@ int sprintf(char *, const char *, ...);
 int snprintf(char *, size_t, const char *, ...);
 extern int vfprintf(FILE *, const char *, va_list);
 
+#ifdef _WIN64
+FILE *_popen(const char *, const char *);
+int _pclose(FILE *);
+#else
 FILE *popen(const char *, const char *);
 int pclose(FILE *);
+#endif
 
 #endif

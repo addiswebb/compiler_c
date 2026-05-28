@@ -77,7 +77,7 @@ void link(Compiler *c, Array *objs) {
     set_log_stage(STAGE_LINKER);
     INFO("Linking ");
     char cmd[4028] = {};
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -lm ");
+    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -lm -lc ");
     for (int i = 0; i < objs->count; i++) {
         char *src = *(char **)get(objs, i);
         printf("%s", src);
@@ -282,9 +282,20 @@ int compile(Compiler *compiler) {
     return 1;
 }
 
+#ifdef _WIN64
+#define libc "E:/dev/compiler_c/libc"
+#ifndef popen
+#define popen _popen
+#define pclose _pclose
+#endif
+#else
+#define libc "/home/addis/dev/compiler_c/libc"
+#endif
+
 static int load_src_file(Compiler *compiler, const char *file) {
     char cmd[512];
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -D__COMPILER_C__ -I/home/addis/dev/compiler_c/libc -std=c11 %s ", file);
+
+    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -D__COMPILER_C__ -I" libc " -std=c11 %s ", file);
     for (int i = 0; i < compiler->passthrough_args.count; i++) {
         cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }

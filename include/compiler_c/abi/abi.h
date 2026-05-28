@@ -57,6 +57,9 @@ extern const XMM_Reg float_param_regs[PARAM_REGISTERS];
 #define strdup _strdup
 #define popen _popen
 #define pclose _pclose
+
+#define STACK_ALIGN(x) ((x+15)&~15)
+
 #else
 
 #define MAX_STRUCT_SIZE 16
@@ -73,6 +76,8 @@ ABI_Result classify_struct(Type *type);
 
 extern const GP_Reg int_param_regs[INTEGER_PARAM_REGISTERS];
 extern const XMM_Reg float_param_regs[FLOAT_PARAM_REGISTERS];
+
+#define STACK_ALIGN(x) (((x+15)&~15) | 8)
 #endif
 
 extern const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS];
