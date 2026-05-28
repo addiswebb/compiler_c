@@ -3,6 +3,8 @@ param(
     [string[]]$Args
 )
 
+& cmake --build build
+
 $ErrorActionPreference = "Stop"
 
 # Expand directories to .c files recursively
