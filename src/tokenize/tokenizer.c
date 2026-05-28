@@ -372,6 +372,11 @@ static void t_consume_string_literal(Tokenizer *tk) {
     t_push_buffer(tk, TK_STRING_LITERAL);
 }
 
+void print_tokens(Tokenizer *tk) {
+    for (int i = 0; i < tk->tokens_array.count; i++) {
+        print_token(get(&tk->tokens_array, i));
+    }
+}
 void t_tokenize(Tokenizer *tk) {
     for (;;) {
         if (t_is_eof(tk)) break;
@@ -382,7 +387,7 @@ void t_tokenize(Tokenizer *tk) {
                 t_consume_n(tk, 2);
                 t_push_buffer(tk, TK_ELLIPSES);
             } else t_push_buffer(tk, TK_DOT);
-        } else if (is_num(c) || c == '.' || c == '-' && is_num(t_peek_next(tk))) {
+        } else if (is_num(c) || c == '.') {
             int is_float = 0;
             t_consume(tk);
             if (c == '0') {
