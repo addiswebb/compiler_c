@@ -8,6 +8,7 @@ An unoptimised self-compiling C compiler written in C for C89 following Win64 & 
 * [Compiler C](#compiler-c)
 * [Grammar](#grammar)
 * [Architecture](#architecture)
+  * [The Compiler] (#the-compiler)
   * [The Tokenizer](#the-tokenizer)
   * [The Parser](#the-parser)
   * [Semantic Analysis Pass](#semantic-analysis-pass)
@@ -59,7 +60,16 @@ A good way to understand what is supported is as follows,
 > "Every language feature used in developing the compiler will be implemented, such that the compiler can compiler itself." 
 
 # Architecture
-The compiler is comprised of 6 major sections. Each one has a clear task. 
+Any C compiler has 4 main stages. The Preprocessor, Compiler, Assembler and Linker. Compiler_c implents the compiler stage and offloads the other 3 tasks to `gcc`. For ease of use, the compiler complies with the GNU interface, allowing things like `-o <output>`, any unknown flags are passed to `gcc` and ignored by the compiler. This allows Compiler_c to be a drop-in replacement of `gcc` in build systems like CMake with no extra work.
+
+The compiler uses a driver function to handle moving between the 4 major stages. For every source file passed, it is given to `gcc` for preprocessing. Here we define `-D__COMPILER_C__` so header files know which compiler is being used. We also direct `gcc` to use our own libc headers with `-nostdlib` and `-I./libc/`. Once the source file has been preprocessed, the driver passes it on to the compiler.
+
+The structure of the compiler will be explained in detail later, for now it takes a `.c` source file and emits a correponding `.s` x86-64 assembly file. Once finished the driver passes it to the assembler which goes from `.s` to a `.o` object file, no special flags needed. Every source file is compiled to any object file and collected by the driver before moving onto the next step.
+
+Finally when all source files have been compiled to objects, the driver has `gcc` link them together. It is important to include `-lc` and `-lm` to link against libc and math libraries which allows for the use of functions like `printf`. ( `-lc` is on by default, `-lm` is on by default on Win64 )
+
+### The Compiler
+The compiler itself is comprised of 6 major sections. Each one has a clear task. 
 The compiler manages all sections and hands the work of one onto the next. It also handles loading the file from disc into memory and parsing compile flags given at runtime which change the compiler`s behaviour.
 
 ### The Tokenizer. 
@@ -81,6 +91,7 @@ Whilst parsing, a typedef token might be parsed, this happens the typedef entry 
 The **AST** constructed by the parser is mostly typeless. Only explictly typed expressions have type information. It is the job of the semantic analysis pass to give every node a correct type. While doing so, it also ensures correctness through type checking. E.g, in the majority of cases a binary operation requires two operands of the same type. If the operands are found to have different types, we try to promote them to the same common type. If this is not possible and their types are completely incompatible, a type error is thrown. Semantic Analysis also handles converting constructs which are simply syntactic sugar into their literal underlying forms. E.g `a[5]` is just `*(a + sizeof(element) * 5)`. Similarily `a->b` is just `*(a).b`. These conversions are handled in this pass.
 
 During semantic analysis, the symbol table is added to for all declarations. Symbols should be unique so for every declaration we check if its identifier is already within the symbol table. If it is, we ensure it is already defined, in the case where it is, the current declaration cannot also contain a definiton. This case produces a redefinition error. If the symbol is not defined and the declaration is, we update the symbol with the definition.
+Most types are finalized in the parser, however types that rely on const expression evaluation must be resolved during semantic analysis. Array bounds are const expr, so `char[<const_expr>]`. The AST nodes are converted and evaluated into a const literal which can be used to update the array type. The type is then marked as resolved.
 
 ### IR Gen
 This step involves taking the **AST** and converting it from the recursive structured tree (where nodes link to nodes linking to other nodes), into a more linear and assembly like "Intermediate Representation", **IR**. The **IR** generator, traverses the tree according to our definition, and when it reaches a statement or expression, it converts it to corresponding **IR**  instructions. 
@@ -108,12 +119,13 @@ Here we lower the **IR** to raw assembly, replacing simplified **IR_BINARYOP**, 
 E.g., given an **IR_RET** instruction, we first take the given virtual register (Which promises to store a return value) and load it into the `%rax` CPU register. This register is used for return values. Then we reset the `%rsp` stack pointer back to the start of the function's stack frame, which was stored in `%rbp`. Then we pop the return address off the stack (Which is at the top of the stack, when we are at the start of the functions stack frame) and finally call `ret`. Which jumps back to the return address in `%rbp` and "brings" our return value along in `%rax`.
 
 You can see how such a simple **IR** instruction can expand into a much more complex set of assembly instructions. This highlights the purpose of the intermediate representation, to hide away this overwhelming complexity so we can later focus on optimizaton and stuff.
+
 ### ABI
-As the compiler supports both Win64 and SysV platforms it is neccary to have differing implementations which correspond to the correct Application Binary Interface. This is done by selectively compiling either `win64.c` or `sysv.c`, which both implement the functions found in `abi.h` and are ABI conformant. 
+As the compiler supports both Win64 and SysV platforms it is necessary to have differing implementations which correspond to their respective Application Binary Interface. This is done by selectively compiling either `win64.c` or `sysv.c`, which both implement the functions found in `abi.h` and are ABI conformant and dependant. 
 
 Any function whose implementation changes by platform is prefixed with `abi_`.  Much of the differences in ABI standards are found in IR or x86 lowering. My goal was to have a high level version of a translation unit's IR, which is the same regardless of platform. This then gets "lowered" to be ABI specific. Things like `call` or `ret` instructions. This mimics how `IR_Value`s go from virtual concepts to physical registers and defined stack offsets. Both take place together after IR has been fully generated.
 
-As both platforms use registers for different things and in different orders, the corresponding static arrays which define this are intialized in their respective implementation source file, so that anywhere else `int_param_reg[0]` gives the correct register.
+As both platforms use different registers for different things and in different orders, the corresponding static arrays which define this are intialized in their respective implementation source file, so that anywhere else `int_param_reg[0]` gives the correct first integer param register.
 
 ### Architecure Components
 
@@ -261,13 +273,27 @@ When a block is full, instead of reallocating the whole block somewhere else at 
 * Compiler builtins
     * `__builtin_va_list` etc.
 * Const Expression Evaluation
+  * Global variable declarations support const_expr assignment
+    ```c
+      int a = 1+2*3;
+      double b = 7.5*2;
+      char[2*2] c= { 1, 2, 3, 2+2 };
+      iny * d = &a;
+    ```
 
 ## Todo
-- [ ] Add tests for `||` and `&&` to ensure early returns
-- [ ] Allow `{.x = {}}` where `x` is a union;
-- [ ] Self-compile `sysv.c`, `analysis.c`, `sema.c`, `ir_builder.c`, `ir_module.c`, `ir_gen.c`, `parser.c`,
+- [x] Add tests for `||` and `&&` to ensure early returns
+- [x] Allow `{.x = {}}` where `x` is a union;
+- [x] Self-compile `sysv.c`, `analysis.c`, `sema.c`, `ir_builder.c`, `ir_module.c`, `ir_gen.c`, `parser.c`,
 
 ## To be Implemented (Ordered from next to never...)
+* Self Compile
+* Custom printf implementation
+  * `print("type is %t", type_u8);` Support printing types
+* Multi variable declaration
+  * `int a, b;`
+* String concatination
+  * `"hello" " world"`
 * Use physical registers
     * Overflow to stack
 * Create IR index instruction 
