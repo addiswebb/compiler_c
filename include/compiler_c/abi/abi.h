@@ -54,13 +54,16 @@ void set_hidden_sret_ptr(Type *return_type);
 
 extern const GP_Reg int_param_regs[PARAM_REGISTERS];
 extern const XMM_Reg float_param_regs[PARAM_REGISTERS];
+
 #define strdup _strdup
 #define popen _popen
 #define pclose _pclose
 
 #define STACK_ALIGN(x) ((x+15)&~15)
+#define LINK_C ""
 
 #else
+#define LINK_C "-lc"
 
 #define MAX_STRUCT_SIZE 16
 #define SHADOW_SPACE 0

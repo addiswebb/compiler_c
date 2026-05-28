@@ -1,136 +1,50 @@
-typedef struct {
-    unsigned int gp_offset;
-    unsigned int fp_offset;
-    void *overflow_args;
-    void *reg_save_area;
-} va_list[1];
-typedef char int8_t;
-typedef short int16_t;
-typedef int int32_t;
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned long size_t;
-typedef long int64_t;
-typedef unsigned long uint64_t;
-typedef struct FILE FILE;
-extern FILE *stdin;
-extern FILE *stdout;
-extern FILE *stderr;
-FILE *fopen(const char *, const char *);
-FILE *fdopen(int, const char *);
-int fclose(FILE *);
-int fflush(FILE *);
-int fputc(int, FILE *);
-int putc(int, FILE *);
-int putchar(int);
-char *fgets(char *, int, FILE *);
-char fgetc(FILE *);
-char *gets(char *);
-int fputs(const char *, FILE *);
-int puts(const char *);
-int printf(const char *, ...);
-int fprintf(FILE *, const char *, ...);
-int sprintf(char *, const char *, ...);
-int snprintf(char *, size_t, const char *, ...);
-extern int vfprintf(FILE *, const char *, va_list);
-FILE *popen(const char *, const char *);
-int pclose(FILE *);
-void exit(int);
-void *malloc(size_t);
-void *realloc(void *, size_t);
-void *calloc(size_t, size_t);
-void free(void *);
-int system(const char *);
-typedef int (*__compar_fn_t)(const void *, const void *);
-extern void qsort(void *__base, size_t __nmemb, size_t __size, __compar_fn_t __compar);
+typedef enum{
+    RAX, RBX, RCX, RDX,
+    RSI, RDI,
+    RBP, RSP,
+    R8, R9, R10, R11, R12, R13, R14, R15,
+}GP_Reg;
+typedef enum{
+    XMM0, XMM1, XMM2, XMM3,
+    XMM4, XMM5, XMM6, XMM7,
+    XMM8, XMM9, XMM10, XMM11,
+    XMM12, XMM13, XMM14, XMM15,
+}XMM_Reg;
+typedef enum{
+    REG_8,
+    REG_16,
+    REG_32,
+    REG_64,
+}RegSize;
+typedef enum{
+    REG_GP,
+    REG_XMM,
+    REG_IP
+}RegKind;
 typedef enum {
-    LOG_INFO,
-    LOG_DEBUG,
-    LOG_WARN,
-    LOG_ERROR,
-    LOG_PANIC,
-} LogLevel;
-typedef enum {
-    STAGE_COMPILER,
-    STAGE_TOKENIZING,
-    STAGE_PARSING,
-    STAGE_SEMA_ANALYSIS,
-    STAGE_IR,
-    STAGE_X86_GEN,
-    STAGE_ASSEMBLER,
-    STAGE_LINKER
-} LogStage;
-typedef struct {
-    LogLevel min_level;
-    LogStage stage;
-    FILE *file;
-} Logger;
-extern Logger logger;
-static inline void init_logger(FILE *fp, LogLevel level) {
-    logger.file = fp ? fp : stderr;
-    logger.stage = STAGE_COMPILER;
-    logger.min_level = level;
-}
-static inline char *stage_str(LogStage stage) {
-    switch (logger.stage) {
-    case STAGE_COMPILER:
-        return "Compiler";
-    case STAGE_TOKENIZING:
-        return "Tokenizer";
-    case STAGE_PARSING:
-        return "Parser";
-    case STAGE_IR:
-        return "IR";
-    case STAGE_X86_GEN:
-        return "x86 Gen";
-    case STAGE_SEMA_ANALYSIS:
-        return "Semantic Analysis";
-    case STAGE_ASSEMBLER:
-        return "Assembler";
-    case STAGE_LINKER:
-        return "Linker";
-    }
-}
-static inline void set_log_stage(LogStage stage) { logger.stage = stage; }
-static inline void log_start(LogLevel lvl) {
-    if (lvl < logger.min_level) return;
-    const char *level_str;
-    switch (lvl) {
-    case LOG_DEBUG:
-        level_str = "\x1b[34mDEBUG\x1b[0m";
-        break;
-    case LOG_INFO:
-        level_str = "\x1b[32mINFO\x1b[0m";
-        break;
-    case LOG_WARN:
-        level_str = "\x1b[33mWARN\x1b[0m";
-        break;
-    case LOG_ERROR:
-        level_str = "\x1b[31mERROR\x1b[0m";
-        break;
-    case LOG_PANIC:
-        level_str = "\x1b[1;31mPANIC\x1b[0m";
-        break;
-    default:
-        level_str = "LOG";
-        break;
-    }
-    const char *stage = stage_str(logger.stage);
-    fprintf(logger.file, "[%s] %s: ", level_str, stage);
-}
-void print(const char *fmt, ...);
-void vprint(const char *fmt, va_list ap);
-static inline void log_message(LogLevel lvl, const char *fmt, ...) {
-    if (lvl < logger.min_level) return;
-    log_start(lvl);
-    va_list args;
-    __builtin_va_start(args, fmt);
-    vprint(fmt, args);
-    __builtin_va_end(args);
-    fflush(logger.file);
-    if (lvl == LOG_PANIC) exit(1);
-}
+    REG_DATA_LABEL,
+    REG_DATA_OFFSET,
+    REG_DATA_CONST_INDEX,
+    REG_DATA_NONE,
+}RegDataKind;
+struct PhysReg{
+    RegKind kind;
+    union{
+        GP_Reg gp_reg;
+        XMM_Reg sse_reg;
+    };
+    RegSize size;
+    RegDataKind data_kind;
+    union{
+        const char* label;
+        struct{
+            int offset;
+            int scale;
+        };
+        int const_index;
+    };
+};
+RegSize reg_size(int size);
 typedef struct Array {
     int count;
     int capacity;
@@ -160,6 +74,15 @@ void *arena_append(Arena *arena, const void *element);
 Array *arena_get_block(const Arena *arena, int index);
 void *arena_get(const Arena *arena, int index);
 void arena_set(Arena *arena, const void *element, int index);
+typedef char int8_t;
+typedef short int16_t;
+typedef int int32_t;
+typedef unsigned char uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int uint32_t;
+typedef unsigned long long size_t;
+typedef long long int64_t;
+typedef unsigned long long uint64_t;
 typedef enum {
     T_VOID,
     T_INT,
@@ -489,8 +412,8 @@ int strcmp(const char *, const char *);
 int strncmp(const char *, const char *, size_t);
 size_t strlen(const char *);
 char *strrchr(const char *, int);
-char *strdup(const char *);
-char *strndup(const char *, size_t);
+char *_strdup(const char *);
+char *_strndup(const char *, size_t);
 typedef enum {
     N_TRANSLATION_UNIT,
     N_FUNCTION,
@@ -867,54 +790,684 @@ static inline UnionMember *get_union_member(const Type *union_t, int index) {
 }
 UnionMember *get_union_member_named(Type *union_t, const char *name);
 StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index);
-typedef struct {
-    char *output;
-    Array current_source;
-    Array current_output;
-    Array source_files;
-    Array passthrough_args;
-    char *src;
-    int src_size;
-    NodeManager nm;
-    Parser p;
-    Tokenizer tk;
-} Compiler;
 typedef enum {
-    CF_STOP_AFTER_AST,
-    CF_STOP_AFTER_IR,
-    CF_STOP_AFTER_COMPILE,
-    CF_STOP_AFTER_ASSEMBLE,
-    CF_DEBUG_TYPEPOOL,
-    CF_DEBUG_LIFETIMES,
-    CF_DEBUG_ENUM,
-    CF_DEBUG_STRUCT,
-    CF_DEBUG_UNION,
-    CF_DEBUG_LOWERED_IR,
-    CF_DEBUG_IR_INSTR,
-    CF_DEBUG_PARSER,
-    CF_DEBUG_TOKENIZER,
-    CF_DEBUG_TOKENS,
-    CF_DEBUG_SYMBOLS,
-    CF_COUNT,
-} CompilerFlag;
-extern unsigned int compiler_flags;
-extern const char *flag_strings[CF_COUNT];
-int has_flag(CompilerFlag f);
-Compiler begin_compiler(int argc, char *argv[]);
-void init_compiler(Compiler *compiler);
-void clear_compiler(Compiler *compiler);
-void free_compiler(Compiler *compiler);
-void drive(Compiler *c);
-void assemble(Compiler *c);
-void link(Compiler *c, Array *objs);
-int compile(Compiler *compiler);
-void free_compiler(Compiler *compiler);
-static int load_src_file(Compiler *compiler, const char *file);
-char *replace_extension(const char *path, const char *ext);
-int main(const int argc, char *argv[]) {
-    init_logger(stdout, LOG_INFO);
-    Compiler compiler = begin_compiler(argc, argv);
-    drive(&compiler);
-    free_compiler(&compiler);
-    return 0;
+    LT,
+    LE,
+    GT,
+    GE,
+    EQ,
+    NEQ,
+} IR_CMP_OP;
+typedef enum {
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    MOD,
+    BW_AND,
+    L_AND,
+    BW_OR,
+    L_OR,
+    XOR,
+    SHR,
+    SHL,
+} IR_BINOP_OP;
+typedef enum {
+    POS,
+    NEG,
+    LNOT,
+    BNOT,
+    REF,
+    DEREF,
+} IR_UNARY_OP;
+typedef enum {
+    IR_CONST,
+    IR_UNOP,
+    IR_BINOP,
+    IR_LOAD,
+    IR_STORE,
+    IR_MOVE,
+    IR_RET,
+    IR_CALL,
+    IR_BR,
+    IR_BR_COND,
+    IR_CMP,
+    IR_CAST,
+    IR_ADDR,
+    IR_ALLOCA,
+    IR_MEMSET,
+    IR_MEMCPY,
+    IR_LABEL,
+    IR_JMP,
+    IR_PARAM,
+    IR_BUILTIN_VA_START,
+    IR_BUILTIN_VA_ARG,
+} IR_OP;
+typedef enum {
+    IR_UNDEFINED,
+    IR_SYMBOL,
+    IR_VREG,
+    IR_CONSTANT,
+    IR_PHYS_REG,
+    IR_INT_LITERAL,
+} IR_ValueKind;
+typedef struct PhysReg PhysReg;
+typedef struct IR_Value {
+    IR_ValueKind kind;
+    int size;
+    int align;
+    union {
+        Symbol *symbol;
+        int vreg;
+        int const_index;
+        PhysReg phys_reg;
+        int64_t int_literal;
+    };
+} IR_Value;
+typedef struct {
+    Symbol *symbol;
+    ConstLiteral val;
+} IR_Global;
+typedef struct {
+    Type *type;
+    IR_Value v;
+} IR_CallArg;
+typedef struct {
+    uint8_t def_mask;
+    uint8_t use_mask;
+} IR_OpInfo;
+extern IR_OpInfo op_info[];
+typedef struct IR_Block IR_Block;
+typedef struct {
+    const char *name;
+    int index;
+    int is_defined;
+    int is_variadic;
+    StorageClass storage_class;
+} IR_Func_Def;
+typedef struct {
+    IR_OP op;
+    IR_Value ops[3];
+    int op_count;
+    union {
+        struct {
+            Type *type;
+        } _const;
+        struct {
+            Type *type;
+        } load;
+        struct {
+            Type *type;
+        } store;
+        struct {
+            Type *type;
+        } ret;
+        struct {
+            IR_UNARY_OP op;
+            Type *type;
+        } unary;
+        struct {
+            IR_BINOP_OP op;
+            Type *type;
+        } binop;
+        struct {
+            IR_CMP_OP op;
+            Type *type;
+        } cmp;
+        struct {
+            Array arg_array;
+            Type *type;
+        } call;
+        struct {
+            IR_Block *block;
+        } br;
+        struct {
+            IR_Block *t_block;
+            IR_Block *f_block;
+        } br_cond;
+        struct {
+            Type *from;
+            Type *to;
+        } cast;
+        struct {
+            int offset;
+        } addr;
+        struct {
+            int size;
+        } alloca;
+        struct {
+            int size;
+        } memcpy;
+        struct {
+            int size;
+            int c;
+        } memset;
+        struct {
+            const char *name;
+        } label;
+        struct {
+            const char *name;
+        } jmp;
+        struct {
+            Type *type;
+        } builtin_va_arg;
+        struct {
+            Type *type;
+            int param_index;
+        } param;
+    };
+} IR_Instruction;
+typedef enum {
+    SLOT_REGISTER,
+    SLOT_STACK,
+} RegisterSlotKind;
+typedef struct {
+    IR_Value v;
+    int free_at;
+} RegisterSlot;
+typedef struct {
+    unsigned int *data;
+    int num_bits;
+    int capacity;
+} BitSet;
+typedef struct {
+    int *succ;
+    int succ_count;
+    int *pred;
+    int pred_count;
+} IR_BlockCFG;
+typedef struct {
+    BitSet def;
+    BitSet use;
+    BitSet live_in;
+    BitSet live_out;
+} IR_BlockLiveness;
+typedef struct {
+    int reg;
+    int start;
+    int end;
+    int stack_slot;
+    int stack_offset;
+    IR_Value *v;
+} Lifetime;
+struct IR_Block {
+    int id;
+    Array instruction_array;
+    IR_BlockCFG cfg;
+    IR_BlockLiveness live;
+};
+typedef struct {
+    int reg_count;
+    int stack_pointer;
+    Array var_array;
+} IR_Scope;
+typedef struct {
+    const char *name;
+    Array blocks_array;
+    int next_reg;
+    int max_reg;
+    int stack_size;
+    Array locals_array;
+    Array scopes_array;
+    int stack_slot_count;
+    int stack_slot_capacity;
+    Linkage linkage;
+    Storage storage;
+    Type *type;
+} IR_Function;
+typedef struct {
+    int count;
+    int capacity;
+    IR_Global *globals;
+} IR_Global_Pool;
+typedef struct {
+    IR_Block *block;
+    const char *label;
+    int placeholder;
+} IR_LabeledBlock;
+typedef struct {
+    Array functions_array;
+    Array const_array;
+    Array global_array;
+    Array labeled_block_array;
+} IR_Module;
+typedef struct {
+    IR_Block *continue_block;
+    IR_Block *break_block;
+} IR_LoopContext;
+typedef struct {
+    IR_LoopContext *data;
+    int size;
+    int capacity;
+} IR_LoopStack;
+typedef struct IR_InitContext {
+    Type *type;
+    int offset;
+    int index;
+} IR_InitContext;
+typedef struct {
+    IR_Module *module;
+    IR_Function *func;
+    IR_Block *block;
+    Array loop_stack_array;
+    IR_Block *true_block;
+    IR_Block *false_block;
+    Arena *symbol_table;
+    int func_not_address;
+    IR_InitContext init_ctx;
+} IR_Context;
+extern const IR_Value ir_no_value;
+IR_Context ir_init_ctx(Parser *p);
+void free_ir_ctx(IR_Context *ctx);
+IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu);
+void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break_block);
+void ir_pop_loop_ctx(IR_Context *ctx);
+void ir_append_instruction(IR_Context *ctx, IR_Instruction *instr);
+void ir_free_module(IR_Module *module);
+void ir_begin_scope(IR_Function *func);
+void ir_end_scope(IR_Function *func);
+IR_Value ir_next_virtual_reg(IR_Function *func);
+IR_Value ir_integer_literal(int64_t i);
+IR_Module *ir_new_module();
+IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type);
+IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const int is_defined, const int is_variadic,
+                                const StorageClass storage_class);
+IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
+IR_Block *ir_new_block();
+IR_Block *ir_add_block(IR_Context *ctx);
+IR_Value ir_symbol_value(Symbol *s);
+void ir_append_function(const IR_Context *ctx, IR_Function *func);
+void ir_append_global(IR_Module *module, Symbol *symbol, const ConstLiteral *literal);
+int ir_append_const(IR_Module *module, const ConstLiteral *literal);
+IR_Block *ir_append_block(IR_Context *ctx, IR_Block *block);
+IR_LabeledBlock *ir_append_labeled_block(IR_Context *ctx, const char *label);
+IR_Value ir_get_symbol_value(IR_Context *ctx, const char *name, int give_lvalue);
+IR_LabeledBlock *ir_get_labeled_block(IR_Context *ctx, const char *label);
+static inline IR_Instruction *get_instruction(const Array *arr, int index) { return (IR_Instruction *)get(arr, index); }
+static inline IR_LoopContext *get_loop_ctx(const IR_Context *ctx) {
+    return (IR_LoopContext *)get(&ctx->loop_stack_array, ctx->loop_stack_array.count - 1);
+}
+static inline IR_Scope *get_current_scope(const IR_Function *func) {
+    return (IR_Scope *)get(&func->scopes_array, func->scopes_array.count - 1);
+}
+static inline IR_Scope *get_scope(const IR_Function *func, int index) { return (IR_Scope *)get(&func->scopes_array, index); }
+static inline IR_Block *get_block(const IR_Function *func, int index) { return *(IR_Block **)get(&func->blocks_array, index); }
+static inline ConstLiteral *get_const(const IR_Context *ctx, int index) { return (ConstLiteral *)get(&ctx->module->const_array, index); }
+static inline IR_Global *get_global(const IR_Context *ctx, int index) { return (IR_Global *)get(&ctx->module->global_array, index); }
+static inline Symbol *get_local_symbol(const IR_Function *func, int index) { return *(Symbol **)get(&func->locals_array, index); }
+static inline int get_var_index(const IR_Scope *scope, int index) { return *(int *)get(&scope->var_array, index); }
+static inline IR_Function *get_func(const IR_Module *module, int index) { return *(IR_Function **)get(&module->functions_array, index); }
+static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int index) {
+    return (IR_LabeledBlock *)get(&module->labeled_block_array, index);
+}
+static inline IR_CallArg *get_call_arg(const IR_Instruction *call, int index) { return (IR_CallArg *)get(&call->call.arg_array, index); }
+typedef char *va_list;
+typedef struct FILE FILE;
+extern FILE *stdin;
+extern FILE *stdout;
+extern FILE *stderr;
+FILE *fopen(const char *, const char *);
+FILE *fdopen(int, const char *);
+int fclose(FILE *);
+int fflush(FILE *);
+int fputc(int, FILE *);
+int putc(int, FILE *);
+int putchar(int);
+char *fgets(char *, int, FILE *);
+char fgetc(FILE *);
+char *gets(char *);
+int fputs(const char *, FILE *);
+int puts(const char *);
+int printf(const char *, ...);
+int fprintf(FILE *, const char *, ...);
+int sprintf(char *, const char *, ...);
+int snprintf(char *, size_t, const char *, ...);
+extern int vfprintf(FILE *, const char *, va_list);
+FILE *_popen(const char *, const char *);
+int _pclose(FILE *);
+typedef enum {
+    ABI_NO_CLASS,
+    ABI_MEMORY,
+    ABI_INTEGER,
+    ABI_SSE,
+} ABI_TypeClass;
+typedef struct {
+    ABI_TypeClass class[2];
+    int memory;
+    char p[8];
+} ABI_Result;
+ABI_Result abi_classify(Type *type);
+IR_Value abi_lower_param_register(Type *type, int i);
+int is_va_list_type(Type *type);
+void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
+void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i, int param_index, int *param_cursor);
+void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
+void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+void abi_func_type_gen(Type *type);
+IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr);
+void abi_gen_params(IR_Context *ctx, IR_Function *f);
+void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr);
+void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
+extern Symbol *_hidden_sret_ptr;
+Symbol *current_sret();
+void set_sret(Type *return_type);
+void set_hidden_sret_ptr(Type *return_type);
+extern const GP_Reg int_param_regs[4];
+extern const XMM_Reg float_param_regs[4];
+extern const GP_Reg caller_saved_regs[7];
+extern const GP_Reg callee_saved_regs[8];
+extern const char *gp_register_str[16][4];
+extern const char *sse_register_str[16];
+void exit(int);
+void *malloc(size_t);
+void *realloc(void *, size_t);
+void *calloc(size_t, size_t);
+void free(void *);
+int system(const char *);
+typedef int (*__compar_fn_t)(const void *, const void *);
+extern void qsort(void *__base, size_t __nmemb, size_t __size, __compar_fn_t __compar);
+typedef enum {
+    LOG_INFO,
+    LOG_DEBUG,
+    LOG_WARN,
+    LOG_ERROR,
+    LOG_PANIC,
+} LogLevel;
+typedef enum {
+    STAGE_COMPILER,
+    STAGE_TOKENIZING,
+    STAGE_PARSING,
+    STAGE_SEMA_ANALYSIS,
+    STAGE_IR,
+    STAGE_X86_GEN,
+    STAGE_ASSEMBLER,
+    STAGE_LINKER
+} LogStage;
+typedef struct {
+    LogLevel min_level;
+    LogStage stage;
+    FILE *file;
+} Logger;
+extern Logger logger;
+static FILE *stdin = ((void *)0);
+static FILE *stdout = ((void *)0);
+static FILE *stderr = ((void *)0);
+static inline void init_logger(FILE *fp, LogLevel level) {
+    logger.file = fp ? fp : stderr;
+    logger.stage = STAGE_COMPILER;
+    logger.min_level = level;
+}
+static inline char *stage_str(LogStage stage) {
+    switch (logger.stage) {
+    case STAGE_COMPILER:
+        return "Compiler";
+    case STAGE_TOKENIZING:
+        return "Tokenizer";
+    case STAGE_PARSING:
+        return "Parser";
+    case STAGE_IR:
+        return "IR";
+    case STAGE_X86_GEN:
+        return "x86 Gen";
+    case STAGE_SEMA_ANALYSIS:
+        return "Semantic Analysis";
+    case STAGE_ASSEMBLER:
+        return "Assembler";
+    case STAGE_LINKER:
+        return "Linker";
+    }
+}
+static inline void set_log_stage(LogStage stage) { logger.stage = stage; }
+static inline void log_start(LogLevel lvl) {
+    if (lvl < logger.min_level) return;
+    const char *level_str;
+    switch (lvl) {
+    case LOG_DEBUG:
+        level_str = "\x1b[34mDEBUG\x1b[0m";
+        break;
+    case LOG_INFO:
+        level_str = "\x1b[32mINFO\x1b[0m";
+        break;
+    case LOG_WARN:
+        level_str = "\x1b[33mWARN\x1b[0m";
+        break;
+    case LOG_ERROR:
+        level_str = "\x1b[31mERROR\x1b[0m";
+        break;
+    case LOG_PANIC:
+        level_str = "\x1b[1;31mPANIC\x1b[0m";
+        break;
+    default:
+        level_str = "LOG";
+        break;
+    }
+    const char *stage = stage_str(logger.stage);
+    fprintf(logger.file, "[%s] %s: ", level_str, stage);
+}
+void print(const char *fmt, ...);
+void vprint(const char *fmt, va_list ap);
+static inline void log_message(LogLevel lvl, const char *fmt, ...) {
+    if (lvl < logger.min_level) return;
+    log_start(lvl);
+    va_list args;
+    __builtin_va_start(args, fmt);
+    vprint(fmt, args);
+    __builtin_va_end(args);
+    fflush(logger.file);
+    if (lvl == LOG_PANIC) exit(1);
+}
+void x86_gen_module(FILE *fp, IR_Context *ctx);
+void x86_operand(const IR_Value *v, char *buf, int n);
+void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst);
+void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst);
+void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst);
+void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst);
+void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *operand);
+void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, const char *r);
+const char *x86_rax_reg(Type *t);
+const char *x86_rbx_reg(const Type *t);
+const char *x86_rcx_reg(const Type *t);
+const char *x86_rdx_reg(const Type *t);
+const char *x86_op_suffix(const Type *t);
+const char *x86_integer_op_suffix(int size);
+const char *x86_float_op_suffix(int size);
+void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, IR_BINOP_OP op, Type *t);
+void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNARY_OP op, Type *t);
+void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst);
+void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to);
+void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, int pool_index);
+void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
+void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
+void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src);
+void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t);
+void x86_emit_string(FILE *fp, const char *str);
+void x86_emit_literal(FILE *fp, const ConstLiteral *c);
+static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_block(FILE *fp, IR_Context *ctx);
+static void x86_gen_function(FILE *fp, IR_Context *ctx);
+static void x86_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memset_instruction(fp, instr); }
+static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memcpy_instruction(fp, instr); }
+static void x86_gen_cmp_instruction(FILE *fp, const IR_Instruction *instr) {
+    x86_emit_cmp(fp, instr->cmp.op, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->cmp.type);
+}
+static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr) { x86_emit_addr(fp, &instr->ops[1], &instr->ops[0]); }
+static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
+    x86_emit_cast(fp, &instr->ops[1], &instr->ops[0], instr->cast.from, instr->cast.to);
+}
+static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
+    if (instr->ops[1].kind == IR_CONSTANT) {
+        ConstLiteral *c = get_const(ctx, instr->ops[1].const_index);
+        x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
+        return;
+    }
+    const char *reg = x86_rax_reg(instr->_const.type);
+    const char *op_suffix = x86_op_suffix(instr->_const.type);
+    x86_emit_xr(fp, "mov", op_suffix, "", &instr->ops[1], reg);
+    x86_emit_rx(fp, "mov", op_suffix, "", reg, &instr->ops[0]);
+}
+static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { x86_emit_call(fp, ctx, instr); }
+static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_store(fp, &instr->ops[1], &instr->ops[0], instr->store.type);
+}
+static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_load(fp, &instr->ops[1], &instr->ops[0], instr->load.type);
+}
+static void x86_gen_move_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_move(fp, &instr->ops[0], &instr->ops[1]);
+}
+static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_unary(fp, &instr->ops[0], &instr->ops[1], instr->unary.op, instr->unary.type);
+}
+static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_binary(fp, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->binop.op, instr->binop.type);
+}
+static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->op) {
+    case IR_UNOP:
+        x86_gen_unary_instruction(fp, ctx, instr);
+        return;
+    case IR_BINOP:
+        x86_gen_binary_instruction(fp, ctx, instr);
+        return;
+    case IR_LOAD:
+        x86_gen_load_instruction(fp, ctx, instr);
+        return;
+    case IR_STORE:
+        x86_gen_store_instruction(fp, ctx, instr);
+        return;
+    case IR_MOVE:
+        x86_gen_move_instruction(fp, ctx, instr);
+        return;
+    case IR_CALL:
+        x86_gen_call_instruction(fp, ctx, instr);
+        return;
+    case IR_CONST:
+        x86_gen_const_instruction(fp, ctx, instr);
+        return;
+    case IR_CAST:
+        x86_gen_cast_instruction(fp, instr);
+        return;
+    case IR_ADDR:
+        x86_gen_addr_instruction(fp, instr);
+        break;
+    case IR_ALLOCA:
+        break;
+    case IR_MEMSET:
+        x86_gen_memset_instruction(fp, instr);
+        break;
+    case IR_MEMCPY:
+        x86_gen_memcpy_instruction(fp, instr);
+        break;
+    case IR_CMP:
+        x86_gen_cmp_instruction(fp, instr);
+        break;
+    case IR_RET:
+        if (instr->ops[0].kind != IR_UNDEFINED && instr->ret.type != type_void)
+            x86_emit_xr(fp, "mov", x86_op_suffix(instr->ret.type), "", &instr->ops[0], x86_rax_reg(instr->ret.type));
+        fprintf(fp, "    mov %%rbp, %%rsp\n");
+        fprintf(fp, "    pop %%rbp\n");
+        fprintf(fp, "    ret\n");
+        return;
+    case IR_BR:
+        fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.block->id);
+        return;
+    case IR_BR_COND:
+        x86_emit_xr(fp, "mov", "l", "", &instr->ops[0], "%eax");
+        fprintf(fp, "    testl %%eax, %%eax\n");
+        if (instr->br_cond.f_block) fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_block->id);
+        else if (instr->br_cond.t_block) fprintf(fp, "    jnz %s_%d\n", ctx->func->name, instr->br_cond.t_block->id);
+        break;
+    case IR_LABEL:
+        fprintf(fp, "%s:\n", instr->label.name);
+        break;
+    case IR_JMP:
+        fprintf(fp, "    jmp %s\n", instr->jmp.name);
+        break;
+    case IR_BUILTIN_VA_START:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rax");
+        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[1]);
+        break;
+    case IR_BUILTIN_VA_ARG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
+        fprintf(fp, "    addq $%d, %%rax\n", instr->builtin_va_arg.type->size);
+        x86_emit_rr(fp, "mov", "q", "", "(%rax)", "%rcx");
+        x86_emit_rx(fp, "mov", "q", "", "%rcx", &instr->ops[0]);
+        break;
+    case IR_PARAM:
+        if (instr->op_count == 1) break;
+        if (instr->param.type->size > 8) break;
+        if (!memcmp(&instr->ops[0], &instr->ops[1], sizeof(IR_Value))) break;
+        const char *param_op_suffix = x86_op_suffix(instr->param.type);
+        if (instr->param.param_index < 4 && instr->param.param_index != -1) {
+            x86_emit_xx(fp, "mov", param_op_suffix, "", &instr->ops[1], &instr->ops[0]);
+        } else {
+            const char *rax_reg = x86_rax_reg(instr->param.type);
+            x86_emit_xr(fp, "mov", param_op_suffix, "", &instr->ops[1], rax_reg);
+            x86_emit_rx(fp, "mov", param_op_suffix, "", rax_reg, &instr->ops[0]);
+        }
+        break;
+    }
+}
+static void x86_gen_block(FILE *fp, IR_Context *ctx) {
+    for (int i = 0; i < ctx->block->instruction_array.count; i++) {
+        x86_gen_instruction(fp, ctx, get_instruction(&ctx->block->instruction_array, i));
+    }
+}
+static void x86_gen_function(FILE *fp, IR_Context *ctx) {
+    const int stack_size = ctx->func->stack_size;
+    const int aligned_stack_size = ((stack_size+15)&~15);
+    if (ctx->func->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", ctx->func->name);
+    fprintf(fp, "%s:\n", ctx->func->name);
+    fprintf(fp, "    push %%rbp\n");
+    fprintf(fp, "    mov %%rsp, %%rbp\n");
+    fprintf(fp, "    subq $%d, %%rsp\n", aligned_stack_size);
+    for (int i = 0; i < ctx->func->blocks_array.count; i++) {
+        fprintf(fp, "%s_%d:\n", ctx->func->name, i);
+        ctx->block = get_block(ctx->func, i);
+        x86_gen_block(fp, ctx);
+    }
+}
+void x86_gen_module(FILE *fp, IR_Context *ctx) {
+    if (ctx->module->const_array.count > 0) {
+        fprintf(fp, ".section .rodata\n");
+        for (int i = 0; i < ctx->module->const_array.count; i++) {
+            const ConstLiteral *c = get_const(ctx, i);
+            if (c->type->align > 1) fprintf(fp, ".align %d\n", c->type->align);
+            fprintf(fp, ".LC%d:\n", i);
+            x86_emit_literal(fp, c);
+        }
+    }
+    for (int i = 0; i < ctx->module->global_array.count; i++) {
+        const IR_Global *g = get_global(ctx, i);
+        const ConstLiteral *c = &g->val;
+        if (g->symbol->storage == STORAGE_NONE) {
+            fprintf(fp, ".extern %s\n", g->symbol->name);
+            continue;
+        }
+        if (g->symbol->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", g->symbol->name);
+        if (g->symbol->storage == STORAGE_DATA) fprintf(fp, ".data\n");
+        if (g->symbol->storage == STORAGE_BSS) {
+            fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->symbol->type->align, g->symbol->name, g->symbol->type->size);
+        } else {
+            if (!(c->type != type_invalid)) do { log_message(LOG_ERROR, "Received invalid type, probably an uninitialized global with incorrect storage specifier\n"); exit(1); } while (0);
+            if (g->symbol->type->align > 1) fprintf(fp, ".align %d\n", g->symbol->type->align);
+            fprintf(fp, "%s:\n", g->symbol->name);
+            x86_emit_literal(fp, &g->val);
+        }
+    }
+    fprintf(fp, "\n.text\n");
+    for (int i = 0; i < ctx->module->functions_array.count; i++) {
+        ctx->func = get_func(ctx->module, i);
+        x86_gen_function(fp, ctx);
+    }
 }

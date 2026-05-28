@@ -224,12 +224,12 @@ bool is_va_list_type(Type *type) { return type->kind == T_POINTER && type->base 
 
 Type *to_arg_type(Type *t, ABI_Result *res) {
     switch (t->kind) {
-
     case T_INT:
     case T_FLOAT:
     case T_POINTER:
-    case T_ENUM:
         return t;
+    case T_ENUM:
+        return type_i32;
     case T_ARRAY:
     case T_STRUCT:
     case T_UNION:

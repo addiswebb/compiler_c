@@ -19,7 +19,12 @@ size_t strlen(const char *);
 
 char *strrchr(const char *, int);
 
+#ifdef _WIN64
+char *_strdup(const char *);
+char *_strndup(const char *, size_t);
+#else
 char *strdup(const char *);
 char *strndup(const char *, size_t);
+#endif
 
 #endif

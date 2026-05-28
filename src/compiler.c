@@ -7,6 +7,7 @@
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/tokenize/tokenizer.h"
+#include <compiler_c/abi/abi.h>
 #include <compiler_c/analyse/sema.h>
 #include <compiler_c/compiler.h>
 #include <compiler_c/x86/x86.h>
@@ -31,7 +32,7 @@ bool is_source_file(const char *arg) {
     if (arg[0] == '-') return false;
     const char *dot = strrchr(arg, '.');
     if (!dot) return false;
-    return strcmp(dot, ".c") == 0 || strcmp(dot, ".s") == 0 || strcmp(dot, ".o") == 0; // .o for linking stage
+    return strcmp(dot, ".c") == 0 || strcmp(dot, ".s") == 0 || strcmp(dot, ".o") == 0 || strcmp(dot, ".obj") == 0;
 }
 
 void read_args(Compiler *compiler, const int argc, char *argv[]) {
@@ -77,7 +78,7 @@ void link(Compiler *c, Array *objs) {
     set_log_stage(STAGE_LINKER);
     INFO("Linking ");
     char cmd[4028] = {};
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -lm -lc ");
+    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -lm " LINK_C);
     for (int i = 0; i < objs->count; i++) {
         char *src = *(char **)get(objs, i);
         printf("%s", src);
@@ -132,6 +133,7 @@ void drive(Compiler *c) {
             assemble(c);
             if (has_flag(CF_STOP_AFTER_ASSEMBLE)) continue;
         case 'o':
+        case 'j': // obj imlazy
             char *obj_path = strdup((char *)c->current_output.data);
             append(&objs, &obj_path);
             break;
