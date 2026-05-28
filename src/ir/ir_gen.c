@@ -585,6 +585,7 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     case N_NULL:
     case N_IDENTIFIER:
     case N_LITERAL:
+    case N_CAST:
         return;
     default:
         // given invalid statement? probably an expression

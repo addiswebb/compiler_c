@@ -1,8 +1,8 @@
 #ifndef COMPILER_C_TOKENIZER_H
 #define COMPILER_C_TOKENIZER_H
 
-#include "compiler_c/core/array.h"
 #include "../libc/stdbool.h"
+#include "compiler_c/core/array.h"
 
 #define MIN_BINARY_OP_PRECEDENCE 0
 
@@ -164,6 +164,8 @@ Tokenizer t_new_tokenizer(const char *src, int src_size);
 void t_free(Tokenizer *tokenizer);
 /* Converts the tokenizer's source file into tokens in the token array. */
 void t_tokenize(Tokenizer *tk);
+
+void print_tokens(Tokenizer *tk);
 
 bool is_postfix_operator(const TokenType type);
 bool is_unary_operator(const TokenType type);

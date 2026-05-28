@@ -22,7 +22,8 @@ const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",         [CF_S
                                       [CF_DEBUG_ENUM] = "genum",           [CF_DEBUG_STRUCT] = "gstruct",
                                       [CF_DEBUG_UNION] = "gunion",         [CF_DEBUG_LOWERED_IR] = "glowered-ir",
                                       [CF_DEBUG_IR_INSTR] = "gir-instr",   [CF_DEBUG_PARSER] = "gparser",
-                                      [CF_DEBUG_TOKENIZER] = "gtokenizer", [CF_DEBUG_SYMBOLS] = "gsymbols"};
+                                      [CF_DEBUG_TOKENIZER] = "gtokenizer", [CF_DEBUG_TOKENS] = "gtokens",
+                                      [CF_DEBUG_SYMBOLS] = "gsymbols"};
 
 bool has_flag(CompilerFlag f) { return compiler_flags & FLAG(f); }
 
@@ -75,7 +76,7 @@ void assemble(Compiler *c) {
 void link(Compiler *c, Array *objs) {
     set_log_stage(STAGE_LINKER);
     INFO("Linking ");
-    char cmd[512] = {};
+    char cmd[4028] = {};
     int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -lm ");
     for (int i = 0; i < objs->count; i++) {
         char *src = *(char **)get(objs, i);
@@ -86,7 +87,7 @@ void link(Compiler *c, Array *objs) {
     printf(" to %s\n", (char *)c->current_output.data);
     snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "-o %s ", (char *)c->current_output.data);
     int ret = system(cmd);
-    ASSERT(ret == 0, "Failed to link %d objs to %s\n", objs->count, (char *)c->current_output.data);
+    ASSERT(ret == 0, "Failed to link %d objs to %s with cmd '%s'\n", objs->count, (char *)c->current_output.data, cmd);
 }
 
 void update_current_output(Compiler *c, bool cond, char *path, const char *ext) {
@@ -112,24 +113,29 @@ void drive(Compiler *c) {
     for (int i = 0; i < c->source_files.count; i++) {
         char *src_path = *(char **)get(&c->source_files, i);
         array_str_cpy(&c->current_source, src_path);
-        update_current_output(c, has_flag(CF_STOP_AFTER_COMPILE), src_path, ".s");
+        array_str_cpy(&c->current_output, src_path);
 
-        // Todo early out if empty
-        load_src_file(c, (char *)c->current_source.data);
-        init_compiler(c);
-        compile(c);
-        clear_compiler(c);
+        char ext = src_path[strlen(src_path) - 1];
+        switch (ext) {
+        case 'c':
+            update_current_output(c, has_flag(CF_STOP_AFTER_COMPILE), src_path, ".s");
+            load_src_file(c, (char *)c->current_source.data);
+            init_compiler(c);
+            compile(c);
+            clear_compiler(c);
 
-        if (has_flag(CF_STOP_AFTER_AST) || has_flag(CF_STOP_AFTER_IR)) return;
-        if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
-
-        array_str_cpy(&c->current_source, c->current_output.data);
-        update_current_output(c, has_flag(CF_STOP_AFTER_ASSEMBLE), src_path, ".o");
-        assemble(c);
-        if (has_flag(CF_STOP_AFTER_ASSEMBLE)) continue;
-
-        char *obj_path = strdup((char *)c->current_output.data);
-        append(&objs, &obj_path);
+            if (has_flag(CF_STOP_AFTER_AST) || has_flag(CF_STOP_AFTER_IR)) return;
+            if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
+        case 's':
+            array_str_cpy(&c->current_source, c->current_output.data);
+            update_current_output(c, has_flag(CF_STOP_AFTER_ASSEMBLE), src_path, ".o");
+            assemble(c);
+            if (has_flag(CF_STOP_AFTER_ASSEMBLE)) continue;
+        case 'o':
+            char *obj_path = strdup((char *)c->current_output.data);
+            append(&objs, &obj_path);
+            break;
+        }
     }
     if (has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) return;
 
@@ -206,6 +212,7 @@ int compile(Compiler *compiler) {
 
     set_log_stage(STAGE_TOKENIZING);
     t_tokenize(&compiler->tk);
+    if (has_flag(CF_DEBUG_TOKENS)) print_tokens(&compiler->tk);
 
     set_log_stage(STAGE_PARSING);
     init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
@@ -277,7 +284,7 @@ int compile(Compiler *compiler) {
 
 static int load_src_file(Compiler *compiler, const char *file) {
     char cmd[512];
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 %s ", file);
+    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -D__COMPILER_C__ -I/home/addis/dev/compiler_c/libc -std=c11 %s ", file);
     for (int i = 0; i < compiler->passthrough_args.count; i++) {
         cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }

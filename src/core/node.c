@@ -439,6 +439,7 @@ void print_node(const Node *node, const int depth) {
         print_node(node->ternary.if_false, depth + 1);
         break;
     case N_NULL:
+        printf("\n");
         break;
     }
 }

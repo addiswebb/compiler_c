@@ -76,16 +76,7 @@ void p_skip(Parser *p) { p_consume_n(p, 1); }
 void p_expect(const Parser *p, const TokenType expected_type) {
     if (!p_is_last_token(p)) {
         const Token *token = get_token(p->src, p->index);
-        if (token->type != expected_type) {
-            log_start(LOG_ERROR);
-            printf("[%d:%d]: ", token->line_n, token->char_n);
-            printf("Expected ");
-            print_token_type(expected_type);
-            printf(" got ");
-            print_token_type(token->type);
-            printf("\n");
-            exit(1);
-        }
+        ASSERT(token->type == expected_type, "[%d:%d]: Expected %tk got %tk\n", token->line_n, token->char_n, expected_type, token->type);
     }
 }
 

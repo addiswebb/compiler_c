@@ -46,6 +46,7 @@ typedef enum {
     CF_DEBUG_IR_INSTR,
     CF_DEBUG_PARSER,
     CF_DEBUG_TOKENIZER,
+    CF_DEBUG_TOKENS,
     CF_DEBUG_SYMBOLS,
     CF_COUNT,
 } CompilerFlag;
