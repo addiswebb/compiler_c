@@ -61,6 +61,7 @@ void read_args(Compiler *compiler, const int argc, char *argv[]) {
             }
             if (consumed_flag) continue;
             append(&compiler->passthrough_args, &argv[i]);
+            if (strcmp(argv[i], "-I") == 0) append(&compiler->passthrough_args, &argv[++i]);
         } else if (is_source_file(argv[i])) append(&compiler->source_files, &argv[i]);
     }
 }
@@ -301,6 +302,7 @@ static int load_src_file(Compiler *compiler, const char *file) {
     for (int i = 0; i < compiler->passthrough_args.count; i++) {
         cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }
+    printf("cmd %s\n", cmd);
 
     FILE *fp = popen(cmd, "r");
     ASSERT(fp, "Failed to open %s\n", file);

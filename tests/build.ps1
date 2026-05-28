@@ -39,7 +39,7 @@ foreach ($InputFile in $Inputs)
     $Basename   = [System.IO.Path]::GetFileNameWithoutExtension($InputFile)
     # Normalize to forward slashes to match CMake's dir structure
     $Relative   = (Resolve-Path -Relative $InputFile).Replace("\", "/").TrimStart("./")
-    $OutputPath = "./build/CMakeFiles/compiler_c.dir/$Relative.o"
+    $OutputPath = "./build/CMakeFiles/compiler_c.dir/$Relative.obj"
 
     # Ensure output directory exists
     $OutputDir = Split-Path $OutputPath -Parent
@@ -115,7 +115,7 @@ try
         src/analyse/sema.c.obj `
         src/analyse/analysis.c.obj `
         src/analyse/const_expr.c.obj `
-        src/abi/sysv.c.obj `
+        src/abi/win64.c.obj `
         src/log/logger.c.obj `
         -o ../../compiler_c.exe -lm
     if ($LASTEXITCODE -ne 0)

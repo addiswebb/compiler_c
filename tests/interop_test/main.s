@@ -1,47 +1,60 @@
-	.file	"main.c"
-	.text
-	.globl	main
-	.type	main, @function
+
+.text
+.global main
 main:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	pushq	%rbx
-	subq	$56, %rsp
-	movq	$1, -64(%rbp)
-	movq	$2, -56(%rbp)
-	movq	$3, -48(%rbp)
-	movq	$4, -40(%rbp)
-	movq	$5, -32(%rbp)
-	subq	$40, %rsp
-	movq	%rsp, %rax
-	movq	-64(%rbp), %rcx
-	movq	-56(%rbp), %rbx
-	movq	%rcx, (%rax)
-	movq	%rbx, 8(%rax)
-	movq	-48(%rbp), %rcx
-	movq	-40(%rbp), %rbx
-	movq	%rcx, 16(%rax)
-	movq	%rbx, 24(%rax)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, 32(%rax)
-	subq	$40, %rsp
-	movq	%rsp, %rax
-	movq	-64(%rbp), %rcx
-	movq	-56(%rbp), %rbx
-	movq	%rcx, (%rax)
-	movq	%rbx, 8(%rax)
-	movq	-48(%rbp), %rcx
-	movq	-40(%rbp), %rbx
-	movq	%rcx, 16(%rax)
-	movq	%rbx, 24(%rax)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, 32(%rax)
-	movl	$123, %edi
-	call	foo@PLT
-	addq	$80, %rsp
-	movq	-8(%rbp), %rbx
-	leave
-	ret
-	.size	main, .-main
-	.ident	"GCC: (GNU) 16.1.1 20260430"
-	.section	.note.GNU-stack,"",@progbits
+    push %rbp
+    mov %rsp, %rbp
+    subq $48, %rsp
+main_0:
+    leaq -24(%rbp), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    movl $1, %ecx
+    movl %ecx, (%rax)
+    leaq -24(%rbp), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    addq $4, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    movl $2, %ecx
+    movl %ecx, (%rax)
+    leaq -24(%rbp), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    addq $8, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    movl $3, %ecx
+    movl %ecx, (%rax)
+    leaq -24(%rbp), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    addq $12, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    movl $4, %ecx
+    movl %ecx, (%rax)
+    leaq -24(%rbp), %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    addq $16, %rax
+    movq %rax, -32(%rbp)
+    movq -32(%rbp), %rax
+    movl $5, %ecx
+    movl %ecx, (%rax)
+    leaq -24(%rbp), %rax
+    movq %rax, -32(%rbp)
+    leaq -24(%rbp), %rax
+    movq %rax, -40(%rbp)
+    subq $32, %rsp
+    movq $123, %rcx
+    movq -32(%rbp), %rdx
+    movq -40(%rbp), %r8
+    call foo
+    addq $32, %rsp
+    movl %eax, -32(%rbp)
+    movl -32(%rbp), %eax
+    mov %rbp, %rsp
+    pop %rbp
+    ret

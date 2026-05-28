@@ -6,6 +6,6 @@ typedef struct A {
     long e;
 } A;
 int foo(int *z, A x, A y) {
-    // return x.a + x.b + x.c + y.d + y.e;
-    return y.a;
+    return x.a + x.b + x.c + y.d + y.e;
+    // return y.a;
 }

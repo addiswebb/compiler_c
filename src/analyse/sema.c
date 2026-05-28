@@ -333,9 +333,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         // Resolve const expr array bounds for array types
         if (!node->type->is_resolved) node->type = resolve_type(sema_ctx, p, nm, node->type);
         if (node->var_decl.storage_class == EXTERN) {
-            if (node->var_decl.is_defined) {
-                PANIC("External variable cannot be initialized in the same statement\n");
-            }
+            ASSERT(!node->var_decl.is_defined, "External variable cannot be initialized in the same statement\n");
         }
         Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR, true);
         // TODO consider if symbol management can happen after symantic analysis
