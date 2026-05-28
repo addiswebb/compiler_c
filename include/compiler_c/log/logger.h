@@ -13,8 +13,8 @@
 //     } while (0)
 
 typedef enum {
-    LOG_DEBUG,
     LOG_INFO,
+    LOG_DEBUG,
     LOG_WARN,
     LOG_ERROR,
     LOG_PANIC,
