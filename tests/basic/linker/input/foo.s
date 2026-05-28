@@ -1,3 +1,4 @@
+.section .note.GNU-stack,"",@progbits
 .section .rodata
 .LC0:
     .byte '%', 'd', ' ', '%', 'l', 'f', ' ', '%', 's', 0x0A, 0
@@ -7,11 +8,11 @@
 foo:
     push %rbp
     mov %rsp, %rbp
-    subq $64, %rsp
+    subq $72, %rsp
 foo_0:
-    movl %ecx, -8(%rbp)
-    movsd %xmm1, -16(%rbp)
-    movq %r8, -24(%rbp)
+    movl %edi, -8(%rbp)
+    movsd %xmm0, -16(%rbp)
+    movq %rsi, -24(%rbp)
     leaq .LC0(%rip), %rax
     movq %rax, -32(%rbp)
     leaq -8(%rbp), %rax
@@ -29,14 +30,14 @@ foo_0:
     movq -56(%rbp), %rax
     movq (%rax), %rax
     movq %rax, -56(%rbp)
-    subq $32, %rsp
-    movq -32(%rbp), %rcx
-    movl -40(%rbp), %edx
-    movq -48(%rbp), %r8
-    movsd -48(%rbp), %xmm2
-    movq -56(%rbp), %r9
+    subq $184, %rsp
+    movq -32(%rbp), %rdi
+    movl -40(%rbp), %esi
+    movsd -48(%rbp), %xmm0
+    movq -56(%rbp), %rdx
+    movl $1, %eax
     call printf
-    addq $32, %rsp
+    addq $184, %rsp
     movl %eax, -32(%rbp)
     leaq -8(%rbp), %rax
     movq %rax, -32(%rbp)

@@ -334,8 +334,9 @@ Type *to_arg_type(Type *t, ABI_Result *res) {
     case T_INT:
     case T_FLOAT:
     case T_POINTER:
-    case T_ENUM:
         return t;
+    case T_ENUM:
+        return type_i32;
     case T_ARRAY:
     case T_STRUCT:
     case T_UNION:
@@ -393,7 +394,6 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         IR_CallArg *v = get_call_arg(instr, i);
         ABI_Result res = abi_classify(v->type);
         Type *arg_type = to_arg_type(v->type, &res);
-
         switch (arg_type->kind) {
         case T_INT:
         case T_ENUM:
