@@ -330,13 +330,13 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
 }
 
 Type *to_arg_type(Type *t, ABI_Result *res) {
+
     switch (t->kind) {
+    case T_ENUM:
     case T_INT:
     case T_FLOAT:
     case T_POINTER:
         return t;
-    case T_ENUM:
-        return type_i32;
     case T_ARRAY:
     case T_STRUCT:
     case T_UNION:
@@ -395,8 +395,8 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         ABI_Result res = abi_classify(v->type);
         Type *arg_type = to_arg_type(v->type, &res);
         switch (arg_type->kind) {
-        case T_INT:
         case T_ENUM:
+        case T_INT:
         case T_POINTER:
             const char *gp_suffix = x86_op_suffix(arg_type);
             if (gp_index < INTEGER_PARAM_REGISTERS) {

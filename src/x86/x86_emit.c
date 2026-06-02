@@ -99,6 +99,7 @@ void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, con
 
 const char *x86_rax_reg(Type *t) {
     if (t->kind == T_FLOAT) return "%xmm0";
+    if (t->kind == T_ENUM) return "%eax";
     if (t->kind == T_INT) {
         switch (t->size) {
         case 1:
@@ -119,6 +120,7 @@ const char *x86_rax_reg(Type *t) {
 
 const char *x86_rbx_reg(const Type *t) {
     if (t->kind == T_FLOAT) return "%xmm1";
+    if (t->kind == T_ENUM) return "%ebx";
     if (t->kind == T_INT) {
         switch (t->size) {
         case 1:
@@ -140,6 +142,7 @@ const char *x86_rbx_reg(const Type *t) {
 
 const char *x86_rcx_reg(const Type *t) {
     if (t->kind == T_FLOAT) return "%xmm2";
+    if (t->kind == T_ENUM) return "%ecx";
     if (t->kind == T_INT) {
         switch (t->size) {
         case 1:
@@ -161,6 +164,7 @@ const char *x86_rcx_reg(const Type *t) {
 
 const char *x86_rdx_reg(const Type *t) {
     if (t->kind == T_FLOAT) return "%xmm3";
+    if (t->kind == T_ENUM) return "%edx";
     if (t->kind == T_INT) {
         switch (t->size) {
         case 1:

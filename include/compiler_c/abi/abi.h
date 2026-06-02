@@ -59,11 +59,11 @@ extern const XMM_Reg float_param_regs[PARAM_REGISTERS];
 #define popen _popen
 #define pclose _pclose
 
-#define STACK_ALIGN(x) ((x+15)&~15)
+#define STACK_ALIGN(x) ((x + 15) & ~15)
 #define LINK_C ""
 
 #else
-#define LINK_C "-lc"
+#define LINK_C "-lc "
 
 #define MAX_STRUCT_SIZE 16
 #define SHADOW_SPACE 0
@@ -80,7 +80,7 @@ ABI_Result classify_struct(Type *type);
 extern const GP_Reg int_param_regs[INTEGER_PARAM_REGISTERS];
 extern const XMM_Reg float_param_regs[FLOAT_PARAM_REGISTERS];
 
-#define STACK_ALIGN(x) (((x+15)&~15) | 8)
+#define STACK_ALIGN(x) (((x + 15) & ~15) | 8)
 #endif
 
 extern const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS];
