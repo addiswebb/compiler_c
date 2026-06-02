@@ -1101,33 +1101,9 @@ static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int in
     return (IR_LabeledBlock *)get(&module->labeled_block_array, index);
 }
 static inline IR_CallArg *get_call_arg(const IR_Instruction *call, int index) { return (IR_CallArg *)get(&call->call.arg_array, index); }
-void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src);
-IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type);
-IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type);
-IR_Value ir_smart_const(IR_Context *ctx, ConstLiteral *literal, Type *type);
-IR_Value ir_const(IR_Context *ctx, int const_index, Type *type);
-IR_Value ir_unary(IR_Context *ctx, IR_UNARY_OP op, IR_Value expr_reg, Type *type);
-IR_Value ir_binary(IR_Context *ctx, IR_BINOP_OP op, IR_Value dst, IR_Value lhs_reg, IR_Value rhs_reg, Type *type);
-IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg, IR_Value rhs_reg, Type *type);
-IR_Value ir_call(IR_Context *ctx, const Node *expr);
-IR_Value ir_return(IR_Context *ctx, IR_Value reg, Type *type);
-IR_Value ir_branch(IR_Context *ctx, IR_Block *block);
-IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, IR_Block *f_block);
-IR_Value ir_label(IR_Context *ctx, const char *name);
-IR_Value ir_jmp(IR_Context *ctx, const char *name);
-IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from);
-IR_Value ir_address(IR_Context *ctx, IR_Value src, int offset);
-IR_Value ir_alloca(IR_Context *ctx, IR_Value dst, int size, int al);
-IR_Value ir_memset(IR_Context *ctx, IR_Value dst, int c, int size);
-IR_Value ir_memcpy(IR_Context *ctx, IR_Value from_reg, IR_Value to_reg, int size);
-void ir_zero(IR_Context *ctx, IR_Value dst, Type *type);
-IR_Value ir_builtin_va_start(IR_Context *ctx, IR_Value ap, IR_Value last_named_param);
-IR_Value ir_builtin_va_arg(IR_Context *ctx, IR_Value ap, Type *type);
 typedef char *va_list;
 typedef struct FILE FILE;
-extern FILE *stdin;
-extern FILE *stdout;
-extern FILE *stderr;
+FILE *__acrt_iob_func(unsigned int _Fileno);
 FILE *fopen(const char *, const char *);
 FILE *fdopen(int, const char *);
 int fclose(FILE *);
@@ -1180,34 +1156,6 @@ extern const GP_Reg caller_saved_regs[7];
 extern const GP_Reg callee_saved_regs[8];
 extern const char *gp_register_str[16][4];
 extern const char *sse_register_str[16];
-IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr);
-IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr);
-static void ir_gen_block_item(IR_Context *ctx, const Node *item);
-static void ir_gen_compound(IR_Context *ctx, const Node *comp);
-static void ir_gen_while_loop(IR_Context *ctx, const Node *_while);
-static void ir_gen_for_loop(IR_Context *ctx, const Node *_for);
-static void ir_gen_if_statement(IR_Context *ctx, const Node *_if);
-static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl);
-static void ir_gen_statement(IR_Context *ctx, const Node *stmt);
-static void ir_gen_return(IR_Context *ctx, const Node *_return);
-static void ir_gen_goto(IR_Context *ctx, const Node *_goto);
-static void ir_gen_label(IR_Context *ctx, const Node *label);
-static IR_Function *ir_gen_function(IR_Context *ctx, const Node *func);
-int ir_is_within_cond(IR_Context *ctx);
-void ir_set_cond_block(IR_Context *ctx, IR_Block *true_block, IR_Block *false_block);
-void ir_reset_cond_block(IR_Context *ctx);
-IR_CMP_OP ir_cmp_op(const TokenType type);
-IR_UNARY_OP ir_unary_op(const TokenType type);
-IR_BINOP_OP ir_binary_op(const TokenType type);
-void print_ir_module(const IR_Context *ctx,const IR_Module *module);
-void print_ir_value(const IR_Value *v);
-void print_ir_phys_reg(const PhysReg *r);
-static void print_ir_block(const IR_Context *ctx, const IR_Block *block);
-void print_ir_function(const IR_Context *ctx, const IR_Function *func);
-void print_ir_instruction(const IR_Context *ctx,const IR_Instruction *instr);
-static void print_unary_op(IR_UNARY_OP op);
-static void print_binary_op(IR_BINOP_OP op);
-static void print_cmp_op(IR_CMP_OP op);
 void exit(int);
 void *malloc(size_t);
 void *realloc(void *, size_t);
@@ -1239,11 +1187,8 @@ typedef struct {
     FILE *file;
 } Logger;
 extern Logger logger;
-static FILE *stdin = ((void *)0);
-static FILE *stdout = ((void *)0);
-static FILE *stderr = ((void *)0);
 static inline void init_logger(FILE *fp, LogLevel level) {
-    logger.file = fp ? fp : stderr;
+    logger.file = fp ? fp : (__acrt_iob_func(2));
     logger.stage = STAGE_COMPILER;
     logger.min_level = level;
 }
@@ -1306,269 +1251,218 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     fflush(logger.file);
     if (lvl == LOG_PANIC) exit(1);
 }
-void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src) {
-    IR_Instruction i;
-    i.op = IR_MOVE;
-    i.ops[1] = src;
-    i.ops[0] = dst;
-    i.op_count = 2;
-    ir_append_instruction(ctx, &i);
+void x86_gen_module(FILE *fp, IR_Context *ctx);
+void x86_operand(const IR_Value *v, char *buf, int n);
+void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst);
+void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst);
+void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst);
+void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst);
+void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *operand);
+void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, const char *r);
+const char *x86_rax_reg(Type *t);
+const char *x86_rbx_reg(const Type *t);
+const char *x86_rcx_reg(const Type *t);
+const char *x86_rdx_reg(const Type *t);
+const char *x86_op_suffix(const Type *t);
+const char *x86_integer_op_suffix(int size);
+const char *x86_float_op_suffix(int size);
+void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, IR_BINOP_OP op, Type *t);
+void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNARY_OP op, Type *t);
+void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst);
+void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to);
+void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, int pool_index);
+void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
+void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
+void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src);
+void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t);
+void x86_emit_string(FILE *fp, const char *str);
+void x86_emit_literal(FILE *fp, const ConstLiteral *c);
+static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_block(FILE *fp, IR_Context *ctx);
+static void x86_gen_function(FILE *fp, IR_Context *ctx);
+static void x86_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memset_instruction(fp, instr); }
+static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memcpy_instruction(fp, instr); }
+static void x86_gen_cmp_instruction(FILE *fp, const IR_Instruction *instr) {
+    x86_emit_cmp(fp, instr->cmp.op, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->cmp.type);
 }
-IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
-    if (type->kind == T_STRUCT && type->size > 8) {
-        printf("heere\n");
-    }
-    IR_Instruction i;
-    i.op = IR_LOAD;
-    i.ops[1] = addr;
-    i.load.type = type;
-    i.ops[0] = ir_next_virtual_reg(ctx->func);
-    i.op_count = 2;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
+static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr) { x86_emit_addr(fp, &instr->ops[1], &instr->ops[0]); }
+static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
+    x86_emit_cast(fp, &instr->ops[1], &instr->ops[0], instr->cast.from, instr->cast.to);
 }
-void ir_zero(IR_Context *ctx, IR_Value dst, Type *type) {
-    switch (type->kind) {
-    case T_INT:
-    case T_ENUM:
-    case T_FLOAT:
-    case T_POINTER:
-        ir_store(ctx, dst, ir_integer_literal(0), ctx->init_ctx.type);
+static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
+    if (instr->ops[1].kind == IR_CONSTANT) {
+        ConstLiteral *c = get_const(ctx, instr->ops[1].const_index);
+        x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
         return;
-    case T_ARRAY:
-    case T_STRUCT:
-    case T_UNION:
-        if (type->size <= 8) ir_store(ctx, dst, ir_integer_literal(0), get_integer_type(type->size));
-        else ir_memset(ctx, dst, 0, type->size);
+    }
+    const char *reg = x86_rax_reg(instr->_const.type);
+    const char *op_suffix = x86_op_suffix(instr->_const.type);
+    x86_emit_xr(fp, "mov", op_suffix, "", &instr->ops[1], reg);
+    x86_emit_rx(fp, "mov", op_suffix, "", reg, &instr->ops[0]);
+}
+static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { x86_emit_call(fp, ctx, instr); }
+static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_store(fp, &instr->ops[1], &instr->ops[0], instr->store.type);
+}
+static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_load(fp, &instr->ops[1], &instr->ops[0], instr->load.type);
+}
+static void x86_gen_move_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_move(fp, &instr->ops[0], &instr->ops[1]);
+}
+static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_unary(fp, &instr->ops[0], &instr->ops[1], instr->unary.op, instr->unary.type);
+}
+static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    x86_emit_binary(fp, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->binop.op, instr->binop.type);
+}
+static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
+    switch (instr->op) {
+    case IR_UNOP:
+        x86_gen_unary_instruction(fp, ctx, instr);
         return;
-    default:
-        do { log_message(LOG_ERROR, "Tried to zero invalid type %t\n", type); exit(1); } while (0);
+    case IR_BINOP:
+        x86_gen_binary_instruction(fp, ctx, instr);
+        return;
+    case IR_LOAD:
+        x86_gen_load_instruction(fp, ctx, instr);
+        return;
+    case IR_STORE:
+        x86_gen_store_instruction(fp, ctx, instr);
+        return;
+    case IR_MOVE:
+        x86_gen_move_instruction(fp, ctx, instr);
+        return;
+    case IR_CALL:
+        x86_gen_call_instruction(fp, ctx, instr);
+        return;
+    case IR_CONST:
+        x86_gen_const_instruction(fp, ctx, instr);
+        return;
+    case IR_CAST:
+        x86_gen_cast_instruction(fp, instr);
+        return;
+    case IR_ADDR:
+        x86_gen_addr_instruction(fp, instr);
+        break;
+    case IR_ALLOCA:
+        break;
+    case IR_MEMSET:
+        x86_gen_memset_instruction(fp, instr);
+        break;
+    case IR_MEMCPY:
+        x86_gen_memcpy_instruction(fp, instr);
+        break;
+    case IR_CMP:
+        x86_gen_cmp_instruction(fp, instr);
+        break;
+    case IR_RET:
+        if (instr->ops[0].kind != IR_UNDEFINED && instr->ret.type != type_void)
+            x86_emit_xr(fp, "mov", x86_op_suffix(instr->ret.type), "", &instr->ops[0], x86_rax_reg(instr->ret.type));
+        fprintf(fp, "    mov %%rbp, %%rsp\n");
+        fprintf(fp, "    pop %%rbp\n");
+        fprintf(fp, "    ret\n");
+        return;
+    case IR_BR:
+        fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.block->id);
+        return;
+    case IR_BR_COND:
+        x86_emit_xr(fp, "mov", "l", "", &instr->ops[0], "%eax");
+        fprintf(fp, "    testl %%eax, %%eax\n");
+        if (instr->br_cond.f_block) fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_block->id);
+        else if (instr->br_cond.t_block) fprintf(fp, "    jnz %s_%d\n", ctx->func->name, instr->br_cond.t_block->id);
+        break;
+    case IR_LABEL:
+        fprintf(fp, "%s:\n", instr->label.name);
+        break;
+    case IR_JMP:
+        fprintf(fp, "    jmp %s\n", instr->jmp.name);
+        break;
+    case IR_BUILTIN_VA_START:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rax");
+        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[1]);
+        break;
+    case IR_BUILTIN_VA_ARG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
+        fprintf(fp, "    addq $%d, %%rax\n", instr->builtin_va_arg.type->size);
+        x86_emit_rr(fp, "mov", "q", "", "(%rax)", "%rcx");
+        x86_emit_rx(fp, "mov", "q", "", "%rcx", &instr->ops[0]);
+        break;
+    case IR_PARAM:
+        if (instr->op_count == 1) break;
+        if (instr->param.type->size > 8) break;
+        if (!memcmp(&instr->ops[0], &instr->ops[1], sizeof(IR_Value))) break;
+        const char *param_op_suffix = x86_op_suffix(instr->param.type);
+        if (instr->param.param_index < 4 && instr->param.param_index != -1) {
+            x86_emit_xx(fp, "mov", param_op_suffix, "", &instr->ops[1], &instr->ops[0]);
+        } else {
+            const char *rax_reg = x86_rax_reg(instr->param.type);
+            x86_emit_xr(fp, "mov", param_op_suffix, "", &instr->ops[1], rax_reg);
+            x86_emit_rx(fp, "mov", param_op_suffix, "", rax_reg, &instr->ops[0]);
+        }
+        break;
     }
 }
-IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
-    IR_Instruction i;
-    i.op = IR_STORE;
-    i.ops[1] = src;
-    i.store.type = type->kind == T_ENUM ? type_i32 : type;
-    i.ops[0] = dst;
-    i.op_count = 2;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
-}
-IR_Value ir_smart_const(IR_Context *ctx, ConstLiteral *literal, Type *type) {
-    if (literal->type->kind == T_INT) return ir_integer_literal(literal->i);
-    IR_Value l = ir_const(ctx, ir_append_const(ctx->module, literal), type);
-    if (literal->type->kind == T_ARRAY && literal->type->base == type_i8) return ir_address(ctx, l, 0);
-    else return l;
-}
-IR_Value ir_const(IR_Context *ctx, int const_index, Type *type) {
-    IR_Instruction i;
-    i.op = IR_CONST;
-    i.ops[1] = (IR_Value){.kind = IR_CONSTANT, .const_index = const_index, .size = type->size, .align = type->align};
-    i._const.type = type;
-    i.ops[0] = type->kind == T_ARRAY && type->base == type_i8 ? i.ops[1] : ir_next_virtual_reg(ctx->func);
-    i.op_count = 2;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
-}
-IR_Value ir_unary(IR_Context *ctx, IR_UNARY_OP op, IR_Value expr_reg, Type *type) {
-    IR_Instruction i;
-    i.op = IR_UNOP;
-    i.unary.op = op;
-    i.unary.type = type;
-    i.ops[1] = expr_reg;
-    i.ops[0] = ir_next_virtual_reg(ctx->func);
-    i.op_count = 2;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
-}
-IR_Value ir_binary(IR_Context *ctx, IR_BINOP_OP op, IR_Value dst, IR_Value lhs_reg, IR_Value rhs_reg, Type *type) {
-    IR_Instruction i;
-    i.op = IR_BINOP;
-    i.binop.op = op;
-    i.binop.type = type;
-    i.ops[1] = lhs_reg;
-    i.ops[2] = rhs_reg;
-    i.ops[0] = dst;
-    i.op_count = 3;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
-}
-IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg, IR_Value rhs_reg, Type *type) {
-    if (type == type_invalid) {
-        printf("Found invalid\n");
+static void x86_gen_block(FILE *fp, IR_Context *ctx) {
+    for (int i = 0; i < ctx->block->instruction_array.count; i++) {
+        x86_gen_instruction(fp, ctx, get_instruction(&ctx->block->instruction_array, i));
     }
-    IR_Instruction i;
-    i.op = IR_CMP;
-    i.cmp.op = op;
-    i.cmp.type = type;
-    i.ops[1] = lhs_reg;
-    i.ops[2] = rhs_reg;
-    i.ops[0] = ir_next_virtual_reg(ctx->func);
-    i.op_count = 3;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
 }
-IR_Value ir_call(IR_Context *ctx, const Node *expr) {
-    IR_Instruction i;
-    i.op = IR_CALL;
-    ctx->func_not_address = 1;
-    i.ops[1] = ir_gen_rvalue(ctx, expr->func_call.callee);
-    ctx->func_not_address = 0;
-    i.call.type = expr->func_call.callee->type;
-    if (i.call.type->kind == T_POINTER) i.call.type = i.call.type->base;
-    if (!(i.call.type->abi.type)) do { log_message(LOG_ERROR, "Function Type did not recieve ABI type\n"); exit(1); } while (0);
-    array_init(&i.call.arg_array, expr->func_call.params_array.count ? expr->func_call.params_array.count : 1, sizeof(IR_CallArg));
-    int hidden_ptr_offset = 0;
-    Type *return_type = i.call.type->_func.return_type;
-    IR_Value sret;
-    int use_sret = 0;
-    if (return_type != type_void) {
-        ABI_Result res = abi_classify(return_type);
-        if (res.memory) {
-            set_sret(return_type);
-            Symbol *current_sret_symbol = current_sret();
-            append(&ctx->func->locals_array, &current_sret_symbol);
-            hidden_ptr_offset++;
-            sret = ((IR_CallArg *)append(&i.call.arg_array, &(IR_CallArg){.v = ir_address(ctx, ir_symbol_value(current_sret_symbol), 0),
-                                                                          .type = get_pointer_type(return_type)}))
-                       ->v;
-            use_sret = 1;
+static void x86_gen_function(FILE *fp, IR_Context *ctx) {
+    const int stack_size = ctx->func->stack_size;
+    const int aligned_stack_size = ((stack_size + 15) & ~15);
+    if (ctx->func->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", ctx->func->name);
+    fprintf(fp, "%s:\n", ctx->func->name);
+    fprintf(fp, "    push %%rbp\n");
+    fprintf(fp, "    mov %%rsp, %%rbp\n");
+    fprintf(fp, "    subq $%d, %%rsp\n", aligned_stack_size);
+    for (int i = 0; i < ctx->func->blocks_array.count; i++) {
+        fprintf(fp, "%s_%d:\n", ctx->func->name, i);
+        ctx->block = get_block(ctx->func, i);
+        x86_gen_block(fp, ctx);
+    }
+}
+void x86_gen_module(FILE *fp, IR_Context *ctx) {
+    if (ctx->module->const_array.count > 0) {
+        fprintf(fp, ".section .rodata\n");
+        for (int i = 0; i < ctx->module->const_array.count; i++) {
+            const ConstLiteral *c = get_const(ctx, i);
+            if (c->type->align > 1) fprintf(fp, ".align %d\n", c->type->align);
+            fprintf(fp, ".LC%d:\n", i);
+            x86_emit_literal(fp, c);
         }
     }
-    for (int j = 0; j < expr->func_call.params_array.count; j++) {
-        Node *param = get_node(&expr->func_call.params_array, j);
-        Type *arg_type = param->type;
-        if (j < i.call.type->abi.type->_func.params.count) {
-            ParamDecl *d = (ParamDecl *)get(&i.call.type->abi.type->_func.params, j + hidden_ptr_offset);
-            arg_type = d->type;
+    for (int i = 0; i < ctx->module->global_array.count; i++) {
+        const IR_Global *g = get_global(ctx, i);
+        const ConstLiteral *c = &g->val;
+        if (g->symbol->storage == STORAGE_NONE) {
+            fprintf(fp, ".extern %s\n", g->symbol->name);
+            continue;
         }
-        IR_Value val;
-        ABI_Result res = abi_classify(arg_type);
-        if (res.memory) val = ir_gen_lvalue(ctx, param);
-        else if (param->type->kind == T_FUNCTION || is_func_ptr(param->type)) val = ir_gen_lvalue(ctx, param);
-        else val = ir_gen_rvalue(ctx, param);
-        append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg_type});
+        if (g->symbol->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", g->symbol->name);
+        if (g->symbol->storage == STORAGE_DATA) fprintf(fp, ".data\n");
+        if (g->symbol->storage == STORAGE_BSS) {
+            fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->symbol->type->align, g->symbol->name, g->symbol->type->size);
+        } else {
+            if (!(c->type != type_invalid)) do { log_message(LOG_ERROR, "Received invalid type, probably an uninitialized global with incorrect storage specifier\n"); exit(1); } while (0);
+            if (g->symbol->type->align > 1) fprintf(fp, ".align %d\n", g->symbol->type->align);
+            fprintf(fp, "%s:\n", g->symbol->name);
+            x86_emit_literal(fp, &g->val);
+        }
     }
-    i.ops[0] = ir_next_virtual_reg(ctx->func);
-    i.op_count = 2;
-    ir_append_instruction(ctx, &i);
-    if (use_sret) ir_move(ctx, i.ops[0], sret);
-    return i.ops[0];
+    fprintf(fp, "\n.text\n");
+    for (int i = 0; i < ctx->module->functions_array.count; i++) {
+        ctx->func = get_func(ctx->module, i);
+        x86_gen_function(fp, ctx);
+    }
 }
-IR_Value ir_return(IR_Context *ctx, IR_Value reg, Type *type) {
-    IR_Instruction i;
-    i.op = IR_RET;
-    i.ops[0] = reg;
-    i.op_count = 1;
-    i.ret.type = type;
-    ir_append_instruction(ctx, &i);
-    return ir_no_value;
-}
-IR_Value ir_branch(IR_Context *ctx, IR_Block *block) {
-    IR_Instruction i;
-    i.op = IR_BR;
-    i.br.block = block;
-    i.op_count = 0;
-    ir_append_instruction(ctx, &i);
-    return ir_no_value;
-}
-IR_Value ir_jmp(IR_Context *ctx, const char *name) {
-    IR_Instruction i;
-    i.op = IR_JMP;
-    i.jmp.name = name;
-    i.op_count = 0;
-    ir_append_instruction(ctx, &i);
-    return ir_no_value;
-}
-IR_Value ir_label(IR_Context *ctx, const char *name) {
-    IR_Instruction i;
-    i.op = IR_LABEL;
-    i.label.name = name;
-    i.op_count = 0;
-    ir_append_instruction(ctx, &i);
-    return ir_no_value;
-}
-IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, IR_Block *f_block) {
-    IR_Instruction i;
-    i.op = IR_BR_COND;
-    i.ops[0] = cond_reg;
-    i.br_cond.t_block = t_block;
-    i.br_cond.f_block = f_block;
-    i.op_count = 1;
-    ir_append_instruction(ctx, &i);
-    return ir_no_value;
-}
-IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
-    if (get_qualified_type(from, QUAL_NONE) == get_qualified_type(to, QUAL_NONE)) return src;
-    if (src.kind == IR_INT_LITERAL && (to->kind == T_INT || to->kind == T_POINTER)) return src;
-    if (from->kind == T_ARRAY && to->kind == T_POINTER && from->base->kind == to->base->kind) do { log_message(LOG_ERROR, "HOW"); exit(1); } while (0);
-    IR_Instruction i;
-    i.op = IR_CAST;
-    i.cast.from = from;
-    i.cast.to = to;
-    i.ops[1] = src;
-    i.ops[0] = ir_next_virtual_reg(ctx->func);
-    i.op_count = 2;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
-}
-IR_Value ir_address(IR_Context *ctx, IR_Value src, int offset) {
-    IR_Instruction i;
-    i.op = IR_ADDR;
-    i.ops[1] = src;
-    i.addr.offset = offset;
-    i.ops[0] = ir_next_virtual_reg(ctx->func);
-    i.op_count = 2;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
-}
-IR_Value ir_alloca(IR_Context *ctx, IR_Value dst, int size, int align) {
-    IR_Instruction i;
-    i.op = IR_ALLOCA;
-    i.alloca.size = size;
-    i.op_count = 1;
-    i.ops[0] = dst;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
-}
-IR_Value ir_memset(IR_Context *ctx, IR_Value dst, int c, int size) {
-    IR_Instruction i;
-    i.op = IR_MEMSET;
-    i.memset.size = size;
-    i.memset.c = c;
-    i.ops[0] = dst;
-    i.op_count = 1;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
-}
-IR_Value ir_memcpy(IR_Context *ctx, IR_Value from_reg, IR_Value to_reg, int size) {
-    IR_Instruction i;
-    i.op = IR_MEMCPY;
-    i.ops[1] = from_reg;
-    i.memcpy.size = size;
-    i.ops[0] = to_reg;
-    i.op_count = 2;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
-}
-IR_Value ir_builtin_va_start(IR_Context *ctx, IR_Value ap, IR_Value first_arg) {
-    IR_Instruction i;
-    i.op = IR_BUILTIN_VA_START;
-    i.ops[0] = ap;
-    i.ops[1] = first_arg;
-    i.op_count = 2;
-    ir_append_instruction(ctx, &i);
-    return ir_no_value;
-}
-IR_Value ir_builtin_va_arg(IR_Context *ctx, IR_Value ap, Type *type) {
-    IR_Instruction i;
-    i.op = IR_BUILTIN_VA_ARG;
-    i.ops[0] = ir_next_virtual_reg(ctx->func);
-    i.ops[1] = ap;
-    i.op_count = 2;
-    i.builtin_va_arg.type = type;
-    ir_append_instruction(ctx, &i);
-    return i.ops[0];
-}
-void ir_builtin_va_end() { return; }

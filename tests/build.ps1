@@ -30,7 +30,7 @@ foreach ($Arg in $Args)
 $GCC_COMPILE = @()
 
 # Files to skip completely
-$SKIP = @("win64")
+$SKIP = @("sysv")
 
 $GCC_Compiled       = @()
 $CompilerC_Compiled = @()

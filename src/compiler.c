@@ -110,6 +110,7 @@ void drive(Compiler *c) {
         WARN("-o ignored with multiple inputs %d\n", c->source_files.count);
         c->output = NULL;
     }
+
     Array objs;
     array_init(&objs, c->source_files.count, sizeof(char *));
     for (int i = 0; i < c->source_files.count; i++) {
