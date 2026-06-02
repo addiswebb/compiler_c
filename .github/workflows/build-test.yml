@@ -57,7 +57,7 @@ jobs:
             - name: Run Tests
               run: >
                   lit
-                  -D compiler_exe=./build/${{ matrix.compiler }}
+                  -D compiler_exe=${{ github.workspace }}/build/${{ matrix.compiler }}
                   -vv ./tests/basic ./tests/complex
 
             - name: Self Compile
@@ -66,7 +66,7 @@ jobs:
                   -B ./self_build
                   -S .
                   -G Ninja
-                  -DCMAKE_C_COMPILER=./build/${{ matrix.compiler }}
+                  -DCMAKE_C_COMPILER=${{ github.workspace }}/build/${{ matrix.compiler }}
                   -DCMAKE_C_COMPILER_WORKS=true
                   -DCMAKE_C_COMPILER_ID=c_c
 
@@ -76,7 +76,7 @@ jobs:
             - name: Run Self Compiled Tests
               run: >
                   lit
-                  -D compiler_exe=./self_build/${{ matrix.compiler }}
+                  -D compiler_exe=${{ github.workspace }}/self_build/${{ matrix.compiler }}
                   -vv ./tests/basic ./tests/complex
 
             - name: Package (Linux)
