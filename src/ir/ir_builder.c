@@ -5,7 +5,6 @@
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_gen.h"
 #include "compiler_c/ir/ir_module.h"
-#include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 
 void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src) {

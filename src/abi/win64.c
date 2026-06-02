@@ -309,38 +309,6 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     x86_emit_rx(fp, "mov", x86_op_suffix(t), "", x86_rax_reg(t), &instr->ops[0]);
 }
 
-// void *abi_func_type(Type *type) { instr->param.type = type_i32;
-//     ASSERT(type->kind == T_FUNCTION, "Invalid Func Type\n");
-//     Type *abi_type = new_type();
-//     memcpy(abi_type, type, sizeof(Type));
-//     array_init(&abi_type->_func.params, type->_func.params.capacity, type->_func.params.element_size);
-//     memcpy(abi_type->_func.params.data, type->_func.params.data, type->_func.params.count * type->_func.params.element_size);
-//     abi_type->_func.params.count = type->_func.params.count;
-
-//     type->abi.fp_count = 0;
-//     type->abi.gp_count = 0;
-//     if (type->_func.return_type->kind == T_STRUCT) {
-//         if (abi_type->_func.return_type->size > MAX_STRUCT_SIZE) {
-//             set_sret(type->_func.return_type);
-//             Symbol *_sret = current_sret();
-//             insert(&abi_type->_func.params,
-//                    &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = _sret->name, .symbol = _sret}, 0);
-//             abi_type->_func.return_type = type_void;
-//         } else
-//             abi_type->_func.return_type = abi_type->_func.return_type->kind == T_FLOAT
-//                                               ? get_float_type(abi_type->_func.return_type->size)
-//                                               : get_integer_type(abi_type->_func.return_type->size);
-//     }
-//     if (abi_type->_func.return_type->kind == T_ENUM) abi_type->_func.return_type = type_i32;
-//     for (int i = 0; i < abi_type->_func.params.count; i++) {
-//         ParamDecl *d = get(&abi_type->_func.params, i);
-//         ABI_Result res = abi_classify(d->type);
-//         if (res.memory) d->type = get_pointer_type(d->type);
-//         else if (type->abi.gp_count < PARAM_REGISTERS) type->abi.gp_count++;
-//     }
-//     type->abi.type = abi_type;
-// }
-
 void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) {
     // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
     switch (instr->ops[0].kind) {

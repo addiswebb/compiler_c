@@ -287,10 +287,6 @@ int compile(Compiler *compiler) {
 
 #ifdef _WIN64
 #define libc "E:/dev/compiler_c/libc"
-#ifndef popen
-#define popen _popen
-#define pclose _pclose
-#endif
 #else
 #define libc "/home/addis/dev/compiler_c/libc"
 #endif
@@ -302,7 +298,6 @@ static int load_src_file(Compiler *compiler, const char *file) {
     for (int i = 0; i < compiler->passthrough_args.count; i++) {
         cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }
-    printf("cmd %s\n", cmd);
 
     FILE *fp = popen(cmd, "r");
     ASSERT(fp, "Failed to open %s\n", file);
