@@ -15,7 +15,7 @@ else()
     set(ABI_SRC src/abi/sysv.c)
 endif()
 
-add_compile_definitions(LIBC="${CMAKE_SOURCE_DIR}/libc")
+add_compile_definitions(LIBC=${CMAKE_SOURCE_DIR}/libc)
 
 add_executable(compiler_c
     src/main.c

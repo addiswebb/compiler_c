@@ -62,7 +62,7 @@ foreach ($InputFile in $Inputs)
         $GCC_Compiled += $Basename
     } else
     {
-        & gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 $InputFile -o ./tests/test.c -I./include/
+        & gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -DLIBC=E:/Dev/compiler_c/libc -std=c11 $InputFile -o ./tests/test.c -I./include/
         if ($LASTEXITCODE -ne 0)
         { Write-Error "GCC preprocessor failed on $InputFile"; exit 1
         }

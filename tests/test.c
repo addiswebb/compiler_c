@@ -1,43 +1,63 @@
-typedef enum{
-    RAX, RBX, RCX, RDX,
-    RSI, RDI,
-    RBP, RSP,
-    R8, R9, R10, R11, R12, R13, R14, R15,
-}GP_Reg;
-typedef enum{
-    XMM0, XMM1, XMM2, XMM3,
-    XMM4, XMM5, XMM6, XMM7,
-    XMM8, XMM9, XMM10, XMM11,
-    XMM12, XMM13, XMM14, XMM15,
-}XMM_Reg;
-typedef enum{
+typedef enum {
+    RAX,
+    RBX,
+    RCX,
+    RDX,
+    RSI,
+    RDI,
+    RBP,
+    RSP,
+    R8,
+    R9,
+    R10,
+    R11,
+    R12,
+    R13,
+    R14,
+    R15,
+} GP_Reg;
+typedef enum {
+    XMM0,
+    XMM1,
+    XMM2,
+    XMM3,
+    XMM4,
+    XMM5,
+    XMM6,
+    XMM7,
+    XMM8,
+    XMM9,
+    XMM10,
+    XMM11,
+    XMM12,
+    XMM13,
+    XMM14,
+    XMM15,
+} XMM_Reg;
+typedef enum {
     REG_8,
     REG_16,
     REG_32,
     REG_64,
-}RegSize;
-typedef enum{
-    REG_GP,
-    REG_XMM,
-    REG_IP
-}RegKind;
+} RegSize;
+typedef enum { REG_GP, REG_XMM, REG_IP } RegKind;
 typedef enum {
     REG_DATA_LABEL,
     REG_DATA_OFFSET,
     REG_DATA_CONST_INDEX,
     REG_DATA_NONE,
-}RegDataKind;
-struct PhysReg{
+} RegDataKind;
+struct PhysReg {
     RegKind kind;
-    union{
+    union {
         GP_Reg gp_reg;
         XMM_Reg sse_reg;
     };
     RegSize size;
     RegDataKind data_kind;
-    union{
-        const char* label;
-        struct{
+    union {
+        const char *label;
+        struct {
             int offset;
             int scale;
         };
@@ -1101,6 +1121,52 @@ static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int in
     return (IR_LabeledBlock *)get(&module->labeled_block_array, index);
 }
 static inline IR_CallArg *get_call_arg(const IR_Instruction *call, int index) { return (IR_CallArg *)get(&call->call.arg_array, index); }
+IR_Value ir_gp_register_value(GP_Reg reg);
+IR_Value ir_gp_register_offset_value(GP_Reg reg, int offset);
+IR_Value ir_stack_value(int size, int align, int offset);
+void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count);
+void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map);
+void ir_lower_const_value(IR_Value *v);
+void analysis(const IR_Context *ctx);
+void generate_types();
+void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map);
+int get_symbol_index(const Array *symbol_map, Symbol *symbol);
+int bitset_add_defined(const BitSet *defined, const IR_Value *v);
+void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v);
+int reg_bitset(const IR_Function *f);
+void lower_ir_for_asm(IR_Function *f);
+void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
+                              const Array *symbol_map);
+void add_successor(IR_Function *func, IR_Block *from, IR_Block *to);
+Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *rpo);
+void compute_reverse_postorder(IR_Function *func, int *rpo);
+void compute_bitset(const IR_Function *f, const int *rpo);
+int cmp_lifetime(const void *a, const void *b);
+void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size);
+void bitset_init(BitSet *s, int reg_count);
+void bitset_expand(BitSet *s);
+void bitset_add(const BitSet *s, int reg);
+void bitset_remove(const BitSet *s, int reg);
+int bitset_has(const BitSet *s, int reg);
+void bitset_union(const BitSet *dst, const BitSet *src);
+void bitset_intersect(const BitSet *dst, const BitSet *src);
+void bitset_difference(const BitSet *dst, const BitSet *src);
+void bitset_copy(const BitSet *dst, const BitSet *src);
+int bitset_equal(const BitSet *a, const BitSet *b);
+void print_bitset(const BitSet *bs);
+void print_cfg(const IR_Function *func);
+IR_CMP_OP ir_cmp_op(const TokenType type);
+IR_UNARY_OP ir_unary_op(const TokenType type);
+IR_BINOP_OP ir_binary_op(const TokenType type);
+void print_ir_module(const IR_Context *ctx, const IR_Module *module);
+void print_ir_value(const IR_Value *v);
+void print_ir_phys_reg(const PhysReg *r);
+static void print_ir_block(const IR_Context *ctx, const IR_Block *block);
+void print_ir_function(const IR_Context *ctx, const IR_Function *func);
+void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr);
+static void print_unary_op(IR_UNARY_OP op);
+static void print_binary_op(IR_BINOP_OP op);
+static void print_cmp_op(IR_CMP_OP op);
 typedef char *va_list;
 typedef struct FILE FILE;
 FILE *__acrt_iob_func(unsigned int _Fileno);
@@ -1123,39 +1189,6 @@ int snprintf(char *, size_t, const char *, ...);
 extern int vfprintf(FILE *, const char *, va_list);
 FILE *_popen(const char *, const char *);
 int _pclose(FILE *);
-typedef enum {
-    ABI_NO_CLASS,
-    ABI_MEMORY,
-    ABI_INTEGER,
-    ABI_SSE,
-} ABI_TypeClass;
-typedef struct {
-    ABI_TypeClass class[2];
-    int memory;
-    char p[8];
-} ABI_Result;
-ABI_Result abi_classify(Type *type);
-IR_Value abi_lower_param_register(Type *type, int i);
-int is_va_list_type(Type *type);
-void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
-void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i, int param_index, int *param_cursor);
-void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
-void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
-void abi_func_type_gen(Type *type);
-IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr);
-void abi_gen_params(IR_Context *ctx, IR_Function *f);
-void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr);
-void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
-extern Symbol *_hidden_sret_ptr;
-Symbol *current_sret();
-void set_sret(Type *return_type);
-void set_hidden_sret_ptr(Type *return_type);
-extern const GP_Reg int_param_regs[4];
-extern const XMM_Reg float_param_regs[4];
-extern const GP_Reg caller_saved_regs[7];
-extern const GP_Reg callee_saved_regs[8];
-extern const char *gp_register_str[16][4];
-extern const char *sse_register_str[16];
 void exit(int);
 void *malloc(size_t);
 void *realloc(void *, size_t);
@@ -1251,6 +1284,105 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
     fflush(logger.file);
     if (lvl == LOG_PANIC) exit(1);
 }
+typedef enum {
+    ABI_NO_CLASS,
+    ABI_MEMORY,
+    ABI_INTEGER,
+    ABI_SSE,
+} ABI_TypeClass;
+typedef struct {
+    ABI_TypeClass class[2];
+    int memory;
+    char p[8];
+} ABI_Result;
+ABI_Result abi_classify(Type *type);
+IR_Value abi_lower_param_register(Type *type, int i);
+int is_va_list_type(Type *type);
+void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
+void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i, int param_index, int *param_cursor);
+void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
+void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+void abi_func_type_gen(Type *type);
+IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr);
+void abi_gen_params(IR_Context *ctx, IR_Function *f);
+void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr);
+void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
+extern Symbol *_hidden_sret_ptr;
+Symbol *current_sret();
+void set_sret(Type *return_type);
+void set_hidden_sret_ptr(Type *return_type);
+extern const GP_Reg int_param_regs[4];
+extern const XMM_Reg float_param_regs[4];
+extern const GP_Reg caller_saved_regs[7];
+extern const GP_Reg callee_saved_regs[8];
+extern const char *gp_register_str[16][4];
+extern const char *sse_register_str[16];
+typedef struct {
+    Node *func;
+    Array compound_stack;
+    Array loop_stack;
+    Array i_array;
+} SemanticContext;
+int is_lvalue(const Node *n);
+int is_deref(const Node *n);
+Type *check_unary_op(NodeManager *nm, Node *unary_op);
+Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop);
+Type *promote_binary_operands(NodeManager *nm, Node *binop);
+void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
+void handle_builtin_call(BuiltinKind kind, Node *node);
+void lower_nodes(NodeManager *nm);
+void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
+void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n);
+void pop_sema_scope(SemanticContext *sema_ctx, Parser *p);
+void push_sema_loop(SemanticContext *sema_ctx, const Node *loop);
+void pop_sema_loop(SemanticContext *sema_ctx);
+Node *sema_current_loop(const SemanticContext *sema_ctx);
+Node *sema_current_compound(const SemanticContext *sema_ctx);
+static inline int *get_i(SemanticContext *sema_ctx) { return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
+typedef struct {
+    char *output;
+    Array current_source;
+    Array current_output;
+    Array source_files;
+    Array passthrough_args;
+    char *src;
+    int src_size;
+    NodeManager nm;
+    Parser p;
+    Tokenizer tk;
+} Compiler;
+typedef enum {
+    CF_STOP_AFTER_AST,
+    CF_STOP_AFTER_IR,
+    CF_STOP_AFTER_COMPILE,
+    CF_STOP_AFTER_ASSEMBLE,
+    CF_DEBUG_TYPEPOOL,
+    CF_DEBUG_LIFETIMES,
+    CF_DEBUG_ENUM,
+    CF_DEBUG_STRUCT,
+    CF_DEBUG_UNION,
+    CF_DEBUG_LOWERED_IR,
+    CF_DEBUG_IR_INSTR,
+    CF_DEBUG_PARSER,
+    CF_DEBUG_TOKENIZER,
+    CF_DEBUG_TOKENS,
+    CF_DEBUG_SYMBOLS,
+    CF_COUNT,
+} CompilerFlag;
+extern unsigned int compiler_flags;
+extern const char *flag_strings[CF_COUNT];
+int has_flag(CompilerFlag f);
+Compiler begin_compiler(int argc, char *argv[]);
+void init_compiler(Compiler *compiler);
+void clear_compiler(Compiler *compiler);
+void free_compiler(Compiler *compiler);
+void drive(Compiler *c);
+void assemble(Compiler *c);
+void link(Compiler *c, Array *objs);
+int compile(Compiler *compiler);
+void free_compiler(Compiler *compiler);
+static int load_src_file(Compiler *compiler, const char *file);
+char *replace_extension(const char *path, const char *ext);
 void x86_gen_module(FILE *fp, IR_Context *ctx);
 void x86_operand(const IR_Value *v, char *buf, int n);
 void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst);
@@ -1290,179 +1422,293 @@ static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instr
 static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
 static void x86_gen_block(FILE *fp, IR_Context *ctx);
 static void x86_gen_function(FILE *fp, IR_Context *ctx);
-static void x86_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memset_instruction(fp, instr); }
-static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memcpy_instruction(fp, instr); }
-static void x86_gen_cmp_instruction(FILE *fp, const IR_Instruction *instr) {
-    x86_emit_cmp(fp, instr->cmp.op, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->cmp.type);
+unsigned int compiler_flags = 0u;
+const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",         [CF_STOP_AFTER_IR] = "ir",
+                                      [CF_STOP_AFTER_COMPILE] = "S",       [CF_STOP_AFTER_ASSEMBLE] = "c",
+                                      [CF_DEBUG_TYPEPOOL] = "gtypepool",   [CF_DEBUG_LIFETIMES] = "glifetimes",
+                                      [CF_DEBUG_ENUM] = "genum",           [CF_DEBUG_STRUCT] = "gstruct",
+                                      [CF_DEBUG_UNION] = "gunion",         [CF_DEBUG_LOWERED_IR] = "glowered-ir",
+                                      [CF_DEBUG_IR_INSTR] = "gir-instr",   [CF_DEBUG_PARSER] = "gparser",
+                                      [CF_DEBUG_TOKENIZER] = "gtokenizer", [CF_DEBUG_TOKENS] = "gtokens",
+                                      [CF_DEBUG_SYMBOLS] = "gsymbols"};
+int has_flag(CompilerFlag f) { return compiler_flags & (1u << f); }
+int is_source_file(const char *arg) {
+    if (arg[0] == '-') return 0;
+    const char *dot = strrchr(arg, '.');
+    if (!dot) return 0;
+    return strcmp(dot, ".c") == 0 || strcmp(dot, ".s") == 0 || strcmp(dot, ".o") == 0 || strcmp(dot, ".obj") == 0;
 }
-static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr) { x86_emit_addr(fp, &instr->ops[1], &instr->ops[0]); }
-static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
-    x86_emit_cast(fp, &instr->ops[1], &instr->ops[0], instr->cast.from, instr->cast.to);
-}
-static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
-    if (instr->ops[1].kind == IR_CONSTANT) {
-        ConstLiteral *c = get_const(ctx, instr->ops[1].const_index);
-        x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
-        return;
-    }
-    const char *reg = x86_rax_reg(instr->_const.type);
-    const char *op_suffix = x86_op_suffix(instr->_const.type);
-    x86_emit_xr(fp, "mov", op_suffix, "", &instr->ops[1], reg);
-    x86_emit_rx(fp, "mov", op_suffix, "", reg, &instr->ops[0]);
-}
-static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { x86_emit_call(fp, ctx, instr); }
-static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_store(fp, &instr->ops[1], &instr->ops[0], instr->store.type);
-}
-static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_load(fp, &instr->ops[1], &instr->ops[0], instr->load.type);
-}
-static void x86_gen_move_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_move(fp, &instr->ops[0], &instr->ops[1]);
-}
-static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_unary(fp, &instr->ops[0], &instr->ops[1], instr->unary.op, instr->unary.type);
-}
-static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    x86_emit_binary(fp, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->binop.op, instr->binop.type);
-}
-static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
-    switch (instr->op) {
-    case IR_UNOP:
-        x86_gen_unary_instruction(fp, ctx, instr);
-        return;
-    case IR_BINOP:
-        x86_gen_binary_instruction(fp, ctx, instr);
-        return;
-    case IR_LOAD:
-        x86_gen_load_instruction(fp, ctx, instr);
-        return;
-    case IR_STORE:
-        x86_gen_store_instruction(fp, ctx, instr);
-        return;
-    case IR_MOVE:
-        x86_gen_move_instruction(fp, ctx, instr);
-        return;
-    case IR_CALL:
-        x86_gen_call_instruction(fp, ctx, instr);
-        return;
-    case IR_CONST:
-        x86_gen_const_instruction(fp, ctx, instr);
-        return;
-    case IR_CAST:
-        x86_gen_cast_instruction(fp, instr);
-        return;
-    case IR_ADDR:
-        x86_gen_addr_instruction(fp, instr);
-        break;
-    case IR_ALLOCA:
-        break;
-    case IR_MEMSET:
-        x86_gen_memset_instruction(fp, instr);
-        break;
-    case IR_MEMCPY:
-        x86_gen_memcpy_instruction(fp, instr);
-        break;
-    case IR_CMP:
-        x86_gen_cmp_instruction(fp, instr);
-        break;
-    case IR_RET:
-        if (instr->ops[0].kind != IR_UNDEFINED && instr->ret.type != type_void)
-            x86_emit_xr(fp, "mov", x86_op_suffix(instr->ret.type), "", &instr->ops[0], x86_rax_reg(instr->ret.type));
-        fprintf(fp, "    mov %%rbp, %%rsp\n");
-        fprintf(fp, "    pop %%rbp\n");
-        fprintf(fp, "    ret\n");
-        return;
-    case IR_BR:
-        fprintf(fp, "    jmp %s_%d\n", ctx->func->name, instr->br.block->id);
-        return;
-    case IR_BR_COND:
-        x86_emit_xr(fp, "mov", "l", "", &instr->ops[0], "%eax");
-        fprintf(fp, "    testl %%eax, %%eax\n");
-        if (instr->br_cond.f_block) fprintf(fp, "    jz %s_%d\n", ctx->func->name, instr->br_cond.f_block->id);
-        else if (instr->br_cond.t_block) fprintf(fp, "    jnz %s_%d\n", ctx->func->name, instr->br_cond.t_block->id);
-        break;
-    case IR_LABEL:
-        fprintf(fp, "%s:\n", instr->label.name);
-        break;
-    case IR_JMP:
-        fprintf(fp, "    jmp %s\n", instr->jmp.name);
-        break;
-    case IR_BUILTIN_VA_START:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rax");
-        x86_emit_rx(fp, "mov", "q", "", "%rax", &instr->ops[1]);
-        break;
-    case IR_BUILTIN_VA_ARG:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rax");
-        fprintf(fp, "    addq $%d, %%rax\n", instr->builtin_va_arg.type->size);
-        x86_emit_rr(fp, "mov", "q", "", "(%rax)", "%rcx");
-        x86_emit_rx(fp, "mov", "q", "", "%rcx", &instr->ops[0]);
-        break;
-    case IR_PARAM:
-        if (instr->op_count == 1) break;
-        if (instr->param.type->size > 8) break;
-        if (!memcmp(&instr->ops[0], &instr->ops[1], sizeof(IR_Value))) break;
-        const char *param_op_suffix = x86_op_suffix(instr->param.type);
-        if (instr->param.param_index < 4 && instr->param.param_index != -1) {
-            x86_emit_xx(fp, "mov", param_op_suffix, "", &instr->ops[1], &instr->ops[0]);
-        } else {
-            const char *rax_reg = x86_rax_reg(instr->param.type);
-            x86_emit_xr(fp, "mov", param_op_suffix, "", &instr->ops[1], rax_reg);
-            x86_emit_rx(fp, "mov", param_op_suffix, "", rax_reg, &instr->ops[0]);
-        }
-        break;
+void read_args(Compiler *compiler, const int argc, char *argv[]) {
+    for (int i = 1; i < argc; i++) {
+        char *arg = argv[i];
+        if (arg[0] == '-') {
+            arg++;
+            if (strcmp(arg, "o") == 0) {
+                if (i + 1 < argc && argv[i + 1] != ((void *)0)) {
+                    if (!(argv[i + 1][0] != '-')) do {
+                            log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n");
+                            exit(1);
+                        } while (0);
+                    compiler->output = argv[++i];
+                    if (!(compiler->output)) do {
+                            log_message(LOG_ERROR, "Failed to strdup output\n");
+                            exit(1);
+                        } while (0);
+                    continue;
+                }
+                do {
+                    log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n");
+                    exit(1);
+                } while (0);
+            }
+            int consumed_flag = 0;
+            for (int j = 0; j < CF_COUNT; j++) {
+                if (strcmp(arg, flag_strings[j]) == 0) {
+                    compiler_flags |= (1u << j);
+                    consumed_flag = 1;
+                    break;
+                }
+            }
+            if (consumed_flag) continue;
+            append(&compiler->passthrough_args, &argv[i]);
+            if (strcmp(argv[i], "-I") == 0) append(&compiler->passthrough_args, &argv[++i]);
+        } else if (is_source_file(argv[i])) append(&compiler->source_files, &argv[i]);
     }
 }
-static void x86_gen_block(FILE *fp, IR_Context *ctx) {
-    for (int i = 0; i < ctx->block->instruction_array.count; i++) {
-        x86_gen_instruction(fp, ctx, get_instruction(&ctx->block->instruction_array, i));
+void assemble(Compiler *c) {
+    set_log_stage(STAGE_ASSEMBLER);
+    if (!(c->current_source.count && c->current_output.count)) do {
+            log_message(LOG_ERROR, "Source or output is not set for assemble\n");
+            exit(1);
+        } while (0);
+    log_message(LOG_INFO, "Assembling %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "gcc -c %s -o %s", (char *)c->current_source.data, (char *)c->current_output.data);
+    int ret = system(cmd);
+    if (!(ret == 0)) do {
+            log_message(LOG_ERROR, "Failed to assemble %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
+            exit(1);
+        } while (0);
+}
+void link(Compiler *c, Array *objs) {
+    set_log_stage(STAGE_LINKER);
+    log_message(LOG_INFO, "Linking ");
+    char cmd[4028] = {};
+    int cmd_len = snprintf(cmd, sizeof(cmd),
+                           "gcc -lm "
+                           "");
+    for (int i = 0; i < objs->count; i++) {
+        char *src = *(char **)get(objs, i);
+        printf("%s", src);
+        cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", src);
+        if (i < objs->count - 1) putchar(' ');
+    }
+    printf(" to %s\n", (char *)c->current_output.data);
+    snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "-o %s ", (char *)c->current_output.data);
+    int ret = system(cmd);
+    if (!(ret == 0)) do {
+            log_message(LOG_ERROR, "Failed to link %d objs to %s with cmd '%s'\n", objs->count, (char *)c->current_output.data, cmd);
+            exit(1);
+        } while (0);
+}
+void update_current_output(Compiler *c, int cond, char *path, const char *ext) {
+    if (cond && c->output) {
+        array_str_cpy(&c->current_output, c->output);
+    } else {
+        char *out = _strdup(path);
+        char *dot = strrchr(out, '.');
+        if (dot) strcpy(dot, ext);
+        else do {
+                log_message(LOG_ERROR, "Failed to append '%s' to %s\n", ext, path);
+                exit(1);
+            } while (0);
+        array_str_cpy(&c->current_output, out);
+        free(out);
     }
 }
-static void x86_gen_function(FILE *fp, IR_Context *ctx) {
-    const int stack_size = ctx->func->stack_size;
-    const int aligned_stack_size = ((stack_size + 15) & ~15);
-    if (ctx->func->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", ctx->func->name);
-    fprintf(fp, "%s:\n", ctx->func->name);
-    fprintf(fp, "    push %%rbp\n");
-    fprintf(fp, "    mov %%rsp, %%rbp\n");
-    fprintf(fp, "    subq $%d, %%rsp\n", aligned_stack_size);
-    for (int i = 0; i < ctx->func->blocks_array.count; i++) {
-        fprintf(fp, "%s_%d:\n", ctx->func->name, i);
-        ctx->block = get_block(ctx->func, i);
-        x86_gen_block(fp, ctx);
+void drive(Compiler *c) {
+    if ((has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) && c->source_files.count > 1 && c->output) {
+        log_message(LOG_WARN, "-o ignored with multiple inputs %d\n", c->source_files.count);
+        c->output = ((void *)0);
     }
-}
-void x86_gen_module(FILE *fp, IR_Context *ctx) {
-    if (ctx->module->const_array.count > 0) {
-        fprintf(fp, ".section .rodata\n");
-        for (int i = 0; i < ctx->module->const_array.count; i++) {
-            const ConstLiteral *c = get_const(ctx, i);
-            if (c->type->align > 1) fprintf(fp, ".align %d\n", c->type->align);
-            fprintf(fp, ".LC%d:\n", i);
-            x86_emit_literal(fp, c);
+    Array objs;
+    array_init(&objs, c->source_files.count, sizeof(char *));
+    for (int i = 0; i < c->source_files.count; i++) {
+        char *src_path = *(char **)get(&c->source_files, i);
+        array_str_cpy(&c->current_source, src_path);
+        array_str_cpy(&c->current_output, src_path);
+        char ext = src_path[strlen(src_path) - 1];
+        switch (ext) {
+        case 'c':
+            update_current_output(c, has_flag(CF_STOP_AFTER_COMPILE), src_path, ".s");
+            load_src_file(c, (char *)c->current_source.data);
+            init_compiler(c);
+            compile(c);
+            clear_compiler(c);
+            if (has_flag(CF_STOP_AFTER_AST) || has_flag(CF_STOP_AFTER_IR)) return;
+            if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
+        case 's':
+            array_str_cpy(&c->current_source, c->current_output.data);
+            update_current_output(c, has_flag(CF_STOP_AFTER_ASSEMBLE), src_path, ".o");
+            assemble(c);
+            if (has_flag(CF_STOP_AFTER_ASSEMBLE)) continue;
+        case 'o':
+        case 'j':
+            char *obj_path = _strdup((char *)c->current_output.data);
+            append(&objs, &obj_path);
+            break;
         }
     }
-    for (int i = 0; i < ctx->module->global_array.count; i++) {
-        const IR_Global *g = get_global(ctx, i);
-        const ConstLiteral *c = &g->val;
-        if (g->symbol->storage == STORAGE_NONE) {
-            fprintf(fp, ".extern %s\n", g->symbol->name);
-            continue;
-        }
-        if (g->symbol->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", g->symbol->name);
-        if (g->symbol->storage == STORAGE_DATA) fprintf(fp, ".data\n");
-        if (g->symbol->storage == STORAGE_BSS) {
-            fprintf(fp, ".bss\n.align %d\n%s:\n    .zero %d\n", g->symbol->type->align, g->symbol->name, g->symbol->type->size);
-        } else {
-            if (!(c->type != type_invalid)) do { log_message(LOG_ERROR, "Received invalid type, probably an uninitialized global with incorrect storage specifier\n"); exit(1); } while (0);
-            if (g->symbol->type->align > 1) fprintf(fp, ".align %d\n", g->symbol->type->align);
-            fprintf(fp, "%s:\n", g->symbol->name);
-            x86_emit_literal(fp, &g->val);
+    if (has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) return;
+    array_str_cpy(&c->current_output, c->output ? c->output : "a.exe");
+    if (!(objs.count > 0)) do {
+            log_message(LOG_ERROR, "No object files to link\n");
+            exit(1);
+        } while (0);
+    link(c, &objs);
+    ptr_array_free(&objs);
+    set_log_stage(STAGE_COMPILER);
+    log_message(LOG_INFO, "Done.\n");
+}
+void init_compiler(Compiler *compiler) {
+    compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
+    compiler->nm = new_node_manager();
+    compiler->p = new_parser();
+    init_typepool();
+    return;
+}
+Compiler begin_compiler(const int argc, char *argv[]) {
+    printf("[\x1b[34mCompiler_C\x1b[0m]\n");
+    if (argc < 2) {
+        do {
+            log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n");
+            exit(1);
+        } while (0);
+    }
+    if (argc == 2 && strcmp(argv[1], "-h") == 0) {
+        printf("compiler [input]\n");
+        printf("\t-o [output] : Set output file path\n");
+        printf("\t-S          : Compile to Assembly File\n");
+        printf("\t-c          : Compile to Object File\n");
+        printf("\t-ir         : Compile and print IR\n");
+        printf("\t-ast        : Print parse tree\n");
+        printf("\t-h          : Get help\n");
+        exit(0);
+    }
+    Compiler compiler = {};
+    compiler.output = ((void *)0);
+    compiler_flags = 0;
+    array_init(&compiler.passthrough_args, 4, sizeof(char *));
+    array_init(&compiler.source_files, 4, sizeof(char *));
+    array_init(&compiler.current_output, 4, sizeof(char));
+    array_init(&compiler.current_source, 4, sizeof(char));
+    read_args(&compiler, argc, argv);
+    return compiler;
+}
+void clear_compiler(Compiler *compiler) {
+    free_typepool();
+    free_node(arena_get(&compiler->nm, 0));
+    arena_free(&compiler->nm);
+    free_parser(&compiler->p);
+    t_free(&compiler->tk);
+    free(compiler->src);
+}
+void free_compiler(Compiler *compiler) {
+    array_free(&compiler->passthrough_args);
+    array_free(&compiler->source_files);
+    array_free(&compiler->current_source);
+    array_free(&compiler->current_output);
+    compiler->src = ((void *)0);
+}
+int compile(Compiler *compiler) {
+    set_log_stage(STAGE_COMPILER);
+    if (!(compiler->current_source.count && compiler->current_output.count)) do {
+            log_message(LOG_ERROR, "Source or output is not set for compile\n");
+            exit(1);
+        } while (0);
+    log_message(LOG_INFO, "Compiling %s to %s\n", (char *)compiler->current_source.data, (char *)compiler->current_output.data);
+    set_log_stage(STAGE_TOKENIZING);
+    t_tokenize(&compiler->tk);
+    if (has_flag(CF_DEBUG_TOKENS)) print_tokens(&compiler->tk);
+    set_log_stage(STAGE_PARSING);
+    init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
+    p_parse_translation_unit(&compiler->p, &compiler->nm);
+    set_log_stage(STAGE_SEMA_ANALYSIS);
+    SemanticContext sema_ctx = (SemanticContext){
+        .func = ((void *)0),
+    };
+    array_init(&sema_ctx.i_array, 4, sizeof(int));
+    array_init(&sema_ctx.compound_stack, 4, sizeof(Node *));
+    array_init(&sema_ctx.loop_stack, 4, sizeof(Node *));
+    if (has_flag(CF_DEBUG_TYPEPOOL)) print_typepool();
+    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
+    if (has_flag(CF_STOP_AFTER_AST)) {
+        print_ast(&compiler->nm);
+        return 1;
+    }
+    array_free(&sema_ctx.i_array);
+    generate_types();
+    set_log_stage(STAGE_IR);
+    lower_nodes(&compiler->nm);
+    IR_Context ctx = ir_init_ctx(&compiler->p);
+    IR_Module *module = ir_gen_translation_unit(&ctx, arena_get(&compiler->nm, 0));
+    if (has_flag(CF_STOP_AFTER_IR)) {
+        printf("---- IR ----\n");
+        print_ir_module(&ctx, module);
+        printf("\n");
+    }
+    analysis(&ctx);
+    if (has_flag(CF_DEBUG_LIFETIMES)) {
+        for (int i = 0; i < module->functions_array.count; i++) print_cfg(get_func(module, i));
+    }
+    if (has_flag(CF_DEBUG_LOWERED_IR)) {
+        printf("---- Lowered IR ----\n");
+        print_ir_module(&ctx, module);
+        printf("\n");
+    }
+    if (has_flag(CF_DEBUG_SYMBOLS)) {
+        printf("---- Symbols ----\n");
+        for (int i = 0; i < ctx.symbol_table->count; i++) {
+            Symbol *s = arena_get(ctx.symbol_table, i);
+            print("%t %s\n", s->type, s->name);
         }
     }
-    fprintf(fp, "\n.text\n");
-    for (int i = 0; i < ctx->module->functions_array.count; i++) {
-        ctx->func = get_func(ctx->module, i);
-        x86_gen_function(fp, ctx);
+    if (has_flag(CF_STOP_AFTER_IR)) return 1;
+    set_log_stage(STAGE_X86_GEN);
+    FILE *fp = fopen((char *)compiler->current_output.data, "w");
+    x86_gen_module(fp, &ctx);
+    fclose(fp);
+    ir_free_module(module);
+    free_ir_ctx(&ctx);
+    return 1;
+}
+static int load_src_file(Compiler *compiler, const char *file) {
+    char cmd[512];
+    int cmd_len = snprintf(cmd, sizeof(cmd),
+                           "gcc -E -P -nostdinc -D__COMPILER_C__ -I"
+                           "E:/Dev/compiler_c/libc"
+                           " -std=c11 %s ",
+                           file);
+    for (int i = 0; i < compiler->passthrough_args.count; i++) {
+        cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }
+    FILE *fp = _popen(cmd, "r");
+    if (!(fp)) do {
+            log_message(LOG_ERROR, "Failed to open %s\n", file);
+            exit(1);
+        } while (0);
+    Array src;
+    array_init(&src, 1024, sizeof(char));
+    char c;
+    for (;;) {
+        c = (char)fgetc(fp);
+        if (c == (-1)) break;
+        append(&src, &c);
+    }
+    _pclose(fp);
+    append(&src, &(char){'\0'});
+    compiler->src = (char *)src.data;
+    compiler->src_size = src.count - 1;
+    if (compiler->src_size == 0) log_message(LOG_WARN, "Loaded an empty source file\n");
+    return 0;
 }
