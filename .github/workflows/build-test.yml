@@ -62,6 +62,22 @@ jobs:
                   -D compiler_exe=${{ github.workspace }}/build/compiler_c
                   -vv ${{ github.workspace }}/tests/basic ${{ github.workspace }}/tests/complex
 
+            - name: Self Compile
+              run: >
+                  cmake
+                  -B ${{ github.workspace }}/self_build
+                  -S ${{ github.workspace}}
+                  -G Ninja
+                  -DCMAKE_C_COMPILER=${{ github.workspace }}/build/compiler_c
+                  -DCMAKE_C_COMPILER_WORKS=true
+                  -DCMAKE_C_COMPILER_ID=c_c
+
+            - name: Run Self Compiled Tests
+              run: >
+                  lit
+                  -D compiler_exe=${{ github.workspace }}/self_build/compiler_c
+                  -vv ${{ github.workspace }}/tests/basic ${{ github.workspace }}/tests/complex
+
             - name: Package (Linux)
               if: runner.os == 'Linux'
               run: |
