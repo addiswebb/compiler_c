@@ -72,6 +72,9 @@ jobs:
                   -DCMAKE_C_COMPILER_WORKS=true
                   -DCMAKE_C_COMPILER_ID=c_c
 
+            - name: Self Compile Build
+              run: cmake --build ${{ github.workspace }}/self_build
+
             - name: Run Self Compiled Tests
               run: >
                   lit
