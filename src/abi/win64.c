@@ -257,6 +257,7 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         IR_CallArg *v = get_call_arg(instr, i);
         ABI_Result res = abi_classify(v->type);
         Type *arg_type = to_arg_type(v->type, &res);
+        ASSERT(arg_type == v->type, "to_arg_type redundency check\n");
 
         bool use_register = false;
         use_register = gp_index < PARAM_REGISTERS;

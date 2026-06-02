@@ -454,10 +454,14 @@ void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *fr
             Track if a symbol is an arg, and track if it is gp, fp, or spilled so i can set offset correctly and easily
         */
         offset = -(*frame_size) - size;
+#ifdef __linux__
         if (local_symbol->scope_depth == 1 && res.memory) {
             offset = stack_offset;
             stack_offset += size;
         } else *frame_size += size;
+#else
+        *frame_size += size;
+#endif
 
         append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
         append(symbol_map, &local_symbol);

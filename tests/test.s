@@ -114,26 +114,20 @@ ir_binary_0:
     addq $32, %rsp
     leaq -72(%rbp), %rax
     movq %rax, -80(%rbp)
-    movq -80(%rbp), %rcx
-    mov $0, %rdx
-    movq $36, %r8
-    sub $32, %rsp
-    call memset
-    add $32, %rsp
     movq -80(%rbp), %rax
-    movl $0, %ecx
+    movl $1, %ecx
     movl %ecx, (%rax)
     movq -80(%rbp), %rax
     addq $4, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
-    movl $0, %ecx
+    movl $2, %ecx
     movl %ecx, (%rax)
     movq -80(%rbp), %rax
     addq $8, %rax
     movq %rax, -88(%rbp)
     movq -88(%rbp), %rax
-    movl $0, %ecx
+    movl $3, %ecx
     movl %ecx, (%rax)
     movq -80(%rbp), %rax
     addq $12, %rax
@@ -245,9 +239,9 @@ main_0:
     movq %rax, -216(%rbp)
     leaq -40(%rbp), %rax
     movq %rax, -224(%rbp)
-    leaq -40(%rbp), %rax
+    leaq -80(%rbp), %rax
     movq %rax, -232(%rbp)
-    leaq -40(%rbp), %rax
+    leaq -120(%rbp), %rax
     movq %rax, -240(%rbp)
     subq $64, %rsp
     movq -216(%rbp), %rcx
