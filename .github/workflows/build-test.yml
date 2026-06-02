@@ -20,9 +20,11 @@ jobs:
                     - name: win64
                       os: windows-latest
                       build_type: Release
+                      compiler: compiler_c.exe
                     - name: sysv
                       os: ubuntu-latest
                       build_type: Release
+                      compiler: compiler_c
 
         runs-on: ${{ matrix.os }}
 
@@ -47,39 +49,35 @@ jobs:
                   python -m pip install lit
 
             - name: Configure CMake
-              run: >
-                  cmake
-                  -B ${{ github.workspace }}/build
-                  -S ${{ github.workspace }}
-                  -G Ninja
+              run: cmake -B ./build -S . -G Ninja
 
             - name: Build
-              run: cmake --build ${{ github.workspace }}/build
+              run: cmake --build ./build
 
             - name: Run Tests
               run: >
                   lit
-                  -D compiler_exe=${{ github.workspace }}/build/compiler_c
-                  -vv ${{ github.workspace }}/tests/basic ${{ github.workspace }}/tests/complex
+                  -D compiler_exe=./build/${{ matrix.compiler }}
+                  -vv ./tests/basic ./tests/complex
 
             - name: Self Compile
               run: >
                   cmake
-                  -B ${{ github.workspace }}/self_build
-                  -S ${{ github.workspace}}
+                  -B ./self_build
+                  -S .
                   -G Ninja
-                  -DCMAKE_C_COMPILER=${{ github.workspace }}/build/compiler_c
+                  -DCMAKE_C_COMPILER=./build/${{ matrix.compiler }}
                   -DCMAKE_C_COMPILER_WORKS=true
                   -DCMAKE_C_COMPILER_ID=c_c
 
             - name: Self Compile Build
-              run: cmake --build ${{ github.workspace }}/self_build
+              run: cmake --build ./self_build
 
             - name: Run Self Compiled Tests
               run: >
                   lit
-                  -D compiler_exe=${{ github.workspace }}/self_build/compiler_c
-                  -vv ${{ github.workspace }}/tests/basic ${{ github.workspace }}/tests/complex
+                  -D compiler_exe=./self_build/${{ matrix.compiler }}
+                  -vv ./tests/basic ./tests/complex
 
             - name: Package (Linux)
               if: runner.os == 'Linux'
