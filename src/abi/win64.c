@@ -62,7 +62,7 @@ ABI_Result abi_classify(Type *type) {
                         .memory = type->size > HIDDEN_PTR_SIZE};
 }
 
-void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+void abi_lower_store(IR_Instruction *instr){
     if (instr->store.type->kind == T_STRUCT) {
         ASSERT(instr->store.type->size <= 8, "[SysV] IR_STORE only for 8 bytes or less given %d", instr->store.type->size);
         instr->store.type = get_integer_type(instr->store.type->size);

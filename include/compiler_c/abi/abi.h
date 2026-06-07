@@ -20,18 +20,27 @@ typedef struct ABI_Result {
     char p[8];
 } ABI_Result;
 
+/* Classify the given type according to ABI specifications. */
 ABI_Result abi_classify(Type *type);
 
-IR_Value abi_lower_param_register(Type *type, int i);
-bool is_va_list_type(Type *type);
+/* Returns ABI correct param register based of param index. */
+IR_Value abi_lower_param_register(const Type *type, int i);
+/* Identifies va_list type according to ABI. */
+bool is_va_list_type(const Type *type);
 
+/* Convert return instructions of memory class types into memcpy's to the `_hidden_sret_ptr` */
 void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
+/* Lower param instructions' operands correctly to either registers or stack offsets. */
 void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i, int param_index, int *param_cursor);
-void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i);
+/* Convert small struct types to integer. */
+void abi_lower_store(IR_Instruction *instr);
+/* x86 Emit call instructions according to ABI. */
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+/* Fill T_FUNCTION types with corresponding ABI type. e.g. struct A (); -> void (struct A *); */
 void abi_func_type_gen(Type *type);
-
+/* Generate IR implementations of compiler builtins according to ABI. */
 IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr);
+/* Emit IR for function params according to ABI. */
 void abi_gen_params(IR_Context *ctx, IR_Function *f);
 
 void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr);
@@ -39,8 +48,11 @@ void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
 
 extern Symbol *_hidden_sret_ptr;
 
+/* Returns the current struct return symbol. */
 Symbol *current_sret();
+/* Appends sret of return_type as current_sret for function calls that return large structs. */
 void set_sret(Type *return_type);
+/* Sets the _hidden_sret_ptr symbol when entering a function which returns a large struct. */
 void set_hidden_sret_ptr(Type *return_type);
 
 #ifdef _WIN64
@@ -75,8 +87,11 @@ char *strndup(const char *, size_t n);
 #define CALLEE_SAVED_REGISTERS 6
 #define HIDDEN_PTR_SIZE 16
 
+/* Merge two Type Classes into one. */
 ABI_TypeClass merge(ABI_TypeClass chunk_class, ABI_TypeClass field_class);
-ABI_Result classify_struct(Type *type);
+
+ABI_Result classify_struct(const Type *type);
+ABI_Result classify_union(const Type *type);
 
 extern const GP_Reg int_param_regs[INTEGER_PARAM_REGISTERS];
 extern const XMM_Reg float_param_regs[FLOAT_PARAM_REGISTERS];

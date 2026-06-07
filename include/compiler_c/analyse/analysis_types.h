@@ -62,6 +62,7 @@ struct PhysReg{
     };
 };
 
+/* Convert integer size to RegSize. */
 RegSize reg_size(int size);
 
 #endif // COMPILER_C_ANALYSIS_TYPES_H

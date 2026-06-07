@@ -60,11 +60,11 @@ ABI_TypeClass merge(ABI_TypeClass a, ABI_TypeClass b) {
     if (a == ABI_SSE && b == ABI_SSE) return ABI_SSE;
     PANIC("Invalid classification merge\n");
 }
-ABI_Result classify_union(Type *type) {
+ABI_Result classify_union(const Type *type) {
     if (type->size > 16) return (ABI_Result){.memory = true};
     ABI_Result res = {.class = {ABI_NO_CLASS, ABI_NO_CLASS}, .memory = false};
     for (int i = 0; i < type->_union.members_array.count; i++) {
-        UnionMember *m = get_union_member(type, i);
+        const UnionMember *m = get_union_member(type, i);
         ABI_Result field_res = abi_classify(m->type);
         if (field_res.memory) return field_res;
         for (int j = 0; j <= 2; j++) {
@@ -73,19 +73,19 @@ ABI_Result classify_union(Type *type) {
     }
     return res;
 }
-ABI_Result classify_struct(Type *type) {
+ABI_Result classify_struct(const Type *type) {
     if (type->size > 16) return (ABI_Result){.memory = true};
     ABI_Result res = {.class = {ABI_NO_CLASS, ABI_NO_CLASS}, .memory = false};
     for (int i = 0; i < type->_struct.members_array.count; i++) {
-        StructMember *m = get_struct_member(type, i);
+        const StructMember *m = get_struct_member(type, i);
         ABI_Result field_res = abi_classify(m->type);
         if (field_res.memory) return field_res;
 
-        int start = m->offset;
-        int end = m->offset + m->type->size - 1;
+        const int start = m->offset;
+        const int end = m->offset + m->type->size - 1;
 
-        int low = start / 8;
-        int high = end / 8;
+        const int low = start / 8;
+        const int high = end / 8;
         if (field_res.memory) return field_res;
         for (int j = low; j <= high; j++) {
             res.class[j] = merge(res.class[j], field_res.class[j - low]);
@@ -102,7 +102,7 @@ ABI_Result abi_classify(Type *type) {
     case T_INT:
     case T_POINTER:
     case T_VOID:
-    // TODO make so array type never reaches here (arrays are decayed functionally in genlvalue but not by type)
+    // TODO make so array type never reaches here (arrays are decayed functionally in gen_lvalue but not by type)
     case T_ARRAY:
         return (ABI_Result){.class = {ABI_INTEGER, ABI_NO_CLASS}, 0};
     case T_FLOAT:
@@ -115,15 +115,15 @@ ABI_Result abi_classify(Type *type) {
         PANIC("Classification failed on %t\n", type);
     }
 }
-IR_Value abi_lower_param_register(Type *type, int i) {
+IR_Value abi_lower_param_register(const Type *type, const int i) {
     // TODO investigate if below is still needed after rework
-#ifdef __COMPILER_C__
-    IR_Value v = (IR_Value){.kind = IR_PHYS_REG};
-    v.phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0};
-#else
+// #ifdef __COMPILER_C__
+//     IR_Value v = (IR_Value){.kind = IR_PHYS_REG};
+//     v.phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0};
+// #else
     IR_Value v = (IR_Value){.kind = IR_PHYS_REG,
                             .phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0}};
-#endif
+// #endif
     // if(i < 0) return;
     if (type->kind == T_FLOAT) {
         ASSERT(i >= 0 && i < FLOAT_PARAM_REGISTERS, "SysV ABI Invalid SSE param arg index %d\n", i);
@@ -139,11 +139,11 @@ IR_Value abi_lower_param_register(Type *type, int i) {
 
 // Does not check members, only space
 // TODO: Check members also maybe?
-bool is_va_list_type(Type *type) {
+bool is_va_list_type(const Type *type) {
     return (type->kind == T_ARRAY || type->kind == T_POINTER) && type->base->kind == T_STRUCT && type->base->size == 24;
 }
 
-void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+void abi_lower_store(IR_Instruction *instr) {
     if (instr->store.type->kind == T_STRUCT) {
         ASSERT(instr->store.type->size <= 8, "[SysV] IR_STORE only for 8 bytes or less given %d", instr->store.type->size);
         instr->store.type = get_integer_type(instr->store.type->size);
@@ -155,7 +155,7 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i,
     ABI_Result res = abi_classify(type);
     if (res.memory) return;
     instr->op_count = 2;
-    int param_registers = type->kind == T_FLOAT ? FLOAT_PARAM_REGISTERS : INTEGER_PARAM_REGISTERS;
+    const int param_registers = type->kind == T_FLOAT ? FLOAT_PARAM_REGISTERS : INTEGER_PARAM_REGISTERS;
     const int variadic_space = f->type->_func.is_variadic ? 176 : 0;
     if (instr->param.param_index < param_registers) instr->ops[1] = abi_lower_param_register(type, instr->param.param_index);
     else instr->ops[1] = ir_stack_value(8, 8, 8 * (instr->param.param_index - param_registers) - variadic_space);
@@ -183,7 +183,6 @@ void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
             ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Multi register return types are not yet supported\n");
         }
     }
-    return;
 }
 
 IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
@@ -378,7 +377,7 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     const int variadic_space = instr->call.type->_func.is_variadic ? 176 : 0;
     int param_frame_size = variadic_space;
     for (int i = 0; i < instr->call.arg_array.count; i++) {
-        IR_CallArg *v = get_call_arg(instr, i);
+        const IR_CallArg *v = get_call_arg(instr, i);
         ABI_Result res = abi_classify(v->type);
         if (res.class[0] == ABI_INTEGER && gp_index < INTEGER_PARAM_REGISTERS) gp_index++;
         else if (res.class[0] == ABI_SSE && sse_index < FLOAT_PARAM_REGISTERS) sse_index++;

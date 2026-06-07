@@ -533,7 +533,7 @@ void lower_ir_for_asm(IR_Function *f) {
 
                 if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
             } else if (instr->op == IR_STORE) {
-                abi_lower_store(f, b, instr, &j);
+                abi_lower_store(instr);
             }
         }
     }
