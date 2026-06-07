@@ -44,13 +44,21 @@ Node *new_node(NodeManager *nm, const NodeKind kind) {
     return node;
 }
 
-Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type) {
-    Node *cast = new_node(nm, N_CAST);
-    cast->cast.from = node->type;
-    cast->cast.to = type;
-    cast->cast.expr = node;
-    return cast;
+Node *new_init_list_node(NodeManager *nm) {
+    Node *node = new_node(nm, N_INIT_LIST);
+    array_init(&node->init_list.elements_array, 4, sizeof(Node *));
+    return node;
 }
+
+Node *new_function_node(NodeManager *nm) { return new_node(nm, N_FUNCTION); }
+
+Node *new_function_call_node(NodeManager *nm, Node *identifier) {
+    Node *node = new_node(nm, N_FUNCTION_CALL);
+    node->func_call.callee = identifier;
+    array_init(&node->func_call.params_array, 4, sizeof(Node *));
+    return node;
+}
+
 Node *cast_node(NodeManager *nm, Node *node, Type *type) {
     if (is_func_ptr(node->type) && is_func_ptr(type)) {
         if (cmp_func_types(node->type->base, type->base)) {

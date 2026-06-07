@@ -233,7 +233,7 @@ void compute_bitset(const IR_Function *f, const int *rpo) {
     while (changed) {
         changed = false;
         for (int i = 0; i < f->blocks_array.count; i++) {
-            int index = rpo[i];
+            const int index = rpo[i];
             if (index == -1) continue;
             const IR_Block *b = get_block(f, index);
             bitset_clear(&old_live_out);
@@ -306,7 +306,7 @@ RegSize reg_size(const int size) {
     }
 }
 
-const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) {
+const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, const int reg) {
     for (int i = 0; i < lts_count; i++) {
         if (lts[i].reg == reg) {
             return &lts[i];
@@ -315,12 +315,12 @@ const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) 
     PANIC("Failed to find lifetime of r%d\n", reg);
 }
 void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map) {
-    IR_Value old = *v;
+    const IR_Value old = *v;
     switch (old.symbol->kind) {
     case VAR:
         // Handle local variables, replace with stack offset
         if (old.symbol->storage == STORAGE_NONE) {
-            int index = get_symbol_index(symbol_map, v->symbol);
+            const int index = get_symbol_index(symbol_map, v->symbol);
             ASSERT(index != -1, "Tried to find symbol index of %s\n", v->symbol->name);
             v->kind = IR_PHYS_REG;
             *v = ((RegisterSlot *)get(symbol_slots, index))->v;
@@ -339,11 +339,10 @@ void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *
     case ANY:
     case ENUM:
         PANIC("ir_lower_symbol_value dont know how to handle\n");
-        break;
     }
 }
 
-IR_Value ir_gp_register(GP_Reg reg) {
+IR_Value ir_gp_register(const GP_Reg reg) {
     return (IR_Value){.kind = IR_PHYS_REG,
                       .size = 8,
                       .align = 8,
@@ -355,7 +354,7 @@ IR_Value ir_gp_register(GP_Reg reg) {
                       }};
 }
 
-IR_Value ir_gp_register_value(GP_Reg reg) {
+IR_Value ir_gp_register_value(const GP_Reg reg) {
     return (IR_Value){.kind = IR_PHYS_REG,
                       .size = 8,
                       .align = 8,
@@ -366,7 +365,7 @@ IR_Value ir_gp_register_value(GP_Reg reg) {
                           .size = REG_64,
                       }};
 }
-IR_Value ir_gp_register_offset_value(GP_Reg reg, int offset) {
+IR_Value ir_gp_register_offset_value(const GP_Reg reg, const int offset) {
     return (IR_Value){.kind = IR_PHYS_REG,
                       .size = 8,
                       .align = 8,
@@ -378,7 +377,7 @@ IR_Value ir_gp_register_offset_value(GP_Reg reg, int offset) {
                           .offset = offset,
                       }};
 }
-IR_Value ir_stack_value(int size, int align, int offset) {
+IR_Value ir_stack_value(const int size, const int align, const int offset) {
     return (IR_Value){.kind = IR_PHYS_REG,
                       .size = size,
                       .align = align,
@@ -390,7 +389,7 @@ IR_Value ir_stack_value(int size, int align, int offset) {
                           .offset = offset,
                       }};
 }
-void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count) {
+void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, const int lts_count) {
     ASSERT(lts, "LTS is null\n");
     ASSERT(v->kind == IR_VREG, "Expected VREG IR Value\n");
     *v = ir_stack_value(v->size, v->align, get_lifetime(lts, lts_count, v->vreg)->stack_offset);
@@ -420,7 +419,7 @@ void verify_completion(const IR_Function *f) {
     }
 }
 
-int get_symbol_index(const Array *symbol_map, Symbol *symbol) {
+int get_symbol_index(const Array *symbol_map, const Symbol *symbol) {
     for (int i = 0; i < symbol_map->count; i++) {
         Symbol *s = *(Symbol **)get(symbol_map, i);
         if (s == symbol) return i;
@@ -464,10 +463,10 @@ void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *fr
     }
 }
 
-void generate_types() {
-    int n = typepool.count;
+void gen_abi_func_types() {
+    const int n = typepool.count;
     for (int i = 0; i < n; i++) {
-        Type *t = (Type *)arena_get(&typepool, i);
+        Type *t = arena_get(&typepool, i);
         if (t->kind == T_FUNCTION) abi_func_type_gen(t);
     }
 }

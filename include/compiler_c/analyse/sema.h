@@ -5,15 +5,19 @@
 #include "compiler_c/parse/parser.h"
 
 typedef struct {
+    // Tracks function
     Node *func;
+    // Tracks `{}` scopes
     Array compound_stack;
+    // Tracks for/while loops
     Array loop_stack;
+    // Tracks number of added nodes to a compound array to sema properly (Compound Literal Unwrapping)
     Array i_array;
 } SemanticContext;
 
-/* Is a node which is assignable */
+/* Is a node which is assignable. */
 bool is_lvalue(const Node *n);
-/* Is a unary node with the `*`, unary operator. */
+/* Is a unary node with the `*`, unary operator. e.g `*x` */
 bool is_deref(const Node *n);
 
 /*
@@ -41,15 +45,16 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop);
 */
 void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
 
+/* Handle builtin function calls separately. */
 void handle_builtin_call(BuiltinKind kind, Node *node);
 
 /*
     Lowers enums and compound literals to their literal counterparts.
 */
-void lower_nodes(NodeManager *nm);
+void lower_nodes(const NodeManager *nm);
 
 /*
-    Convert compount literal into a variable declaration+initialization
+    Convert compound literal into a variable declaration+initialization
     `foo(&(Type){1,2,3});`
     into
     ```c
@@ -57,8 +62,8 @@ void lower_nodes(NodeManager *nm);
     foo(&_tmp);
     ```
 */
-void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
-// TODO Consider having the actual conversion after sema, but add the symbols during sema.
+void lower_compound_literal(const SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
+// TODO Consider having the actual conversion after sema, but add the symbols during sema. ^^^^^
 
 /*
     Handles pushing a new symbol table and compound + index tracker onto the stack.
@@ -72,9 +77,11 @@ void pop_sema_scope(SemanticContext *sema_ctx, Parser *p);
 
 void push_sema_loop(SemanticContext *sema_ctx, const Node *loop);
 void pop_sema_loop(SemanticContext *sema_ctx);
+
 Node *sema_current_loop(const SemanticContext *sema_ctx);
 Node *sema_current_compound(const SemanticContext *sema_ctx);
 
-static inline int *get_i(SemanticContext *sema_ctx) { return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
+// Get current index in semantic analysis compound loop.
+static int *get_i(const SemanticContext *sema_ctx) { return get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
 
 #endif // COMPILER_C_SEMA_H

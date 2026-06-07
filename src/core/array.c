@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void array_init(Array *arr, int initial_capacity, int element_size) {
+void array_init(Array *arr, const int initial_capacity, const int element_size) {
     ASSERT(element_size > 0, "Array cannot have element size <= 0\n");
     ASSERT(initial_capacity > 0, "Array cannot have element capacity <= 0\n");
     arr->element_size = element_size;
@@ -15,7 +15,7 @@ void array_init(Array *arr, int initial_capacity, int element_size) {
     arr->count = 0;
 }
 
-static void ensure_capacity(Array *arr, int size) {
+static void ensure_capacity(Array *arr, const int size) {
     if (size >= arr->capacity) {
         arr->capacity *= 2;
         void *new_data = realloc(arr->data, arr->element_size * arr->capacity);
@@ -27,7 +27,7 @@ static void ensure_capacity(Array *arr, int size) {
 }
 
 /* Conservatively realloc */
-static void reserve_capacity(Array *arr, int size) {
+static void reserve_capacity(Array *arr, const int size) {
     ASSERT(size > 0, "Cannot reserve 0 capacity\n");
     if (size > arr->capacity) {
         arr->capacity = size;
@@ -36,7 +36,7 @@ static void reserve_capacity(Array *arr, int size) {
         arr->data = new_data;
     }
 }
-static void ensure_index(const Array *arr, int index) {
+static void ensure_index(const Array *arr, const int index) {
 #ifdef __COMPILER_C__
     if (index >= arr->count || index < 0) {
 #else
@@ -52,11 +52,10 @@ void *append(Array *arr, const void *element) {
     return (char *)arr->data + arr->count++ * arr->element_size;
 }
 
-void *insert(Array *arr, const void *element, int index) {
+void *insert(Array *arr, const void *element, const int index) {
     // TODO max(arr->count, index);
     ensure_capacity(arr, arr->count);
     ASSERT(index <= arr->capacity && index >= 0, "Index must be within capacity to insert in array\n");
-    // ensure_index(arr, index);
 
     char *src = (char *)arr->data + index * arr->element_size;
     char *dst = src + arr->element_size;
@@ -69,12 +68,12 @@ void *insert(Array *arr, const void *element, int index) {
 
 void pop(Array *arr) { arr->count--; }
 
-void *get(const Array *arr, int index) {
+void *get(const Array *arr, const int index) {
     ensure_index(arr, index);
     return (char *)arr->data + index * arr->element_size;
 }
 
-void set(const Array *arr, const void *element, int index) {
+void set(const Array *arr, const void *element, const int index) {
     ensure_index(arr, index);
     memcpy(((char *)arr->data + index * arr->element_size), element, arr->element_size);
 }
@@ -100,7 +99,7 @@ void array_str_cpy(Array *arr, const char *str) {
     append(arr, &(char){'\0'});
 }
 
-void array_str_catn(Array *arr, const char *str, int n) {
+void array_str_catn(Array *arr, const char *str, const int n) {
     reserve_capacity(arr, arr->count + n + 1);
     memcpy(arr->data + arr->count, str, n);
     arr->count += n;

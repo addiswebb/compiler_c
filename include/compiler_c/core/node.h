@@ -216,12 +216,15 @@ struct Node {
         struct {
             const char *name;
         } _typedef;
+        // goto Identifier
         struct {
             Node *identifier;
         } _goto;
+        // Identifier:
         struct {
             Node *identifier;
         } label;
+        // .name = `value`   |   [index] = `value`
         struct {
             TypeKind kind;
             union {
@@ -254,43 +257,38 @@ typedef Arena NodeManager;
 
 #define NODE_ARENA_SIZE 1024
 
+/* Create and initialize NodeManager */
 NodeManager new_node_manager();
-void free_node_manager(NodeManager *nm);
 
+/* Return builtin kind from string name */
 BuiltinKind get_builtin_kind(const char *name);
 
-/*
-    Handles creating a Node, pushing it to the global node array
-*/
+/* Creates a new Node and pushes it to the Node Arena */
 Node *new_node(NodeManager *nm, NodeKind kind);
-
-Node *init_translation_unit(NodeManager *nm);
+Node *new_init_translation_unit_node(NodeManager *nm);
 Node *new_compound_node(NodeManager *nm);
 Node *new_init_list_node(NodeManager *nm);
 Node *new_function_node(NodeManager *nm);
 Node *new_function_call_node(NodeManager *nm, Node *identifier);
 
-Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type);
+void free_node(Node *node);
+
+/* Try cast node to the given type, asserting it is a valid cast. */
 Node *cast_node(NodeManager *nm, Node *node, Type *type);
 bool is_valid_cast(const Type *from, const Type *to);
 
 LiteralKind literal_kind(TokenType type);
+
 void print_node_type(NodeKind type);
-
 void print_indent(int depth);
-
 void print_node(const Node *node, int depth);
-
-/*
-    Recursively prints the parse tree starting with the translation unit
-*/
+/* Recursively prints the parse tree starting with the translation unit */
 void print_ast(const NodeManager *nm);
 
-void free_node(Node *node);
 
-static inline Node *get_node(const Array *node_array, int index) { return *(Node **)get(node_array, index); }
-static inline void set_node(Array *node_array, Node **node, int index) {
+static Node *get_node(const Array *node_array, const int index) { return *(Node **)get(node_array, index); }
+static void set_node(const Array *node_array, Node **node, const int index) {
     memcpy((char *)node_array->data + index * node_array->element_size, node, sizeof(Node *));
 }
-static inline Node *insert_node(Array *node_array, Node **node, int index) { return (Node *)insert(node_array, node, index); }
+static Node *insert_node(Array *node_array, Node **node, const int index) { return insert(node_array, node, index); }
 #endif // COMPILER_C_NODE_H

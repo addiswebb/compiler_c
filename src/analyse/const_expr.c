@@ -5,8 +5,6 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
 #include <compiler_c/analyse/const_expr.h>
-#include <inttypes.h>
-#include <stdint.h>
 
 ConstLiteral evaluate_const_unary(const Node *node) {
     ConstLiteral e = evaluate_const_expression(node->unary.expr);

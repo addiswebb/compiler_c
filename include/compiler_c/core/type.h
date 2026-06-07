@@ -88,22 +88,24 @@ struct Type {
     TypeKind kind;
     int size;
     int align;
+    // signed / unsigned
     bool is_signed;
-    // Const, etc
+    // const, volatile
     unsigned int qualifiers;
     // False if the type has const expressions which need evaluating
     bool is_resolved;
-    // Prevent recursive printing for debug
+    // Prevent recursively printing nested types in DEBUG.
     bool printing;
     union {
+        // Underlying type for pointers
         Type *base;
+        // ABI specific version of parsed type
         struct {
             Type *type;
             int gp_count;
             int fp_count;
         } abi;
     };
-    // Data for special types
     union {
         // T_ARRAY
         struct {
@@ -124,11 +126,13 @@ struct Type {
             char *name;
             Array fields_array;
         } _enum;
+        // T_UNION
         struct {
             bool complete;
             char *name;
             Array members_array;
         } _union;
+        // T_FUNCTION
         struct {
             Type *return_type;
             Array params;
@@ -188,89 +192,96 @@ extern Type *type_void_ptr;
 extern Type *type_invalid;
 
 /*
-    Stores all cannonical types in a statically sized array.
-    Allowing for easy type comparison
+    Stores all canonical types in a statically sized array.
+    Allowing for easy type comparisons
 */
 extern Arena typepool;
 
 /* Aligns the given size to the correct alignment */
-static inline int align(int size, int align) { return (size + align - 1) & ~(align - 1); }
+static int align(const int size, const int align) { return (size + align - 1) & ~(align - 1); }
 
-/* Initialises all global types and the typepool */
+/* Initializes all global types and the typepool */
 void init_typepool();
-
 void free_typepool();
 
-/* Helper for initialising a global type outside of the typepool */
+/* Helper for initializing a C standard types. */
 Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is_signed);
 
-/* Returns pointer to a new type in the typepool */
+/* Appends a new empty type to the typepool and returns its pointer. */
 Type *new_type();
 
-/* Wraps the given type in a pointer type */
+/* Returns pointer to the given type */
 Type *new_pointer_type(Type *type);
-
-Type *new_qualified_type(Type *type, unsigned int qualifiers);
+/* Returns new identical type with given qualifiers. */
+Type *new_qualified_type(const Type *type, unsigned int qualifiers);
+/* Returns unsigned variant of given type */
 Type *new_unsigned_type(Type *type);
 /* Creates a sized array of the given type */
 Type *new_array_type(Type *type, int len);
 
-/* Creates a array type with const expr for array_bounds */
+/* Creates an incomplete array type with an unevaluated const_expr for its length. */
 Type *new_incomplete_array_type(Type *type, Node *const_expr);
-
+/* Returns either f32 or f64 based of size. */
 Type *get_float_type(int size);
+/* Returns signed integer of correct size. */
 Type *get_integer_type(int size);
 /*
+    All get_x_type() functions search the typepool for the existing type,
+
     Searches the typepool first for corresponding type falls back by creating a new corresponding type.
     Prevents duplicate type definitions.
 */
+
 Type *get_pointer_type(Type *type);
+Type *get_array_type(Type *type, int len);
+Type *get_qualified_type(const Type *type, unsigned int qualifiers);
+Type *get_function_type(Type *type, Array params, bool is_variadic);
+Type *get_modified_type(Type *type, const Declarator *decl);
+/* Returns unsigned version of type, which must be some signed intger. */
+Type *get_unsigned_type(Type *type);
+
+/* These get_aggregate_type by name functions return NULL on failure instead of creating a new type. */
+
 Type *get_enum_type(const char *name);
 Type *get_union_type(const char *name);
 Type *get_struct_type(const char *name);
-Type *get_array_type(Type *type, int len);
-Type *get_qualified_type(Type *type, unsigned int qualifiers);
-Type *get_function_type(Type *type, Array params, bool is_variadic);
-Type *get_modified_type(Type *type, Declarator *decl);
-Type *get_unsigned_type(Type *type);
-
-bool cmp_func_types(const Type *a, const Type *b);
-
-/* Expects the signed type to promote to, selects sign from original type. */
-Type *promote_integer(Type *from, Type *to);
 
 /*
-    Update the length of the given array type, which was previously uninitialized.
-
-    e.g `int a[] = { ... };`. At, int a[], the size is unknown. After { ... } is semantically analysed,
-    the size can be inferred and updated.
+    Compares two function types a and b by their return type and parameter types.
+    Ignoring param names, as multiple functionally identical function types may exist.
+    e.g `int(int, float) === int(int a, float b)`
 */
-Type *infer_array_length(Type *arr_type, int len);
+bool cmp_func_types(const Type *a, const Type *b);
 
-/* Appends the given union field, sizing its array if needed */
-void append_union_member(Type *u, UnionMember *m);
-/* Appends the given enum field, sizing its array if needed */
-void append_enum_field(Type *e, EnumField *f);
-/* Appends the given struct field, sizing its array if needed */
+/* Update the length of the given array type, which was previously uninitialized. */
+Type *infer_array_length(Type *arr_type, int inferred_len);
+
+/* Appends the union field, updating the union size and alignment. */
+void append_union_member(Type *u, const UnionMember *m);
+/* Appends the struct field, updating the struct size and alignment. */
 void append_struct_member(Type *s, StructMember *f);
+/* Appends the enum field. */
+void append_enum_field(Type *e, EnumField *f);
 
-/* Helper for defining struct types */
+/* Return empty union type. */
 Type union_type();
-/* Helper for defining struct types */
+/* Return empty struct type. */
 Type struct_type();
-/* Helper for defining enum types */
+/* Return empty enum type. */
 Type enum_type();
 
-/* Gets the struct member by name from a struct type */
-AggrMember *get_member(Type *struct_t, const char *name, bool is_root, int *offset, int *index);
+/*
+    Tries to retrieve the member by name.
+    Will also explore unnamed root level unions and structs.
+    Emits error if is_root is true and fails to find the named member.
+*/
+AggrMember *get_member(const Type *struct_t, const char *name, bool is_root, int *offset, int *index);
 
 bool is_func_ptr(const Type *t);
 bool is_scalar_type(const Type *t);
 
-/* Prints the given type as seen in C */
 void print_type(Type *type);
-void print_struct_type(Type *s);
-void print_param_decl(ParamDecl *decl);
+void print_param_decl(const ParamDecl *decl);
 void print_typepool();
 
 #endif // COMPILER_C_TYPE_H

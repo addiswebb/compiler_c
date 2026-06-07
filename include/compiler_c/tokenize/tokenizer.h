@@ -121,7 +121,6 @@ typedef enum {
     TK_FLT_LITERAL,
     TK_CHAR_LITERAL,
     TK_STRING_LITERAL,
-    TK_EXPR,
     TK_IDENTIFIER,
     TK_ELLIPSES,
 } TokenType;
@@ -141,40 +140,38 @@ typedef struct {
     int capacity;
 } TokenArray;
 
-/* Converts a given src file to tokens */
+/* Converts a given source file to Tokens. */
 typedef struct {
     const char *src;
     int index;
     int size;
     int line_n;
     int char_n;
-    // TokenArray tokens;
     Array tokens_array;
     Buffer buf;
 } Tokenizer;
 
-/* Defines number of characters a specific token type is comprised of. Used for correctly parsing +=,/=,-= etc. */
+/* Defines number of characters a specific token type consists of. Used for correctly parsing +=,/=,-= etc. */
 typedef struct {
     TokenType type;
     int n_chars;
 } TokenMatch;
 
-/* Creates a new tokenizer for a given source file. Also handles the token array and buffer. */
+/* Creates a new tokenizer with the given source file, initializes the token array. */
 Tokenizer t_new_tokenizer(const char *src, int src_size);
 void t_free(Tokenizer *tokenizer);
 /* Converts the tokenizer's source file into tokens in the token array. */
 void t_tokenize(Tokenizer *tk);
 
-void print_tokens(Tokenizer *tk);
 
-bool is_postfix_operator(const TokenType type);
-bool is_unary_operator(const TokenType type);
-bool is_binary_operator(const TokenType type);
-bool is_assignment_op(const TokenType type);
-bool is_arithmetic_op(const TokenType type);
-bool is_bitwise_op(const TokenType type);
-bool is_comparison_op(const TokenType type);
-bool is_logical_op(const TokenType type);
+bool is_postfix_operator(TokenType type);
+bool is_unary_operator(TokenType type);
+bool is_binary_operator(TokenType type);
+bool is_assignment_op(TokenType type);
+bool is_arithmetic_op(TokenType type);
+bool is_bitwise_op(TokenType type);
+bool is_comparison_op(TokenType type);
+bool is_logical_op(TokenType type);
 
 /* Returns the underlying operator of combined operators. E.g `+=` returns `+`, `/=` returns `/`. */
 TokenType get_underlying_op(TokenType type);
@@ -185,14 +182,16 @@ TokenType get_underlying_op(TokenType type);
     **Right associativity**: `1 + 2 + 3` => `1 + (2 + 3)`.
 */
 int op_associativity(TokenType type);
-/* Returns the precedence of the given operator token type. */
+/* Returns the precedence of the given operator TokenType. */
 int op_precedence(TokenType type);
 
-const char *token_type_str(const TokenType type);
+/* Returns the string version of the given TokenType. */
+const char *token_type_str(TokenType type);
 
 void print_token_type(TokenType type);
 void print_token(const Token *token);
+void print_tokens(Tokenizer *tk);
 
-static inline Token *get_token(Array *arr, int index) { return (Token *)get(arr, index); }
+static Token *get_token(const Array *arr, const int index) { return get(arr, index); }
 
 #endif // COMPILER_C_TOKENIZER_H

@@ -26,7 +26,7 @@ const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",         [CF_S
                                       [CF_DEBUG_TOKENIZER] = "gtokenizer", [CF_DEBUG_TOKENS] = "gtokens",
                                       [CF_DEBUG_SYMBOLS] = "gsymbols"};
 
-bool has_flag(CompilerFlag f) { return compiler_flags & FLAG(f); }
+bool has_flag(const CompilerFlag f) { return compiler_flags & FLAG(f); }
 
 bool is_source_file(const char *arg) {
     if (arg[0] == '-') return false;
@@ -38,7 +38,7 @@ bool is_source_file(const char *arg) {
 void read_args(Compiler *compiler, const int argc, char *argv[]) {
     // Loop and try find compile flags
     for (int i = 1; i < argc; i++) {
-        char *arg = argv[i];
+        const char *arg = argv[i];
         if (arg[0] == '-') {
             arg++;
             if (strcmp(arg, "o") == 0) {
@@ -72,10 +72,9 @@ void assemble(Compiler *c) {
     INFO("Assembling %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "gcc -c %s -o %s", (char *)c->current_source.data, (char *)c->current_output.data);
-    int ret = system(cmd);
-    ASSERT(ret == 0, "Failed to assemble %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
+    ASSERT(system(cmd) == 0, "Failed to assemble %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
 }
-void link(Compiler *c, Array *objs) {
+void link(const Compiler *c, const Array *objs) {
     set_log_stage(STAGE_LINKER);
     INFO("Linking ");
     char cmd[4028] = {};
@@ -88,8 +87,7 @@ void link(Compiler *c, Array *objs) {
     }
     printf(" to %s\n", (char *)c->current_output.data);
     snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "-o %s ", (char *)c->current_output.data);
-    int ret = system(cmd);
-    ASSERT(ret == 0, "Failed to link %d objs to %s with cmd '%s'\n", objs->count, (char *)c->current_output.data, cmd);
+    ASSERT(system(cmd) == 0, "Failed to link %d objs to %s with cmd '%s'\n", objs->count, (char *)c->current_output.data, cmd);
 }
 
 void update_current_output(Compiler *c, bool cond, char *path, const char *ext) {
@@ -156,7 +154,6 @@ void init_compiler(Compiler *compiler) {
     compiler->nm = new_node_manager();
     compiler->p = new_parser();
     init_typepool();
-    return;
 }
 Compiler begin_compiler(const int argc, char *argv[]) {
 #ifdef __COMPILER_C__
@@ -241,7 +238,7 @@ int compile(Compiler *compiler) {
 
     array_free(&sema_ctx.i_array);
 
-    generate_types();
+    gen_abi_func_types();
     set_log_stage(STAGE_IR);
     lower_nodes(&compiler->nm);
 

@@ -49,20 +49,18 @@ static FILE *stdout = NULL;
 static FILE *stderr = NULL;
 #endif
 #else
-// extern void exit_bp() __THROW __attribute__((__noreturn__));
-
-__attribute__((noreturn)) static inline void exit_bp() { exit(1); }
+__attribute__((noreturn)) static void exit_bp() { exit(1); }
 #define PRINTCC(s) ((void)0)
 #endif
 
-static inline void init_logger(FILE *fp, LogLevel level) {
+static void init_logger(FILE *fp, const LogLevel level) {
     logger.file = fp ? fp : stderr;
     logger.stage = STAGE_COMPILER;
     logger.min_level = level;
 }
 
-static inline char *stage_str(LogStage stage) {
-    switch (logger.stage) {
+static char *stage_str(const LogStage stage) {
+    switch (stage) {
     case STAGE_COMPILER:
         return "Compiler";
     case STAGE_TOKENIZING:
@@ -81,9 +79,9 @@ static inline char *stage_str(LogStage stage) {
         return "Linker";
     }
 }
-static inline void set_log_stage(LogStage stage) { logger.stage = stage; }
+static void set_log_stage(const LogStage stage) { logger.stage = stage; }
 
-static inline void log_start(LogLevel lvl) {
+static void log_start(const LogLevel lvl) {
     if (lvl < logger.min_level) return;
     const char *level_str;
     switch (lvl) {
@@ -112,7 +110,7 @@ static inline void log_start(LogLevel lvl) {
 void print(const char *fmt, ...);
 void vprint(const char *fmt, va_list ap);
 
-static inline void log_message(LogLevel lvl, const char *fmt, ...) {
+static void log_message(const LogLevel lvl, const char *fmt, ...) {
     if (lvl < logger.min_level) return;
     log_start(lvl);
     va_list args;
