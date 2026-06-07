@@ -9,6 +9,15 @@
 #include "compiler_c/log/logger.h"
 #include "compiler_c/x86/x86.h"
 
+char *strndup(const char *s, size_t n) {
+    if (s == NULL) return NULL;
+    size_t len = strnlen(s, n);
+    char *new_str = malloc(len + 1);
+    if (new_str == NULL) return NULL;
+    memcpy(new_str, s, len);
+    new_str[len] = '\0';
+    return new_str;
+}
 Arena _sret = {.count = 0};
 Symbol *_hidden_sret_ptr = NULL;
 
