@@ -421,13 +421,13 @@ void verify_completion(const IR_Function *f) {
 
 int get_symbol_index(const Array *symbol_map, const Symbol *symbol) {
     for (int i = 0; i < symbol_map->count; i++) {
-        Symbol *s = *(Symbol **)get(symbol_map, i);
+        const Symbol *s = *(Symbol **)get(symbol_map, i);
         if (s == symbol) return i;
     }
     return -1;
 }
 void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map) {
-    int slot_count = f->locals_array.count + ctx->module->global_array.count;
+    const int slot_count = f->locals_array.count + ctx->module->global_array.count;
     if (slot_count == 0) return;
     // TODO account parameters,
 
@@ -446,11 +446,11 @@ void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *fr
     for (int i = 0; i < f->locals_array.count; i++) {
         Symbol *local_symbol = get_local_symbol(f, i);
         ABI_Result res = abi_classify(local_symbol->type);
-        int size = align(local_symbol->type->size, 8);
-        // Todo track scopes on symbols, so that we can reuse slots for symbols aswell, (instead of '-1' currently)
+        const int size = align(local_symbol->type->size, 8);
+        // Todo track scopes on symbols, so that we can reuse slots for symbols as well, (instead of '-1' currently)
         // TODO making selecting these MORE ROBUST!!
         /*
-            Track if a symbol is an arg, and track if it is gp, fp, or spilled so i can set offset correctly and easily
+            Track if a symbol is an arg, and track if it is gp, fp, or spilled so I can set offset correctly and easily
         */
         offset = -(*frame_size) - size;
         if (local_symbol->scope_depth == 1 && res.memory) {
@@ -478,8 +478,8 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                bool is_arg_param = k >= instr->op_count;
-                int instr_index = is_arg_param ? k - instr->op_count : k;
+                const bool is_arg_param = k >= instr->op_count;
+                const int instr_index = is_arg_param ? k - instr->op_count : k;
                 IR_CallArg *arg = is_arg_param ? get_call_arg(instr, instr_index) : NULL;
                 IR_Value *a = is_arg_param ? &arg->v : &instr->ops[instr_index];
                 // Lower IR_VREG & IR_SYMBOL to IR_PHYS_REG
@@ -606,7 +606,7 @@ Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *
     int pc = 0;
 
     for (int i = 0; i < f->blocks_array.count; i++) {
-        int index = rpo[i];
+        const int index = rpo[i];
         if (index == -1) continue;
         const IR_Block *b = get_block(f, rpo[i]);
         for (int j = 0; j < b->instruction_array.count; j++) {

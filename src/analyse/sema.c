@@ -228,9 +228,6 @@ Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *
         ASSERT(t->size > 0, "Union size resolve failed\n");
         return t;
     case T_STRUCT:
-        if (t->_struct.name && strcmp(t->_struct.name, "Type") == 0) {
-            // printf("Here\n");
-        }
         t->size = 0;
         t->align = 0;
         for (int i = 0; i < t->_struct.members_array.count; i++) {

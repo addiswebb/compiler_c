@@ -198,7 +198,6 @@ Type *get_integer_type(const int size) {
     }
 }
 
-
 Type *get_pointer_type(Type *type) {
     for (int i = 0; i < typepool.count; i++) {
         Type *t = arena_get(&typepool, i);
@@ -218,6 +217,7 @@ Type *get_array_type(Type *type, const int len) {
 }
 
 Type *get_qualified_type(const Type *type, const unsigned int qualifiers) {
+    // TODO qualified types dont get resolved correctly at semantic analysis, incorrect struct sizing etc.
     for (int i = 0; i < typepool.count; i++) {
         Type *t = arena_get(&typepool, i);
         if (t->base == type->base && t->kind == type->kind && t->size == type->size && t->qualifiers == qualifiers &&
@@ -478,7 +478,7 @@ void print_type(Type *type) {
             printf("{");
             for (int i = 0; i < type->_struct.members_array.count; i++) {
                 const StructMember *member = get_struct_member(type, i);
-                print("%t %s:[%d@%d], ",member->type, member->name, member->offset, member->type->size);
+                print("%t %s:[%d@%d], ", member->type, member->name, member->offset, member->type->size);
             }
             printf("}");
         }
@@ -500,7 +500,7 @@ void print_type(Type *type) {
             printf("{");
             for (int i = 0; i < type->_union.members_array.count; i++) {
                 const UnionMember *member = get_union_member(type, i);
-                print("%t %s:[%d] ",member->type, member->name, member->type->size);
+                print("%t %s:[%d] ", member->type, member->name, member->type->size);
                 if (i < type->_union.members_array.count - 1) printf(", ");
             }
             printf("}");

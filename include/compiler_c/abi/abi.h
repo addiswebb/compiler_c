@@ -6,14 +6,14 @@
 #include "compiler_c/ir/ir_module.h"
 #include <stdio.h>
 
-typedef enum {
+typedef enum ABI_TypeClass {
     ABI_NO_CLASS,
     ABI_MEMORY,
     ABI_INTEGER,
     ABI_SSE,
 } ABI_TypeClass;
 
-typedef struct {
+typedef struct ABI_Result {
     ABI_TypeClass class[2];
     bool memory;
     // TODO remove need for padding (without padding <16bytes -> tuple rax rdx return)
