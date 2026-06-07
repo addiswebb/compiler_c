@@ -56,6 +56,7 @@ extern const GP_Reg int_param_regs[PARAM_REGISTERS];
 extern const XMM_Reg float_param_regs[PARAM_REGISTERS];
 
 #define strdup _strdup
+#define strndup _strndup
 #define popen _popen
 #define pclose _pclose
 
