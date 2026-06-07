@@ -5,11 +5,11 @@
 #include "compiler_c/tokenize/tokenizer.h"
 
 /* Converts token to IR_CMP_OP */
-IR_CMP_OP ir_cmp_op(const TokenType type);
+IR_CMP_OP ir_cmp_op(TokenType type);
 /* Converts token to IR_UNARY_OP */
-IR_UNARY_OP ir_unary_op(const TokenType type);
+IR_UNARY_OP ir_unary_op(TokenType type);
 /* Converts token to IR_BINARY_OP */
-IR_BINOP_OP ir_binary_op(const TokenType type);
+IR_BINOP_OP ir_binary_op(TokenType type);
 
 void print_ir_module(const IR_Context *ctx,const IR_Module *module);
 void print_ir_value(const IR_Value *v);

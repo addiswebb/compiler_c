@@ -509,7 +509,7 @@ void lower_ir_for_asm(IR_Function *f) {
         IR_Block *b = get_block(f, i);
         int param_cursor = 0;
         for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            const IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             if (instr->op == IR_PARAM) {
                 param_cursor++;
             }

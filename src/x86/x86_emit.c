@@ -11,7 +11,7 @@
 
 const char *x86_reg(const IR_Value *v) {
     if (v->phys_reg.kind == REG_GP) return gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size];
-    else return sse_register_str[v->phys_reg.sse_reg];
+    return sse_register_str[v->phys_reg.sse_reg];
 }
 
 void x86_operand(const IR_Value *v, char *buf, const int n) {
@@ -185,7 +185,7 @@ const char *x86_rdx_reg(const Type *t) {
     PANIC("Tried to get %%rdx register of unsupported type\n");
 }
 
-const char *x86_float_op_suffix(int size) {
+const char *x86_float_op_suffix(const int size) {
     switch (size) {
     case 4:
         return "ss";
@@ -196,7 +196,7 @@ const char *x86_float_op_suffix(int size) {
     }
 }
 
-const char *x86_integer_op_suffix(int size) {
+const char *x86_integer_op_suffix(const int size) {
     switch (size) {
     case 1:
         return "b";
@@ -545,11 +545,10 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *
     case CONST_REFERENCE:
     case CONST_ZERO:
         PANIC("Tried to emit const of unsupported type\n");
-        break;
     }
     x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
 }
-void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t) {
+void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, const Type *t) {
     const char *v = x86_rcx_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     x86_emit_xr(fp, "mov", "q", "", dst, "%rax");
@@ -578,7 +577,7 @@ void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src) {
     x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
 }
 
-void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t) {
+void x86_emit_cmp(FILE *fp, const IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
@@ -613,13 +612,12 @@ void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *l
     }
     x86_emit_rr(fp, "mov", "zbl", "", "%al", "%eax");
     x86_emit_rx(fp, "mov", "l", "", "%eax", dst);
-    return;
 }
 
 void x86_emit_string(FILE *fp, const char *str) {
     fprintf(fp, "    .byte ");
     while (*str) {
-        unsigned char c = *str;
+        const unsigned char c = *str;
         if (c >= 0x20 && c <= 0x7E && c != '\'' && c != '\\' && c != '"') {
             fprintf(fp, "'%c', ", c);
         } else {
@@ -646,7 +644,7 @@ void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
             fprintf(fp, "    .quad 0x%016" PRIx64 "\n", bits);
         } else if (c->type == type_f32) {
             uint32_t bits;
-            float f = (float)c->f;
+            const float f = (float)c->f;
             memcpy(&bits, &f, sizeof(bits));
             fprintf(fp, "    .long 0x%08x\n", bits);
         }
@@ -656,7 +654,7 @@ void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
         return;
     case CONST_ARRAY:
         for (int i = 0; i < c->arr.count; i++) {
-            ConstLiteral *e = get(&c->arr, i);
+            const ConstLiteral *e = get(&c->arr, i);
             x86_emit_literal(fp, e);
         }
         return;

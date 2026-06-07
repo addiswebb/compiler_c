@@ -12,6 +12,12 @@
 void x86_gen_module(FILE *fp, IR_Context *ctx);
 
 void x86_operand(const IR_Value *v, char *buf, int n);
+/*
+    Helper functions to automatically emit formatted assembly
+    `x` is an IR_Value, `r` is a string (generally a register string)
+    `s1` and `s2` are used for suffixes, like `l`,`q` etc. Can be left empty.
+    Formatting is as follows, [instr][s1][s2] [src], [dst]
+*/
 void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst);
 void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst);
 void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst);
@@ -33,7 +39,7 @@ void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNAR
 void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst);
 void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to);
 void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, int pool_index);
-void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
+void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, const Type *t);
 void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
 void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src);
 void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t);

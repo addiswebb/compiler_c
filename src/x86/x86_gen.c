@@ -6,7 +6,6 @@
 #include "compiler_c/x86/x86.h"
 
 #include <inttypes.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -23,7 +22,7 @@ static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
 }
 static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
     if (instr->ops[1].kind == IR_CONSTANT) {
-        ConstLiteral *c = get_const(ctx, instr->ops[1].const_index);
+        const ConstLiteral *c = get_const(ctx, instr->ops[1].const_index);
         x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
         return;
     }
