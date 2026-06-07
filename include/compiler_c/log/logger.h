@@ -42,12 +42,6 @@ extern Logger logger;
 #ifdef __COMPILER_C__
 #define PRINTCC(s) printf("[CC] " s "\n");
 #define exit_bp() exit(1)
-
-#ifdef _WIN64
-static FILE *stdin = NULL;
-static FILE *stdout = NULL;
-static FILE *stderr = NULL;
-#endif
 #else
 __attribute__((noreturn)) static void exit_bp() { exit(1); }
 #define PRINTCC(s) ((void)0)

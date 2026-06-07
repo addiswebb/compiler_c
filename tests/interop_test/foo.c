@@ -1,11 +1,38 @@
-typedef struct A {
-    long a;
-    long b;
-    long c;
-    long d;
-    long e;
-} A;
-int foo(int *z, A x, A y) {
-    return x.a + x.b + x.c + y.d + y.e;
-    // return y.a;
+#include <stdarg.h>
+
+#include <stdio.h>
+
+void vprint(const char *fmt, va_list ap) {
+    while (*fmt != '\0') {
+        if (*fmt == '%') {
+            fmt++;
+            switch (*fmt) {
+            case '%':
+                putchar('%');
+                break;
+            case 'd':
+                printf("%d", __builtin_va_arg(ap, int));
+                break;
+            case 'f':
+                printf("%f", __builtin_va_arg(ap, double));
+                break;
+            case 's':
+                printf("%s", __builtin_va_arg(ap, char *));
+                break;
+            case 'p':
+                printf("%p", __builtin_va_arg(ap, void *));
+                break;
+            case 'c':
+                char c = __builtin_va_arg(ap, int);
+                putchar(c);
+                break;
+            default:
+                break;
+            }
+            fmt++;
+        } else {
+            putchar(*fmt);
+            fmt++;
+        }
+    }
 }

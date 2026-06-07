@@ -124,6 +124,11 @@ void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
         } else instr->ret.type = get_integer_type(s_t->size);
     }
 }
+
+static int variadic_param_offset(int i) {
+    if (i <= 3) return i * 8 + 16;
+    return i * 8 + 48;
+}
 IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
     switch (expr->_builtin.kind) {
     case BUILTIN_VA_START:
@@ -132,20 +137,21 @@ IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
         // Todo make more robust, have symbol store is_param_symbol and check it
         for (int z = 0; z < ctx->func->locals_array.count; z++) {
             Symbol *v = get_local_symbol(ctx->func, z);
-            if (n->identifier.symbol == v) param_index = z;
+            if (n->identifier.symbol == v) param_index = z + 1;
         }
-        ASSERT(param_index != -1, "Expected named param, got bs.\n");
+        ASSERT(param_index != -1, "Failed to find named param for va_start.\n");
         Node *ap_node = get_node(&expr->_builtin.params, 0);
         IR_Value ap_addr = ir_gen_lvalue(ctx, ap_node);
-        IR_Value addr = ir_address(ctx, ir_stack_value(8, 8, param_index * 8 + 16), 0);
-        return ir_store(ctx, ap_addr, addr, ap_node->type);
+        IR_Value first_variadic_addr = ir_address(ctx, ir_stack_value(8, 8, variadic_param_offset(param_index)), 0);
+        return ir_store(ctx, ap_addr, first_variadic_addr, ap_node->type);
     case BUILTIN_VA_ARG:
         ap_node = get_node(&expr->_builtin.params, 0);
         ap_addr = ir_gen_lvalue(ctx, ap_node);
-        IR_Value new_addr =
-            ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ir_load(ctx, ap_addr, ap_node->type), ir_integer_literal(8), ap_node->type);
+        IR_Value ap = ir_load(ctx, ap_addr, ap_node->type);
+        IR_Value arg = ir_load(ctx, ap, get_node(&expr->_builtin.params, 1)->type);
+        IR_Value new_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap, ir_integer_literal(8), ap_node->type);
         ir_store(ctx, ap_addr, new_addr, ap_node->type);
-        return ir_load(ctx, new_addr, get_node(&expr->_builtin.params, 1)->type);
+        return arg;
     case BUILTIN_VA_END:
         return ir_no_value;
     case BUILTIN_NONE:
@@ -180,7 +186,7 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
         for (int i = params_emitted; i < PARAM_REGISTERS; i++) {
             ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
                                                          .op_count = 1,
-                                                         .ops = {[0] = ir_stack_value(8, 8, 16 + i * 8)},
+                                                         .ops = {[0] = ir_stack_value(8, 8, variadic_param_offset(i))},
                                                          .param = {.param_index = params_emitted++, .type = type_u64}});
         }
     }
@@ -257,6 +263,7 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
         IR_CallArg *v = get_call_arg(instr, i);
         ABI_Result res = abi_classify(v->type);
         Type *arg_type = to_arg_type(v->type, &res);
+        // ASSERT(arg_type == v->type, "to_arg_type redundency check\n");
 
         bool use_register = false;
         use_register = gp_index < PARAM_REGISTERS;
@@ -308,38 +315,6 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
 
     x86_emit_rx(fp, "mov", x86_op_suffix(t), "", x86_rax_reg(t), &instr->ops[0]);
 }
-
-// void *abi_func_type(Type *type) { instr->param.type = type_i32;
-//     ASSERT(type->kind == T_FUNCTION, "Invalid Func Type\n");
-//     Type *abi_type = new_type();
-//     memcpy(abi_type, type, sizeof(Type));
-//     array_init(&abi_type->_func.params, type->_func.params.capacity, type->_func.params.element_size);
-//     memcpy(abi_type->_func.params.data, type->_func.params.data, type->_func.params.count * type->_func.params.element_size);
-//     abi_type->_func.params.count = type->_func.params.count;
-
-//     type->abi.fp_count = 0;
-//     type->abi.gp_count = 0;
-//     if (type->_func.return_type->kind == T_STRUCT) {
-//         if (abi_type->_func.return_type->size > MAX_STRUCT_SIZE) {
-//             set_sret(type->_func.return_type);
-//             Symbol *_sret = current_sret();
-//             insert(&abi_type->_func.params,
-//                    &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = _sret->name, .symbol = _sret}, 0);
-//             abi_type->_func.return_type = type_void;
-//         } else
-//             abi_type->_func.return_type = abi_type->_func.return_type->kind == T_FLOAT
-//                                               ? get_float_type(abi_type->_func.return_type->size)
-//                                               : get_integer_type(abi_type->_func.return_type->size);
-//     }
-//     if (abi_type->_func.return_type->kind == T_ENUM) abi_type->_func.return_type = type_i32;
-//     for (int i = 0; i < abi_type->_func.params.count; i++) {
-//         ParamDecl *d = get(&abi_type->_func.params, i);
-//         ABI_Result res = abi_classify(d->type);
-//         if (res.memory) d->type = get_pointer_type(d->type);
-//         else if (type->abi.gp_count < PARAM_REGISTERS) type->abi.gp_count++;
-//     }
-//     type->abi.type = abi_type;
-// }
 
 void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) {
     // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc

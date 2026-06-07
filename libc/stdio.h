@@ -10,9 +10,17 @@
 
 typedef struct FILE FILE;
 
+#ifdef __linux__
 extern FILE *stdin;
 extern FILE *stdout;
 extern FILE *stderr;
+#endif
+#ifdef _WIN64
+FILE *__acrt_iob_func(unsigned int _Fileno);
+#define stdin (__acrt_iob_func(0))
+#define stdout (__acrt_iob_func(1))
+#define stderr (__acrt_iob_func(2))
+#endif
 
 FILE *fopen(const char *, const char *);
 FILE *fdopen(int, const char *);

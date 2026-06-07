@@ -1,17 +1,16 @@
-typedef struct A {
-    long a;
-    long b;
-    long c;
-    long d;
-    long e;
-} A;
-int foo(int *z, A x, A y);
+#include <stdarg.h>
+
+void print(const char *fmt, ...);
+void vprint(const char *fmt, va_list ap);
+
+void print(const char *fmt, ...) {
+    va_list ap;
+    __builtin_va_start(ap, fmt);
+    vprint(fmt, ap);
+    __builtin_va_end(ap);
+}
+
 int main() {
-    A x; // ={.a = 1, .b = 2, .c = 3, .d = 4, .e = 5};
-    x.a = 1;
-    x.b = 2;
-    x.c = 3;
-    x.d = 4;
-    x.e = 5;
-    return foo((int *)123, x, x);
+    print("%d %d %d %d %d %d %d %d %d\n", 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    return 0;
 }

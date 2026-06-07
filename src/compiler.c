@@ -108,6 +108,7 @@ void drive(Compiler *c) {
         WARN("-o ignored with multiple inputs %d\n", c->source_files.count);
         c->output = NULL;
     }
+
     Array objs;
     array_init(&objs, c->source_files.count, sizeof(char *));
     for (int i = 0; i < c->source_files.count; i++) {
@@ -282,24 +283,15 @@ int compile(Compiler *compiler) {
     return 1;
 }
 
-#ifdef _WIN64
-#define libc "E:/dev/compiler_c/libc"
-#ifndef popen
-#define popen _popen
-#define pclose _pclose
-#endif
-#else
-#define libc "/home/addis/dev/compiler_c/libc"
-#endif
-
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
 static int load_src_file(Compiler *compiler, const char *file) {
     char cmd[512];
 
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -D__COMPILER_C__ -I" libc " -std=c11 %s ", file);
+    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -D__COMPILER_C__ -I" TOSTRING(LIBC) " -std=c11 %s ", file);
     for (int i = 0; i < compiler->passthrough_args.count; i++) {
         cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }
-    printf("cmd %s\n", cmd);
 
     FILE *fp = popen(cmd, "r");
     ASSERT(fp, "Failed to open %s\n", file);

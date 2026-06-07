@@ -1,43 +1,63 @@
-typedef enum{
-    RAX, RBX, RCX, RDX,
-    RSI, RDI,
-    RBP, RSP,
-    R8, R9, R10, R11, R12, R13, R14, R15,
-}GP_Reg;
-typedef enum{
-    XMM0, XMM1, XMM2, XMM3,
-    XMM4, XMM5, XMM6, XMM7,
-    XMM8, XMM9, XMM10, XMM11,
-    XMM12, XMM13, XMM14, XMM15,
-}XMM_Reg;
-typedef enum{
+typedef enum {
+    RAX,
+    RBX,
+    RCX,
+    RDX,
+    RSI,
+    RDI,
+    RBP,
+    RSP,
+    R8,
+    R9,
+    R10,
+    R11,
+    R12,
+    R13,
+    R14,
+    R15,
+} GP_Reg;
+typedef enum {
+    XMM0,
+    XMM1,
+    XMM2,
+    XMM3,
+    XMM4,
+    XMM5,
+    XMM6,
+    XMM7,
+    XMM8,
+    XMM9,
+    XMM10,
+    XMM11,
+    XMM12,
+    XMM13,
+    XMM14,
+    XMM15,
+} XMM_Reg;
+typedef enum {
     REG_8,
     REG_16,
     REG_32,
     REG_64,
-}RegSize;
-typedef enum{
-    REG_GP,
-    REG_XMM,
-    REG_IP
-}RegKind;
+} RegSize;
+typedef enum { REG_GP, REG_XMM, REG_IP } RegKind;
 typedef enum {
     REG_DATA_LABEL,
     REG_DATA_OFFSET,
     REG_DATA_CONST_INDEX,
     REG_DATA_NONE,
-}RegDataKind;
-struct PhysReg{
+} RegDataKind;
+struct PhysReg {
     RegKind kind;
-    union{
+    union {
         GP_Reg gp_reg;
         XMM_Reg sse_reg;
     };
     RegSize size;
     RegDataKind data_kind;
-    union{
-        const char* label;
-        struct{
+    union {
+        const char *label;
+        struct {
             int offset;
             int scale;
         };
@@ -73,16 +93,16 @@ void arena_free(Arena *arena);
 void *arena_append(Arena *arena, const void *element);
 Array *arena_get_block(const Arena *arena, int index);
 void *arena_get(const Arena *arena, int index);
-void arena_set(const Arena *arena, const void *element, int index);
+void arena_set(Arena *arena, const void *element, int index);
 typedef char int8_t;
 typedef short int16_t;
 typedef int int32_t;
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
-typedef unsigned long size_t;
-typedef long int64_t;
-typedef unsigned long uint64_t;
+typedef unsigned long long size_t;
+typedef long long int64_t;
+typedef unsigned long long uint64_t;
 typedef enum {
     T_VOID,
     T_INT,
@@ -229,40 +249,42 @@ extern Type *type_void;
 extern Type *type_void_ptr;
 extern Type *type_invalid;
 extern Arena typepool;
-static int align(const int size, const int align) { return (size + align - 1) & ~(align - 1); }
+static inline int align(int size, int align) { return (size + align - 1) & ~(align - 1); }
 void init_typepool();
 void free_typepool();
 Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, int is_signed);
 Type *new_type();
 Type *new_pointer_type(Type *type);
-Type *new_qualified_type(const Type *type, unsigned int qualifiers);
+Type *new_qualified_type(Type *type, unsigned int qualifiers);
 Type *new_unsigned_type(Type *type);
 Type *new_array_type(Type *type, int len);
 Type *new_incomplete_array_type(Type *type, Node *const_expr);
 Type *get_float_type(int size);
 Type *get_integer_type(int size);
 Type *get_pointer_type(Type *type);
-Type *get_array_type(Type *type, int len);
-Type *get_qualified_type(const Type *type, unsigned int qualifiers);
-Type *get_function_type(Type *type, Array params, int is_variadic);
-Type *get_modified_type(Type *type, const Declarator *decl);
-Type *get_unsigned_type(Type *type);
 Type *get_enum_type(const char *name);
 Type *get_union_type(const char *name);
 Type *get_struct_type(const char *name);
+Type *get_array_type(Type *type, int len);
+Type *get_qualified_type(Type *type, unsigned int qualifiers);
+Type *get_function_type(Type *type, Array params, int is_variadic);
+Type *get_modified_type(Type *type, Declarator *decl);
+Type *get_unsigned_type(Type *type);
 int cmp_func_types(const Type *a, const Type *b);
-Type *infer_array_length(Type *arr_type, int inferred_len);
-void append_union_member(Type *u, const UnionMember *m);
-void append_struct_member(Type *s, StructMember *f);
+Type *promote_integer(Type *from, Type *to);
+Type *infer_array_length(Type *arr_type, int len);
+void append_union_member(Type *u, UnionMember *m);
 void append_enum_field(Type *e, EnumField *f);
+void append_struct_member(Type *s, StructMember *f);
 Type union_type();
 Type struct_type();
 Type enum_type();
-AggrMember *get_member(const Type *struct_t, const char *name, int is_root, int *offset, int *index);
+AggrMember *get_member(Type *struct_t, const char *name, int is_root, int *offset, int *index);
 int is_func_ptr(const Type *t);
 int is_scalar_type(const Type *t);
 void print_type(Type *type);
-void print_param_decl(const ParamDecl *decl);
+void print_struct_type(Type *s);
+void print_param_decl(ParamDecl *decl);
 void print_typepool();
 typedef struct {
     char buf[1024];
@@ -352,6 +374,7 @@ typedef enum {
     TK_FLT_LITERAL,
     TK_CHAR_LITERAL,
     TK_STRING_LITERAL,
+    TK_EXPR,
     TK_IDENTIFIER,
     TK_ELLIPSES,
 } TokenType;
@@ -383,22 +406,22 @@ typedef struct {
 Tokenizer t_new_tokenizer(const char *src, int src_size);
 void t_free(Tokenizer *tokenizer);
 void t_tokenize(Tokenizer *tk);
-int is_postfix_operator(TokenType type);
-int is_unary_operator(TokenType type);
-int is_binary_operator(TokenType type);
-int is_assignment_op(TokenType type);
-int is_arithmetic_op(TokenType type);
-int is_bitwise_op(TokenType type);
-int is_comparison_op(TokenType type);
-int is_logical_op(TokenType type);
+void print_tokens(Tokenizer *tk);
+int is_postfix_operator(const TokenType type);
+int is_unary_operator(const TokenType type);
+int is_binary_operator(const TokenType type);
+int is_assignment_op(const TokenType type);
+int is_arithmetic_op(const TokenType type);
+int is_bitwise_op(const TokenType type);
+int is_comparison_op(const TokenType type);
+int is_logical_op(const TokenType type);
 TokenType get_underlying_op(TokenType type);
 int op_associativity(TokenType type);
 int op_precedence(TokenType type);
-const char *token_type_str(TokenType type);
+const char *token_type_str(const TokenType type);
 void print_token_type(TokenType type);
 void print_token(const Token *token);
-void print_tokens(Tokenizer *tk);
-static Token *get_token(const Array *arr, const int index) { return get(arr, index); }
+static inline Token *get_token(Array *arr, int index) { return (Token *)get(arr, index); }
 void *memcpy(void *, const void *, size_t);
 void *memmove(void *, const void *, size_t);
 void *memset(void *, int, size_t);
@@ -409,8 +432,8 @@ int strcmp(const char *, const char *);
 int strncmp(const char *, const char *, size_t);
 size_t strlen(const char *);
 char *strrchr(const char *, int);
-char *strdup(const char *);
-char *strndup(const char *, size_t);
+char *_strdup(const char *);
+char *_strndup(const char *, size_t);
 typedef enum {
     N_TRANSLATION_UNIT,
     N_FUNCTION,
@@ -624,14 +647,15 @@ struct Node {
 };
 typedef Arena NodeManager;
 NodeManager new_node_manager();
+void free_node_manager(NodeManager *nm);
 BuiltinKind get_builtin_kind(const char *name);
 Node *new_node(NodeManager *nm, NodeKind kind);
-Node *new_init_translation_unit_node(NodeManager *nm);
+Node *init_translation_unit(NodeManager *nm);
 Node *new_compound_node(NodeManager *nm);
 Node *new_init_list_node(NodeManager *nm);
 Node *new_function_node(NodeManager *nm);
 Node *new_function_call_node(NodeManager *nm, Node *identifier);
-void free_node(Node *node);
+Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type);
 Node *cast_node(NodeManager *nm, Node *node, Type *type);
 int is_valid_cast(const Type *from, const Type *to);
 LiteralKind literal_kind(TokenType type);
@@ -639,11 +663,12 @@ void print_node_type(NodeKind type);
 void print_indent(int depth);
 void print_node(const Node *node, int depth);
 void print_ast(const NodeManager *nm);
-static Node *get_node(const Array *node_array, const int index) { return *(Node **)get(node_array, index); }
-static void set_node(const Array *node_array, Node **node, const int index) {
+void free_node(Node *node);
+static inline Node *get_node(const Array *node_array, int index) { return *(Node **)get(node_array, index); }
+static inline void set_node(Array *node_array, Node **node, int index) {
     memcpy((char *)node_array->data + index * node_array->element_size, node, sizeof(Node *));
 }
-static Node *insert_node(Array *node_array, Node **node, const int index) { return insert(node_array, node, index); }
+static inline Node *insert_node(Array *node_array, Node **node, int index) { return (Node *)insert(node_array, node, index); }
 typedef struct {
     const char *new_def;
     Type *type;
@@ -700,8 +725,8 @@ void p_expect(const Parser *p, TokenType expected_type);
 Token *p_consume_a(Parser *p, TokenType type);
 Token *p_consume_semi(Parser *p);
 int is_type_token(const Parser *p, const Token *t);
-int is_storage_classifier(TokenType type);
-int is_qualifier_token(TokenType type);
+int is_storage_classifier(const TokenType type);
+int is_qualifier_token(const TokenType type);
 int is_start_of_type(const Parser *p, const Token *tk);
 Type *token_to_type(Parser *p, const Token *t);
 void p_push_scope(Parser *p);
@@ -713,7 +738,7 @@ Node *p_parse_prefix(Parser *p, NodeManager *nm);
 Node *p_parse_literal(Parser *p, NodeManager *nm);
 Node *p_parse_init_list(Parser *p, NodeManager *nm);
 Node *p_parse_expression(Parser *p, NodeManager *nm, int min_prec);
-Node *p_parse_binary(Parser *p, NodeManager *nm, Node *lhs);
+Node *p_parse_binary(Parser *p, NodeManager *nm, Node *lhs, const int min_prec);
 Node *p_parse_ternary(Parser *p, NodeManager *nm, Node *cond);
 Node *p_parse_cast(Parser *p, NodeManager *nm);
 Node *p_parse_goto_statement(Parser *p, NodeManager *nm);
@@ -730,16 +755,16 @@ Node *p_parse_continue(Parser *p, NodeManager *nm);
 Node *p_parse_break(Parser *p, NodeManager *nm);
 Node *p_parse_statement(Parser *p, NodeManager *nm);
 Node *p_parse_compound(Parser *p, NodeManager *nm);
-Node *p_parse_function(Parser *p, NodeManager *nm, Type *type, const char *name, StorageClass storage_class, int is_inline);
+Node *p_parse_function(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, int is_inline);
 Modifier p_parse_parameter_list(Parser *p, NodeManager *nm);
 Node *p_parse_external_declaration(Parser *p, NodeManager *nm);
 Node *p_parse_block_declaration(Parser *p, NodeManager *nm);
 Node *p_parse_decl_identifier(Parser *p, NodeManager *nm);
-Node *p_parse_declaration(Parser *p, NodeManager *nm, Type *type, const char *name, StorageClass storage_class, int global);
+Node *p_parse_declaration(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, const int global);
 Node *p_parse_typedef(Parser *p, NodeManager *nm);
 Node *p_parse_translation_unit(Parser *p, NodeManager *nm);
-Type *p_parse_type(Parser *p, NodeManager *nm, const char **name);
 Type *p_parse_abstract_type(Parser *p, NodeManager *nm);
+Type *p_parse_type(Parser *p, NodeManager *nm, const char **name);
 Declarator p_parse_declarator(Parser *p, NodeManager *nm);
 Type *p_parse_enum(Parser *p, NodeManager *nm);
 Type *p_parse_struct(Parser *p, NodeManager *nm);
@@ -754,17 +779,18 @@ int64_t parse_dec(const char *raw, int len);
 int64_t parse_hex(const char *raw, int len);
 int parse_multi_character(const char *raw, int len);
 double parse_float(const char *raw, int len);
-Symbol *p_get_symbol(const Parser *p, const char *name, SymbolKind kind, int same_depth);
+Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind, const int same_depth);
+Node *p_get_func_def(const Parser *p, const char *name);
 Typedef *p_get_typedef(const Parser *p, const char *name);
 Node *p_get_var_decl(const Parser *p, const char *name);
 const EnumField *p_get_enum_const(const Parser *p, const char *name);
 Symbol *p_new_symbol(Parser *p, const Symbol *s);
 void p_append_call_param(Node *func_call, Node *param);
-void p_append_param(const Node *func, Node *param);
+void p_append_param(Node *func, Node *param);
 void p_append_enum_const(Parser *p, const EnumField *e);
 Symbol *p_append_var_decl_symbol(Parser *p, Node *v);
-void update_linkage_storage(Symbol *s, const Node *v);
-Symbol *p_append_param_decl_symbol(Parser *p, const ParamDecl *param);
+void update_linkage_storage(Symbol *s, Node *v);
+Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param);
 void p_append_element(Node *init_list, Node *element);
 void p_append_symbol_table(Parser *p);
 Symbol *p_append_symbol(Array *st, const Symbol *s);
@@ -772,12 +798,16 @@ void p_append_typedef(Parser *p, const Typedef *t);
 Symbol *p_append_func_def(Parser *p, Node *f);
 void p_append_block_item(Node *root, Node *item);
 void p_append_case(Node *s, Node *c);
-static Array *get_symbol_table(const Parser *p, const int index) { return get(&p->scopes_array, index); }
-static Array *get_current_symbol_table(const Parser *p) { return get_symbol_table(p, p->scopes_array.count - 1); }
-static Symbol *get_symbol(const Array *symbol_table, const int index) { return *(Symbol **)get(symbol_table, index); }
-static EnumField *get_enum_field(const Type *enum_t, const int index) { return get(&enum_t->_enum.fields_array, index); }
-static StructMember *get_struct_member(const Type *struct_t, const int index) { return get(&struct_t->_struct.members_array, index); }
-static UnionMember *get_union_member(const Type *union_t, const int index) { return get(&union_t->_union.members_array, index); }
+static inline Array *get_symbol_table(const Parser *p, int index) { return (Array *)get(&p->scopes_array, index); }
+static inline Array *get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count - 1); }
+static inline Symbol *get_symbol(Array *symbol_table, int index) { return *(Symbol **)get(symbol_table, index); }
+static inline EnumField *get_enum_field(const Type *enum_t, int index) { return (EnumField *)get(&enum_t->_enum.fields_array, index); }
+static inline StructMember *get_struct_member(const Type *struct_t, int index) {
+    return (StructMember *)get(&struct_t->_struct.members_array, index);
+}
+static inline UnionMember *get_union_member(const Type *union_t, int index) {
+    return (UnionMember *)get(&union_t->_union.members_array, index);
+}
 UnionMember *get_union_member_named(Type *union_t, const char *name);
 StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index);
 typedef enum {
@@ -1096,10 +1126,11 @@ IR_Value ir_gp_register_offset_value(GP_Reg reg, int offset);
 IR_Value ir_stack_value(int size, int align, int offset);
 void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count);
 void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map);
+void ir_lower_const_value(IR_Value *v);
 void analysis(const IR_Context *ctx);
-void gen_abi_func_types();
+void generate_types();
 void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map);
-int get_symbol_index(const Array *symbol_map, const Symbol *symbol);
+int get_symbol_index(const Array *symbol_map, Symbol *symbol);
 int bitset_add_defined(const BitSet *defined, const IR_Value *v);
 void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v);
 int reg_bitset(const IR_Function *f);
@@ -1124,16 +1155,21 @@ void bitset_copy(const BitSet *dst, const BitSet *src);
 int bitset_equal(const BitSet *a, const BitSet *b);
 void print_bitset(const BitSet *bs);
 void print_cfg(const IR_Function *func);
-typedef struct {
-    unsigned int gp_offset;
-    unsigned int fp_offset;
-    void *overflow_args;
-    void *reg_save_area;
-} va_list[1];
+IR_CMP_OP ir_cmp_op(const TokenType type);
+IR_UNARY_OP ir_unary_op(const TokenType type);
+IR_BINOP_OP ir_binary_op(const TokenType type);
+void print_ir_module(const IR_Context *ctx, const IR_Module *module);
+void print_ir_value(const IR_Value *v);
+void print_ir_phys_reg(const PhysReg *r);
+static void print_ir_block(const IR_Context *ctx, const IR_Block *block);
+void print_ir_function(const IR_Context *ctx, const IR_Function *func);
+void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr);
+static void print_unary_op(IR_UNARY_OP op);
+static void print_binary_op(IR_BINOP_OP op);
+static void print_cmp_op(IR_CMP_OP op);
+typedef char *va_list;
 typedef struct FILE FILE;
-extern FILE *stdin;
-extern FILE *stdout;
-extern FILE *stderr;
+FILE *__acrt_iob_func(unsigned int _Fileno);
 FILE *fopen(const char *, const char *);
 FILE *fdopen(int, const char *);
 int fclose(FILE *);
@@ -1151,15 +1187,110 @@ int fprintf(FILE *, const char *, ...);
 int sprintf(char *, const char *, ...);
 int snprintf(char *, size_t, const char *, ...);
 extern int vfprintf(FILE *, const char *, va_list);
-FILE *popen(const char *, const char *);
-int pclose(FILE *);
-typedef enum ABI_TypeClass {
+FILE *_popen(const char *, const char *);
+int _pclose(FILE *);
+void exit(int);
+void *malloc(size_t);
+void *realloc(void *, size_t);
+void *calloc(size_t, size_t);
+void free(void *);
+int system(const char *);
+typedef int (*__compar_fn_t)(const void *, const void *);
+extern void qsort(void *__base, size_t __nmemb, size_t __size, __compar_fn_t __compar);
+typedef enum {
+    LOG_INFO,
+    LOG_DEBUG,
+    LOG_WARN,
+    LOG_ERROR,
+    LOG_PANIC,
+} LogLevel;
+typedef enum {
+    STAGE_COMPILER,
+    STAGE_TOKENIZING,
+    STAGE_PARSING,
+    STAGE_SEMA_ANALYSIS,
+    STAGE_IR,
+    STAGE_X86_GEN,
+    STAGE_ASSEMBLER,
+    STAGE_LINKER
+} LogStage;
+typedef struct {
+    LogLevel min_level;
+    LogStage stage;
+    FILE *file;
+} Logger;
+extern Logger logger;
+static inline void init_logger(FILE *fp, LogLevel level) {
+    logger.file = fp ? fp : (__acrt_iob_func(2));
+    logger.stage = STAGE_COMPILER;
+    logger.min_level = level;
+}
+static inline char *stage_str(LogStage stage) {
+    switch (logger.stage) {
+    case STAGE_COMPILER:
+        return "Compiler";
+    case STAGE_TOKENIZING:
+        return "Tokenizer";
+    case STAGE_PARSING:
+        return "Parser";
+    case STAGE_IR:
+        return "IR";
+    case STAGE_X86_GEN:
+        return "x86 Gen";
+    case STAGE_SEMA_ANALYSIS:
+        return "Semantic Analysis";
+    case STAGE_ASSEMBLER:
+        return "Assembler";
+    case STAGE_LINKER:
+        return "Linker";
+    }
+}
+static inline void set_log_stage(LogStage stage) { logger.stage = stage; }
+static inline void log_start(LogLevel lvl) {
+    if (lvl < logger.min_level) return;
+    const char *level_str;
+    switch (lvl) {
+    case LOG_DEBUG:
+        level_str = "\x1b[34mDEBUG\x1b[0m";
+        break;
+    case LOG_INFO:
+        level_str = "\x1b[32mINFO\x1b[0m";
+        break;
+    case LOG_WARN:
+        level_str = "\x1b[33mWARN\x1b[0m";
+        break;
+    case LOG_ERROR:
+        level_str = "\x1b[31mERROR\x1b[0m";
+        break;
+    case LOG_PANIC:
+        level_str = "\x1b[1;31mPANIC\x1b[0m";
+        break;
+    default:
+        level_str = "LOG";
+        break;
+    }
+    const char *stage = stage_str(logger.stage);
+    fprintf(logger.file, "[%s] %s: ", level_str, stage);
+}
+void print(const char *fmt, ...);
+void vprint(const char *fmt, va_list ap);
+static inline void log_message(LogLevel lvl, const char *fmt, ...) {
+    if (lvl < logger.min_level) return;
+    log_start(lvl);
+    va_list args;
+    __builtin_va_start(args, fmt);
+    vprint(fmt, args);
+    __builtin_va_end(args);
+    fflush(logger.file);
+    if (lvl == LOG_PANIC) exit(1);
+}
+typedef enum {
     ABI_NO_CLASS,
     ABI_MEMORY,
     ABI_INTEGER,
     ABI_SSE,
 } ABI_TypeClass;
-typedef struct ABI_Result {
+typedef struct {
     ABI_TypeClass class[2];
     int memory;
     char p[8];
@@ -1180,14 +1311,34 @@ extern Symbol *_hidden_sret_ptr;
 Symbol *current_sret();
 void set_sret(Type *return_type);
 void set_hidden_sret_ptr(Type *return_type);
-ABI_TypeClass merge(ABI_TypeClass chunk_class, ABI_TypeClass field_class);
-ABI_Result classify_struct(Type *type);
-extern const GP_Reg int_param_regs[6];
-extern const XMM_Reg float_param_regs[8];
-extern const GP_Reg caller_saved_regs[9];
-extern const GP_Reg callee_saved_regs[6];
+extern const GP_Reg int_param_regs[4];
+extern const XMM_Reg float_param_regs[4];
+extern const GP_Reg caller_saved_regs[7];
+extern const GP_Reg callee_saved_regs[8];
 extern const char *gp_register_str[16][4];
 extern const char *sse_register_str[16];
+typedef struct {
+    Node *func;
+    Array compound_stack;
+    Array loop_stack;
+    Array i_array;
+} SemanticContext;
+int is_lvalue(const Node *n);
+int is_deref(const Node *n);
+Type *check_unary_op(NodeManager *nm, Node *unary_op);
+Type *check_binary_op(NodeManager *nm, TokenType op, Node *binop);
+Type *promote_binary_operands(NodeManager *nm, Node *binop);
+void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
+void handle_builtin_call(BuiltinKind kind, Node *node);
+void lower_nodes(NodeManager *nm);
+void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node);
+void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n);
+void pop_sema_scope(SemanticContext *sema_ctx, Parser *p);
+void push_sema_loop(SemanticContext *sema_ctx, const Node *loop);
+void pop_sema_loop(SemanticContext *sema_ctx);
+Node *sema_current_loop(const SemanticContext *sema_ctx);
+Node *sema_current_compound(const SemanticContext *sema_ctx);
+static inline int *get_i(SemanticContext *sema_ctx) { return (int *)get(&sema_ctx->i_array, sema_ctx->i_array.count - 1); }
 typedef struct {
     char *output;
     Array current_source;
@@ -1227,703 +1378,337 @@ void clear_compiler(Compiler *compiler);
 void free_compiler(Compiler *compiler);
 void drive(Compiler *c);
 void assemble(Compiler *c);
-void link(const Compiler *c, const Array *objs);
+void link(Compiler *c, Array *objs);
 int compile(Compiler *compiler);
+void free_compiler(Compiler *compiler);
 static int load_src_file(Compiler *compiler, const char *file);
-IR_CMP_OP ir_cmp_op(const TokenType type);
-IR_UNARY_OP ir_unary_op(const TokenType type);
-IR_BINOP_OP ir_binary_op(const TokenType type);
-void print_ir_module(const IR_Context *ctx,const IR_Module *module);
-void print_ir_value(const IR_Value *v);
-void print_ir_phys_reg(const PhysReg *r);
-static void print_ir_block(const IR_Context *ctx, const IR_Block *block);
-void print_ir_function(const IR_Context *ctx, const IR_Function *func);
-void print_ir_instruction(const IR_Context *ctx,const IR_Instruction *instr);
-static void print_unary_op(IR_UNARY_OP op);
-static void print_binary_op(IR_BINOP_OP op);
-static void print_cmp_op(IR_CMP_OP op);
-void exit(int);
-void *malloc(size_t);
-void *realloc(void *, size_t);
-void *calloc(size_t, size_t);
-void free(void *);
-int system(const char *);
-typedef int (*__compar_fn_t)(const void *, const void *);
-extern void qsort(void *__base, size_t __nmemb, size_t __size, __compar_fn_t __compar);
-typedef enum {
-    LOG_INFO,
-    LOG_DEBUG,
-    LOG_WARN,
-    LOG_ERROR,
-    LOG_PANIC,
-} LogLevel;
-typedef enum {
-    STAGE_COMPILER,
-    STAGE_TOKENIZING,
-    STAGE_PARSING,
-    STAGE_SEMA_ANALYSIS,
-    STAGE_IR,
-    STAGE_X86_GEN,
-    STAGE_ASSEMBLER,
-    STAGE_LINKER
-} LogStage;
-typedef struct {
-    LogLevel min_level;
-    LogStage stage;
-    FILE *file;
-} Logger;
-extern Logger logger;
-static void init_logger(FILE *fp, const LogLevel level) {
-    logger.file = fp ? fp : stderr;
-    logger.stage = STAGE_COMPILER;
-    logger.min_level = level;
+char *replace_extension(const char *path, const char *ext);
+void x86_gen_module(FILE *fp, IR_Context *ctx);
+void x86_operand(const IR_Value *v, char *buf, int n);
+void x86_emit_xx(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const IR_Value *dst);
+void x86_emit_rx(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const IR_Value *dst);
+void x86_emit_xr(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *src, const char *dst);
+void x86_emit_rr(FILE *fp, const char *instr, const char *s1, const char *s2, const char *src, const char *dst);
+void x86_emit_x(FILE *fp, const char *instr, const char *s1, const char *s2, const IR_Value *operand);
+void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, const char *r);
+const char *x86_rax_reg(Type *t);
+const char *x86_rbx_reg(const Type *t);
+const char *x86_rcx_reg(const Type *t);
+const char *x86_rdx_reg(const Type *t);
+const char *x86_op_suffix(const Type *t);
+const char *x86_integer_op_suffix(int size);
+const char *x86_float_op_suffix(int size);
+void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+void x86_emit_binary(FILE *fp, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, IR_BINOP_OP op, Type *t);
+void x86_emit_unary(FILE *fp, const IR_Value *dst, const IR_Value *expr, IR_UNARY_OP op, Type *t);
+void x86_emit_addr(FILE *fp, const IR_Value *src, const IR_Value *dst);
+void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *from, Type *to);
+void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *c, int pool_index);
+void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t);
+void x86_emit_load(FILE *fp, const IR_Value *addr, const IR_Value *dst, Type *t);
+void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src);
+void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t);
+void x86_emit_string(FILE *fp, const char *str);
+void x86_emit_literal(FILE *fp, const ConstLiteral *c);
+static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_addr_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr);
+static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_call_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_store_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_load_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_unary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_binary_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction *instr);
+static void x86_gen_block(FILE *fp, IR_Context *ctx);
+static void x86_gen_function(FILE *fp, IR_Context *ctx);
+unsigned int compiler_flags = 0u;
+const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",         [CF_STOP_AFTER_IR] = "ir",
+                                      [CF_STOP_AFTER_COMPILE] = "S",       [CF_STOP_AFTER_ASSEMBLE] = "c",
+                                      [CF_DEBUG_TYPEPOOL] = "gtypepool",   [CF_DEBUG_LIFETIMES] = "glifetimes",
+                                      [CF_DEBUG_ENUM] = "genum",           [CF_DEBUG_STRUCT] = "gstruct",
+                                      [CF_DEBUG_UNION] = "gunion",         [CF_DEBUG_LOWERED_IR] = "glowered-ir",
+                                      [CF_DEBUG_IR_INSTR] = "gir-instr",   [CF_DEBUG_PARSER] = "gparser",
+                                      [CF_DEBUG_TOKENIZER] = "gtokenizer", [CF_DEBUG_TOKENS] = "gtokens",
+                                      [CF_DEBUG_SYMBOLS] = "gsymbols"};
+int has_flag(CompilerFlag f) { return compiler_flags & (1u << f); }
+int is_source_file(const char *arg) {
+    if (arg[0] == '-') return 0;
+    const char *dot = strrchr(arg, '.');
+    if (!dot) return 0;
+    return strcmp(dot, ".c") == 0 || strcmp(dot, ".s") == 0 || strcmp(dot, ".o") == 0 || strcmp(dot, ".obj") == 0;
 }
-static char *stage_str(const LogStage stage) {
-    switch (stage) {
-    case STAGE_COMPILER:
-        return "Compiler";
-    case STAGE_TOKENIZING:
-        return "Tokenizer";
-    case STAGE_PARSING:
-        return "Parser";
-    case STAGE_IR:
-        return "IR";
-    case STAGE_X86_GEN:
-        return "x86 Gen";
-    case STAGE_SEMA_ANALYSIS:
-        return "Semantic Analysis";
-    case STAGE_ASSEMBLER:
-        return "Assembler";
-    case STAGE_LINKER:
-        return "Linker";
+void read_args(Compiler *compiler, const int argc, char *argv[]) {
+    for (int i = 1; i < argc; i++) {
+        char *arg = argv[i];
+        if (arg[0] == '-') {
+            arg++;
+            if (strcmp(arg, "o") == 0) {
+                if (i + 1 < argc && argv[i + 1] != ((void *)0)) {
+                    if (!(argv[i + 1][0] != '-')) do {
+                            log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n");
+                            exit(1);
+                        } while (0);
+                    compiler->output = argv[++i];
+                    if (!(compiler->output)) do {
+                            log_message(LOG_ERROR, "Failed to strdup output\n");
+                            exit(1);
+                        } while (0);
+                    continue;
+                }
+                do {
+                    log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n");
+                    exit(1);
+                } while (0);
+            }
+            int consumed_flag = 0;
+            for (int j = 0; j < CF_COUNT; j++) {
+                if (strcmp(arg, flag_strings[j]) == 0) {
+                    compiler_flags |= (1u << j);
+                    consumed_flag = 1;
+                    break;
+                }
+            }
+            if (consumed_flag) continue;
+            append(&compiler->passthrough_args, &argv[i]);
+            if (strcmp(argv[i], "-I") == 0) append(&compiler->passthrough_args, &argv[++i]);
+        } else if (is_source_file(argv[i])) append(&compiler->source_files, &argv[i]);
     }
 }
-static void set_log_stage(const LogStage stage) { logger.stage = stage; }
-static void log_start(const LogLevel lvl) {
-    if (lvl < logger.min_level) return;
-    const char *level_str;
-    switch (lvl) {
-    case LOG_DEBUG:
-        level_str = "\x1b[34mDEBUG\x1b[0m";
-        break;
-    case LOG_INFO:
-        level_str = "\x1b[32mINFO\x1b[0m";
-        break;
-    case LOG_WARN:
-        level_str = "\x1b[33mWARN\x1b[0m";
-        break;
-    case LOG_ERROR:
-        level_str = "\x1b[31mERROR\x1b[0m";
-        break;
-    case LOG_PANIC:
-        level_str = "\x1b[1;31mPANIC\x1b[0m";
-        break;
-    default:
-        level_str = "LOG";
-        break;
+void assemble(Compiler *c) {
+    set_log_stage(STAGE_ASSEMBLER);
+    if (!(c->current_source.count && c->current_output.count)) do {
+            log_message(LOG_ERROR, "Source or output is not set for assemble\n");
+            exit(1);
+        } while (0);
+    log_message(LOG_INFO, "Assembling %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "gcc -c %s -o %s", (char *)c->current_source.data, (char *)c->current_output.data);
+    int ret = system(cmd);
+    if (!(ret == 0)) do {
+            log_message(LOG_ERROR, "Failed to assemble %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
+            exit(1);
+        } while (0);
+}
+void link(Compiler *c, Array *objs) {
+    set_log_stage(STAGE_LINKER);
+    log_message(LOG_INFO, "Linking ");
+    char cmd[4028] = {};
+    int cmd_len = snprintf(cmd, sizeof(cmd),
+                           "gcc -lm "
+                           "");
+    for (int i = 0; i < objs->count; i++) {
+        char *src = *(char **)get(objs, i);
+        printf("%s", src);
+        cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", src);
+        if (i < objs->count - 1) putchar(' ');
     }
-    const char *stage = stage_str(logger.stage);
-    fprintf(logger.file, "[%s] %s: ", level_str, stage);
+    printf(" to %s\n", (char *)c->current_output.data);
+    snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "-o %s ", (char *)c->current_output.data);
+    int ret = system(cmd);
+    if (!(ret == 0)) do {
+            log_message(LOG_ERROR, "Failed to link %d objs to %s with cmd '%s'\n", objs->count, (char *)c->current_output.data, cmd);
+            exit(1);
+        } while (0);
 }
-void print(const char *fmt, ...);
-void vprint(const char *fmt, va_list ap);
-static void log_message(const LogLevel lvl, const char *fmt, ...) {
-    if (lvl < logger.min_level) return;
-    log_start(lvl);
-    va_list args;
-    __builtin_va_start(args, fmt);
-    vprint(fmt, args);
-    __builtin_va_end(args);
-    fflush(logger.file);
-    if (lvl == LOG_PANIC) exit(1);
-}
-const char *gp_register_str[16][4] = {
-    [RAX] = {"%al", "%ax", "%eax", "%rax"}, [RBX] = {"%bl", "%bx", "%ebx", "%rbx"}, [RCX] = {"%cl", "%cx", "%ecx", "%rcx"},
-    [RDX] = {"%dl", "%dx", "%edx", "%rdx"}, [RSI] = {"%sil", "%si", "%esi", "%rsi"}, [RDI] = {"%dil", "%di", "%edi", "%rdi"},
-    [RBP] = {"%bpl", "%bp", "%ebp", "%rbp"}, [RSP] = {"%spl", "%sp", "%esp", "%rsp"}, [R8] = {"%r8b", "%r8w", "%r8d", "%r8"},
-    [R9] = {"%r9b", "%r9w", "%r9d", "%r9"}, [R10] = {"%r10b", "%r10w", "%r10d", "%r10"}, [R11] = {"%r11b", "%r11w", "%r11d", "%r11"},
-    [R12] = {"%r12b", "%r12w", "%r12d", "%r12"}, [R13] = {"%r13b", "%r13w", "%r13d", "%r13"}, [R14] = {"%r14b", "%r14w", "%r14d", "%r14"},
-    [R15] = {"%r15b", "%r15w", "%r15d", "%r15"},
-};
-const char *sse_register_str[16] = {
-    [XMM0] = "%xmm0", [XMM1] = "%xmm1", [XMM2] = "%xmm2", [XMM3] = "%xmm3", [XMM4] = "%xmm4", [XMM5] = "%xmm5",
-    [XMM6] = "%xmm6", [XMM7] = "%xmm7", [XMM8] = "%xmm8", [XMM9] = "%xmm9", [XMM10] = "%xmm10", [XMM11] = "%xmm11",
-    [XMM12] = "%xmm12", [XMM13] = "%xmm13", [XMM14] = "%xmm14", [XMM15] = "%xmm15",
-};
-void bitset_init(BitSet *s, const int reg_count) {
-    s->num_bits = reg_count;
-    s->capacity = (s->num_bits + 31) / 32;
-    if (reg_count) {
-        s->data = calloc(s->capacity, sizeof(int));
-        if (!(s->data)) do { log_message(LOG_ERROR, "Failed to alloc for bitset init\n"); exit(1); } while (0);
+void update_current_output(Compiler *c, int cond, char *path, const char *ext) {
+    if (cond && c->output) {
+        array_str_cpy(&c->current_output, c->output);
     } else {
-        s->data = ((void *)0);
+        char *out = _strdup(path);
+        char *dot = strrchr(out, '.');
+        if (dot) strcpy(dot, ext);
+        else do {
+                log_message(LOG_ERROR, "Failed to append '%s' to %s\n", ext, path);
+                exit(1);
+            } while (0);
+        array_str_cpy(&c->current_output, out);
+        free(out);
     }
 }
-void bitset_clear(const BitSet *s) {
-    for (int i = 0; i < s->capacity; i++) {
-        s->data[i] = 0;
+void drive(Compiler *c) {
+    if ((has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) && c->source_files.count > 1 && c->output) {
+        log_message(LOG_WARN, "-o ignored with multiple inputs %d\n", c->source_files.count);
+        c->output = ((void *)0);
     }
-}
-void bitset_add(const BitSet *s, const int reg) {
-    if (reg >= s->num_bits) {
-        do { log_message(LOG_ERROR, "%d is too large a register for this bitset\n", reg); exit(1); } while (0);
+    Array objs;
+    array_init(&objs, c->source_files.count, sizeof(char *));
+    for (int i = 0; i < c->source_files.count; i++) {
+        char *src_path = *(char **)get(&c->source_files, i);
+        array_str_cpy(&c->current_source, src_path);
+        array_str_cpy(&c->current_output, src_path);
+        char ext = src_path[strlen(src_path) - 1];
+        switch (ext) {
+        case 'c':
+            update_current_output(c, has_flag(CF_STOP_AFTER_COMPILE), src_path, ".s");
+            load_src_file(c, (char *)c->current_source.data);
+            init_compiler(c);
+            compile(c);
+            clear_compiler(c);
+            if (has_flag(CF_STOP_AFTER_AST) || has_flag(CF_STOP_AFTER_IR)) return;
+            if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
+        case 's':
+            array_str_cpy(&c->current_source, c->current_output.data);
+            update_current_output(c, has_flag(CF_STOP_AFTER_ASSEMBLE), src_path, ".o");
+            assemble(c);
+            if (has_flag(CF_STOP_AFTER_ASSEMBLE)) continue;
+        case 'o':
+        case 'j':
+            char *obj_path = _strdup((char *)c->current_output.data);
+            append(&objs, &obj_path);
+            break;
+        }
     }
-    if (!(reg >= 0)) do { log_message(LOG_ERROR, "Reg must be >= 0\n"); exit(1); } while (0);
-    const int word = reg / 32;
-    const unsigned int offset = reg % 32;
-    s->data[word] |= (1u << offset);
+    if (has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) return;
+    array_str_cpy(&c->current_output, c->output ? c->output : "a.exe");
+    if (!(objs.count > 0)) do {
+            log_message(LOG_ERROR, "No object files to link\n");
+            exit(1);
+        } while (0);
+    link(c, &objs);
+    ptr_array_free(&objs);
+    set_log_stage(STAGE_COMPILER);
+    log_message(LOG_INFO, "Done.\n");
 }
-void bitset_remove(const BitSet *s, const int reg) {
-    if (!(reg >= 0)) do { log_message(LOG_ERROR, "Reg must be >= 0\n"); exit(1); } while (0);
-    const int word = reg / 32;
-    const unsigned int offset = reg % 32;
-    s->data[word] &= ~(1u << offset);
+void init_compiler(Compiler *compiler) {
+    compiler->tk = t_new_tokenizer(compiler->src, compiler->src_size);
+    compiler->nm = new_node_manager();
+    compiler->p = new_parser();
+    init_typepool();
+    return;
 }
-int bitset_has(const BitSet *s, const int reg) {
-    if (!(reg >= 0)) do { log_message(LOG_ERROR, "Reg must be >= 0\n"); exit(1); } while (0);
-    const int word = reg / 32;
-    const unsigned int offset = reg % 32;
-    return (s->data[word] & (1u << offset)) != 0;
-}
-void bitset_union(const BitSet *dst, const BitSet *src) {
-    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
-    for (int i = 0; i < dst->capacity; i++) dst->data[i] |= src->data[i];
-}
-void bitset_intersect(const BitSet *dst, const BitSet *src) {
-    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
-    for (int i = 0; i < dst->capacity; i++) dst->data[i] &= src->data[i];
-}
-void bitset_difference(const BitSet *dst, const BitSet *src) {
-    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
-    for (int i = 0; i < dst->capacity; i++) dst->data[i] &= ~src->data[i];
-}
-void bitset_copy(const BitSet *dst, const BitSet *src) {
-    if (!(dst->capacity == src->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
-    for (int i = 0; i < dst->capacity; i++) dst->data[i] = src->data[i];
-}
-int bitset_equal(const BitSet *a, const BitSet *b) {
-    if (!(a->capacity == b->capacity)) do { log_message(LOG_ERROR, "Capacities must be equal\n"); exit(1); } while (0);
-    for (int i = 0; i < a->capacity; i++) {
-        if (a->data[i] != b->data[i]) return 0;
+Compiler begin_compiler(const int argc, char *argv[]) {
+    printf("[\x1b[34mCompiler_C\x1b[0m]\n");
+    if (argc < 2) {
+        do {
+            log_message(LOG_ERROR, "Improper Usage,\n  compiler_c [input] -o [output]\n");
+            exit(1);
+        } while (0);
     }
+    if (argc == 2 && strcmp(argv[1], "-h") == 0) {
+        printf("compiler [input]\n");
+        printf("\t-o [output] : Set output file path\n");
+        printf("\t-S          : Compile to Assembly File\n");
+        printf("\t-c          : Compile to Object File\n");
+        printf("\t-ir         : Compile and print IR\n");
+        printf("\t-ast        : Print parse tree\n");
+        printf("\t-h          : Get help\n");
+        exit(0);
+    }
+    Compiler compiler = {};
+    compiler.output = ((void *)0);
+    compiler_flags = 0;
+    array_init(&compiler.passthrough_args, 4, sizeof(char *));
+    array_init(&compiler.source_files, 4, sizeof(char *));
+    array_init(&compiler.current_output, 4, sizeof(char));
+    array_init(&compiler.current_source, 4, sizeof(char));
+    read_args(&compiler, argc, argv);
+    return compiler;
+}
+void clear_compiler(Compiler *compiler) {
+    free_typepool();
+    free_node(arena_get(&compiler->nm, 0));
+    arena_free(&compiler->nm);
+    free_parser(&compiler->p);
+    t_free(&compiler->tk);
+    free(compiler->src);
+}
+void free_compiler(Compiler *compiler) {
+    array_free(&compiler->passthrough_args);
+    array_free(&compiler->source_files);
+    array_free(&compiler->current_source);
+    array_free(&compiler->current_output);
+    compiler->src = ((void *)0);
+}
+int compile(Compiler *compiler) {
+    set_log_stage(STAGE_COMPILER);
+    if (!(compiler->current_source.count && compiler->current_output.count)) do {
+            log_message(LOG_ERROR, "Source or output is not set for compile\n");
+            exit(1);
+        } while (0);
+    log_message(LOG_INFO, "Compiling %s to %s\n", (char *)compiler->current_source.data, (char *)compiler->current_output.data);
+    set_log_stage(STAGE_TOKENIZING);
+    t_tokenize(&compiler->tk);
+    if (has_flag(CF_DEBUG_TOKENS)) print_tokens(&compiler->tk);
+    set_log_stage(STAGE_PARSING);
+    init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
+    p_parse_translation_unit(&compiler->p, &compiler->nm);
+    set_log_stage(STAGE_SEMA_ANALYSIS);
+    SemanticContext sema_ctx = (SemanticContext){
+        .func = ((void *)0),
+    };
+    array_init(&sema_ctx.i_array, 4, sizeof(int));
+    array_init(&sema_ctx.compound_stack, 4, sizeof(Node *));
+    array_init(&sema_ctx.loop_stack, 4, sizeof(Node *));
+    if (has_flag(CF_DEBUG_TYPEPOOL)) print_typepool();
+    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
+    if (has_flag(CF_STOP_AFTER_AST)) {
+        print_ast(&compiler->nm);
+        return 1;
+    }
+    array_free(&sema_ctx.i_array);
+    generate_types();
+    set_log_stage(STAGE_IR);
+    lower_nodes(&compiler->nm);
+    IR_Context ctx = ir_init_ctx(&compiler->p);
+    IR_Module *module = ir_gen_translation_unit(&ctx, arena_get(&compiler->nm, 0));
+    if (has_flag(CF_STOP_AFTER_IR)) {
+        printf("---- IR ----\n");
+        print_ir_module(&ctx, module);
+        printf("\n");
+    }
+    analysis(&ctx);
+    if (has_flag(CF_DEBUG_LIFETIMES)) {
+        for (int i = 0; i < module->functions_array.count; i++) print_cfg(get_func(module, i));
+    }
+    if (has_flag(CF_DEBUG_LOWERED_IR)) {
+        printf("---- Lowered IR ----\n");
+        print_ir_module(&ctx, module);
+        printf("\n");
+    }
+    if (has_flag(CF_DEBUG_SYMBOLS)) {
+        printf("---- Symbols ----\n");
+        for (int i = 0; i < ctx.symbol_table->count; i++) {
+            Symbol *s = arena_get(ctx.symbol_table, i);
+            print("%t %s\n", s->type, s->name);
+        }
+    }
+    if (has_flag(CF_STOP_AFTER_IR)) return 1;
+    set_log_stage(STAGE_X86_GEN);
+    FILE *fp = fopen((char *)compiler->current_output.data, "w");
+    x86_gen_module(fp, &ctx);
+    fclose(fp);
+    ir_free_module(module);
+    free_ir_ctx(&ctx);
     return 1;
 }
-static int contains(const int *arr, const int count, const int val) {
-    for (int i = 0; i < count; i++) {
-        if (arr[i] == val) return 1;
+static int load_src_file(Compiler *compiler, const char *file) {
+    char cmd[512];
+    int cmd_len = snprintf(cmd, sizeof(cmd),
+                           "gcc -E -P -nostdinc -D__COMPILER_C__ -I"
+                           "E:/Dev/compiler_c/libc"
+                           " -std=c11 %s ",
+                           file);
+    for (int i = 0; i < compiler->passthrough_args.count; i++) {
+        cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }
+    FILE *fp = _popen(cmd, "r");
+    if (!(fp)) do {
+            log_message(LOG_ERROR, "Failed to open %s\n", file);
+            exit(1);
+        } while (0);
+    Array src;
+    array_init(&src, 1024, sizeof(char));
+    char c;
+    for (;;) {
+        c = (char)fgetc(fp);
+        if (c == (-1)) break;
+        append(&src, &c);
+    }
+    _pclose(fp);
+    append(&src, &(char){'\0'});
+    compiler->src = (char *)src.data;
+    compiler->src_size = src.count - 1;
+    if (compiler->src_size == 0) log_message(LOG_WARN, "Loaded an empty source file\n");
     return 0;
-}
-void add_successor(IR_Function *func, IR_Block *from, IR_Block *to) {
-    if (!contains(from->cfg.succ, from->cfg.succ_count, to->id)) {
-        from->cfg.succ = realloc(from->cfg.succ, sizeof(int) * (from->cfg.succ_count + 1));
-        from->cfg.succ[from->cfg.succ_count++] = to->id;
-    }
-    if (!contains(to->cfg.pred, to->cfg.pred_count, from->id)) {
-        to->cfg.pred = realloc(to->cfg.pred, sizeof(int) * (to->cfg.pred_count + 1));
-        to->cfg.pred[to->cfg.pred_count++] = from->id;
-    }
-}
-void dfs_postorder(IR_Function *func, const int block_id, int *visited, int *postorder, int *count) {
-    if (visited[block_id]) return;
-    visited[block_id] = 1;
-    const IR_Block *b = get_block(func, block_id);
-    for (int i = 0; i < b->cfg.succ_count; i++) {
-        dfs_postorder(func, b->cfg.succ[i], visited, postorder, count);
-    }
-    postorder[(*count)++] = block_id;
-}
-void compute_reverse_postorder(IR_Function *func, int *rpo) {
-    int *visited = calloc(func->blocks_array.count, sizeof(int));
-    if (!visited) {
-        do { log_message(LOG_ERROR, "Failed to calloc for visited\n"); exit(1); } while (0);
-    }
-    int *postorder = malloc(func->blocks_array.count * sizeof(int));
-    if (!postorder) {
-        free(visited);
-        do { log_message(LOG_ERROR, "Failed to calloc for postorder\n"); exit(1); } while (0);
-    }
-    int count = 0;
-    dfs_postorder(func, 0, visited, postorder, &count);
-    for (int i = 0; i < count; i++) {
-        rpo[i] = postorder[count - 1 - i];
-    }
-    free(postorder);
-    free(visited);
-}
-int bitset_add_defined(const BitSet *defined, const IR_Value *v) {
-    if (v->kind == IR_VREG) {
-        if (!bitset_has(defined, v->vreg)) {
-            bitset_add(defined, v->vreg);
-            return 1;
-        }
-    }
-    return 0;
-}
-void bitset_add_used(const BitSet *defined, const BitSet *used, const IR_Value *v) {
-    if (v->kind == IR_VREG) {
-        if (!bitset_has(defined, v->vreg)) {
-            bitset_add(used, v->vreg);
-        }
-    }
-}
-void ir_init_func_cfg(const IR_Function *f) {
-    for (int j = 0; j < f->blocks_array.count; j++) {
-        IR_Block *b = get_block(f, j);
-        b->cfg.succ = ((void *)0);
-        b->cfg.succ_count = 0;
-        b->cfg.pred = ((void *)0);
-        b->cfg.pred_count = 0;
-        bitset_init(&b->live.live_in, f->max_reg);
-        bitset_init(&b->live.live_out, f->max_reg);
-        bitset_init(&b->live.def, f->max_reg);
-        bitset_init(&b->live.use, f->max_reg);
-    }
-}
-void ir_compute_func_io(IR_Function *f) {
-    for (int j = 0; j < f->blocks_array.count; j++) {
-        IR_Block *b = get_block(f, j);
-        int has_terminator = 0;
-        for (int i = 0; i < b->instruction_array.count; i++) {
-            const IR_Instruction *instr = get_instruction(&b->instruction_array, i);
-            switch (instr->op) {
-            case IR_BR:
-                add_successor(f, b, instr->br.block);
-                has_terminator = 1;
-                break;
-            case IR_BR_COND:
-                if (instr->br_cond.f_block) add_successor(f, b, instr->br_cond.f_block);
-                if (instr->br_cond.t_block) add_successor(f, b, instr->br_cond.t_block);
-                has_terminator = instr->br_cond.f_block && instr->br_cond.t_block;
-                break;
-            case IR_RET:
-                has_terminator = 1;
-                break;
-            default:
-                break;
-            }
-            if (has_terminator) break;
-        }
-        if (!has_terminator && j < f->blocks_array.count - 1) add_successor(f, b, get_block(f, j + 1));
-    }
-}
-int reg_bitset(const IR_Function *f) {
-    int defined = 0;
-    for (int j = 0; j < f->blocks_array.count; j++) {
-        const IR_Block *b = get_block(f, j);
-        for (int k = 0; k < b->instruction_array.count; k++) {
-            const IR_Instruction *instr = get_instruction(&b->instruction_array, k);
-            for (int i = 0; i < instr->op_count; i++) {
-                if (instr->ops[i].kind != IR_VREG) continue;
-                if (op_info[instr->op].def_mask & (1 << i)) {
-                    if (bitset_add_defined(&b->live.def, &instr->ops[i])) defined++;
-                }
-                if (op_info[instr->op].use_mask & (1 << i)) {
-                    bitset_add_used(&b->live.def, &b->live.use, &instr->ops[i]);
-                }
-            }
-        }
-    }
-    return defined;
-}
-void compute_bitset(const IR_Function *f, const int *rpo) {
-    BitSet old_live_out;
-    BitSet old_live_in;
-    BitSet tmp;
-    bitset_init(&old_live_out, f->max_reg);
-    bitset_init(&old_live_in, f->max_reg);
-    bitset_init(&tmp, f->max_reg);
-    int changed = 1;
-    while (changed) {
-        changed = 0;
-        for (int i = 0; i < f->blocks_array.count; i++) {
-            const int index = rpo[i];
-            if (index == -1) continue;
-            const IR_Block *b = get_block(f, index);
-            bitset_clear(&old_live_out);
-            bitset_clear(&old_live_in);
-            bitset_clear(&tmp);
-            bitset_copy(&old_live_out, &b->live.live_out);
-            bitset_copy(&old_live_in, &b->live.live_in);
-            bitset_clear(&b->live.live_out);
-            for (int j = 0; j < b->cfg.succ_count; j++) bitset_union(&b->live.live_out, &get_block(f, b->cfg.succ[j])->live.live_in);
-            bitset_copy(&tmp, &b->live.live_out);
-            bitset_difference(&tmp, &b->live.def);
-            bitset_copy(&b->live.live_in, &b->live.use);
-            bitset_union(&b->live.live_in, &tmp);
-            if (!bitset_equal(&b->live.live_out, &old_live_out) || !bitset_equal(&b->live.live_in, &old_live_in)) changed = 1;
-        }
-    }
-    free(old_live_out.data);
-    free(old_live_in.data);
-    free(tmp.data);
-}
-int cmp_lifetime(const void *a, const void *b) { return ((Lifetime *)a)->start - ((Lifetime *)b)->start; }
-void linear_stack_slot_allocation(Lifetime *lts, const int count, int *stack_size) {
-    RegisterSlot *slots = ((void *)0);
-    int slot_count = 0;
-    for (int i = 0; i < count; i++) {
-        Lifetime *l = &lts[i];
-        int found_slot = 0;
-        for (int j = 0; j < slot_count; j++) {
-            RegisterSlot *s = &slots[j];
-            if (s->free_at <= l->start) {
-                s->free_at = l->end;
-                l->stack_slot = j;
-                l->stack_offset = s->v.phys_reg.offset;
-                found_slot = 1;
-                break;
-            }
-        }
-        if (!found_slot) {
-            RegisterSlot *new_slots = realloc(slots, sizeof(RegisterSlot) * (slot_count + 1));
-            if (!new_slots) {
-                do { log_message(LOG_ERROR, "Failed to realloc new_slots\n"); exit(1); } while (0);
-            }
-            slots = new_slots;
-            l->stack_offset = -(*stack_size) - l->v->size;
-            slots[slot_count].v = ir_stack_value(l->v->size, l->v->align, l->stack_offset);
-            slots[slot_count].free_at = l->end;
-            l->stack_slot = slot_count++;
-            *stack_size += l->v->size;
-        }
-    }
-    if (slots) free(slots);
-}
-RegSize reg_size(const int size) {
-    switch (size) {
-    case 1:
-        return REG_8;
-    case 2:
-        return REG_16;
-    case 4:
-        return REG_32;
-    case 8:
-        return REG_64;
-    default:
-        do { log_message(LOG_ERROR, "Incompatible size %d, should have already been handled tho\n", size); exit(1); } while (0);
-    }
-}
-const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, const int reg) {
-    for (int i = 0; i < lts_count; i++) {
-        if (lts[i].reg == reg) {
-            return &lts[i];
-        }
-    }
-    do { log_message(LOG_ERROR, "Failed to find lifetime of r%d\n", reg); exit(1); } while (0);
-}
-void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map) {
-    const IR_Value old = *v;
-    switch (old.symbol->kind) {
-    case VAR:
-        if (old.symbol->storage == STORAGE_NONE) {
-            const int index = get_symbol_index(symbol_map, v->symbol);
-            if (!(index != -1)) do { log_message(LOG_ERROR, "Tried to find symbol index of %s\n", v->symbol->name); exit(1); } while (0);
-            v->kind = IR_PHYS_REG;
-            *v = ((RegisterSlot *)get(symbol_slots, index))->v;
-            return;
-        }
-    case FUNC:
-        v->kind = IR_PHYS_REG;
-        v->phys_reg.kind = REG_IP;
-        v->phys_reg.size = REG_64;
-        v->phys_reg.data_kind = REG_DATA_LABEL;
-        v->phys_reg.label = old.symbol->name;
-        break;
-    case TYPEDEF:
-    case ANY:
-    case ENUM:
-        do { log_message(LOG_ERROR, "ir_lower_symbol_value dont know how to handle\n"); exit(1); } while (0);
-    }
-}
-IR_Value ir_gp_register(const GP_Reg reg) {
-    return (IR_Value){.kind = IR_PHYS_REG,
-                      .size = 8,
-                      .align = 8,
-                      .phys_reg = (PhysReg){
-                          .kind = REG_GP,
-                          .gp_reg = reg,
-                          .data_kind = REG_DATA_NONE,
-                          .size = REG_64,
-                      }};
-}
-IR_Value ir_gp_register_value(const GP_Reg reg) {
-    return (IR_Value){.kind = IR_PHYS_REG,
-                      .size = 8,
-                      .align = 8,
-                      .phys_reg = (PhysReg){
-                          .kind = REG_GP,
-                          .gp_reg = reg,
-                          .data_kind = REG_DATA_NONE,
-                          .size = REG_64,
-                      }};
-}
-IR_Value ir_gp_register_offset_value(const GP_Reg reg, const int offset) {
-    return (IR_Value){.kind = IR_PHYS_REG,
-                      .size = 8,
-                      .align = 8,
-                      .phys_reg = (PhysReg){
-                          .kind = REG_GP,
-                          .gp_reg = reg,
-                          .data_kind = REG_DATA_OFFSET,
-                          .size = REG_64,
-                          .offset = offset,
-                      }};
-}
-IR_Value ir_stack_value(const int size, const int align, const int offset) {
-    return (IR_Value){.kind = IR_PHYS_REG,
-                      .size = size,
-                      .align = align,
-                      .phys_reg = (PhysReg){
-                          .kind = REG_GP,
-                          .gp_reg = RBP,
-                          .data_kind = REG_DATA_OFFSET,
-                          .size = REG_64,
-                          .offset = offset,
-                      }};
-}
-void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, const int lts_count) {
-    if (!(lts)) do { log_message(LOG_ERROR, "LTS is null\n"); exit(1); } while (0);
-    if (!(v->kind == IR_VREG)) do { log_message(LOG_ERROR, "Expected VREG IR Value\n"); exit(1); } while (0);
-    *v = ir_stack_value(v->size, v->align, get_lifetime(lts, lts_count, v->vreg)->stack_offset);
-}
-void verify_completion(const IR_Function *f) {
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        const IR_Block *b = get_block(f, i);
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            const IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
-            for (int k = 0; k < value_count; k++) {
-                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
-                if (a->kind == IR_CONSTANT) continue;
-                if (a->kind == IR_CONSTANT && instr->op != IR_CALL) continue;
-                if (a->kind == IR_PHYS_REG || a->kind == IR_INT_LITERAL) continue;
-                if (instr->op == IR_RET && instr->ret.type == type_void) continue;
-                if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) continue;
-                log_start(LOG_ERROR);
-                print_ir_value(a);
-                printf(" was not converted to stack offset\n");
-                exit(1);
-            }
-        }
-    }
-}
-int get_symbol_index(const Array *symbol_map, const Symbol *symbol) {
-    for (int i = 0; i < symbol_map->count; i++) {
-        const Symbol *s = *(Symbol **)get(symbol_map, i);
-        if (s == symbol) return i;
-    }
-    return -1;
-}
-void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map) {
-    const int slot_count = f->locals_array.count + ctx->module->global_array.count;
-    if (slot_count == 0) return;
-    array_init(symbol_map, slot_count, sizeof(Symbol *));
-    array_init(symbol_slots, slot_count, sizeof(RegisterSlot));
-    for (int i = 0; i < ctx->module->global_array.count; i++) {
-        Symbol *global_symbol = get_global(ctx, i)->symbol;
-        append(symbol_slots, &(RegisterSlot){.v = ir_symbol_value(global_symbol), .free_at = -1});
-        append(symbol_map, &global_symbol);
-    }
-    int stack_offset = 16;
-    int offset = 0;
-    int gp_count = 0;
-    int fp_count = 0;
-    for (int i = 0; i < f->locals_array.count; i++) {
-        Symbol *local_symbol = get_local_symbol(f, i);
-        const ABI_Result res = abi_classify(local_symbol->type);
-        const int size = align(local_symbol->type->size, 8);
-        offset = -(*frame_size) - size;
-        if (local_symbol->scope_depth == 1 && res.memory) {
-            offset = stack_offset;
-            stack_offset += size;
-        } else *frame_size += size;
-        append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
-        append(symbol_map, &local_symbol);
-    }
-}
-void gen_abi_func_types() {
-    const int n = typepool.count;
-    for (int i = 0; i < n; i++) {
-        Type *t = arena_get(&typepool, i);
-        if (t->kind == T_FUNCTION) abi_func_type_gen(t);
-    }
-}
-void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const int lts_count, const Array *symbol_slots,
-                              const Array *symbol_map) {
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        const IR_Block *b = get_block(f, i);
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
-            for (int k = 0; k < value_count; k++) {
-                const int is_arg_param = k >= instr->op_count;
-                const int instr_index = is_arg_param ? k - instr->op_count : k;
-                IR_CallArg *arg = is_arg_param ? get_call_arg(instr, instr_index) : ((void *)0);
-                IR_Value *a = is_arg_param ? &arg->v : &instr->ops[instr_index];
-                switch (a->kind) {
-                case IR_VREG:
-                    ir_lower_vreg_value(a, lts, lts_count);
-                    break;
-                case IR_SYMBOL:
-                    ir_lower_symbol_value(a, symbol_slots, symbol_map);
-                    break;
-                case IR_CONSTANT:
-                case IR_PHYS_REG:
-                case IR_INT_LITERAL:
-                    break;
-                case IR_UNDEFINED:
-                    if (instr->op == IR_RET && instr->ret.type == type_void) break;
-                    if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) break;
-                    do { log_message(LOG_ERROR, "An undefined IR value made it to analysis!!\n"); exit(1); } while (0);
-                    break;
-                }
-            }
-        }
-    }
-}
-void lower_ir_for_asm(IR_Function *f) {
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        IR_Block *b = get_block(f, i);
-        int param_cursor = 0;
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            if (instr->op == IR_PARAM) {
-                param_cursor++;
-            }
-        }
-        int param_index = 0;
-        int instrs_added = 0;
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            if (instr->op == IR_RET) {
-                abi_lower_ret(f, b, instr, &j);
-            } else if (instr->op == IR_PARAM) {
-                abi_lower_param(f, b, instr, &instrs_added, param_index++, &param_cursor);
-            } else if (instr->op == IR_LOAD) {
-                if (!(instr->load.type->size <= 8)) do { log_message(LOG_ERROR, " : ir_load of type sized %d is larger than 8 bytes %t\n", instr->load.type->size, instr->load.type); exit(1); } while (0);
-                if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
-            } else if (instr->op == IR_STORE) {
-                abi_lower_store(f, b, instr, &j);
-            }
-        }
-    }
-}
-void analysis(const IR_Context *ctx) {
-    for (int i = 0; i < ctx->module->functions_array.count; i++) {
-        IR_Function *f = get_func(ctx->module, i);
-        lower_ir_for_asm(f);
-        if (has_flag(CF_DEBUG_LOWERED_IR)) {
-            printf("vvvvvvvvvvvvvvvvvvvvv\n");
-            print_ir_function(ctx, f);
-            printf("\n^^^^^^^^^^^^^^^^^^^^^\n");
-        }
-        ir_init_func_cfg(f);
-        ir_compute_func_io(f);
-        Lifetime *lifetimes = ((void *)0);
-        int *rpo = malloc(f->blocks_array.count * sizeof(int));
-        for (int i = 0; i < f->blocks_array.count; i++) {
-            rpo[i] = -1;
-        }
-        if (!rpo) {
-            do { log_message(LOG_ERROR, "Failed to allocate rpo\n"); exit(1); } while (0);
-        }
-        int reg_count = 0;
-        if (f->max_reg > 0) {
-            reg_count = reg_bitset(f);
-            compute_reverse_postorder(f, rpo);
-            compute_bitset(f, rpo);
-            lifetimes = compute_lifetimes(f, reg_count, rpo);
-            qsort(lifetimes, reg_count, sizeof(Lifetime), cmp_lifetime);
-            if (has_flag(CF_DEBUG_LIFETIMES)) {
-                for (int j = 0; j < reg_count; j++) {
-                    printf("r%d = [%d -> %d]\n", lifetimes[j].reg, lifetimes[j].start, lifetimes[j].end);
-                }
-                printf("\n");
-            }
-        }
-        Array symbol_map = {};
-        Array symbol_slots = {};
-        const int variadic_space = f->type->_func.is_variadic ? 176 : 0;
-        int frame_size = variadic_space;
-        symbol_slot_allocation(ctx, f, &frame_size, &symbol_slots, &symbol_map);
-        linear_stack_slot_allocation(lifetimes, reg_count, &frame_size);
-        lower_ir_values_to_stack(f, lifetimes, reg_count, &symbol_slots, &symbol_map);
-        verify_completion(f);
-        f->stack_size = frame_size;
-        free(rpo);
-        free(lifetimes);
-        array_free(&symbol_map);
-        array_free(&symbol_slots);
-    }
-}
-Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *rpo) {
-    Lifetime *lts = malloc(sizeof(Lifetime) * defined);
-    int pc = 0;
-    for (int i = 0; i < f->blocks_array.count; i++) {
-        const int index = rpo[i];
-        if (index == -1) continue;
-        const IR_Block *b = get_block(f, rpo[i]);
-        for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
-            const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
-            for (int k = 0; k < value_count; k++) {
-                const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
-                const int is_call_arg = k >= instr->op_count;
-                if (a->kind == IR_VREG) {
-                    if (a->vreg < 0) continue;
-                    if (op_info[instr->op].def_mask & (1 << k)) {
-                        lts[instr->ops[k].vreg] = (Lifetime){instr->ops[k].vreg, pc, -1, 0, 0, .v = &instr->ops[k]};
-                    }
-                    if (is_call_arg || op_info[instr->op].use_mask & (1 << k)) {
-                        if (lts[a->vreg].end < pc) {
-                            lts[a->vreg].end = pc;
-                        }
-                    }
-                }
-            }
-            pc++;
-        }
-    }
-    return lts;
-}
-void print_bitset(const BitSet *bs) {
-    printf("{");
-    int first = 1;
-    for (int i = 0; i < bs->num_bits; i++) {
-        if (bitset_has(bs, i)) {
-            if (!first) printf(", ");
-            printf("r%d", i);
-            first = 0;
-        }
-    }
-    printf("}");
-}
-void print_cfg(const IR_Function *func) {
-    printf("Func Analysis: %s\n", func->name);
-    for (int i = 0; i < func->blocks_array.count; i++) {
-        const IR_Block *b = get_block(func, i);
-        printf("L%d:\n", i);
-        printf("  Succ: ");
-        if (b->cfg.succ_count == 0) printf("None");
-        for (int j = 0; j < b->cfg.succ_count; j++) printf("L%d ", b->cfg.succ[j]);
-        printf("\n");
-        printf("  Pred: ");
-        if (b->cfg.pred_count == 0) printf("None");
-        for (int j = 0; j < b->cfg.pred_count; j++) printf("L%d ", b->cfg.pred[j]);
-        printf("\n");
-        printf("  Def: ");
-        print_bitset(&b->live.def);
-        printf("\n");
-        printf("  Use: ");
-        print_bitset(&b->live.use);
-        printf("\n");
-        printf("  Live-in: ");
-        print_bitset(&b->live.live_in);
-        printf("\n");
-        printf("  Live-out: ");
-        print_bitset(&b->live.live_out);
-        printf("\n");
-    }
 }
