@@ -6,6 +6,9 @@ An unoptimised self-compiling C compiler written in C for C89 following Win64 & 
 
 ## Table of Contents
 * [Compiler C](#compiler-c)
+* [Usage](#usage)
+  * [CMake](#cmake)
+* [Specifications](#specifications)
 * [Grammar](#grammar)
 * [Architecture](#architecture)
   * [The Compiler] (#the-compiler)
@@ -27,16 +30,30 @@ An unoptimised self-compiling C compiler written in C for C89 following Win64 & 
   * [8. Completeness](#8-completeness)
 * [To be Implemented](#to-be-implemented-ordered-from-next-to-never)
 
-# Grammar
-The grammar supported by the compiler is as defined in the [GNU C Language Manual](gnu-c-language-manual.pdf). Some liberties have been taken in places where I felt supporting such grammar would be redundant in the short term. Below is an example of equivalent code where only the former is supported.
-```c
-char a[] = "Hello World";
-```
+# Usage
 
-```c
-char b[] = "Hello " "World";
-```
-Both of these are parsed to be identical strings `"Hello World"`, as option `a` is perfectly fine, I do not plan to support option `b` until absolutely necessary. While the goal is to fully support C89, some useful features from future standards are also supported. For example designated initliazers for `struct` and `array` types,
+The compiler uses the GNU interface where the most common flags are implemented. Any flags not mentioned here are passed to gcc in the preprocessor stage.
+* `-h` Lists help information
+* `-o <output>` Sets a specified output file path
+* `-S` Stop after compiler, outputs a `.s` file.
+* `-c` Stop after assembler, outputs a `.o` file.
+Note flags like `-I<include/path>` and `-D<macro>` are not implemented by the compiler however are passed through to preprocessor and therefore are fully functional.
+
+## CMake
+The compiler is designed to be seemlessly compatible with existing build systems, specifically CMake. In order to use Compiler_C the following flags must be set accordingly.
+* `-DCMAKE_C_COMPILER=<path/to/compiler_c>`
+* `-DCMAKE_C_COMPILER_WORKS=true`
+* `-DCMAKE_C_COMPILER_ID=compiler_c`
+The `CMAKE_C_COMPILER_WORKS=true` flag is needed to skip the Identification test run by CMake, I believe to pass this test I would have to pass my compiler off as a GNU based compiler. It passes the other generic CompilerCTest.c given by CMake.
+
+# Specifications
+* Emits `x86-64` `AT&T` Syntax Assembly
+* Supports both `Win64` and `SysV` ABI specifications
+* Uses virtual registers placed on the stack.
+
+# Grammar
+The grammar supported by the compiler is as defined in the [GNU C Language Manual](gnu-c-language-manual.pdf). 
+While the goal is to fully support C89, some useful features from future standards are also supported. For example designated initliazers for `struct`, `union` and `array` types,
 ```c
 int x[] = { [1] = 5, 4, 5, [5] = 6 };
 ```
@@ -60,13 +77,13 @@ A good way to understand what is supported is as follows,
 > "Every language feature used in developing the compiler will be implemented, such that the compiler can compiler itself." 
 
 # Architecture
-Any C compiler has 4 main stages. The Preprocessor, Compiler, Assembler and Linker. Compiler_c implents the compiler stage and offloads the other 3 tasks to `gcc`. For ease of use, the compiler complies with the GNU interface, allowing things like `-o <output>`, any unknown flags are passed to `gcc` and ignored by the compiler. This allows Compiler_c to be a drop-in replacement of `gcc` in build systems like CMake with no extra work.
+Any C compiler has 4 main stages. The Preprocessor, Compiler, Assembler and Linker. Compiler_c implents the compiler stage and outsources the 3 other stages to `gcc`. For ease of use, the compiler complies with the GNU interface, allowing things like `-o <output>`, any unknown flags are passed to `gcc` and ignored by the compiler. This allows Compiler_c to be a drop-in replacement of `gcc` in build systems like CMake with no extra work.
 
 The compiler uses a driver function to handle moving between the 4 major stages. For every source file passed, it is given to `gcc` for preprocessing. Here we define `-D__COMPILER_C__` so header files know which compiler is being used. We also direct `gcc` to use our own libc headers with `-nostdlib` and `-I./libc/`. Once the source file has been preprocessed, the driver passes it on to the compiler.
 
-The structure of the compiler will be explained in detail later, for now it takes a `.c` source file and emits a correponding `.s` x86-64 assembly file. Once finished the driver passes it to the assembler which goes from `.s` to a `.o` object file, no special flags needed. Every source file is compiled to any object file and collected by the driver before moving onto the next step.
+The structure of the compiler will be explained in detail later, for now it takes a `.c` source file and emits a correponding `.s` x86-64 assembly file. Once finished the driver passes it to the assembler which goes from `.s` to a `.o` object file. Every source file is compiled to an object file and collected by the driver before moving onto the last stage.
 
-Finally when all source files have been compiled to objects, the driver has `gcc` link them together. It is important to include `-lc` and `-lm` to link against libc and math libraries which allows for the use of functions like `printf`. ( `-lc` is on by default, `-lm` is on by default on Win64 )
+Finally when all source files have been compiled to objects, the driver has `gcc` link them together. It is important that we link with both libc `-lc` and math `-lm` which allows for the use of functions like `printf`. ( `-lc` is generally on by default, `-lm` is on by default on Win64 )
 
 ### The Compiler
 The compiler itself is comprised of 6 major sections. Each one has a clear task. 
