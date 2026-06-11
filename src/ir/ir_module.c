@@ -22,6 +22,7 @@ IR_OpInfo op_info[] = {
     [IR_CAST] = {.def_mask = 0b001, .use_mask = 0b010},
     [IR_ADDR] = {.def_mask = 0b001, .use_mask = 0b010},
     [IR_ALLOCA] = {.def_mask = 0b001, .use_mask = 0b000},
+    [IR_MEMSET] = {.def_mask = 0b000, .use_mask = 0b001},
     [IR_MEMCPY] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_BINOP] = {.def_mask = 0b001, .use_mask = 0b110},
     [IR_UNOP] = {.def_mask = 0b001, .use_mask = 0b010},
@@ -33,7 +34,11 @@ IR_OpInfo op_info[] = {
     [IR_BUILTIN_VA_START] = {.def_mask = 0b000, .use_mask = 0b011},
     [IR_BUILTIN_VA_ARG] = {.def_mask = 0b001, .use_mask = 0b010},
 };
+#ifdef __COMPILER_C__
+const IR_Value ir_no_value;
+#else
 const IR_Value ir_no_value = (IR_Value){IR_UNDEFINED, 0, 0, 0};
+#endif
 
 IR_Context ir_init_ctx(Parser *p) {
     IR_Context ctx = {0};
@@ -237,8 +242,12 @@ void ir_free_module(IR_Module *module) {
     free(module);
 }
 
-void ir_append_instruction(IR_Block *b, IR_Instruction *instr) {
+void ir_append_instruction(IR_Context *ctx, IR_Instruction *instr) {
     if (has_flag(CF_DEBUG_IR_INSTR)) print_ir_instruction(NULL, instr);
-
-    append(&b->instruction_array, instr);
+    if (ctx->block->instruction_array.count > 0) {
+        IR_Instruction *last = get_instruction(&ctx->block->instruction_array, ctx->block->instruction_array.count - 1);
+        if (last->op == IR_BR || (last->op == IR_BR_COND && last->br_cond.f_block && last->br_cond.t_block) || last->op == IR_RET)
+            ir_add_block(ctx);
+    }
+    append(&ctx->block->instruction_array, instr);
 }

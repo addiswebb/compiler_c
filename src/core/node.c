@@ -35,59 +35,53 @@ NodeManager new_node_manager() {
 */
 Node *new_node(NodeManager *nm, const NodeKind kind) {
     Node *node = arena_append(nm, &(Node){0});
+#ifdef __COMPILER_C__
+    // structs are not zero'd yet...
+    memset(node, 0, sizeof(Node));
+#endif
     node->kind = kind;
     node->type = type_invalid;
     return node;
 }
 
-Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type) {
-    Node *cast = new_node(nm, N_CAST);
-    cast->cast.from = node->type;
-    cast->cast.to = type;
-    cast->cast.expr = node;
-    return cast;
+Node *new_init_list_node(NodeManager *nm) {
+    Node *node = new_node(nm, N_INIT_LIST);
+    array_init(&node->init_list.elements_array, 4, sizeof(Node *));
+    return node;
 }
+
+Node *new_function_node(NodeManager *nm) { return new_node(nm, N_FUNCTION); }
+
+Node *new_function_call_node(NodeManager *nm, Node *identifier) {
+    Node *node = new_node(nm, N_FUNCTION_CALL);
+    node->func_call.callee = identifier;
+    array_init(&node->func_call.params_array, 4, sizeof(Node *));
+    return node;
+}
+
 Node *cast_node(NodeManager *nm, Node *node, Type *type) {
     if (is_func_ptr(node->type) && is_func_ptr(type)) {
         if (cmp_func_types(node->type->base, type->base)) {
             return node;
         }
     }
-    // if (node->type->kind == T_FUNCTION && type->kind == T_POINTER && type->base->kind == T_FUNCTION &&
-    //     cmp_func_types(node->type, type->base)) {
-
-    //     node->type = get_pointer_type(node->type);
-    //     return node;
-    // }
-
-    if (!is_valid_cast(node->type, type)) {
-        log_start(LOG_ERROR);
-        printf("Invalid conversion from ");
-        print_type(node->type);
-        printf(" to ");
-        print_type(type);
-        printf("\n");
-        exit(1);
-    }
+    ASSERT(is_valid_cast(node->type, type), "Invalid cast from %t to %t\n", node->cast.expr->type, node->cast.to);
 
     Node *cast = new_node(nm, N_CAST);
     cast->type = type;
-    // cast->cast.to = type;
     cast->cast.from = node->type;
     cast->cast.expr = node;
+
     return cast;
 }
 
 bool is_valid_cast(const Type *from, const Type *to) {
     if (from->kind == T_INVALID || to->kind == T_INVALID) return false;
-    if (from->kind == T_FUNCTION && to->kind == T_POINTER) {
-        return cmp_func_types(from, to->base);
-    }
-    if (from->kind == T_ARRAY) {
-        // Can only cast array->pointer (pointer decay)
-        return to->kind == T_POINTER;
-    }
+    if (from->kind == T_FUNCTION && to->kind == T_POINTER) return cmp_func_types(from, to->base);
+    // Can only cast array->pointer (pointer decay)
+    if (from->kind == T_ARRAY) return to->kind == T_POINTER;
     if (to->kind == T_POINTER && !(from->kind == T_POINTER || from->kind == T_INT)) return to->base == from;
+
     return true;
 }
 
@@ -105,8 +99,8 @@ LiteralKind literal_kind(const TokenType type) {
         PANIC("Given a non literal token\n");
     }
 }
-void print_node_type(const NodeKind type) {
-    switch (type) {
+void print_node_kind(const NodeKind kind) {
+    switch (kind) {
     case N_TRANSLATION_UNIT:
         printf("Translation Unit");
         break;
@@ -185,7 +179,7 @@ void print_node_type(const NodeKind type) {
     case N_COMPOUND_LITERAL:
         printf("Compound Literal");
         break;
-    case N_DESIGNATED_INITIALIZER:
+    case N_DESIGNATOR:
         printf("Designated Initializer");
         break;
     case N_BUILTIN:
@@ -212,7 +206,7 @@ void print_node(const Node *node, const int depth) {
         printf("-\n");
         return;
     }
-    print_node_type(node->kind);
+    print_node_kind(node->kind);
     printf(" |");
     print_type(node->type);
     printf("| ");
@@ -435,10 +429,10 @@ void print_node(const Node *node, const int depth) {
         printf("]\n");
         print_node(node->compound_literal.value, depth + 1);
         break;
-    case N_DESIGNATED_INITIALIZER:
-        if (node->designated_init.kind == T_ARRAY) printf(": [index= %d]\n", node->designated_init._array.index);
-        else printf(": [name= %s]\n", node->designated_init._struct.name);
-        print_node(node->designated_init.value, depth + 1);
+    case N_DESIGNATOR:
+        if (node->designator.kind == T_ARRAY) printf(": [index= %d]\n", node->designator._array.index);
+        else printf(": [name= %s]\n", node->designator._struct.name);
+        print_node(node->designator.value, depth + 1);
         break;
     case N_BUILTIN:
         printf(": [name= %s, param_count= %d]\n", builtin_names[node->_builtin.kind], node->_builtin.params.count);
@@ -453,6 +447,7 @@ void print_node(const Node *node, const int depth) {
         print_node(node->ternary.if_false, depth + 1);
         break;
     case N_NULL:
+        printf("\n");
         break;
     }
 }
@@ -483,9 +478,9 @@ void free_node(Node *node) {
         array_free(&node->compound.items_array);
         break;
     case N_VAR_DECL:
+        if (node->var_decl.is_global) free_const_literal(node->var_decl.const_expr);
         free_node(node->var_decl.identifier);
         node->var_decl.identifier = NULL;
-        if (node->var_decl.is_global) free_const_literal(node->var_decl.const_expr);
         node->var_decl.const_expr = NULL;
         free_node(node->var_decl.expr);
         node->var_decl.expr = NULL;
@@ -605,23 +600,23 @@ void free_node(Node *node) {
         free_node(node->compound_literal.value);
         node->compound_literal.value = NULL;
         break;
-    case N_DESIGNATED_INITIALIZER:
-        switch (node->designated_init.kind) {
+    case N_DESIGNATOR:
+        switch (node->designator.kind) {
         case T_ARRAY:
             break;
         case T_STRUCT:
-            node->designated_init._struct.name = NULL;
-            node->designated_init._struct.member = NULL;
+            node->designator._struct.name = NULL;
+            node->designator._struct.member = NULL;
             break;
         case T_UNION:
-            node->designated_init._union.name = NULL;
-            node->designated_init._union.member = NULL;
+            node->designator._union.name = NULL;
+            node->designator._union.member = NULL;
             break;
         default:
             break;
         }
-        free_node(node->designated_init.value);
-        node->designated_init.value = NULL;
+        free_node(node->designator.value);
+        node->designator.value = NULL;
         break;
     case N_BUILTIN:
         for (int i = 0; i < node->_builtin.params.count; i++) {

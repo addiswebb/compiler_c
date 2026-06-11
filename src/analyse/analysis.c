@@ -174,27 +174,29 @@ void ir_init_func_cfg(const IR_Function *f) {
 void ir_compute_func_io(IR_Function *f) {
     for (int j = 0; j < f->blocks_array.count; j++) {
         IR_Block *b = get_block(f, j);
-
-        bool found = false;
+        bool has_terminator = false;
         for (int i = 0; i < b->instruction_array.count; i++) {
             const IR_Instruction *instr = get_instruction(&b->instruction_array, i);
             switch (instr->op) {
             case IR_BR:
                 add_successor(f, b, instr->br.block);
-                found = true;
+                has_terminator = true;
                 break;
             case IR_BR_COND:
                 if (instr->br_cond.f_block) add_successor(f, b, instr->br_cond.f_block);
                 if (instr->br_cond.t_block) add_successor(f, b, instr->br_cond.t_block);
-                found = instr->br_cond.f_block && instr->br_cond.t_block;
+                has_terminator = instr->br_cond.f_block && instr->br_cond.t_block;
                 break;
             case IR_RET:
+                has_terminator = true;
+                break;
             default:
                 break;
             }
+            if (has_terminator) break;
         }
         // Means we may still be within the block, allow fallthrough to sequentially next block.
-        if (!found && j < f->blocks_array.count - 1) add_successor(f, b, get_block(f, j + 1));
+        if (!has_terminator && j < f->blocks_array.count - 1) add_successor(f, b, get_block(f, j + 1));
     }
 }
 
@@ -231,7 +233,9 @@ void compute_bitset(const IR_Function *f, const int *rpo) {
     while (changed) {
         changed = false;
         for (int i = 0; i < f->blocks_array.count; i++) {
-            const IR_Block *b = get_block(f, rpo[i]);
+            const int index = rpo[i];
+            if (index == -1) continue;
+            const IR_Block *b = get_block(f, index);
             bitset_clear(&old_live_out);
             bitset_clear(&old_live_in);
             bitset_clear(&tmp);
@@ -302,7 +306,7 @@ RegSize reg_size(const int size) {
     }
 }
 
-const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) {
+const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, const int reg) {
     for (int i = 0; i < lts_count; i++) {
         if (lts[i].reg == reg) {
             return &lts[i];
@@ -311,18 +315,19 @@ const Lifetime *get_lifetime(const Lifetime *lts, const int lts_count, int reg) 
     PANIC("Failed to find lifetime of r%d\n", reg);
 }
 void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *symbol_map) {
-    IR_Value old = *v;
+    const IR_Value old = *v;
     switch (old.symbol->kind) {
     case VAR:
-        // Handle global variables
+        // Handle local variables, replace with stack offset
         if (old.symbol->storage == STORAGE_NONE) {
-            int index = get_symbol_index(symbol_map, v->symbol);
+            const int index = get_symbol_index(symbol_map, v->symbol);
             ASSERT(index != -1, "Tried to find symbol index of %s\n", v->symbol->name);
             v->kind = IR_PHYS_REG;
             *v = ((RegisterSlot *)get(symbol_slots, index))->v;
-            break;
+            return;
         }
         // !!INTENTIONAL PASSTHROUGH!!
+        // Lower all global symbols to name(%rip)
     case FUNC:
         v->kind = IR_PHYS_REG;
         v->phys_reg.kind = REG_IP;
@@ -334,11 +339,10 @@ void ir_lower_symbol_value(IR_Value *v, const Array *symbol_slots, const Array *
     case ANY:
     case ENUM:
         PANIC("ir_lower_symbol_value dont know how to handle\n");
-        break;
     }
 }
 
-IR_Value ir_gp_register(GP_Reg reg) {
+IR_Value ir_gp_register(const GP_Reg reg) {
     return (IR_Value){.kind = IR_PHYS_REG,
                       .size = 8,
                       .align = 8,
@@ -349,7 +353,31 @@ IR_Value ir_gp_register(GP_Reg reg) {
                           .size = REG_64,
                       }};
 }
-IR_Value ir_stack_value(int size, int align, int offset) {
+
+IR_Value ir_gp_register_value(const GP_Reg reg) {
+    return (IR_Value){.kind = IR_PHYS_REG,
+                      .size = 8,
+                      .align = 8,
+                      .phys_reg = (PhysReg){
+                          .kind = REG_GP,
+                          .gp_reg = reg,
+                          .data_kind = REG_DATA_NONE,
+                          .size = REG_64,
+                      }};
+}
+IR_Value ir_gp_register_offset_value(const GP_Reg reg, const int offset) {
+    return (IR_Value){.kind = IR_PHYS_REG,
+                      .size = 8,
+                      .align = 8,
+                      .phys_reg = (PhysReg){
+                          .kind = REG_GP,
+                          .gp_reg = reg,
+                          .data_kind = REG_DATA_OFFSET,
+                          .size = REG_64,
+                          .offset = offset,
+                      }};
+}
+IR_Value ir_stack_value(const int size, const int align, const int offset) {
     return (IR_Value){.kind = IR_PHYS_REG,
                       .size = size,
                       .align = align,
@@ -361,20 +389,10 @@ IR_Value ir_stack_value(int size, int align, int offset) {
                           .offset = offset,
                       }};
 }
-void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, int lts_count) {
+void ir_lower_vreg_value(IR_Value *v, const Lifetime *lts, const int lts_count) {
     ASSERT(lts, "LTS is null\n");
     ASSERT(v->kind == IR_VREG, "Expected VREG IR Value\n");
     *v = ir_stack_value(v->size, v->align, get_lifetime(lts, lts_count, v->vreg)->stack_offset);
-}
-
-void ir_lower_const_value(IR_Value *v) {
-    return;
-    IR_Value old = *v;
-    v->kind = IR_PHYS_REG;
-    v->phys_reg.kind = REG_IP;
-    v->phys_reg.size = REG_64;
-    v->phys_reg.data_kind = REG_DATA_CONST_INDEX;
-    v->phys_reg.const_index = old.const_index;
 }
 
 void verify_completion(const IR_Function *f) {
@@ -385,31 +403,28 @@ void verify_completion(const IR_Function *f) {
             const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
                 const IR_Value *a = k < instr->op_count ? &instr->ops[k] : &get_call_arg(instr, k - instr->op_count)->v;
-                if (a->kind == IR_CONSTANT) continue; // TMP
+                if (a->kind == IR_CONSTANT) continue; // TODO: Figure out why this is 'TMP'
                 if (a->kind == IR_CONSTANT && instr->op != IR_CALL) continue;
                 if (a->kind == IR_PHYS_REG || a->kind == IR_INT_LITERAL) continue;
                 // Allow undefined IR Values for the following:
                 if (instr->op == IR_RET && instr->ret.type == type_void) continue;
                 if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) continue;
                 // Otherwise throw error
-                log_start(LOG_ERROR);
-                print_ir_value(a);
-                printf(" was not converted to stack offset\n");
-                exit(1);
+                PANIC("%ir was not converted to stack offset\n", a);
             }
         }
     }
 }
 
-int get_symbol_index(const Array *symbol_map, Symbol *symbol) {
+int get_symbol_index(const Array *symbol_map, const Symbol *symbol) {
     for (int i = 0; i < symbol_map->count; i++) {
-        Symbol *s = *(Symbol **)get(symbol_map, i);
+        const Symbol *s = *(Symbol **)get(symbol_map, i);
         if (s == symbol) return i;
     }
     return -1;
 }
 void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *frame_size, Array *symbol_slots, Array *symbol_map) {
-    int slot_count = f->locals_array.count + ctx->module->global_array.count;
+    const int slot_count = f->locals_array.count + ctx->module->global_array.count;
     if (slot_count == 0) return;
     // TODO account parameters,
 
@@ -421,23 +436,38 @@ void symbol_slot_allocation(const IR_Context *ctx, const IR_Function *f, int *fr
         append(symbol_slots, &(RegisterSlot){.v = ir_symbol_value(global_symbol), .free_at = -1});
         append(symbol_map, &global_symbol);
     }
-
+    int stack_offset = 16;
+    int offset = 0;
+    int gp_count = 0;
+    int fp_count = 0;
     for (int i = 0; i < f->locals_array.count; i++) {
         Symbol *local_symbol = get_local_symbol(f, i);
-        int size = align(local_symbol->type->size, 8);
-        // Todo track scopes on symbols, so that we can reuse slots for symbols aswell, (instead of '-1' currently)
-        int offset = -(*frame_size) - size;
+        ABI_Result res = abi_classify(local_symbol->type);
+        const int size = align(local_symbol->type->size, 8);
+        // Todo track scopes on symbols, so that we can reuse slots for symbols as well, (instead of '-1' currently)
+        // TODO making selecting these MORE ROBUST!!
+        /*
+            Track if a symbol is an arg, and track if it is gp, fp, or spilled so I can set offset correctly and easily
+        */
+        offset = -(*frame_size) - size;
+#ifdef __linux__
+        if (local_symbol->scope_depth == 1 && res.memory) {
+            offset = stack_offset;
+            stack_offset += size;
+        } else *frame_size += size;
+#else
+        *frame_size += size;
+#endif
 
         append(symbol_slots, &(RegisterSlot){.v = ir_stack_value(size, 8, offset), .free_at = -1});
         append(symbol_map, &local_symbol);
-        *frame_size += size;
     }
 }
 
-void generate_types() {
-    int n = typepool.count;
+void gen_abi_func_types() {
+    const int n = typepool.count;
     for (int i = 0; i < n; i++) {
-        Type *t = (Type *)arena_get(&typepool, i);
+        Type *t = arena_get(&typepool, i);
         if (t->kind == T_FUNCTION) abi_func_type_gen(t);
     }
 }
@@ -449,8 +479,8 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             const int value_count = instr->op == IR_CALL ? instr->op_count + instr->call.arg_array.count : instr->op_count;
             for (int k = 0; k < value_count; k++) {
-                bool is_arg_param = k >= instr->op_count;
-                int instr_index = is_arg_param ? k - instr->op_count : k;
+                const bool is_arg_param = k >= instr->op_count;
+                const int instr_index = is_arg_param ? k - instr->op_count : k;
                 IR_CallArg *arg = is_arg_param ? get_call_arg(instr, instr_index) : NULL;
                 IR_Value *a = is_arg_param ? &arg->v : &instr->ops[instr_index];
                 // Lower IR_VREG & IR_SYMBOL to IR_PHYS_REG
@@ -462,8 +492,6 @@ void lower_ir_values_to_stack(const IR_Function *f, const Lifetime *lts, const i
                     ir_lower_symbol_value(a, symbol_slots, symbol_map);
                     break;
                 case IR_CONSTANT:
-                    ir_lower_const_value(a);
-                    break;
                 case IR_PHYS_REG:
                 case IR_INT_LITERAL:
                     break;
@@ -482,7 +510,7 @@ void lower_ir_for_asm(IR_Function *f) {
         IR_Block *b = get_block(f, i);
         int param_cursor = 0;
         for (int j = 0; j < b->instruction_array.count; j++) {
-            IR_Instruction *instr = get_instruction(&b->instruction_array, j);
+            const IR_Instruction *instr = get_instruction(&b->instruction_array, j);
             if (instr->op == IR_PARAM) {
                 param_cursor++;
             }
@@ -497,10 +525,12 @@ void lower_ir_for_asm(IR_Function *f) {
                 abi_lower_param(f, b, instr, &instrs_added, param_index++, &param_cursor);
             } else if (instr->op == IR_LOAD) {
                 // Will fail if size > 8 bytes
-                ASSERT(instr->load.type->size <= 8, "ir_load of type sized larger than 8 bytes\n");
+                ASSERT(instr->load.type->size <= 8, " : ir_load of type sized %d is larger than 8 bytes %t\n", instr->load.type->size,
+                       instr->load.type);
+
                 if (instr->load.type->kind == T_STRUCT) instr->load.type = get_integer_type(instr->load.type->size);
             } else if (instr->op == IR_STORE) {
-                abi_lower_store(f, b, instr, &j);
+                abi_lower_store(instr);
             }
         }
     }
@@ -524,6 +554,9 @@ void analysis(const IR_Context *ctx) {
 
         Lifetime *lifetimes = NULL;
         int *rpo = malloc(f->blocks_array.count * sizeof(int));
+        for (int i = 0; i < f->blocks_array.count; i++) {
+            rpo[i] = -1;
+        }
         if (!rpo) {
             PANIC("Failed to allocate rpo\n");
         }
@@ -574,6 +607,8 @@ Lifetime *compute_lifetimes(const IR_Function *f, const int defined, const int *
     int pc = 0;
 
     for (int i = 0; i < f->blocks_array.count; i++) {
+        const int index = rpo[i];
+        if (index == -1) continue;
         const IR_Block *b = get_block(f, rpo[i]);
         for (int j = 0; j < b->instruction_array.count; j++) {
             IR_Instruction *instr = get_instruction(&b->instruction_array, j);

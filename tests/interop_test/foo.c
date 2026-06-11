@@ -1,18 +1,38 @@
 #include <stdarg.h>
 
-struct S {
-    long long a;
-    long long b;
-};
+#include <stdio.h>
 
-long long sum_struct(int n, ...) {
-    va_list args;
-    va_start(args, n);
-    long long s = 0;
-    for (int i = 0; i < n; i++) {
-        struct S v = va_arg(args, struct S);
-        s += v.a + v.b;
+void vprint(const char *fmt, va_list ap) {
+    while (*fmt != '\0') {
+        if (*fmt == '%') {
+            fmt++;
+            switch (*fmt) {
+            case '%':
+                putchar('%');
+                break;
+            case 'd':
+                printf("%d", __builtin_va_arg(ap, int));
+                break;
+            case 'f':
+                printf("%f", __builtin_va_arg(ap, double));
+                break;
+            case 's':
+                printf("%s", __builtin_va_arg(ap, char *));
+                break;
+            case 'p':
+                printf("%p", __builtin_va_arg(ap, void *));
+                break;
+            case 'c':
+                char c = __builtin_va_arg(ap, int);
+                putchar(c);
+                break;
+            default:
+                break;
+            }
+            fmt++;
+        } else {
+            putchar(*fmt);
+            fmt++;
+        }
     }
-    va_end(args);
-    return s;
 }

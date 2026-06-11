@@ -5,9 +5,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// extern void *free_check;
+// #define free(ptr) \
+//     do { \
+//         if (free_check && ptr == free_check) PANIC("Double free %p\n", ptr); \
+//         free(ptr); \
+//     } while (0)
+
 typedef enum {
-    LOG_DEBUG,
     LOG_INFO,
+    LOG_DEBUG,
     LOG_WARN,
     LOG_ERROR,
     LOG_PANIC,
@@ -32,14 +39,43 @@ typedef struct {
 
 extern Logger logger;
 
-static inline void init_logger(FILE *fp, LogLevel level) {
+#ifdef __COMPILER_C__
+#define PRINTCC(s) printf("[CC] " s "\n");
+#define exit_bp() exit(1)
+#else
+__attribute__((noreturn)) static void exit_bp() { exit(1); }
+#define PRINTCC(s) ((void)0)
+#endif
+
+static void init_logger(FILE *fp, const LogLevel level) {
     logger.file = fp ? fp : stderr;
     logger.stage = STAGE_COMPILER;
     logger.min_level = level;
 }
-static inline void set_log_stage(LogStage stage) { logger.stage = stage; }
 
-static inline void log_start(LogLevel lvl) {
+static char *stage_str(const LogStage stage) {
+    switch (stage) {
+    case STAGE_COMPILER:
+        return "Compiler";
+    case STAGE_TOKENIZING:
+        return "Tokenizer";
+    case STAGE_PARSING:
+        return "Parser";
+    case STAGE_IR:
+        return "IR";
+    case STAGE_X86_GEN:
+        return "x86 Gen";
+    case STAGE_SEMA_ANALYSIS:
+        return "Semantic Analysis";
+    case STAGE_ASSEMBLER:
+        return "Assembler";
+    case STAGE_LINKER:
+        return "Linker";
+    }
+}
+static void set_log_stage(const LogStage stage) { logger.stage = stage; }
+
+static void log_start(const LogLevel lvl) {
     if (lvl < logger.min_level) return;
     const char *level_str;
     switch (lvl) {
@@ -62,46 +98,23 @@ static inline void log_start(LogLevel lvl) {
         level_str = "LOG";
         break;
     }
-    const char *stage_str;
-    switch (logger.stage) {
-    case STAGE_COMPILER:
-        stage_str = "Compiler";
-        break;
-    case STAGE_TOKENIZING:
-        stage_str = "Tokenizer";
-        break;
-    case STAGE_PARSING:
-        stage_str = "Parser";
-        break;
-    case STAGE_IR:
-        stage_str = "IR";
-        break;
-    case STAGE_X86_GEN:
-        stage_str = "x86 Gen";
-        break;
-    case STAGE_SEMA_ANALYSIS:
-        stage_str = "Semantic Analysis";
-        break;
-    case STAGE_ASSEMBLER:
-        stage_str = "Assembler";
-        break;
-    case STAGE_LINKER:
-        stage_str = "Linker";
-        break;
-    }
-    fprintf(logger.file, "[%s] %s: ", level_str, stage_str);
+    const char *stage = stage_str(logger.stage);
+    fprintf(logger.file, "[%s] %s: ", level_str, stage);
 }
+void print(const char *fmt, ...);
+void vprint(const char *fmt, va_list ap);
 
-static inline void log_message(LogLevel lvl, const char *fmt, ...) {
+static void log_message(const LogLevel lvl, const char *fmt, ...) {
     if (lvl < logger.min_level) return;
     log_start(lvl);
     va_list args;
     va_start(args, fmt);
-    vfprintf(logger.file, fmt, args);
+    vprint(fmt, args);
     va_end(args);
     fflush(logger.file);
-    if (lvl == LOG_PANIC) exit(1);
+    if (lvl == LOG_PANIC) exit_bp();
 }
+
 #define DEBUG(fmt, ...) log_message(LOG_DEBUG, fmt, ##__VA_ARGS__)
 #define INFO(fmt, ...) log_message(LOG_INFO, fmt, ##__VA_ARGS__)
 #define WARN(fmt, ...) log_message(LOG_WARN, fmt, ##__VA_ARGS__)
@@ -109,15 +122,18 @@ static inline void log_message(LogLevel lvl, const char *fmt, ...) {
 #define PANIC(fmt, ...)                                                                                                                    \
     do {                                                                                                                                   \
         log_message(LOG_ERROR, fmt, ##__VA_ARGS__);                                                                                        \
-        exit(1);                                                                                                                           \
+        exit_bp();                                                                                                                         \
     } while (0)
 
-#ifdef __COMPILER_C
+#ifdef __COMPILER_C__
 #define ASSERT(cond, fmt, ...)                                                                                                             \
-    if (!cond) PANIC(fmt, ##__VA_ARGS__)
+    if (!(cond)) PANIC(fmt, ##__VA_ARGS__)
 #else
 #define ASSERT(cond, fmt, ...)                                                                                                             \
     if (__builtin_expect(!(cond), 0)) PANIC(fmt, ##__VA_ARGS__)
 #endif
+
+#define ASSERT_DB(cond, fmt, ...)                                                                                                          \
+    if (!(cond)) PANIC("[" #fmt "]" fmt, ##__VA_ARGS__)
 
 #endif // COMPILER_C_LOGGER_H

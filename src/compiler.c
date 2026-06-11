@@ -1,11 +1,13 @@
 #include "compiler_c/analyse/analysis.h"
 #include "compiler_c/core/arena.h"
 #include "compiler_c/core/array.h"
+#include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/log/logger.h"
 #include "compiler_c/tokenize/tokenizer.h"
+#include <compiler_c/abi/abi.h>
 #include <compiler_c/analyse/sema.h>
 #include <compiler_c/compiler.h>
 #include <compiler_c/x86/x86.h>
@@ -15,27 +17,28 @@
 #include <string.h>
 
 unsigned int compiler_flags = 0u;
-const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",        [CF_STOP_AFTER_IR] = "ir",
-                                      [CF_STOP_AFTER_COMPILE] = "S",      [CF_STOP_AFTER_ASSEMBLE] = "c",
-                                      [CF_DEBUG_TYPEPOOL] = "gtypepool",  [CF_DEBUG_LIFETIMES] = "glifetimes",
-                                      [CF_DEBUG_ENUM] = "genum",          [CF_DEBUG_STRUCT] = "gstruct",
-                                      [CF_DEBUG_UNION] = "gunion",        [CF_DEBUG_LOWERED_IR] = "glowered-ir",
-                                      [CF_DEBUG_IR_INSTR] = "gir-instr",  [CF_DEBUG_PARSER] = "gparser",
-                                      [CF_DEBUG_TOKENIZER] = "gtokenizer"};
+const char *flag_strings[CF_COUNT] = {[CF_STOP_AFTER_AST] = "ast",         [CF_STOP_AFTER_IR] = "ir",
+                                      [CF_STOP_AFTER_COMPILE] = "S",       [CF_STOP_AFTER_ASSEMBLE] = "c",
+                                      [CF_DEBUG_TYPEPOOL] = "gtypepool",   [CF_DEBUG_LIFETIMES] = "glifetimes",
+                                      [CF_DEBUG_ENUM] = "genum",           [CF_DEBUG_STRUCT] = "gstruct",
+                                      [CF_DEBUG_UNION] = "gunion",         [CF_DEBUG_LOWERED_IR] = "glowered-ir",
+                                      [CF_DEBUG_IR_INSTR] = "gir-instr",   [CF_DEBUG_PARSER] = "gparser",
+                                      [CF_DEBUG_TOKENIZER] = "gtokenizer", [CF_DEBUG_TOKENS] = "gtokens",
+                                      [CF_DEBUG_SYMBOLS] = "gsymbols"};
 
-bool has_flag(CompilerFlag f) { return compiler_flags & FLAG(f); }
+bool has_flag(const CompilerFlag f) { return compiler_flags & FLAG(f); }
 
 bool is_source_file(const char *arg) {
     if (arg[0] == '-') return false;
     const char *dot = strrchr(arg, '.');
     if (!dot) return false;
-    return strcmp(dot, ".c") == 0 || strcmp(dot, ".s") == 0 || strcmp(dot, ".o") == 0; // .o for linking stage
+    return strcmp(dot, ".c") == 0 || strcmp(dot, ".s") == 0 || strcmp(dot, ".o") == 0 || strcmp(dot, ".obj") == 0;
 }
 
 void read_args(Compiler *compiler, const int argc, char *argv[]) {
     // Loop and try find compile flags
     for (int i = 1; i < argc; i++) {
-        char *arg = argv[i];
+        const char *arg = argv[i];
         if (arg[0] == '-') {
             arg++;
             if (strcmp(arg, "o") == 0) {
@@ -58,6 +61,7 @@ void read_args(Compiler *compiler, const int argc, char *argv[]) {
             }
             if (consumed_flag) continue;
             append(&compiler->passthrough_args, &argv[i]);
+            if (strcmp(argv[i], "-I") == 0) append(&compiler->passthrough_args, &argv[++i]);
         } else if (is_source_file(argv[i])) append(&compiler->source_files, &argv[i]);
     }
 }
@@ -68,14 +72,13 @@ void assemble(Compiler *c) {
     INFO("Assembling %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "gcc -c %s -o %s", (char *)c->current_source.data, (char *)c->current_output.data);
-    int ret = system(cmd);
-    ASSERT(ret == 0, "Failed to assemble %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
+    ASSERT(system(cmd) == 0, "Failed to assemble %s to %s\n", (char *)c->current_source.data, (char *)c->current_output.data);
 }
-void link(Compiler *c, Array *objs) {
+void link(const Compiler *c, const Array *objs) {
     set_log_stage(STAGE_LINKER);
     INFO("Linking ");
-    char cmd[512] = {};
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -lm ");
+    char cmd[4028] = {};
+    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -lm " LINK_C);
     for (int i = 0; i < objs->count; i++) {
         char *src = *(char **)get(objs, i);
         printf("%s", src);
@@ -84,8 +87,7 @@ void link(Compiler *c, Array *objs) {
     }
     printf(" to %s\n", (char *)c->current_output.data);
     snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "-o %s ", (char *)c->current_output.data);
-    int ret = system(cmd);
-    ASSERT(ret == 0, "Failed to link %d objs to %s\n", objs->count, (char *)c->current_output.data);
+    ASSERT(system(cmd) == 0, "Failed to link %d objs to %s with cmd '%s'\n", objs->count, (char *)c->current_output.data, cmd);
 }
 
 void update_current_output(Compiler *c, bool cond, char *path, const char *ext) {
@@ -103,31 +105,39 @@ void update_current_output(Compiler *c, bool cond, char *path, const char *ext) 
 
 void drive(Compiler *c) {
     if ((has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) && c->source_files.count > 1 && c->output) {
-        WARN("-o ignored with multiple inputs %d\n");
+        WARN("-o ignored with multiple inputs %d\n", c->source_files.count);
         c->output = NULL;
     }
+
     Array objs;
     array_init(&objs, c->source_files.count, sizeof(char *));
     for (int i = 0; i < c->source_files.count; i++) {
         char *src_path = *(char **)get(&c->source_files, i);
         array_str_cpy(&c->current_source, src_path);
-        update_current_output(c, has_flag(CF_STOP_AFTER_COMPILE), src_path, ".s");
+        array_str_cpy(&c->current_output, src_path);
 
-        load_src_file(c, (char *)c->current_source.data);
-        init_compiler(c);
-        compile(c);
-        clear_compiler(c);
+        char ext = src_path[strlen(src_path) - 1];
+        switch (ext) {
+        case 'c':
+            update_current_output(c, has_flag(CF_STOP_AFTER_COMPILE), src_path, ".s");
+            load_src_file(c, (char *)c->current_source.data);
+            init_compiler(c);
+            compile(c);
+            clear_compiler(c);
 
-        if (has_flag(CF_STOP_AFTER_AST) || has_flag(CF_STOP_AFTER_IR)) return;
-        if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
-
-        array_str_cpy(&c->current_source, c->current_output.data);
-        update_current_output(c, has_flag(CF_STOP_AFTER_ASSEMBLE), src_path, ".o");
-        assemble(c);
-        if (has_flag(CF_STOP_AFTER_ASSEMBLE)) continue;
-
-        char *obj_path = strdup((char *)c->current_output.data);
-        append(&objs, &obj_path);
+            if (has_flag(CF_STOP_AFTER_AST) || has_flag(CF_STOP_AFTER_IR)) return;
+            if (has_flag(CF_STOP_AFTER_COMPILE)) continue;
+        case 's':
+            array_str_cpy(&c->current_source, c->current_output.data);
+            update_current_output(c, has_flag(CF_STOP_AFTER_ASSEMBLE), src_path, ".o");
+            assemble(c);
+            if (has_flag(CF_STOP_AFTER_ASSEMBLE)) continue;
+        case 'o':
+        case 'j': // obj imlazy
+            char *obj_path = strdup((char *)c->current_output.data);
+            append(&objs, &obj_path);
+            break;
+        }
     }
     if (has_flag(CF_STOP_AFTER_COMPILE) || has_flag(CF_STOP_AFTER_ASSEMBLE)) return;
 
@@ -147,6 +157,9 @@ void init_compiler(Compiler *compiler) {
     init_typepool();
 }
 Compiler begin_compiler(const int argc, char *argv[]) {
+#ifdef __COMPILER_C__
+    printf("[\x1b[34mCompiler_C\x1b[0m]\n");
+#endif
     if (argc < 2) {
         PANIC(IMPROPER_USAGE);
     }
@@ -156,7 +169,7 @@ Compiler begin_compiler(const int argc, char *argv[]) {
         printf("\t-S          : Compile to Assembly File\n");
         printf("\t-c          : Compile to Object File\n");
         printf("\t-ir         : Compile and print IR\n");
-        printf("\t-t          : Print parse tree\n");
+        printf("\t-ast        : Print parse tree\n");
         printf("\t-h          : Get help\n");
         exit(0);
     }
@@ -194,11 +207,13 @@ void free_compiler(Compiler *compiler) {
 
 int compile(Compiler *compiler) {
     set_log_stage(STAGE_COMPILER);
+
     ASSERT(compiler->current_source.count && compiler->current_output.count, "Source or output is not set for compile\n");
     INFO("Compiling %s to %s\n", (char *)compiler->current_source.data, (char *)compiler->current_output.data);
 
     set_log_stage(STAGE_TOKENIZING);
     t_tokenize(&compiler->tk);
+    if (has_flag(CF_DEBUG_TOKENS)) print_tokens(&compiler->tk);
 
     set_log_stage(STAGE_PARSING);
     init_parser(&compiler->p, &compiler->tk.tokens_array, compiler->tk.tokens_array.count);
@@ -206,12 +221,16 @@ int compile(Compiler *compiler) {
     p_parse_translation_unit(&compiler->p, &compiler->nm);
 
     set_log_stage(STAGE_SEMA_ANALYSIS);
-    SemanticContext sema_ctx = (SemanticContext){.func = NULL, .loop = NULL, .compound = NULL};
+    SemanticContext sema_ctx = (SemanticContext){
+        .func = NULL,
+    };
     array_init(&sema_ctx.i_array, 4, sizeof(int));
-
-    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
+    array_init(&sema_ctx.compound_stack, 4, sizeof(Node *));
+    array_init(&sema_ctx.loop_stack, 4, sizeof(Node *));
 
     if (has_flag(CF_DEBUG_TYPEPOOL)) print_typepool();
+
+    semantic_analysis(&sema_ctx, &compiler->p, &compiler->nm, arena_get(&compiler->nm, 0));
 
     if (has_flag(CF_STOP_AFTER_AST)) {
         print_ast(&compiler->nm);
@@ -220,8 +239,8 @@ int compile(Compiler *compiler) {
 
     array_free(&sema_ctx.i_array);
 
+    gen_abi_func_types();
     set_log_stage(STAGE_IR);
-    generate_types();
     lower_nodes(&compiler->nm);
 
     IR_Context ctx = ir_init_ctx(&compiler->p);
@@ -234,17 +253,24 @@ int compile(Compiler *compiler) {
     }
     analysis(&ctx);
 
-    if (has_flag(CF_STOP_AFTER_IR)) {
-        if (has_flag(CF_DEBUG_LIFETIMES)) {
-            for (int i = 0; i < module->functions_array.count; i++) print_cfg(get_func(module, i));
-        }
-        if (has_flag(CF_DEBUG_LOWERED_IR)) {
-            printf("---- Lowered IR ----\n");
-            print_ir_module(&ctx, module);
-            printf("\n");
-        }
-        return 1;
+    if (has_flag(CF_DEBUG_LIFETIMES)) {
+        for (int i = 0; i < module->functions_array.count; i++) print_cfg(get_func(module, i));
     }
+    if (has_flag(CF_DEBUG_LOWERED_IR)) {
+        printf("---- Lowered IR ----\n");
+        print_ir_module(&ctx, module);
+        printf("\n");
+    }
+
+    if (has_flag(CF_DEBUG_SYMBOLS)) {
+        printf("---- Symbols ----\n");
+        for (int i = 0; i < ctx.symbol_table->count; i++) {
+            Symbol *s = arena_get(ctx.symbol_table, i);
+            print("%t %s\n", s->type, s->name);
+        }
+    }
+
+    if (has_flag(CF_STOP_AFTER_IR)) return 1;
 
     set_log_stage(STAGE_X86_GEN);
     FILE *fp = fopen((char *)compiler->current_output.data, "w");
@@ -257,9 +283,12 @@ int compile(Compiler *compiler) {
     return 1;
 }
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
 static int load_src_file(Compiler *compiler, const char *file) {
     char cmd[512];
-    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -D__COMPILER_C__ -I./libc -std=c11 %s ", file);
+
+    int cmd_len = snprintf(cmd, sizeof(cmd), "gcc -E -P -nostdinc -D__COMPILER_C__ -I" TOSTRING(LIBC) " -std=c11 %s ", file);
     for (int i = 0; i < compiler->passthrough_args.count; i++) {
         cmd_len += snprintf(cmd + cmd_len, sizeof(cmd) - cmd_len, "%s ", *(char **)get(&compiler->passthrough_args, i));
     }

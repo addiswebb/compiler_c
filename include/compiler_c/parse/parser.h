@@ -4,7 +4,7 @@
 #include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/tokenize/tokenizer.h"
-#include <stdbool.h>
+#include "../libc/stdbool.h"
 
 typedef struct {
     const char *new_def;
@@ -91,9 +91,9 @@ Token *p_consume_semi(Parser *p);
     Checks against C standard types, and typedef table.
 */
 bool is_type_token(const Parser *p, const Token *t);
-bool is_storage_classifier(const TokenType type);
-bool is_qualifier_token(const TokenType type);
-bool is_start_of_type(const Parser *p, const Token *t);
+bool is_storage_classifier(TokenType type);
+bool is_qualifier_token(TokenType type);
+bool is_start_of_type(const Parser *p, const Token *tk);
 /*
     Converts token using C standard types, and typedef table.
 */
@@ -126,7 +126,7 @@ Node *p_parse_primary_expression(Parser *p, NodeManager *nm);
 Node *p_parse_postfix_expression(Parser *p, NodeManager *nm);
 
 /*
-    Consumes any compiler builtin including appropriate paramters
+    Consumes any compiler builtin including appropriate parameters
 */
 Node *p_parse_builtin(Parser *p, NodeManager *nm, BuiltinKind kind);
 /*
@@ -144,7 +144,7 @@ Node *p_parse_literal(Parser *p, NodeManager *nm);
 /*
     Consumes
     `{ [expr]* }`.
-    Where each `expr` is seperated by a `,`.
+    Where each `expr` is separated by a `,`.
 */
 Node *p_parse_init_list(Parser *p, NodeManager *nm);
 /*
@@ -161,7 +161,7 @@ Node *p_parse_expression(Parser *p, NodeManager *nm, int min_prec);
     Consumes `op [rhs]`
     Where `op` is a binary op and `lhs` was already parsed
 */
-Node *p_parse_binary(Parser *p, NodeManager *nm, Node *lhs, const int min_prec);
+Node *p_parse_binary(Parser *p, NodeManager *nm, Node *lhs);
 
 /*
     Consumes `? [if_true] : [if_false]`
@@ -274,10 +274,10 @@ Node *p_parse_compound(Parser *p, NodeManager *nm);
     () contains any amount of var declarations, including zero,
     and {} contains any amount of statements, including zero.
 */
-Node *p_parse_function(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, bool is_inline);
+Node *p_parse_function(Parser *p, NodeManager *nm, Type *type, const char *name, StorageClass storage_class, bool is_inline);
 
 /*
-    Consums
+    Consumes
     `([var decl]*)`
     Where var decl cannot have a definition, and identifier is optional.
 */
@@ -304,13 +304,13 @@ Node *p_parse_block_declaration(Parser *p, NodeManager *nm);
 Node *p_parse_decl_identifier(Parser *p, NodeManager *nm);
 /*
     Consumes either
-    `struct or enum delcaration`
+    `struct or enum declaration`
     or `{type} [[int literal]?] [= expr]?;
     Where the `{type}` has already been consumed.
 
     A declaration is any variable or type declaration.
 */
-Node *p_parse_declaration(Parser *p, NodeManager *nm, Type *type, const char *name, const StorageClass storage_class, const bool global);
+Node *p_parse_declaration(Parser *p, NodeManager *nm, Type *type, const char *name, StorageClass storage_class, bool global);
 /*
     Consumes
     `typedef [type] [identifier];`
@@ -321,12 +321,26 @@ Node *p_parse_typedef(Parser *p, NodeManager *nm);
     Consumes the whole translation unit.
 */
 Node *p_parse_translation_unit(Parser *p, NodeManager *nm);
+
 /*
-    Consumes either
-    `struct or enum` or a primitive `[type]`.
-*/
-Type *p_parse_abstract_type(Parser *p, NodeManager *nm);
+    Consumes
+    `[Qualifier]` `Type` `Declarator`
+    Where,
+    `Qualifier` is any `const`, `volatile`, `unsigned`, `signed`
+    `Type` is any C defined type name or identifier in Typedef table
+    `Declarator` is any number of `Modifier`'s
+ */
 Type *p_parse_type(Parser *p, NodeManager *nm, const char **name);
+
+/* Calls p_parse_type asserts name == NULL */
+Type *p_parse_abstract_type(Parser *p, NodeManager *nm);
+/*
+    Consumes `Modifier`'s in order
+    `[*]*`
+    `(`Declarator`)?
+    `Identifier`
+    `[[`Expr`] / {`Initialiser List`} ]*`
+*/
 Declarator p_parse_declarator(Parser *p, NodeManager *nm);
 /*
     Consumes
@@ -373,8 +387,7 @@ double parse_float(const char *raw, int len);
 
 /* ===== Symbol Table Functions ===== */
 
-Symbol *p_get_symbol(const Parser *p, const char *name, const SymbolKind kind, const bool same_depth);
-Node *p_get_func_def(const Parser *p, const char *name);
+Symbol *p_get_symbol(const Parser *p, const char *name, SymbolKind kind, bool same_depth);
 Typedef *p_get_typedef(const Parser *p, const char *name);
 Node *p_get_var_decl(const Parser *p, const char *name);
 const EnumField *p_get_enum_const(const Parser *p, const char *name);
@@ -383,11 +396,12 @@ const EnumField *p_get_enum_const(const Parser *p, const char *name);
 
 Symbol *p_new_symbol(Parser *p, const Symbol *s);
 void p_append_call_param(Node *func_call, Node *param);
-void p_append_param(Node *func, Node *param);
+void p_append_param(const Node *func, Node *param);
 void p_append_enum_const(Parser *p, const EnumField *e);
 Symbol *p_append_var_decl_symbol(Parser *p, Node *v);
+void update_linkage_storage(Symbol *s, const Node *v);
 
-Symbol *p_append_param_decl_symbol(Parser *p, ParamDecl *param);
+Symbol *p_append_param_decl_symbol(Parser *p, const ParamDecl *param);
 void p_append_element(Node *init_list, Node *element);
 void p_append_symbol_table(Parser *p);
 Symbol *p_append_symbol(Array *st, const Symbol *s);
@@ -396,19 +410,15 @@ Symbol *p_append_func_def(Parser *p, Node *f);
 void p_append_block_item(Node *root, Node *item);
 void p_append_case(Node *s, Node *c);
 
-static inline Array *get_symbol_table(const Parser *p, int index) { return (Array *)get(&p->scopes_array, index); }
-static inline Array *get_current_symbol_table(Parser *p) { return get_symbol_table(p, p->scopes_array.count - 1); }
-static inline Symbol *get_symbol(Array *symbol_table, int index) { return *(Symbol **)get(symbol_table, index); }
+static Array *get_symbol_table(const Parser *p, const int index) { return get(&p->scopes_array, index); }
+static Array *get_current_symbol_table(const Parser *p) { return get_symbol_table(p, p->scopes_array.count - 1); }
+static Symbol *get_symbol(const Array *symbol_table, const int index) { return *(Symbol **)get(symbol_table, index); }
 
-static inline EnumField *get_enum_field(const Type *enum_t, int index) { return (EnumField *)get(&enum_t->_enum.fields_array, index); }
-static inline StructMember *get_struct_member(const Type *struct_t, int index) {
-    return (StructMember *)get(&struct_t->_struct.members_array, index);
-}
-static inline UnionMember *get_union_member(const Type *union_t, int index) {
-    return (UnionMember *)get(&union_t->_union.members_array, index);
-}
+static EnumField *get_enum_field(const Type *enum_t, const int index) { return get(&enum_t->_enum.fields_array, index); }
+static StructMember *get_struct_member(const Type *struct_t, const int index) { return get(&struct_t->_struct.members_array, index); }
+static UnionMember *get_union_member(const Type *union_t, const int index) { return get(&union_t->_union.members_array, index); }
 
-UnionMember *get_union_member_named(const Type *union_t, const char *name);
-StructMember *get_struct_member_named(const Type *struct_t, const char *name, int *index);
+UnionMember *get_union_member_named(Type *union_t, const char *name);
+StructMember *get_struct_member_named(Type *struct_t, const char *name, int *index);
 
 #endif // COMPILER_C_PARSER_H

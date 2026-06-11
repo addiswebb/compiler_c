@@ -1,17 +1,18 @@
-#include "compiler_c/analyse/analysis_types.h"
 #ifdef __linux__
 
+#include "../libc/stdbool.h"
+#include "compiler_c/core/arena.h"
 #include <compiler_c/abi/abi.h>
 #include <compiler_c/analyse/analysis.h>
+#include <compiler_c/compiler.h>
 #include <compiler_c/core/type.h>
 #include <compiler_c/ir/ir_builder.h>
 #include <compiler_c/ir/ir_gen.h>
 #include <compiler_c/ir/ir_module.h>
 #include <compiler_c/log/logger.h>
 #include <compiler_c/x86/x86.h>
-#include <stdbool.h>
 
-Symbol *_sret = NULL;
+Arena _sret = {.count = 0};
 Symbol *_hidden_sret_ptr = NULL;
 
 void set_hidden_sret_ptr(Type *return_type) {
@@ -28,19 +29,22 @@ void set_hidden_sret_ptr(Type *return_type) {
                                  .type = get_pointer_type(return_type),
                                  .scope_depth = 0};
 }
+
+Symbol *current_sret() { return arena_get(&_sret, _sret.count - 1); }
+
 void set_sret(Type *return_type) {
-    if (_sret && _sret->type == return_type) return;
-    if (!_sret) {
-        _sret = malloc(sizeof(Symbol));
-        ASSERT(_sret, "Failed to allocate _sret symbol\n");
-    }
-    *_sret = (Symbol){.name = "_sret",
-                      .kind = VAR,
-                      .linkage = LINK_NONE,
-                      .storage = STORAGE_NONE,
-                      .var_decl = NULL,
-                      .type = return_type,
-                      .scope_depth = 0};
+    if (_sret.count == 0) arena_init(&_sret, 4, sizeof(Symbol));
+
+    char *name = malloc(32);
+    ASSERT(name, "Failed to malloc _sret name\n");
+    snprintf(name, 32, "_sret%d", _sret.count);
+    arena_append(&_sret, &(Symbol){.name = name,
+                                   .kind = VAR,
+                                   .linkage = LINK_NONE,
+                                   .storage = STORAGE_NONE,
+                                   .var_decl = NULL,
+                                   .type = return_type,
+                                   .scope_depth = 0});
 }
 
 const GP_Reg caller_saved_regs[CALLER_SAVED_REGISTERS] = {RAX, RCX, RDX, RSI, RDI, R8, R9, R10, R11};
@@ -56,24 +60,38 @@ ABI_TypeClass merge(ABI_TypeClass a, ABI_TypeClass b) {
     if (a == ABI_SSE && b == ABI_SSE) return ABI_SSE;
     PANIC("Invalid classification merge\n");
 }
-ABI_Result classify_struct(Type *type) {
+ABI_Result classify_union(const Type *type) {
+    if (type->size > 16) return (ABI_Result){.memory = true};
+    ABI_Result res = {.class = {ABI_NO_CLASS, ABI_NO_CLASS}, .memory = false};
+    for (int i = 0; i < type->_union.members_array.count; i++) {
+        const UnionMember *m = get_union_member(type, i);
+        ABI_Result field_res = abi_classify(m->type);
+        if (field_res.memory) return field_res;
+        for (int j = 0; j <= 2; j++) {
+            res.class[j] = merge(res.class[j], field_res.class[j]);
+        }
+    }
+    return res;
+}
+ABI_Result classify_struct(const Type *type) {
     if (type->size > 16) return (ABI_Result){.memory = true};
     ABI_Result res = {.class = {ABI_NO_CLASS, ABI_NO_CLASS}, .memory = false};
     for (int i = 0; i < type->_struct.members_array.count; i++) {
-        StructMember *m = get_struct_member(type, i);
+        const StructMember *m = get_struct_member(type, i);
         ABI_Result field_res = abi_classify(m->type);
         if (field_res.memory) return field_res;
 
-        int start = m->offset;
-        int end = m->offset + m->type->size - 1;
+        const int start = m->offset;
+        const int end = m->offset + m->type->size - 1;
 
-        int low = start / 8;
-        int high = end / 8;
+        const int low = start / 8;
+        const int high = end / 8;
         if (field_res.memory) return field_res;
         for (int j = low; j <= high; j++) {
             res.class[j] = merge(res.class[j], field_res.class[j - low]);
         }
     }
+
     return res;
 }
 
@@ -84,30 +102,35 @@ ABI_Result abi_classify(Type *type) {
     case T_INT:
     case T_POINTER:
     case T_VOID:
-    // TODO make so array type never reaches here (arrays are decayed functionally in genlvalue but not by type)
+    // TODO make so array type never reaches here (arrays are decayed functionally in gen_lvalue but not by type)
     case T_ARRAY:
         return (ABI_Result){.class = {ABI_INTEGER, ABI_NO_CLASS}, 0};
     case T_FLOAT:
         return (ABI_Result){.class = {ABI_SSE, ABI_NO_CLASS}, 0};
     case T_STRUCT:
         return classify_struct(type);
+    case T_UNION:
+        return classify_union(type);
     default:
-        log_start(LOG_ERROR);
-        printf("Classification failed on ");
-        print_type(type);
-        printf("\n");
-        exit(1);
+        PANIC("Classification failed on %t\n", type);
     }
 }
-IR_Value abi_lower_param_register(Type *type, int i) {
+IR_Value abi_lower_param_register(const Type *type, const int i) {
+    // TODO investigate if below is still needed after rework
+// #ifdef __COMPILER_C__
+//     IR_Value v = (IR_Value){.kind = IR_PHYS_REG};
+//     v.phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0};
+// #else
     IR_Value v = (IR_Value){.kind = IR_PHYS_REG,
                             .phys_reg = (PhysReg){.data_kind = REG_DATA_NONE, .size = reg_size(type->size), .offset = 0, .scale = 0}};
+// #endif
+    // if(i < 0) return;
     if (type->kind == T_FLOAT) {
-        ASSERT(i >= 0 && i < FLOAT_PARAM_REGISTERS, "SysV ABI Invalid param arg index %d\n", i);
+        ASSERT(i >= 0 && i < FLOAT_PARAM_REGISTERS, "SysV ABI Invalid SSE param arg index %d\n", i);
         v.phys_reg.kind = REG_XMM;
         v.phys_reg.sse_reg = float_param_regs[i];
     } else {
-        ASSERT(i >= 0 && i < INTEGER_PARAM_REGISTERS, "SysV ABI Invalid param arg index %d\n", i);
+        ASSERT(i >= 0 && i < INTEGER_PARAM_REGISTERS, "SysV ABI Invalid GP param arg index %d\n", i);
         v.phys_reg.kind = REG_GP;
         v.phys_reg.gp_reg = int_param_regs[i];
     }
@@ -116,11 +139,13 @@ IR_Value abi_lower_param_register(Type *type, int i) {
 
 // Does not check members, only space
 // TODO: Check members also maybe?
-bool is_va_list_type(Type *type) { return type->kind == T_STRUCT && type->size == 24; }
+bool is_va_list_type(const Type *type) {
+    return (type->kind == T_ARRAY || type->kind == T_POINTER) && type->base->kind == T_STRUCT && type->base->size == 24;
+}
 
-void abi_lower_store(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
+void abi_lower_store(IR_Instruction *instr) {
     if (instr->store.type->kind == T_STRUCT) {
-        ASSERT(instr->store.type->size <= 8, "[SysV] Not handling tuple sized struct");
+        ASSERT(instr->store.type->size <= 8, "[SysV] IR_STORE only for 8 bytes or less given %d", instr->store.type->size);
         instr->store.type = get_integer_type(instr->store.type->size);
     }
 }
@@ -128,38 +153,16 @@ void abi_lower_param(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i,
     if (instr->param.param_index == -1) return;
     Type *type = instr->param.type;
     ABI_Result res = abi_classify(type);
-    if (res.memory) type = type_u64;
+    if (res.memory) return;
     instr->op_count = 2;
-    int param_registers = type->kind == T_FLOAT ? FLOAT_PARAM_REGISTERS : INTEGER_PARAM_REGISTERS;
+    const int param_registers = type->kind == T_FLOAT ? FLOAT_PARAM_REGISTERS : INTEGER_PARAM_REGISTERS;
     const int variadic_space = f->type->_func.is_variadic ? 176 : 0;
     if (instr->param.param_index < param_registers) instr->ops[1] = abi_lower_param_register(type, instr->param.param_index);
     else instr->ops[1] = ir_stack_value(8, 8, 8 * (instr->param.param_index - param_registers) - variadic_space);
 
     if (instr->param.type->kind == T_STRUCT) {
-        if (res.memory) {
-            IR_Value hidden_ptr = (IR_Value){.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
-            f->max_reg++;
-            IR_Value s_addr = (IR_Value){.kind = IR_VREG, .size = 8, .align = 8, .vreg = f->next_reg++};
-            f->max_reg++;
-            IR_Instruction param_instr = {.op = IR_PARAM,
-                                          .op_count = 2,
-                                          .ops = {[0] = hidden_ptr, [1] = instr->ops[1]},
-                                          .param = {.param_index = -1, .type = get_pointer_type(instr->param.type)}};
-            IR_Instruction addr = {.op = IR_ADDR, .op_count = 2, .ops = {[0] = s_addr, [1] = instr->ops[0]}};
-            IR_Instruction memcpy = {
-                .op = IR_MEMCPY, .op_count = 2, .ops = {[0] = s_addr, [1] = hidden_ptr}, .memcpy = {.size = instr->param.type->size}};
-
-            set(&b->instruction_array, &param_instr, param_index);
-            insert(&b->instruction_array, &addr, *param_cursor);
-            (*i)++;
-            (*param_cursor)++;
-            insert(&b->instruction_array, &memcpy, *param_cursor);
-            (*i)++;
-            (*param_cursor)++;
-        } else {
-            instr->param.type = type->kind == T_FLOAT ? get_float_type(instr->param.type->size) : get_integer_type(instr->param.type->size);
-            ASSERT(res.class[1] == ABI_NO_CLASS, "Structs sized [8 < size <= 16] are not handled yet\n");
-        }
+        instr->param.type = type->kind == T_FLOAT ? get_float_type(instr->param.type->size) : get_integer_type(instr->param.type->size);
+        ASSERT(res.class[1] == ABI_NO_CLASS, "Structs sized [8 < size <= 16] are not handled yet\n");
     }
 }
 
@@ -180,7 +183,6 @@ void abi_lower_ret(IR_Function *f, IR_Block *b, IR_Instruction *instr, int *i) {
             ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Multi register return types are not yet supported\n");
         }
     }
-    return;
 }
 
 IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
@@ -212,7 +214,8 @@ IR_Value abi_gen_builtin(IR_Context *ctx, const Node *expr) {
     }
     case BUILTIN_VA_ARG: {
         Node *ap_node = get_node(&expr->_builtin.params, 0);
-        IR_Value ap_addr = ir_gen_lvalue(ctx, ap_node);
+        // IR_Value ap_addr = ir_gen_lvalue(ctx, ap_node);
+        IR_Value ap_addr = ir_gen_rvalue(ctx, ap_node);
         Type *arg_type = get_node(&expr->_builtin.params, 1)->type;
         if (arg_type->kind == T_FLOAT)
             ap_addr = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), ap_addr, ir_integer_literal(4), type_u32);
@@ -267,33 +270,36 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
     if (res.memory) {
         set_hidden_sret_ptr(f->type->_func.return_type);
         append(&f->locals_array, &_hidden_sret_ptr);
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 1,
-                                                            .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
-                                                            .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
+        ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
+                                                     .op_count = 1,
+                                                     .ops = {[0] = ir_symbol_value(_hidden_sret_ptr)},
+                                                     .param = {.param_index = hidde_ptr_offset++, .type = _hidden_sret_ptr->type}});
     }
 
     int integers_emitted = hidde_ptr_offset;
     int floats_emitted = 0;
+    int spilled = 0;
     for (int i = 0; i < f->type->_func.params.count; i++) {
         ParamDecl *d = get(&f->type->_func.params, i);
         d->symbol->type = d->type;
+        ABI_Result res = abi_classify(d->type);
         append(&f->locals_array, &d->symbol);
-        const int param_index = d->type->kind == T_FLOAT ? floats_emitted++ : integers_emitted++;
-        ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
-                                                            .op_count = 1,
-                                                            .ops = {[0] = ir_symbol_value(d->symbol)},
-                                                            .param = {.param_index = param_index, .type = d->type}});
+        const int param_index = res.memory ? --spilled : res.class[0] == ABI_SSE ? floats_emitted++ : integers_emitted++;
+        ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
+                                                     .op_count = 1,
+                                                     .ops = {[0] = ir_symbol_value(d->symbol)},
+                                                     .param = {.param_index = param_index, .type = d->type}});
     }
-    ASSERT(integers_emitted == f->type->abi.gp_count && floats_emitted == f->type->abi.fp_count, "Emission failed\n");
+    // TODO give more robust way of ensuring correct emission
+    // integers_emitted includes all non-float, but gp_count is only non-float registers used.
+    // ASSERT(integers_emitted == f->type->abi.gp_count && floats_emitted == f->type->abi.fp_count, "Emission failed\n");
     if (f->type->_func.is_variadic) {
         // Space for this will be allocated later in x86 gen +176 bytes if variadic
         for (int i = integers_emitted; i < INTEGER_PARAM_REGISTERS; i++) {
-            ir_append_instruction(ctx->block,
-                                  &(IR_Instruction){.op = IR_PARAM,
-                                                    .op_count = 1,
-                                                    .ops = {[0] = ir_stack_value(8, 8, -8 * (INTEGER_PARAM_REGISTERS - i) - 128)},
-                                                    .param = {.param_index = i, .type = type_u64}});
+            ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
+                                                         .op_count = 1,
+                                                         .ops = {[0] = ir_stack_value(8, 8, -8 * (INTEGER_PARAM_REGISTERS - i) - 128)},
+                                                         .param = {.param_index = i, .type = type_u64}});
         }
         IR_Value al_equal_zero = ir_cmp(ctx, EQ,
                                         (IR_Value){.kind = IR_PHYS_REG,
@@ -313,13 +319,53 @@ void abi_gen_params(IR_Context *ctx, IR_Function *f) {
 
         // Todo use movaps or move this to x86 lowering
         for (int i = floats_emitted; i < FLOAT_PARAM_REGISTERS; i++) {
-            ir_append_instruction(ctx->block, &(IR_Instruction){.op = IR_PARAM,
-                                                                .op_count = 1,
-                                                                .ops = {[0] = ir_stack_value(8, 8, -16 * (FLOAT_PARAM_REGISTERS - i))},
-                                                                .param = {.param_index = i, .type = type_f64}});
+            ir_append_instruction(ctx, &(IR_Instruction){.op = IR_PARAM,
+                                                         .op_count = 1,
+                                                         .ops = {[0] = ir_stack_value(8, 8, -16 * (FLOAT_PARAM_REGISTERS - i))},
+                                                         .param = {.param_index = i, .type = type_f64}});
         }
         ir_append_block(ctx, skip_floats_block);
     }
+}
+
+Type *to_arg_type(Type *t, ABI_Result *res) {
+
+    switch (t->kind) {
+    case T_ENUM:
+    case T_INT:
+    case T_FLOAT:
+    case T_POINTER:
+        return t;
+    case T_ARRAY:
+    case T_STRUCT:
+    case T_UNION:
+        if (res->memory) return t;
+        else return res->class[0] == ABI_INTEGER ? type_i64 : type_f64;
+    default:
+        PANIC("Invalid arg type %t\n", t);
+    }
+}
+
+void builtin_memcpy(FILE *fp, IR_Value dst, IR_Value src, int size) {
+    IR_Value v_dst = ir_gp_register_value(R10);
+    IR_Value v_src = ir_gp_register_value(R11);
+    x86_emit_xx(fp, "mov", "q", "", &dst, &v_dst);
+    x86_emit_xx(fp, "mov", "q", "", &src, &v_src);
+    v_dst.phys_reg.data_kind = REG_DATA_OFFSET;
+    v_src.phys_reg.data_kind = REG_DATA_OFFSET;
+    int x = 8;
+    for (;;) {
+        if (size == 0 || x == 0) break;
+        if ((size / x) == 0) x /= 2;
+        const char *suffix = x86_integer_op_suffix(x);
+        const char *rax = x86_rax_reg(get_integer_type(x));
+        x86_emit_xr(fp, "mov", suffix, "", &v_src, rax);
+        x86_emit_rx(fp, "mov", suffix, "", rax, &v_dst);
+        v_src.phys_reg.offset += x;
+        v_dst.phys_reg.offset += x;
+        size -= x;
+    }
+    ASSERT(size == 0, "Didnt copy everything\n");
 }
 
 void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
@@ -328,50 +374,67 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
     int gp_index = 0;
     int sse_index = 0;
 
+    const int variadic_space = instr->call.type->_func.is_variadic ? 176 : 0;
+    int param_frame_size = variadic_space;
     for (int i = 0; i < instr->call.arg_array.count; i++) {
-        IR_CallArg *v = get_call_arg(instr, i);
-        if ((v->type->kind == T_INT || v->type->kind == T_POINTER) && gp_index < INTEGER_PARAM_REGISTERS) gp_index++;
-        if (v->type->kind == T_FLOAT && sse_index < FLOAT_PARAM_REGISTERS) sse_index++;
+        const IR_CallArg *v = get_call_arg(instr, i);
+        ABI_Result res = abi_classify(v->type);
+        if (res.class[0] == ABI_INTEGER && gp_index < INTEGER_PARAM_REGISTERS) gp_index++;
+        else if (res.class[0] == ABI_SSE && sse_index < FLOAT_PARAM_REGISTERS) sse_index++;
+        else if (res.memory) param_frame_size += v->type->size;
+        else param_frame_size += 8;
     }
-    const int spilled_count = instr->call.arg_array.count - (sse_index + gp_index);
+    param_frame_size |= 8; // = 16n + 8
     sse_index = 0;
     gp_index = 0;
-    const int variadic_space = instr->call.type->_func.is_variadic ? 176 : 0;
-    const int param_frame_size = 8 * spilled_count + variadic_space;
     int param_offset = 0;
     if (param_frame_size > 0) fprintf(fp, "    subq $%d, %%rsp\n", param_frame_size);
     for (int i = 0; i < instr->call.arg_array.count; i++) {
         IR_CallArg *v = get_call_arg(instr, i);
-        Type *arg_type = v->type;
-        if (arg_type->kind == T_STRUCT) {
-            ABI_Result res = abi_classify(arg_type);
-            if (res.memory) get_pointer_type(arg_type);
-            // else arg_type = res.class[0] == ABI_SSE ? get_float_type(arg_type->size) : get_integer_type(arg_type->size);
-            else arg_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
-        }
-        const char *suffix = x86_op_suffix(arg_type);
+        ABI_Result res = abi_classify(v->type);
+        Type *arg_type = to_arg_type(v->type, &res);
         switch (arg_type->kind) {
-        case T_INT:
         case T_ENUM:
+        case T_INT:
         case T_POINTER:
+            const char *gp_suffix = x86_op_suffix(arg_type);
             if (gp_index < INTEGER_PARAM_REGISTERS) {
-                x86_emit_xr(fp, "mov", x86_op_suffix(arg_type), "", &v->v,
-                            gp_register_str[int_param_regs[gp_index++]][reg_size(arg_type->size)]);
+                x86_emit_xr(fp, "mov", gp_suffix, "", &v->v, gp_register_str[int_param_regs[gp_index++]][reg_size(arg_type->size)]);
             } else {
                 const char *reg = x86_rax_reg(arg_type);
-                x86_emit_xr(fp, "mov", x86_op_suffix(arg_type), "", &v->v, reg);
-                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", x86_op_suffix(arg_type), reg, param_offset);
+                x86_emit_xr(fp, "mov", gp_suffix, "", &v->v, reg);
+                fprintf(fp, "    mov%s %s, %d(%%rsp)\n", gp_suffix, reg, param_offset);
                 param_offset += 8;
             }
             break;
         case T_FLOAT:
+            const char *sse_suffix = x86_op_suffix(arg_type);
             if (sse_index < FLOAT_PARAM_REGISTERS) {
-                x86_emit_xr(fp, "mov", suffix, "", &v->v, sse_register_str[float_param_regs[sse_index++]]);
+                x86_emit_xr(fp, "mov", sse_suffix, "", &v->v, sse_register_str[float_param_regs[sse_index++]]);
             } else {
-                x86_emit_xr(fp, "mov", suffix, "", &v->v, sse_register_str[XMM0]);
-                fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", suffix, param_offset);
+                x86_emit_xr(fp, "mov", sse_suffix, "", &v->v, sse_register_str[XMM0]);
+                fprintf(fp, "    mov%s %%xmm0, %d(%%rsp)\n", sse_suffix, param_offset);
                 param_offset += 8;
             }
+            break;
+        case T_STRUCT:
+        case T_UNION:
+            ASSERT(res.memory, "Arg type should have been converted by gp/sse class %t\n", arg_type);
+            IR_Value dst = {.kind = IR_PHYS_REG,
+                            .size = 8,
+                            .align = 8,
+                            .phys_reg = (PhysReg){
+                                .kind = REG_GP,
+                                .gp_reg = RSP,
+                                .data_kind = REG_DATA_OFFSET,
+                                .size = REG_64,
+                                .offset = param_offset,
+                            }};
+
+            IR_Value rax = ir_gp_register_value(RAX);
+            x86_emit_xx(fp, "lea", "q", "", &dst, &rax);
+            builtin_memcpy(fp, rax, v->v, arg_type->size);
+            param_offset += align(arg_type->size, 8);
             break;
         default:
             PANIC("Tried to emit call arg for unsupported type\n");
@@ -404,40 +467,42 @@ void abi_func_type_gen(Type *type) {
     memcpy(abi_type->_func.params.data, type->_func.params.data, type->_func.params.count * type->_func.params.element_size);
     abi_type->_func.params.count = type->_func.params.count;
 
+    type->abi.fp_count = 0;
+    type->abi.gp_count = 0;
     if (abi_type->_func.return_type->kind == T_STRUCT) {
-
         ABI_Result res = abi_classify(type->_func.return_type);
         if (res.memory) {
             set_sret(type->_func.return_type);
+            Symbol *_sret = current_sret();
             insert(&abi_type->_func.params,
-                   &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = "_sret", .symbol = _sret}, 0);
+                   &(ParamDecl){.type = get_pointer_type(abi_type->_func.return_type), .name = _sret->name, .symbol = _sret}, 0);
             abi_type->_func.return_type = type_void;
         } else {
+            ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Not handling tuple return type %t\n", type->_func.return_type);
             abi_type->_func.return_type = res.class[0] == ABI_INTEGER ? type_u64 : type_f64;
-            ASSERT(res.class[1] == ABI_NO_CLASS, "[SysV] Not handling tuple return type\n");
         }
     }
-    type->abi.fp_count = 0;
-    type->abi.gp_count = 0;
+    if (abi_type->_func.return_type->kind == T_ENUM) abi_type->_func.return_type = type_i32;
     for (int i = 0; i < abi_type->_func.params.count; i++) {
         ParamDecl *d = get(&abi_type->_func.params, i);
-        if (d->type->kind == T_FLOAT && type->abi.fp_count < FLOAT_PARAM_REGISTERS) type->abi.fp_count++;
-        else if (type->abi.gp_count < INTEGER_PARAM_REGISTERS) type->abi.gp_count++;
         ABI_Result res = abi_classify(d->type);
-        if (res.memory) {
-            d->type = get_pointer_type(d->type);
+        //  MEMORY class args are placed in callee stackframe by caller (never actually passed)
+        if (!res.memory) {
+            if (d->type->kind == T_FLOAT && type->abi.fp_count < FLOAT_PARAM_REGISTERS) type->abi.fp_count++;
+            else if (type->abi.gp_count < INTEGER_PARAM_REGISTERS) type->abi.gp_count++;
         }
     }
     type->abi.type = abi_type;
 }
-void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
+
+void abi_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) {
     // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
-    switch (instr->ops[1].kind) {
+    switch (instr->ops[0].kind) {
     case IR_CONSTANT:
-        x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rsi");
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[0], "%rdi");
         break;
     case IR_PHYS_REG:
-        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rsi");
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[0], "%rdi");
         break;
     case IR_SYMBOL:
     case IR_INT_LITERAL:
@@ -445,6 +510,13 @@ void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     case IR_UNDEFINED:
         PANIC("Sanity check failed\n");
     }
+
+    fprintf(fp, "    movl $%d, %%esi\n", instr->memset.c);
+    fprintf(fp, "    movq $%d, %%rdx\n", instr->memset.size);
+    fprintf(fp, "    call memset\n");
+}
+void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
+    // TODO: Correctly determine correct lowering for IR_STACK, LITERAL, GLOBAL etc
 
     switch (instr->ops[0].kind) {
     case IR_CONSTANT:
@@ -459,7 +531,21 @@ void abi_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) {
     case IR_UNDEFINED:
         PANIC("Sanity check failed\n");
     }
-    fprintf(fp, "    mov $%d, %%rdx\n", instr->memcpy.size);
+
+    switch (instr->ops[1].kind) {
+    case IR_CONSTANT:
+        x86_emit_xr(fp, "lea", "", "", &instr->ops[1], "%rsi");
+        break;
+    case IR_PHYS_REG:
+        x86_emit_xr(fp, "mov", "q", "", &instr->ops[1], "%rsi");
+        break;
+    case IR_SYMBOL:
+    case IR_INT_LITERAL:
+    case IR_VREG:
+    case IR_UNDEFINED:
+        PANIC("Sanity check failed\n");
+    }
+    fprintf(fp, "    movq $%d, %%rdx\n", instr->memcpy.size);
     fprintf(fp, "    call memcpy\n");
 }
 

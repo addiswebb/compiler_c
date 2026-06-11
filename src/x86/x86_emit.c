@@ -8,11 +8,10 @@
 
 #include <inttypes.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 const char *x86_reg(const IR_Value *v) {
     if (v->phys_reg.kind == REG_GP) return gp_register_str[v->phys_reg.gp_reg][v->phys_reg.size];
-    else return sse_register_str[v->phys_reg.sse_reg];
+    return sse_register_str[v->phys_reg.sse_reg];
 }
 
 void x86_operand(const IR_Value *v, char *buf, const int n) {
@@ -29,6 +28,7 @@ void x86_operand(const IR_Value *v, char *buf, const int n) {
             len += snprintf(buf, n, "%s", r->label);
             break;
         case REG_DATA_OFFSET:
+            if (r->offset == 0) break;
             len += snprintf(buf, n, "%d", r->offset);
             break;
         case REG_DATA_CONST_INDEX:
@@ -99,6 +99,7 @@ void x86_emit_r(FILE *fp, const char *instr, const char *s1, const char *s2, con
 
 const char *x86_rax_reg(Type *t) {
     if (t->kind == T_FLOAT) return "%xmm0";
+    if (t->kind == T_ENUM) return "%eax";
     if (t->kind == T_INT) {
         switch (t->size) {
         case 1:
@@ -114,15 +115,12 @@ const char *x86_rax_reg(Type *t) {
         }
     }
     if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "%rax";
-    log_start(LOG_ERROR);
-    printf("Tried to get %%rax register of unsupported type ");
-    print_type(t);
-    printf("\n");
-    exit(1);
+    PANIC("Tried to get %%rax, register of unsupported type %t\n", t);
 }
 
 const char *x86_rbx_reg(const Type *t) {
     if (t->kind == T_FLOAT) return "%xmm1";
+    if (t->kind == T_ENUM) return "%ebx";
     if (t->kind == T_INT) {
         switch (t->size) {
         case 1:
@@ -144,6 +142,7 @@ const char *x86_rbx_reg(const Type *t) {
 
 const char *x86_rcx_reg(const Type *t) {
     if (t->kind == T_FLOAT) return "%xmm2";
+    if (t->kind == T_ENUM) return "%ecx";
     if (t->kind == T_INT) {
         switch (t->size) {
         case 1:
@@ -165,6 +164,7 @@ const char *x86_rcx_reg(const Type *t) {
 
 const char *x86_rdx_reg(const Type *t) {
     if (t->kind == T_FLOAT) return "%xmm3";
+    if (t->kind == T_ENUM) return "%edx";
     if (t->kind == T_INT) {
         switch (t->size) {
         case 1:
@@ -185,7 +185,7 @@ const char *x86_rdx_reg(const Type *t) {
     PANIC("Tried to get %%rdx register of unsupported type\n");
 }
 
-const char *x86_float_op_suffix(int size) {
+const char *x86_float_op_suffix(const int size) {
     switch (size) {
     case 4:
         return "ss";
@@ -196,7 +196,7 @@ const char *x86_float_op_suffix(int size) {
     }
 }
 
-const char *x86_integer_op_suffix(int size) {
+const char *x86_integer_op_suffix(const int size) {
     switch (size) {
     case 1:
         return "b";
@@ -212,8 +212,11 @@ const char *x86_integer_op_suffix(int size) {
 }
 const char *x86_op_suffix(const Type *t) {
     if (t->kind == T_FLOAT) return x86_float_op_suffix(t->size);
-    if (t->kind == T_INT || t->kind == T_ENUM) return x86_integer_op_suffix(t->size);
-    if (t->kind == T_POINTER || t->kind == T_ARRAY || t->kind == T_FUNCTION) return "q";
+    if (t->kind == T_INT || t->kind == T_ENUM || t->kind == T_POINTER) return x86_integer_op_suffix(t->size);
+    if (t->kind == T_ARRAY) return "q";
+    // TODO investigate if function actually needed?
+    WARN("T_FUNCTION Was needed\n");
+    if (t->kind == T_ARRAY || t->kind == T_FUNCTION) return "q";
     PANIC("Tried to op of unsupported type\n");
 }
 void x86_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) { abi_emit_call(fp, ctx, instr); }
@@ -479,8 +482,7 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
             x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", from_reg, to_reg);
             x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         } else {
-            x86_emit_xr(fp, "movs", from_op_suffix, "q", src, "%rax");
-            x86_emit_rr(fp, "cvtsi2", to_op_suffix, "", "%rax", to_reg);
+            x86_emit_xr(fp, "cvtsi2", to_op_suffix, "", src, to_reg);
         }
         x86_emit_rx(fp, "mov", to_op_suffix, "", to_reg, dst);
         return;
@@ -488,7 +490,7 @@ void x86_emit_cast(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *fro
     // float/double -> char/short/int/long
     if (from->kind == T_FLOAT && to->kind == T_INT) {
         if (to->size == 8) {
-            x86_emit_xr(fp, "cvtt", from_op_suffix, "2sq", src, "%rax");
+            x86_emit_xr(fp, "cvtt", from_op_suffix, "2si", src, "%rax");
             x86_emit_rx(fp, "mov", "q", "", "%rax", dst);
         } else {
             x86_emit_xr(fp, "cvtt", from_op_suffix, "2si", src, "%eax");
@@ -510,8 +512,8 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
 
-    switch (t->kind) {
-    case T_INT:
+    switch (c->kind) {
+    case CONST_INTEGER:
         switch (t->size) {
         case 1:
         case 2:
@@ -519,13 +521,14 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *
             fprintf(fp, "    movl $%d, %%eax\n", (int)c->i);
             break;
         case 8:
+            // TODO why not q?
             fprintf(fp, "    movl $%" PRId64 ", %%eax\n", c->i);
             break;
         default:
             PANIC("Tried to emit const int of unsupported size\n");
         }
         break;
-    case T_FLOAT:
+    case CONST_FLOAT:
         switch (t->size) {
         case 4:
         case 8:
@@ -535,20 +538,17 @@ void x86_emit_const(FILE *fp, const IR_Value *dst, Type *t, const ConstLiteral *
             PANIC("Tried to emit const float of unsupported size\n");
         }
         break;
-    case T_ARRAY:
-        if (t->base == type_i8) return;
-    case T_POINTER:
-    default:
-        printf("Tried to emit const of unsupported type\n");
+    case CONST_STRING:
+        return;
+    case CONST_ARRAY:
+    case CONST_LABEL:
+    case CONST_REFERENCE:
+    case CONST_ZERO:
+        PANIC("Tried to emit const of unsupported type\n");
     }
     x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
 }
-void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, Type *t) {
-    // const char *reg = x86_rax_reg(t);
-    // const char *op_suffix = x86_op_suffix(t);
-    // x86_emit_xr(fp, "mov", op_suffix, "", src, reg);
-    // x86_emit_rx(fp, "mov", op_suffix, "", reg, dst);
-
+void x86_emit_store(FILE *fp, const IR_Value *src, const IR_Value *dst, const Type *t) {
     const char *v = x86_rcx_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     x86_emit_xr(fp, "mov", "q", "", dst, "%rax");
@@ -577,7 +577,7 @@ void x86_emit_move(FILE *fp, const IR_Value *dst, const IR_Value *src) {
     x86_emit_rx(fp, "mov", op_suffix, "", rax, dst);
 }
 
-void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t) {
+void x86_emit_cmp(FILE *fp, const IR_CMP_OP op, const IR_Value *dst, const IR_Value *lhs, const IR_Value *rhs, Type *t) {
     const char *reg = x86_rax_reg(t);
     const char *op_suffix = x86_op_suffix(t);
     x86_emit_xr(fp, "mov", op_suffix, "", lhs, reg);
@@ -612,13 +612,12 @@ void x86_emit_cmp(FILE *fp, IR_CMP_OP op, const IR_Value *dst, const IR_Value *l
     }
     x86_emit_rr(fp, "mov", "zbl", "", "%al", "%eax");
     x86_emit_rx(fp, "mov", "l", "", "%eax", dst);
-    return;
 }
 
 void x86_emit_string(FILE *fp, const char *str) {
     fprintf(fp, "    .byte ");
     while (*str) {
-        unsigned char c = *str;
+        const unsigned char c = *str;
         if (c >= 0x20 && c <= 0x7E && c != '\'' && c != '\\' && c != '"') {
             fprintf(fp, "'%c', ", c);
         } else {
@@ -632,16 +631,12 @@ void x86_emit_string(FILE *fp, const char *str) {
 void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
     switch (c->kind) {
     case CONST_INTEGER:
-        if (c->type == type_i8 || c->type == type_u8) {
-            fprintf(fp, "    .byte %d\n", (char)c->i);
-        } else if (c->type == type_i16 || c->type == type_u16) {
-            fprintf(fp, "    .word %d\n", (short)c->i);
-        } else if (c->type == type_i32 || c->type == type_u32) {
-            fprintf(fp, "    .long %d\n", (int)c->i);
-        } else if (c->type == type_i64 || c->type == type_u64) {
-            fprintf(fp, "    .quad %" PRId64 "\n", c->i);
-        }
-        break;
+        ASSERT(c->type->kind == T_INT || c->type->kind == T_POINTER, "Const literal of CONST_INTEGER but non INTEGER type %t\n", c->type);
+        if (c->type->size == 1) fprintf(fp, "    .byte %d\n", (char)c->i);
+        else if (c->type->size == 2) fprintf(fp, "    .word %d\n", (short)c->i);
+        else if (c->type->size == 4) fprintf(fp, "    .long %d\n", (int)c->i);
+        else if (c->type->size == 8) fprintf(fp, "    .quad %" PRId64 "\n", c->i);
+        return;
     case CONST_FLOAT:
         if (c->type == type_f64) {
             uint64_t bits;
@@ -649,27 +644,31 @@ void x86_emit_literal(FILE *fp, const ConstLiteral *c) {
             fprintf(fp, "    .quad 0x%016" PRIx64 "\n", bits);
         } else if (c->type == type_f32) {
             uint32_t bits;
-            float f = (float)c->f;
+            const float f = (float)c->f;
             memcpy(&bits, &f, sizeof(bits));
             fprintf(fp, "    .long 0x%08x\n", bits);
         }
-        break;
+        return;
     case CONST_STRING:
         x86_emit_string(fp, c->s.data);
-        break;
+        return;
     case CONST_ARRAY:
         for (int i = 0; i < c->arr.count; i++) {
-            ConstLiteral *e = get(&c->arr, i);
+            const ConstLiteral *e = get(&c->arr, i);
             x86_emit_literal(fp, e);
         }
-        break;
+        return;
     case CONST_LABEL:
         fprintf(fp, "    .quad .LC%d\n", c->const_index);
-        break;
+        return;
     case CONST_REFERENCE:
         fprintf(fp, "    .quad %s", c->ref.symbol->name);
         if (c->ref.offset) fprintf(fp, " + %d", c->ref.offset);
         fprintf(fp, "\n");
-        break;
+        return;
+    case CONST_ZERO:
+        fprintf(fp, "    .zero %d\n", c->zero_bytes);
+        return;
     }
+    PANIC("Tried to emit invalid const literal\n");
 }

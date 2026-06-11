@@ -13,18 +13,39 @@ void ir_move(IR_Context *ctx, IR_Value dst, IR_Value src) {
     i.ops[1] = src;
     i.ops[0] = dst;
     i.op_count = 2;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
 }
 
 IR_Value ir_load(IR_Context *ctx, IR_Value addr, Type *type) {
+    if (type->kind == T_STRUCT && type->size > 8) {
+        printf("heere\n");
+    }
     IR_Instruction i;
     i.op = IR_LOAD;
     i.ops[1] = addr;
     i.load.type = type;
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
+}
+void ir_zero(IR_Context *ctx, IR_Value dst, Type *type) {
+    switch (type->kind) {
+    case T_INT:
+    case T_ENUM:
+    case T_FLOAT:
+    case T_POINTER:
+        ir_store(ctx, dst, ir_integer_literal(0), ctx->init_ctx.type);
+        return;
+    case T_ARRAY:
+    case T_STRUCT:
+    case T_UNION:
+        if (type->size <= 8) ir_store(ctx, dst, ir_integer_literal(0), get_integer_type(type->size));
+        else ir_memset(ctx, dst, 0, type->size);
+        return;
+    default:
+        PANIC("Tried to zero invalid type %t\n", type);
+    }
 }
 IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     IR_Instruction i;
@@ -33,7 +54,7 @@ IR_Value ir_store(IR_Context *ctx, IR_Value dst, IR_Value src, Type *type) {
     i.store.type = type->kind == T_ENUM ? type_i32 : type;
     i.ops[0] = dst;
     i.op_count = 2;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
 IR_Value ir_smart_const(IR_Context *ctx, ConstLiteral *literal, Type *type) {
@@ -55,7 +76,7 @@ IR_Value ir_const(IR_Context *ctx, int const_index, Type *type) {
     // Use the .LCx literal for strings, otherwise it was lowered to an asm literal and stored in a register.
     i.ops[0] = type->kind == T_ARRAY && type->base == type_i8 ? i.ops[1] : ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
 IR_Value ir_unary(IR_Context *ctx, IR_UNARY_OP op, IR_Value expr_reg, Type *type) {
@@ -66,7 +87,7 @@ IR_Value ir_unary(IR_Context *ctx, IR_UNARY_OP op, IR_Value expr_reg, Type *type
     i.ops[1] = expr_reg;
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
 IR_Value ir_binary(IR_Context *ctx, IR_BINOP_OP op, IR_Value dst, IR_Value lhs_reg, IR_Value rhs_reg, Type *type) {
@@ -78,7 +99,7 @@ IR_Value ir_binary(IR_Context *ctx, IR_BINOP_OP op, IR_Value dst, IR_Value lhs_r
     i.ops[2] = rhs_reg;
     i.ops[0] = dst;
     i.op_count = 3;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
 IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg, IR_Value rhs_reg, Type *type) {
@@ -93,7 +114,7 @@ IR_Value ir_cmp(IR_Context *ctx, IR_CMP_OP op, IR_Value lhs_reg, IR_Value rhs_re
     i.ops[2] = rhs_reg;
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 3;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
 IR_Value ir_call(IR_Context *ctx, const Node *expr) {
@@ -109,6 +130,8 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
     array_init(&i.call.arg_array, expr->func_call.params_array.count ? expr->func_call.params_array.count : 1, sizeof(IR_CallArg));
     int hidden_ptr_offset = 0;
     Type *return_type = i.call.type->_func.return_type;
+    IR_Value sret;
+    bool use_sret = false;
     // TODO Abstract the condition to ABI, so it works for both SysV and Win64
     if (return_type != type_void) {
 
@@ -116,10 +139,14 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
         if (res.memory) {
             // Pass hidden pointer as first arg
             set_sret(return_type);
-            append(&ctx->func->locals_array, &_sret);
+            Symbol *current_sret_symbol = current_sret();
+
+            append(&ctx->func->locals_array, &current_sret_symbol);
             hidden_ptr_offset++;
-            append(&i.call.arg_array,
-                   &(IR_CallArg){.v = ir_address(ctx, ir_symbol_value(_sret), 0), .type = get_pointer_type(return_type)});
+            sret = ((IR_CallArg *)append(&i.call.arg_array, &(IR_CallArg){.v = ir_address(ctx, ir_symbol_value(current_sret_symbol), 0),
+                                                                          .type = get_pointer_type(return_type)}))
+                       ->v;
+            use_sret = true;
         }
     }
 
@@ -127,20 +154,30 @@ IR_Value ir_call(IR_Context *ctx, const Node *expr) {
         Node *param = get_node(&expr->func_call.params_array, j);
         Type *arg_type = param->type;
 
-        if (j < i.call.type->abi.type->_func.params.count)
-            arg_type = ((ParamDecl *)get(&i.call.type->abi.type->_func.params, j + hidden_ptr_offset))->type;
+        if (j < i.call.type->abi.type->_func.params.count) {
+            ParamDecl *d = (ParamDecl *)get(&i.call.type->abi.type->_func.params, j + hidden_ptr_offset);
+            arg_type = d->type;
+        }
 
         IR_Value val;
         ABI_Result res = abi_classify(arg_type);
+        // #ifdef _WIN64
         if (res.memory) val = ir_gen_lvalue(ctx, param);
         else if (param->type->kind == T_FUNCTION || is_func_ptr(param->type)) val = ir_gen_lvalue(ctx, param);
         // else if (is_func_ptr(param->type)) val = ir_gen_rvalue(ctx, param);
         else val = ir_gen_rvalue(ctx, param);
+        // #else
+        //         if (param->type->kind == T_FUNCTION || is_func_ptr(param->type)) val = ir_gen_lvalue(ctx, param);
+        //         else val = ir_gen_rvalue(ctx, param);
+        // #endif
         append(&i.call.arg_array, &(IR_CallArg){.v = val, .type = arg_type});
     }
     i.ops[0] = ir_next_virtual_reg(ctx->func);
+    // Used because ir_call redefines i.ops[0]
     i.op_count = 2;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
+    if (use_sret) ir_move(ctx, i.ops[0], sret);
+
     return i.ops[0];
 }
 IR_Value ir_return(IR_Context *ctx, IR_Value reg, Type *type) {
@@ -149,7 +186,7 @@ IR_Value ir_return(IR_Context *ctx, IR_Value reg, Type *type) {
     i.ops[0] = reg;
     i.op_count = 1;
     i.ret.type = type;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return ir_no_value;
 }
 IR_Value ir_branch(IR_Context *ctx, IR_Block *block) {
@@ -157,7 +194,7 @@ IR_Value ir_branch(IR_Context *ctx, IR_Block *block) {
     i.op = IR_BR;
     i.br.block = block;
     i.op_count = 0;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return ir_no_value;
 }
 
@@ -166,7 +203,7 @@ IR_Value ir_jmp(IR_Context *ctx, const char *name) {
     i.op = IR_JMP;
     i.jmp.name = name;
     i.op_count = 0;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return ir_no_value;
 }
 
@@ -175,7 +212,7 @@ IR_Value ir_label(IR_Context *ctx, const char *name) {
     i.op = IR_LABEL;
     i.label.name = name;
     i.op_count = 0;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return ir_no_value;
 }
 IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, IR_Block *f_block) {
@@ -185,12 +222,12 @@ IR_Value ir_branch_cond(IR_Context *ctx, IR_Value cond_reg, IR_Block *t_block, I
     i.br_cond.t_block = t_block;
     i.br_cond.f_block = f_block;
     i.op_count = 1;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return ir_no_value;
 }
 IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
+    if (get_qualified_type(from, QUAL_NONE) == get_qualified_type(to, QUAL_NONE)) return src;
     if (src.kind == IR_INT_LITERAL && (to->kind == T_INT || to->kind == T_POINTER)) return src;
-    // if (from->kind == T_POINTER && from->kind == T_POINTER) return src;
     if (from->kind == T_ARRAY && to->kind == T_POINTER && from->base->kind == to->base->kind) PANIC("HOW");
     IR_Instruction i;
     i.op = IR_CAST;
@@ -199,20 +236,17 @@ IR_Value ir_cast(IR_Context *ctx, IR_Value src, Type *to, Type *from) {
     i.ops[1] = src;
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
 IR_Value ir_address(IR_Context *ctx, IR_Value src, int offset) {
-    if (src.kind == IR_VREG) {
-        printf("HERE");
-    }
     IR_Instruction i;
     i.op = IR_ADDR;
     i.ops[1] = src;
     i.addr.offset = offset;
     i.ops[0] = ir_next_virtual_reg(ctx->func);
     i.op_count = 2;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
 IR_Value ir_alloca(IR_Context *ctx, IR_Value dst, int size, int align) {
@@ -221,10 +255,20 @@ IR_Value ir_alloca(IR_Context *ctx, IR_Value dst, int size, int align) {
     i.alloca.size = size;
     i.op_count = 1;
     i.ops[0] = dst;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
 
+IR_Value ir_memset(IR_Context *ctx, IR_Value dst, int c, int size) {
+    IR_Instruction i;
+    i.op = IR_MEMSET;
+    i.memset.size = size;
+    i.memset.c = c;
+    i.ops[0] = dst;
+    i.op_count = 1;
+    ir_append_instruction(ctx, &i);
+    return i.ops[0];
+}
 IR_Value ir_memcpy(IR_Context *ctx, IR_Value from_reg, IR_Value to_reg, int size) {
     IR_Instruction i;
     i.op = IR_MEMCPY;
@@ -232,7 +276,7 @@ IR_Value ir_memcpy(IR_Context *ctx, IR_Value from_reg, IR_Value to_reg, int size
     i.memcpy.size = size;
     i.ops[0] = to_reg;
     i.op_count = 2;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
 
@@ -242,7 +286,7 @@ IR_Value ir_builtin_va_start(IR_Context *ctx, IR_Value ap, IR_Value first_arg) {
     i.ops[0] = ap;
     i.ops[1] = first_arg;
     i.op_count = 2;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return ir_no_value;
 }
 
@@ -253,7 +297,7 @@ IR_Value ir_builtin_va_arg(IR_Context *ctx, IR_Value ap, Type *type) {
     i.ops[1] = ap;
     i.op_count = 2;
     i.builtin_va_arg.type = type;
-    ir_append_instruction(ctx->block, &i);
+    ir_append_instruction(ctx, &i);
     return i.ops[0];
 }
 

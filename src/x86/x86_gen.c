@@ -6,10 +6,10 @@
 #include "compiler_c/x86/x86.h"
 
 #include <inttypes.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
+static void x86_gen_memset_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memset_instruction(fp, instr); }
 static void x86_gen_memcpy_instruction(FILE *fp, const IR_Instruction *instr) { abi_gen_memcpy_instruction(fp, instr); }
 static void x86_gen_cmp_instruction(FILE *fp, const IR_Instruction *instr) {
     x86_emit_cmp(fp, instr->cmp.op, &instr->ops[0], &instr->ops[1], &instr->ops[2], instr->cmp.type);
@@ -22,7 +22,7 @@ static void x86_gen_cast_instruction(FILE *fp, const IR_Instruction *instr) {
 }
 static void x86_gen_const_instruction(FILE *fp, const IR_Context *ctx, const IR_Instruction *instr) {
     if (instr->ops[1].kind == IR_CONSTANT) {
-        ConstLiteral *c = get_const(ctx, instr->ops[1].const_index);
+        const ConstLiteral *c = get_const(ctx, instr->ops[1].const_index);
         x86_emit_const(fp, &instr->ops[0], instr->_const.type, c, instr->ops[1].const_index);
         return;
     }
@@ -80,6 +80,9 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         break;
     case IR_ALLOCA:
         break;
+    case IR_MEMSET:
+        x86_gen_memset_instruction(fp, instr);
+        break;
     case IR_MEMCPY:
         x86_gen_memcpy_instruction(fp, instr);
         break;
@@ -87,7 +90,12 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         x86_gen_cmp_instruction(fp, instr);
         break;
     case IR_RET:
-        if (instr->ops[0].kind != IR_UNDEFINED)
+        // TODO: fix so instr->ret.type != type_void check works full
+        /*
+            I think it is related to struct return type handling,
+            possibly converted to void return type, but still holds a value
+         */
+        if (instr->ops[0].kind != IR_UNDEFINED && instr->ret.type != type_void)
             x86_emit_xr(fp, "mov", x86_op_suffix(instr->ret.type), "", &instr->ops[0], x86_rax_reg(instr->ret.type));
         fprintf(fp, "    mov %%rbp, %%rsp\n");
         fprintf(fp, "    pop %%rbp\n");
@@ -119,7 +127,8 @@ static void x86_gen_instruction(FILE *fp, IR_Context *ctx, const IR_Instruction 
         x86_emit_rx(fp, "mov", "q", "", "%rcx", &instr->ops[0]);
         break;
     case IR_PARAM:
-        ASSERT(instr->op_count == 2, "Param instruction not correctly lowered\n");
+        if (instr->op_count == 1) break;
+        if (instr->param.type->size > 8) break;
         if (!memcmp(&instr->ops[0], &instr->ops[1], sizeof(IR_Value))) break;
         const char *param_op_suffix = x86_op_suffix(instr->param.type);
         if (instr->param.param_index < PARAM_REGISTERS && instr->param.param_index != -1) {
@@ -139,7 +148,7 @@ static void x86_gen_block(FILE *fp, IR_Context *ctx) {
 }
 static void x86_gen_function(FILE *fp, IR_Context *ctx) {
     const int stack_size = ctx->func->stack_size;
-    const int aligned_stack_size = stack_size + 15 & ~15;
+    const int aligned_stack_size = STACK_ALIGN(stack_size);
 
     if (ctx->func->linkage == LINK_EXTERNAL) fprintf(fp, ".global %s\n", ctx->func->name);
     fprintf(fp, "%s:\n", ctx->func->name);
@@ -166,6 +175,7 @@ void x86_gen_module(FILE *fp, IR_Context *ctx) {
             x86_emit_literal(fp, c);
         }
     }
+
     for (int i = 0; i < ctx->module->global_array.count; i++) {
         const IR_Global *g = get_global(ctx, i);
         const ConstLiteral *c = &g->val;

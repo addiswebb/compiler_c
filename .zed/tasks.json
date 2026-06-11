@@ -10,7 +10,7 @@
     },
     {
         "label": "Full Run Test.c",
-        "command": "cmake --build build;./build/compiler_c ./tests/test.c  -o ./tests/test.exe; ./tests/test.exe; echo \"Exit Code: $LASTEXITCODE - $?\"",
+        "command": "cmake --build build;./build/compiler_c ./tests/test.c -o ./tests/test.exe;./tests/test.exe; echo \"Exit Code: $LASTEXITCODE - $?\"",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,
@@ -28,7 +28,7 @@
     },
     {
         "label": "Run Tests",
-        "command": "cmake --build build;lit -vv ./tests/basic ./tests/complex",
+        "command": "lit -vv ./tests/basic ./tests/complex",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,
@@ -37,7 +37,7 @@
     },
     {
         "label": "Compile -ir",
-        "command": "cmake --build build;./build/compiler_c ./tests/test.c -ir",
+        "command": "cmake --build build;./build/compiler_c ./tests/test.c -ir -gir-instr",
         "cwd": "$ZED_WORKTREE_ROOT",
         "use_new_terminal": false,
         "allow_concurrent_runs": false,

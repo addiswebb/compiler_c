@@ -1,4 +1,4 @@
-#include <stdbool.h>
+#include "../libc/stdbool.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,6 +16,8 @@
 #include <compiler_c/ir/ir_builder.h>
 #include <compiler_c/ir/ir_gen.h>
 
+static void ir_gen_initializer(IR_Context *ctx, IR_Value dst, Node *l);
+
 IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
     switch (expr->kind) {
     case N_IDENTIFIER:
@@ -29,6 +31,7 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
         ASSERT(expr->unary.op == TK_MULTIPLY, "Can only generate *expr lvalue\n");
         return ir_gen_rvalue(ctx, expr->unary.expr);
     case N_BINARY:
+    case N_TERNARY:
         return ir_gen_rvalue(ctx, expr);
     case N_INDEX:
         // Uses more complex lowering for ptr -integer arithmetic in ir_gen_rvalue,
@@ -52,6 +55,7 @@ IR_Value ir_gen_lvalue(IR_Context *ctx, const Node *expr) {
             expr->cast.expr->type->kind == T_FUNCTION) {
             return ir_gen_lvalue(ctx, expr->cast.expr);
         }
+        print_node(expr, 0);
         PANIC("bad Lvalue of N_CAST\n");
     default:
         break;
@@ -98,10 +102,10 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
             if (val.kind == IR_SYMBOL && val.symbol->kind == FUNC) {
                 val = ir_address(ctx, val, 0);
             }
-            bool dereference = expr->binary.lhs->kind == N_INDEX || expr->binary.lhs->kind == N_MEMBER_ACCESS || is_deref(expr->binary.lhs);
             // If it is assignment & binary op
             if (expr->binary.op != TK_EQ) {
-                IR_Value binop_val = ir_load(ctx, addr, dereference ? expr->binary.lhs->unary.expr->type : expr->binary.lhs->type);
+                IR_Value binop_val =
+                    ir_load(ctx, addr, is_deref(expr->binary.lhs) ? expr->binary.lhs->unary.expr->type : expr->binary.lhs->type);
                 val = ir_binary(ctx, ir_binary_op(get_underlying_op(expr->binary.op)), ir_next_virtual_reg(ctx->func), binop_val, val,
                                 expr->type);
             }
@@ -113,18 +117,27 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
 
         // Handle early branching for '&&' and '||' binary operations
         if (expr->binary.op == TK_OR_OR || expr->binary.op == TK_AND_AND) {
-            if (ir_is_within_cond(ctx)) {
-                if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, lhs, NULL, ctx->false_block);
-                if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, lhs, ctx->true_block, NULL);
-            }
+            IR_Value val = ir_alloca(ctx, ir_next_virtual_reg(ctx->func), 8, 8);
+            IR_Block *true_block = ir_new_block();
+            IR_Block *false_block = ir_new_block();
+            IR_Block *end_block = ir_new_block();
+
+            if (expr->binary.op == TK_AND_AND) ir_branch_cond(ctx, lhs, NULL, false_block);
+            if (expr->binary.op == TK_OR_OR) ir_branch_cond(ctx, lhs, true_block, NULL);
 
             IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
-            // No need to cmp both results, if we reach here it means lhs is 1 or rhs represents (lhs op rhs)
-            // Early out
-            if (ir_is_within_cond(ctx)) return rhs;
 
-            // Otherwise generate the whole || or && result
-            return ir_binary(ctx, expr->binary.op == TK_OR_OR ? BW_OR : BW_AND, ir_next_virtual_reg(ctx->func), lhs, rhs, type_i32);
+            ir_branch_cond(ctx, rhs, true_block, false_block);
+
+            ir_append_block(ctx, true_block);
+            ir_move(ctx, val, ir_integer_literal(1));
+            ir_branch(ctx, end_block);
+
+            ir_append_block(ctx, false_block);
+            ir_move(ctx, val, ir_integer_literal(0));
+
+            ir_append_block(ctx, end_block);
+            return val;
         }
 
         IR_Value rhs = ir_gen_rvalue(ctx, expr->binary.rhs);
@@ -154,17 +167,19 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
         return lhs;
     case N_UNARY:
         if (expr->unary.op == TK_INCR || expr->unary.op == TK_DECR) {
-            if (expr->unary.expr->kind != N_IDENTIFIER) {
-                PANIC("Can only increment on a identifieir/variable\n");
-            }
+            ASSERT(expr->unary.expr->kind == N_IDENTIFIER || expr->unary.expr->kind == N_MEMBER_ACCESS || expr->unary.expr->kind == N_UNARY,
+                   "Can only increment on a identifieir/variable\n");
             ConstLiteral c;
             c.type = expr->type;
             switch (expr->type->kind) {
             case T_INT:
+            case T_POINTER:
                 c.i = 1;
+                c.kind = CONST_INTEGER;
                 break;
             case T_FLOAT:
                 c.f = 1.0;
+                c.kind = CONST_FLOAT;
                 break;
             default:
                 PANIC("Tried to increment a value which is neither float or int\n");
@@ -194,11 +209,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     default:
         break;
     }
-    log_start(LOG_ERROR);
-    printf("Failed to gen expr for ");
-    print_node_type(expr->kind);
-    printf("\n");
-    exit(1);
+    PANIC("Failed to gen rvalue for %nk\n", expr->kind);
 }
 
 static void ir_gen_block_item(IR_Context *ctx, const Node *item) {
@@ -290,7 +301,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_begin_scope(ctx->func);
     if (_for->_for.init) ir_gen_block_item(ctx, _for->_for.init);
 
-    IR_Block *cond_block = ir_add_block(ctx);
+    IR_Block *cond_block = ir_new_block();
     IR_Block *block_block = ir_new_block();
     IR_Block *iter_block = ir_new_block();
     IR_Block *end_block = ir_new_block();
@@ -299,6 +310,7 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_push_loop_ctx(ctx, iter_block, end_block);
 
     if (_for->_for.cond) {
+        ir_append_block(ctx, cond_block);
         ir_set_cond_block(ctx, block_block, end_block);
         const IR_Value cond_reg = ir_gen_rvalue(ctx, _for->_for.cond);
         ir_reset_cond_block(ctx);
@@ -313,7 +325,8 @@ static void ir_gen_for_loop(IR_Context *ctx, const Node *_for) {
     ir_append_block(ctx, iter_block);
     if (_for->_for.iter) ir_gen_statement(ctx, _for->_for.iter);
 
-    ir_branch(ctx, cond_block);
+    if (_for->_for.cond) ir_branch(ctx, cond_block);
+    else ir_branch(ctx, block_block);
 
     ir_append_block(ctx, end_block);
     // Reset ctx for continue/break statements
@@ -350,84 +363,149 @@ static void ir_gen_if_statement(IR_Context *ctx, const Node *_if) {
     ir_end_scope(ctx->func);
 }
 
-static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, int offset, Type *node_type, Node *l) {
-    IR_Value zero = ir_integer_literal(0);
-    int member_offset = 0;
-    Type *type;
-    IR_Value ir_v;
-
-    switch (node_type->kind) {
+static void ir_smart_store(IR_Context *ctx, IR_Value dst, Node *e) {
+    switch (e->type->kind) {
     case T_INT:
     case T_FLOAT:
     case T_POINTER:
-    case T_UNION:
-        if (l->init_list.elements_array.count == 0) {
-            type = node_type;
-            ir_v = zero;
-        } else {
-            Node *e = get_node(&l->init_list.elements_array, 0);
-            type = e->type;
-            ir_v = ir_gen_rvalue(ctx, e->kind == N_DESIGNATED_INITIALIZER ? e->designated_init.value : e);
-        }
-        ir_store(ctx, dst, ir_v, type);
-        break;
+    case T_ENUM:
+        ir_store(ctx, dst, ir_gen_rvalue(ctx, e), e->type);
+        return;
     case T_ARRAY:
     case T_STRUCT:
-        bool is_array = node_type->kind == T_ARRAY;
-        int len = is_array ? node_type->_array.array_len : node_type->_struct.members_array.count;
+    case T_UNION:
+        ir_memcpy(ctx, ir_gen_lvalue(ctx, e), dst, e->type->size);
+        return;
+    default:
+        PANIC("Tried to smart store invalid type %t\n", e->type);
+    }
+}
 
-        if (is_array) {
-            type = node_type->base;
+static void ir_gen_init(IR_Context *ctx, IR_Value dst, Node *e) {
+    if (ctx->init_ctx.offset)
+        dst = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), dst, ir_integer_literal(ctx->init_ctx.offset), type_u64);
+    ir_smart_store(ctx, dst, e);
+}
+
+static bool find_member_offset(Type *t, const char *name, int *offset) {
+    ASSERT(t->kind == T_STRUCT, "Expected struct type\n");
+    if (t->kind != T_STRUCT && t->kind != T_UNION) return false;
+    for (int i = 0; i < t->_struct.members_array.count; i++) {
+        StructMember *m = get_struct_member(t, i);
+        if (m->name && strcmp(m->name, name) == 0) {
+            *offset += m->offset;
+            return true;
         }
-
-        for (int i = 0; i < len; i++) {
-            Node *value = NULL;
-            StructMember *member = is_array ? NULL : get_struct_member(node_type, i);
-            for (int j = l->init_list.elements_array.count - 1; j >= 0; j--) {
-                Node *e = get_node(&l->init_list.elements_array, j);
-                if (is_array ? e->designated_init._array.index == i : strcmp(member->name, e->designated_init._struct.name) == 0) {
-                    value = e->designated_init.value;
-                    break;
-                }
-            }
-            if (is_array) member_offset = type->align * i + offset;
-            else {
-                type = member->type;
-                member_offset = member->offset + offset;
-            }
-
-            // If the corresponding value was found in the init list, use that, otherwise use a zero,
-            if (value) {
-                if (value->kind == N_INIT_LIST) ir_gen_init_list(ctx, dst, member_offset, type, value);
-                else ir_v = ir_gen_rvalue(ctx, value);
-            } else ir_v = zero;
-
-            IR_Value final_dst = dst;
-            if (member_offset)
-                final_dst = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), dst, ir_integer_literal(member_offset), type_u64);
-            ir_store(ctx, final_dst, ir_v, type);
+        if (!m->name && (m->type->kind == T_STRUCT || m->type->kind == T_UNION)) {
+            *offset += m->offset;
+            if (find_member_offset(m->type, name, offset)) return true;
+            *offset -= m->offset;
         }
+    }
+    return false;
+}
+
+static void ir_gen_init_list(IR_Context *ctx, IR_Value dst, Node *l) {
+    if (l->init_list.elements_array.count == 0) ir_memset(ctx, dst, 0, l->type->size);
+    int len = l->type->kind == T_ARRAY ? l->type->_array.array_len : l->type->_struct.members_array.count;
+    char *initialized = calloc(len, sizeof(char));
+    ASSERT(initialized, "Failed to calloc\n");
+    ctx->init_ctx.index = 0;
+    int start_offset = ctx->init_ctx.offset;
+    for (int i = 0; i < l->init_list.elements_array.count; i++) {
+        Node *e = get_node(&l->init_list.elements_array, i);
+        int offset = 0;
+        if (e->kind == N_DESIGNATOR) {
+            if (l->type->kind == T_ARRAY) {
+                ctx->init_ctx.index = e->designator._array.index;
+                offset = ctx->init_ctx.index * l->type->base->size;
+            } else {
+                AggrMember *m = get_member(l->type, e->designator._struct.name, true, &offset, &ctx->init_ctx.index);
+            }
+        } else {
+            if (l->type->kind == T_ARRAY) {
+                offset = ctx->init_ctx.index * l->type->base->size;
+            } else {
+                AggrMember *m = get_struct_member(l->type, ctx->init_ctx.index);
+                offset = m->offset;
+            }
+        }
+        ctx->init_ctx.offset = start_offset + offset;
+        initialized[ctx->init_ctx.index] = true;
+        ir_gen_initializer(ctx, dst, e->kind == N_DESIGNATOR ? e->designator.value : e);
+        ctx->init_ctx.index++;
+    }
+
+    if (l->type->kind == T_UNION) len = 0;
+    // Todo fill empty union as largest size
+
+    IR_Value final_dst = dst;
+    for (int i = 0; i < len; i++) {
+        int offset = 0;
+        if (!initialized[i]) {
+            if (l->type->kind == T_ARRAY) {
+                offset = i * l->type->base->size;
+                ctx->init_ctx.type = l->type->base;
+            } else {
+                AggrMember *m = get_struct_member(l->type, i);
+                offset = m->offset;
+                ctx->init_ctx.type = m->type;
+            }
+            if (offset + start_offset)
+                final_dst = ir_binary(ctx, ADD, ir_next_virtual_reg(ctx->func), dst, ir_integer_literal(offset + start_offset), type_u64);
+            ir_zero(ctx, final_dst, ctx->init_ctx.type);
+        }
+    }
+    free(initialized);
+}
+
+static void ir_gen_initializer(IR_Context *ctx, IR_Value dst, Node *l) {
+    switch (l->type->kind) {
+    case T_ENUM:
+    case T_INT:
+    case T_FLOAT:
+    case T_POINTER:
+        if (l->kind == N_INIT_LIST) ir_gen_init(ctx, dst, get_node(&l->init_list.elements_array, 0));
+        else ir_gen_init(ctx, dst, l);
+        break;
+    case T_STRUCT:
+    case T_ARRAY:
+    case T_UNION:
+        if (l->kind == N_INIT_LIST) ir_gen_init_list(ctx, dst, l);
+        else ir_gen_init(ctx, dst, l);
         break;
     default:
-        PANIC("Recieving unsupported type to lower var decl with initlist\n");
+        PANIC("Invalid init list type");
+        break;
     }
-    return;
+    ctx->init_ctx.offset = 0;
+    ctx->init_ctx.index = 0;
+    ctx->init_ctx.type = NULL;
 }
 
 ConstLiteral lower_const_literal(IR_Context *ctx, ConstLiteral *l) {
     ConstLiteral e;
     switch (l->type->kind) {
     case T_ENUM:
-        DEBUG("Lower const literal from enum\n");
     case T_INT:
     case T_FLOAT:
+    case T_STRUCT:
+#ifdef __COMPILER_C__
+        ConstLiteral tmps = *l;
+        return tmps;
+#else
         return *l;
+#endif
     case T_POINTER:
-        if (l->type->base == type_i8) {
+        if (l->type->base == type_i8)
             return (ConstLiteral){.const_index = ir_append_const(ctx->module, l), .kind = CONST_LABEL, .type = l->type};
-        }
-        ASSERT(l->kind == CONST_REFERENCE, "Cannot assign pointer with given const expr type\n");
+        ASSERT(l->kind == CONST_REFERENCE || (l->kind == CONST_INTEGER && l->i == 0), "Cannot assign pointer with given const expr type\n");
+#ifdef __COMPILER_C__
+        ConstLiteral tmpp = *l;
+        return tmpp;
+#else
         return *l;
+#endif
     case T_ARRAY:
         array_init(&e.arr, l->arr.count, sizeof(ConstLiteral));
         for (int i = 0; i < l->arr.count; i++) {
@@ -458,16 +536,16 @@ static void ir_gen_var_decl(IR_Context *ctx, const Node *var_decl) {
     // Handle locals
     IR_Value dst = ir_gen_lvalue(ctx, var_decl->var_decl.identifier);
 
-    if (var_decl->var_decl.expr->kind == N_INIT_LIST) return ir_gen_init_list(ctx, dst, 0, var_decl->type, var_decl->var_decl.expr);
+    if (var_decl->var_decl.expr->kind == N_INIT_LIST) return ir_gen_initializer(ctx, dst, var_decl->var_decl.expr);
 
-    IR_Value rhs = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
-    if (rhs.kind == IR_SYMBOL && rhs.symbol->kind == FUNC) rhs = ir_address(ctx, rhs, 0);
     ABI_Result res = abi_classify(var_decl->type);
     if (var_decl->type->kind == T_ARRAY || res.memory) {
-        // ir_alloca(ctx, dst, align(var_decl->type->size, 8), 8);
-        // dst = ir_address(ctx, dst, 0);
+        IR_Value rhs = ir_gen_lvalue(ctx, var_decl->var_decl.expr);
         ir_memcpy(ctx, rhs, dst, var_decl->type->size);
-    } else ir_store(ctx, dst, rhs, var_decl->type);
+    } else {
+        IR_Value rhs = ir_gen_rvalue(ctx, var_decl->var_decl.expr);
+        ir_store(ctx, dst, rhs, var_decl->type);
+    }
 }
 
 static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
@@ -503,14 +581,11 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
     case N_NULL:
     case N_IDENTIFIER:
     case N_LITERAL:
+    case N_CAST:
         return;
     default:
         // given invalid statement? probably an expression
-        log_start(LOG_ERROR);
-        printf("Dont know what to do with the given statement: ir_gen_statement: ");
-        print_node_type(stmt->kind);
-        printf("\n");
-        exit(1);
+        PANIC("ir_gen_statement: Not sure what to do with %nk\n", stmt->kind);
     }
 }
 
@@ -601,6 +676,7 @@ IR_Module *ir_gen_translation_unit(IR_Context *ctx, const Node *tu) {
             PANIC("Recieved an unexpected thing\n");
         }
     }
+
     return module;
 }
 

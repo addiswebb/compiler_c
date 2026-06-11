@@ -27,20 +27,23 @@ BASE2=$(basename "$FILE2")
 BASE2="${BASE2%.*}"
 
 echo "[1/5] Compiling $FILE1 [compiler_c] → $BASE1.s"
-compiler_c "$FILE1" -a
+compiler_c "$FILE1" -o $BASE1.o -c -I../../libc
 
-echo "[2/5] Assembling $BASE1.s [gcc] → $BASE1.o"
-gcc -c "$BASE1.s" -o "$BASE1.o"
 
-echo "[3/5] Compiling $FILE2 [gcc] → $BASE2.o"
-gcc -c "$FILE2" -o "$BASE2.o"
+echo "[2/4] Compiling $FILE2 [gcc] → $BASE2.o"
+gcc -S "$FILE2" -o "$BASE2.s" -fno-unwind-tables -fno-asynchronous-unwind-tables
+gcc -c "$BASE2.s" -o "$BASE2.o"
 
-echo "[4/5] Linking → a.out"
+echo "[3/4] Linking $BASE1.o [compiler_c] + $BASE2.o [gcc] → a.out"
 gcc "$BASE1.o" "$BASE2.o" -o "a.out"
 
-echo "[5/5] Running a.out"
-./a.out
+echo "[4/4] Running a.out"
 
-echo "Exit Code: $?"
+set +e
+./a.out
+rc=$?
+set -e
+
+echo "Exit Code: $rc"
 
 echo "Done."

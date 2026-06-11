@@ -64,6 +64,7 @@ typedef enum {
     IR_ADDR,
     /* No-op */
     IR_ALLOCA,
+    IR_MEMSET,
     IR_MEMCPY,
     IR_LABEL,
     IR_JMP,
@@ -84,7 +85,7 @@ typedef enum {
 
 typedef struct PhysReg PhysReg;
 
-/* Represents every possible way to represent values and memory in IR */
+/* Represents every possible way to represent values/memory in IR */
 typedef struct IR_Value {
     IR_ValueKind kind;
     int size;
@@ -98,6 +99,7 @@ typedef struct IR_Value {
         int const_index;
         // IR_PHYS_REG
         PhysReg phys_reg;
+        // IR_INT_LITERAL
         int64_t int_literal;
     };
 } IR_Value;
@@ -112,7 +114,11 @@ typedef struct {
     IR_Value v;
 } IR_CallArg;
 
-/* Determines of the 3 possible operands in an instruction, which are considered `used` or `defined` by the instruction. */
+/*
+    Determines which of the 3 possible operands in an instruction
+    are considered `used` or `defined` by the instruction.
+    e.g. Defined: 001 Used: 010, Says the first operand is defined and the second is used/read from.
+*/
 typedef struct {
     uint8_t def_mask;
     uint8_t use_mask;
@@ -168,10 +174,12 @@ typedef struct {
             IR_Block *block;
         } br;
         struct {
-            IR_Block *t_block, *f_block;
+            IR_Block *t_block;
+            IR_Block *f_block;
         } br_cond;
         struct {
-            Type *from, *to;
+            Type *from;
+            Type *to;
         } cast;
         struct {
             int offset;
@@ -182,6 +190,10 @@ typedef struct {
         struct {
             int size;
         } memcpy;
+        struct {
+            int size;
+            int c;
+        } memset;
         struct {
             const char *name;
         } label;
@@ -198,10 +210,6 @@ typedef struct {
     };
 } IR_Instruction;
 
-typedef enum {
-    SLOT_REGISTER,
-    SLOT_STACK,
-} RegisterSlotKind;
 /* A physical, stack allocated slot of statically sized memory. Used for virtual registers and locals/IR_MEMs.*/
 typedef struct {
     IR_Value v;
@@ -225,7 +233,7 @@ typedef struct {
 
 /*
     A block's liveness data.
-    Stores whether any virtual register, is defined, used, lives in from a predecessorblock, lives out and used in another sucessor block.
+    Stores whether any virtual register, is defined, used, lives in from a predecessor block, lives out and used in another successor block.
 */
 typedef struct {
     BitSet def;
@@ -235,7 +243,7 @@ typedef struct {
 } IR_BlockLiveness;
 
 /*
-    Represents the start and end liveness of a virtual register aswell as the actual stack slot and offset.
+    Represents the start and end liveness of a virtual register as well as the actual stack slot and offset.
     Also stores a reference the operand which defines the virtual register.
 */
 typedef struct {
@@ -247,7 +255,7 @@ typedef struct {
     IR_Value *v;
 } Lifetime;
 
-/* IR Function component, stores an array of instructions. Handles virtual register livesness and control graph data. */
+/* IR Function component, stores an array of instructions. Handles virtual register liveness and control graph data. */
 struct IR_Block {
     int id;
     Array instruction_array;
@@ -277,7 +285,7 @@ typedef struct {
     Type *type;
 } IR_Function;
 
-/* Global global variable pool, stores definitions in a global array. */
+/* Global variable pool, stores definitions in a global array. */
 typedef struct {
     int count;
     int capacity;
@@ -311,6 +319,11 @@ typedef struct {
     int capacity;
 } IR_LoopStack;
 
+typedef struct IR_InitContext {
+    Type *type;
+    int offset;
+    int index;
+} IR_InitContext;
 /*
     Stores the current and in use module, function, block.
     Stores the true/false blocks to early jump out of (a && b) conditions.
@@ -325,6 +338,7 @@ typedef struct {
     IR_Block *false_block;
     Arena *symbol_table;
     bool func_not_address;
+    IR_InitContext init_ctx;
 } IR_Context;
 
 /* The IR_Value used for instructions which do not have a return value / destination register */
@@ -343,10 +357,7 @@ void ir_push_loop_ctx(IR_Context *ctx, IR_Block *continue_block, IR_Block *break
 /* Pop off the top of the loopstack. */
 void ir_pop_loop_ctx(IR_Context *ctx);
 
-/* Returns an IR Const Value using the constant at `const_index`. */
-IR_Value ir_literal_value(int const_index);
-
-void ir_append_instruction(IR_Block *b, IR_Instruction *instr);
+void ir_append_instruction(IR_Context *ctx, IR_Instruction *instr);
 void ir_free_module(IR_Module *module);
 
 /* Begins a new scope to track locals defined. */
@@ -368,10 +379,10 @@ IR_Function *ir_new_function(IR_Context *ctx, const char *name, Type *type);
     Appends a function definition to the global array.
     At this point the FuncDef is a placeholder. Its actual index is -1/ undefined.
     If it is defined, immediately after, its index will be updated.
-    Otherwise it gets updated when a defined N_Function node is lowered.
+    Otherwise, it gets updated when a defined N_Function node is lowered.
 */
-IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, const bool is_defined, const bool is_variadic,
-                                const StorageClass storage_class);
+IR_Func_Def *ir_append_func_def(const IR_Context *ctx, const char *name, bool is_defined, bool is_variadic,
+                                StorageClass storage_class);
 /* Generates an IR Mem Value for the variable. Also appends it to the current scope.  */
 IR_Value ir_new_var(IR_Function *func, const char *name, Type *type);
 
@@ -409,34 +420,28 @@ IR_Value ir_get_symbol_value(IR_Context *ctx, const char *name, bool give_lvalue
 IR_LabeledBlock *ir_get_labeled_block(IR_Context *ctx, const char *label);
 
 /* Helper functions for the generic Array type. */
-static inline IR_Instruction *get_instruction(const Array *arr, int index) { return (IR_Instruction *)get(arr, index); }
 
-/* Retrieve the current LoopContext, which lies at the top of the loopstack. */
-static inline IR_LoopContext *get_loop_ctx(const IR_Context *ctx) {
-    return (IR_LoopContext *)get(&ctx->loop_stack_array, ctx->loop_stack_array.count - 1);
+static IR_Instruction *get_instruction(const Array *arr, const int index) { return get(arr, index); }
+
+/* Retrieve the current LoopContext at the top of the loopstack. */
+static IR_LoopContext *get_loop_ctx(const IR_Context *ctx) {
+    return get(&ctx->loop_stack_array, ctx->loop_stack_array.count - 1);
 }
 
-/* Retrieve the scope which lies at the top of the scope stack. */
-static inline IR_Scope *get_current_scope(const IR_Function *func) {
-    return (IR_Scope *)get(&func->scopes_array, func->scopes_array.count - 1);
+/* Retrieve the scope at the top of the scope stack. */
+static IR_Scope *get_current_scope(const IR_Function *func) {
+    return get(&func->scopes_array, func->scopes_array.count - 1);
 }
 
-static inline IR_Scope *get_scope(const IR_Function *func, int index) { return (IR_Scope *)get(&func->scopes_array, index); }
-
-static inline IR_Block *get_block(const IR_Function *func, int index) { return *(IR_Block **)get(&func->blocks_array, index); }
-
-static inline ConstLiteral *get_const(const IR_Context *ctx, int index) { return (ConstLiteral *)get(&ctx->module->const_array, index); }
-
-static inline IR_Global *get_global(const IR_Context *ctx, int index) { return (IR_Global *)get(&ctx->module->global_array, index); }
-static inline Symbol *get_local_symbol(const IR_Function *func, int index) { return *(Symbol **)get(&func->locals_array, index); }
-
-static inline int get_var_index(const IR_Scope *scope, int index) { return *(int *)get(&scope->var_array, index); }
-
-static inline IR_Function *get_func(const IR_Module *module, int index) { return *(IR_Function **)get(&module->functions_array, index); }
-
-static inline IR_LabeledBlock *get_labeled_block(const IR_Module *module, int index) {
-    return (IR_LabeledBlock *)get(&module->labeled_block_array, index);
+static IR_Scope *get_scope(const IR_Function *func, const int index) { return get(&func->scopes_array, index); }
+static IR_Block *get_block(const IR_Function *func, const int index) { return *(IR_Block **)get(&func->blocks_array, index); }
+static ConstLiteral *get_const(const IR_Context *ctx, const int index) { return get(&ctx->module->const_array, index); }
+static IR_Global *get_global(const IR_Context *ctx, const int index) { return get(&ctx->module->global_array, index); }
+static Symbol *get_local_symbol(const IR_Function *func, const int index) { return *(Symbol **)get(&func->locals_array, index); }
+static int get_var_index(const IR_Scope *scope, const int index) { return *(int *)get(&scope->var_array, index); }
+static IR_Function *get_func(const IR_Module *module, const int index) { return *(IR_Function **)get(&module->functions_array, index); }
+static IR_LabeledBlock *get_labeled_block(const IR_Module *module, const int index) {
+    return get(&module->labeled_block_array, index);
 }
-
-static inline IR_CallArg *get_call_arg(const IR_Instruction *call, int index) { return (IR_CallArg *)get(&call->call.arg_array, index); }
+static IR_CallArg *get_call_arg(const IR_Instruction *call, const int index) { return get(&call->call.arg_array, index); }
 #endif // COMPILER_C_IR_MODULE_H

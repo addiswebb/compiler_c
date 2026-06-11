@@ -8,7 +8,6 @@
 #include "compiler_c/tokenize/tokenizer.h"
 
 #include <inttypes.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -76,7 +75,7 @@ void free_typepool() {
     arena_free(&typepool);
 }
 
-Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is_signed) {
+Type *init_global_type(const TypeKind type, const int size, const unsigned int qualifiers, const bool is_signed) {
     Type *t = new_type();
     t->kind = type;
     t->size = size;
@@ -84,10 +83,23 @@ Type *init_global_type(TypeKind type, int size, unsigned int qualifiers, bool is
     t->base = NULL;
     t->qualifiers = qualifiers;
     t->is_signed = is_signed;
+    t->is_resolved = true;
     return t;
 }
 Type *new_type() { return arena_append(&typepool, &(Type){0}); }
 
+Type *new_array_type(Type *type, const int len) {
+    Type *arr_type = new_type();
+    arr_type->kind = T_ARRAY;
+    arr_type->size = type->size * len;
+    arr_type->align = type->align;
+    arr_type->base = type;
+    arr_type->_array.array_len = len;
+    arr_type->is_signed = SIGNED;
+    arr_type->qualifiers = QUAL_NONE;
+    arr_type->is_resolved = true;
+    return arr_type;
+}
 Type *new_incomplete_array_type(Type *type, Node *const_expr) {
     Type *arr_type = new_type();
     arr_type->kind = T_ARRAY;
@@ -97,27 +109,16 @@ Type *new_incomplete_array_type(Type *type, Node *const_expr) {
     arr_type->_array.const_expr = const_expr;
     arr_type->is_signed = SIGNED;
     arr_type->qualifiers = QUAL_NONE;
-    arr_type->_array.is_complete = false;
+    arr_type->is_resolved = false;
     return arr_type;
 }
-Type *new_array_type(Type *type, int len) {
-    Type *arr_type = new_type();
-    arr_type->kind = T_ARRAY;
-    arr_type->size = type->size * len;
-    arr_type->align = type->align;
-    arr_type->base = type;
-    arr_type->_array.array_len = len;
-    arr_type->is_signed = SIGNED;
-    arr_type->qualifiers = QUAL_NONE;
-    arr_type->_array.is_complete = true;
+Type *infer_array_length(Type *arr_type, const int inferred_len) {
+    arr_type->_array.array_len = inferred_len;
+    arr_type->size = inferred_len * arr_type->base->size;
+    arr_type->is_resolved = true;
     return arr_type;
 }
-Type *infer_array_length(Type *arr_type, int len) {
-    arr_type->_array.array_len = len;
-    arr_type->size = len * arr_type->base->size;
-    return arr_type;
-}
-Type *new_function_type(Type *type, Array params, bool is_variadic) {
+Type *new_function_type(Type *type, const Array params, const bool is_variadic) {
     Type *fn_type = new_type();
     fn_type->kind = T_FUNCTION;
     fn_type->size = sizeof(void);
@@ -140,51 +141,45 @@ Type *new_pointer_type(Type *type) {
     ptr_type->base = type;
     ptr_type->is_signed = SIGNED;
     ptr_type->qualifiers = QUAL_NONE;
+    ptr_type->is_resolved = type->is_resolved;
     return ptr_type;
 }
 
-Type *new_qualified_type(Type *type, unsigned int qualifiers) {
+Type *new_qualified_type(const Type *type, const unsigned int qualifiers) {
     Type *qual_type = new_type();
     *qual_type = *type;
     switch (type->kind) {
-    case T_ENUM:
+    case T_UNION:
     case T_STRUCT:
         array_init(&qual_type->_struct.members_array, type->_struct.members_array.count, sizeof(StructMember));
         memcpy(qual_type->_struct.members_array.data, type->_struct.members_array.data,
                type->_struct.members_array.count * sizeof(StructMember));
+        qual_type->_struct.members_array.count = type->_struct.members_array.count;
         break;
-    case T_UNION:
+    case T_ENUM:
         array_init(&qual_type->_enum.fields_array, type->_enum.fields_array.count, sizeof(EnumField));
         memcpy(qual_type->_enum.fields_array.data, type->_enum.fields_array.data, type->_enum.fields_array.count * sizeof(EnumField));
+        qual_type->_enum.fields_array.count = type->_enum.fields_array.count;
         break;
     case T_FUNCTION:
         array_init(&qual_type->_func.params, type->_func.params.count, sizeof(ParamDecl));
         memcpy(qual_type->_func.params.data, type->_func.params.data, type->_func.params.count * sizeof(ParamDecl));
+        qual_type->_func.params.count = type->_func.params.count;
         break;
     default:
         break;
     }
     qual_type->qualifiers = qualifiers;
-    // qual_type->base = type->kind == T_POINTER || type->kind == T_ARRAY ? type->base : type;
+    qual_type->is_resolved = type->is_resolved;
     return qual_type;
 }
-Type *new_unsigned_type(Type *type) {
-    Type *unsigned_type = new_type();
-    unsigned_type->kind = type->kind;
-    unsigned_type->size = type->size;
-    unsigned_type->align = type->align;
-    unsigned_type->is_signed = UNSIGNED;
-    unsigned_type->qualifiers = type->qualifiers;
-    unsigned_type->base = type;
-    return unsigned_type;
-}
 
-Type *get_float_type(int size) {
-    ASSERT(size > 0 && size > 8, "Size must be between [1-8]");
+Type *get_float_type(const int size) {
+    ASSERT(size > 0 && size <= 8, "Size must be between [1-8]");
     if (size <= 4) return type_f32;
-    else return type_f64;
+    return type_f64;
 }
-Type *get_integer_type(int size) {
+Type *get_integer_type(const int size) {
     switch (size) {
     case 1:
         return type_i8;
@@ -199,11 +194,9 @@ Type *get_integer_type(int size) {
     case 8:
         return type_i64;
     default:
-        PANIC("Invalid integer size\n");
+        PANIC("Invalid integer size %d\n", size);
     }
 }
-
-Type *promote_integer(Type *from, Type *to) { return from->is_signed ? to : get_unsigned_type(to); }
 
 Type *get_pointer_type(Type *type) {
     for (int i = 0; i < typepool.count; i++) {
@@ -214,15 +207,29 @@ Type *get_pointer_type(Type *type) {
     return new_pointer_type(type);
 }
 
-Type *get_array_type(Type *type, int len) {
+Type *get_array_type(Type *type, const int len) {
     for (int i = 0; i < typepool.count; i++) {
         Type *t = arena_get(&typepool, i);
-        if (t->base == type && t->kind == T_ARRAY && t->_array.is_complete && t->_array.array_len == len) return t;
+        if (!t->is_resolved) continue;
+        if (t->base == type && t->kind == T_ARRAY && t->_array.array_len == len) return t;
     }
     return new_array_type(type, len);
 }
 
-Type *get_function_type(Type *type, Array params, bool is_variadic) {
+Type *get_qualified_type(const Type *type, const unsigned int qualifiers) {
+    // TODO qualified types dont get resolved correctly at semantic analysis, incorrect struct sizing etc.
+    for (int i = 0; i < typepool.count; i++) {
+        Type *t = arena_get(&typepool, i);
+        if (t->base == type->base && t->kind == type->kind && t->size == type->size && t->qualifiers == qualifiers &&
+            t->is_signed == type->is_signed && t->is_resolved) {
+            return t;
+        }
+    }
+
+    return new_qualified_type(type, qualifiers);
+}
+
+Type *get_function_type(Type *type, const Array params, const bool is_variadic) {
     ASSERT(type->kind != T_ARRAY, "Functions cannot return arrays\n");
     for (int i = 0; i < typepool.count; i++) {
         Type *t = arena_get(&typepool, i);
@@ -230,8 +237,8 @@ Type *get_function_type(Type *type, Array params, bool is_variadic) {
             if (t->_func.params.count != params.count) continue;
             bool match = true;
             for (int j = 0; j < params.count; j++) {
-                ParamDecl *p_a = get(&params, j);
-                ParamDecl *p_b = get(&t->_func.params, j);
+                const ParamDecl *p_a = get(&params, j);
+                const ParamDecl *p_b = get(&t->_func.params, j);
                 if (p_a->type != p_b->type) {
                     match = false;
                     break;
@@ -241,57 +248,22 @@ Type *get_function_type(Type *type, Array params, bool is_variadic) {
                     break;
                 }
             }
-            if (match) {
-                return t;
-            }
+            if (match) return t;
         }
     }
     return new_function_type(type, params, is_variadic);
 }
 
-Type *get_modified_type(Type *type, Declarator *decl) {
+Type *get_modified_type(Type *type, const Declarator *decl) {
     if (decl->modifiers.count == 0) return type;
     for (int i = decl->modifiers.count - 1; i >= 0; i--) {
-        Modifier *mod = (Modifier *)get(&decl->modifiers, i);
-        if (mod->kind == MOD_POINTER) {
-            type = get_pointer_type(type);
-        } else if (mod->kind == MOD_ARRAY) {
-            type = new_incomplete_array_type(type, mod->array_bounds);
-        } else if (mod->kind == MOD_FUNCTION) {
-            type = get_function_type(type, mod->function.params, mod->function.is_variadic);
-        }
+        const Modifier *mod = (Modifier *)get(&decl->modifiers, i);
+        if (mod->kind == MOD_POINTER) type = get_pointer_type(type);
+        else if (mod->kind == MOD_ARRAY) type = new_incomplete_array_type(type, mod->array_bounds);
+        else if (mod->kind == MOD_FUNCTION) type = get_function_type(type, mod->function.params, mod->function.is_variadic);
     }
     return type;
 }
-
-Type *get_qualified_type(Type *type, unsigned int qualifiers) {
-    for (int i = 0; i < typepool.count; i++) {
-        Type *t = arena_get(&typepool, i);
-        if (t->base == type->base && t->kind == type->kind && t->size == type->size && t->qualifiers == qualifiers &&
-            t->is_signed == type->is_signed) {
-            if (t->kind == T_ARRAY && !t->_array.is_complete) continue;
-            return t;
-        }
-    }
-
-    return new_qualified_type(type, qualifiers);
-}
-bool cmp_func_types(const Type *a, const Type *b) {
-    ASSERT(a->kind == T_FUNCTION, "Can only compare function types\n");
-    ASSERT(b->kind == T_FUNCTION, "Can only compare function types\n");
-    if (a->_func.is_variadic != b->_func.is_variadic) return false;
-    if (a->_func.return_type != b->_func.return_type) return false;
-    if (a->_func.params.data != b->_func.params.data) {
-        if (a->_func.params.count != b->_func.params.count) return false;
-        for (int i = 0; i < a->_func.params.count; i++) {
-            ParamDecl *a_p = get(&a->_func.params, i);
-            ParamDecl *b_p = get(&b->_func.params, i);
-            if (a_p->type != b_p->type) return false;
-        }
-    }
-    return true;
-}
-
 Type *get_unsigned_type(Type *type) {
     if (type->kind != T_INT) {
         PANIC("Cannot retrieve signed/unsigned variant of non-integer type\n");
@@ -305,7 +277,7 @@ Type *get_unsigned_type(Type *type) {
         }
     }
 
-    return new_unsigned_type(type);
+    PANIC("Failed to find unsigned variant of %t\n", type);
 }
 
 Type *get_enum_type(const char *name) {
@@ -325,6 +297,7 @@ Type *get_union_type(const char *name) {
     }
     return NULL;
 }
+
 Type *get_struct_type(const char *name) {
     if (name == NULL) return NULL;
     for (int i = 0; i < typepool.count; i++) {
@@ -333,23 +306,38 @@ Type *get_struct_type(const char *name) {
     }
     return NULL;
 }
+bool cmp_func_types(const Type *a, const Type *b) {
+    ASSERT(a->kind == T_FUNCTION, "Can only compare function types\n");
+    ASSERT(b->kind == T_FUNCTION, "Can only compare function types\n");
+    if (a->_func.is_variadic != b->_func.is_variadic) return false;
+    if (a->_func.return_type != b->_func.return_type) return false;
+    if (a->_func.params.data != b->_func.params.data) {
+        if (a->_func.params.count != b->_func.params.count) return false;
+        for (int i = 0; i < a->_func.params.count; i++) {
+            const ParamDecl *a_p = get(&a->_func.params, i);
+            const ParamDecl *b_p = get(&b->_func.params, i);
+            if (a_p->type != b_p->type) return false;
+        }
+    }
+    return true;
+}
 
-void append_enum_field(Type *e, EnumField *f) { append(&e->_enum.fields_array, f); }
-
-void append_union_member(Type *u, UnionMember *m) {
+void append_union_member(Type *u, const UnionMember *m) {
     if (m->type->size > u->size) u->size = align(m->type->size, m->type->align);
     append(&u->_union.members_array, m);
 }
+
 void append_struct_member(Type *s, StructMember *m) {
     if (m->type->align > s->align) s->align = m->type->align;
-    s->size = align(s->size, s->align);
+    s->size = align(s->size, m->type->align);
     m->offset = s->size;
     append(&s->_struct.members_array, m);
-    s->size += align(m->type->size, s->align);
+    s->size += m->type->size;
 }
+void append_enum_field(Type *e, EnumField *f) { append(&e->_enum.fields_array, f); }
 
 Type union_type() {
-    Type u;
+    Type u = {};
     u.kind = T_UNION;
     u.base = NULL;
     u.align = 0;
@@ -362,10 +350,11 @@ Type union_type() {
     u._union.members_array.count = 0;
     u._union.members_array.element_size = -1;
     u._union.members_array.data = NULL;
+    u.is_resolved = false;
     return u;
 }
 Type struct_type() {
-    Type s;
+    Type s = {};
     s.kind = T_STRUCT;
     s.base = NULL;
     s.align = 0;
@@ -378,11 +367,12 @@ Type struct_type() {
     s._struct.members_array.count = 0;
     s._struct.members_array.element_size = -1;
     s._struct.members_array.data = NULL;
+    s.is_resolved = false;
     return s;
 }
 
 Type enum_type() {
-    Type e;
+    Type e = {};
     e.kind = T_ENUM;
     e.base = type_i32;
     e.align = 4;
@@ -395,30 +385,47 @@ Type enum_type() {
     e._enum.fields_array.count = 0;
     e._enum.fields_array.element_size = -1;
     e._enum.fields_array.data = NULL;
+    e.is_resolved = false;
     return e;
 }
 
-AggrMember *get_member(Type *struct_t, const char *name, bool is_root) {
+AggrMember *get_member(const Type *struct_t, const char *name, const bool is_root, int *offset, int *index) {
+    if (is_root) *index = 0;
+    // TODO make i = *index when is_root == true for optimisation
     for (int i = 0; i < struct_t->_struct.members_array.count; i++) {
         AggrMember *member = get_struct_member(struct_t, i);
         if (member->name) {
-            if (strcmp(name, member->name) == 0) return member;
+            if (strcmp(name, member->name) == 0) {
+                if (offset) *offset += member->offset;
+                return member;
+            }
         } else if (member->type->kind == T_STRUCT || member->type->kind == T_UNION) {
-            AggrMember *x = get_member(member->type, name, false);
-            if (x) return x;
+            AggrMember *x = get_member(member->type, name, false, offset, index);
+            if (x) {
+                if (offset) *offset += member->offset;
+                return x;
+            }
         }
+        if (is_root) (*index)++;
     }
-    if (is_root) PANIC("No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
-    else return NULL;
+    ASSERT(!is_root, "No member named \"%s\" in struct %s\n", name, struct_t->_struct.name);
+    return NULL;
 }
 
-bool is_func_ptr(Type *t) { return t->kind == T_POINTER && t->base->kind == T_FUNCTION; }
+bool is_func_ptr(const Type *t) { return t->kind == T_POINTER && t->base->kind == T_FUNCTION; }
 
-void print_type(const Type *type) {
+bool is_scalar_type(const Type *t) { return t->kind == T_INT || t->kind == T_FLOAT || t->kind == T_ENUM || t->kind == T_POINTER; }
+
+void print_type(Type *type) {
     if (!type) {
         printf("NULL");
         return;
     }
+    if (type->printing) {
+        printf("<recursive>\n");
+        return;
+    }
+    type->printing = true;
     if (type->qualifiers & QUAL_CONST) printf("%s ", KEYWORDS[TK_CONST]);
     if (type->qualifiers & QUAL_VOLATILE) printf("%s ", KEYWORDS[TK_VOLATILE]);
     if (type->kind == T_INT && !type->is_signed) printf("%s ", KEYWORDS[TK_UNSIGNED]);
@@ -428,7 +435,8 @@ void print_type(const Type *type) {
         break;
     case T_ARRAY:
         print_type(type->base);
-        printf("[%" PRId64 "]", type->_array.array_len);
+        if (type->is_resolved) printf("[%" PRId64 "]", type->_array.array_len);
+        else printf("[!!!]");
         break;
     case T_INT:
         switch (type->size) {
@@ -469,9 +477,8 @@ void print_type(const Type *type) {
         if (has_flag(CF_DEBUG_STRUCT)) {
             printf("{");
             for (int i = 0; i < type->_struct.members_array.count; i++) {
-                StructMember *member = get_struct_member(type, i);
-                print_type(member->type);
-                printf(" %s:[%d@%d], ", member->name, member->offset, member->type->size);
+                const StructMember *member = get_struct_member(type, i);
+                print("%t %s:[%d@%d], ", member->type, member->name, member->offset, member->type->size);
             }
             printf("}");
         }
@@ -481,7 +488,7 @@ void print_type(const Type *type) {
         if (has_flag(CF_DEBUG_ENUM)) {
             printf("{");
             for (int i = 0; i < type->_enum.fields_array.count; i++) {
-                EnumField *field = get_enum_field(type, i);
+                const EnumField *field = get_enum_field(type, i);
                 printf(" %s = %d, ", field->name, field->value);
             }
             printf("}");
@@ -492,9 +499,8 @@ void print_type(const Type *type) {
         if (has_flag(CF_DEBUG_UNION)) {
             printf("{");
             for (int i = 0; i < type->_union.members_array.count; i++) {
-                UnionMember *member = get_union_member(type, i);
-                print_type(member->type);
-                printf(" %s:[%d] ", member->name, member->type->size);
+                const UnionMember *member = get_union_member(type, i);
+                print("%t %s:[%d] ", member->type, member->name, member->type->size);
                 if (i < type->_union.members_array.count - 1) printf(", ");
             }
             printf("}");
@@ -508,7 +514,7 @@ void print_type(const Type *type) {
         printf("(");
         if (type->_func.params.count == 0) printf("void");
         for (int i = 0; i < type->_func.params.count; i++) {
-            ParamDecl *param = (ParamDecl *)get(&type->_func.params, i);
+            const ParamDecl *param = get(&type->_func.params, i);
             print_param_decl(param);
             if (i < type->_func.params.count - 1) printf(", ");
         }
@@ -516,23 +522,13 @@ void print_type(const Type *type) {
         printf(")");
         break;
     }
+    type->printing = false;
 }
 
-void print_struct_type(Type *s) {
-    printf("struct");
-    if (s->_struct.name != NULL) {
-        printf("%s", s->_struct.name);
-    }
-    if (s->_struct.complete) {
-        printf(" {\n");
-        for (int i = 0; i < s->_struct.members_array.count; i++) {
-            StructMember *member = get_struct_member(s, i);
-            printf("    ");
-            print_type(member->type);
-            printf("; [%d]\n", member->offset);
-        }
-        printf("}\n");
-    }
+void print_param_decl(const ParamDecl *decl) {
+    print_type(decl->type);
+    printf(" ");
+    if (decl->name) printf("%s", decl->name);
 }
 
 void print_typepool() {
@@ -541,10 +537,4 @@ void print_typepool() {
         print_type(arena_get(&typepool, i));
         printf("\n");
     }
-}
-
-void print_param_decl(ParamDecl *decl) {
-    print_type(decl->type);
-    printf(" ");
-    if (decl->name) printf("%s", decl->name);
 }

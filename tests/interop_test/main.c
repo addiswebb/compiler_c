@@ -1,12 +1,16 @@
-struct S {
-    long long a;
-    long long b;
-};
+#include <stdarg.h>
 
-extern long long sum_struct(int n, ...);
+void print(const char *fmt, ...);
+void vprint(const char *fmt, va_list ap);
+
+void print(const char *fmt, ...) {
+    va_list ap;
+    __builtin_va_start(ap, fmt);
+    vprint(fmt, ap);
+    __builtin_va_end(ap);
+}
 
 int main() {
-    struct S s1 = {1, 2};
-    struct S s2 = {3, 4};
-    return (int)sum_struct(2, s1, s2);
+    print("%d %d %d %d %d %d %d %d %d\n", 1, 2, 3, 4, 5, 6, 7, 8, 9);
+    return 0;
 }

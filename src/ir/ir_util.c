@@ -1,6 +1,7 @@
 #include "compiler_c/ir/ir_util.h"
 #include "compiler_c/abi/abi.h"
 #include "compiler_c/analyse/analysis_types.h"
+#include "compiler_c/analyse/const_expr.h"
 #include "compiler_c/core/type.h"
 #include "compiler_c/ir/ir_module.h"
 #include "compiler_c/log/logger.h"
@@ -27,11 +28,7 @@ IR_CMP_OP ir_cmp_op(const TokenType type) {
     case TK_GE:
         return GE;
     default:
-        log_start(LOG_ERROR);
-        printf("Given an unsupported token to convert to IR cmp op: ");
-        print_token_type(type);
-        printf("\n");
-        exit(1);
+        PANIC("ir_cmp_op: Unsupported token %tk\n", type);
     }
 }
 IR_UNARY_OP ir_unary_op(const TokenType type) {
@@ -75,11 +72,7 @@ IR_BINOP_OP ir_binary_op(const TokenType type) {
     case TK_OR_OR:
         return L_OR;
     default:
-        log_start(LOG_ERROR);
-        printf("Given an unsupported token to convert to IR Binary op: ");
-        print_token_type(type);
-        printf("\n");
-        exit(1);
+        PANIC("ir_binary_op: Unsupported token %tk\n", type);
     }
 }
 static void print_unary_op(const IR_UNARY_OP op) {
@@ -186,13 +179,8 @@ static char ir_type_suffix(Type *type) {
         return '#';
     case T_ENUM:
         return 'e';
-    // PANIC("Tried to print invalid type\n");
     default:
-        log_start(LOG_ERROR);
-        printf("Not handling this type ir_type_suffix: ");
-        print_type(type);
-        printf("\n");
-        exit(1);
+        PANIC("ir_type_suffix: Unsupported type %t\n", type);
     }
 }
 
@@ -209,23 +197,25 @@ static void print_ir_const(const IR_Context *ctx, const IR_Instruction *instr) {
             c = get_const(ctx, instr->ops[1].phys_reg.const_index);
         } else PANIC("IR_CONST with non const IRVALUE\n");
         printf(", ");
-        switch (instr->_const.type->kind) {
-        case T_INT:
-            if (instr->_const.type->size == 8) printf("%" PRId64, c->i);
-            else if (instr->_const.type->size == 1) printf("%c", (char)c->i);
-            else printf("%d", (int)c->i);
-            break;
-        case T_FLOAT:
-            printf("%g", c->f);
-            break;
-        case T_ARRAY:
-            if (instr->_const.type->base == type_i8) {
-                printf("\"%s\"", c->s.data);
-                break;
-            }
-        default:
-            PANIC("Tried to print IR_CONST of unknown type\n");
-        }
+        print_const_literal(c);
+        // switch (instr->_const.type->kind) {
+        // case T_INT:
+        //     if (instr->_const.type->size == 8) printf("%" PRId64, c->i);
+        //     else if (instr->_const.type->size == 1) printf("%c", (char)c->i);
+        //     else printf("%d", (int)c->i);
+        //     break;
+        // case T_FLOAT:
+        //     printf("%g", c->f);
+        //     break;
+        // case T_POINTER:
+        // case T_ARRAY:
+        //     if (instr->_const.type->base == type_i8) {
+        //         printf("\"%s\"", c->s.data);
+        //         break;
+        //     }
+        // default:
+        //     PANIC("Tried to print IR_CONST of unknown type\n");
+        // }
     }
     printf("\n");
 }
@@ -345,6 +335,11 @@ static void print_ir_alloca(const IR_Instruction *instr) {
     printf(" = ALLOCA %d\n", instr->alloca.size);
 }
 
+static void print_ir_memset(const IR_Instruction *instr) {
+    printf("    MEMSET ");
+    print_ir_value(&instr->ops[0]);
+    printf(", %d %d\n", instr->memset.c, instr->memset.size);
+}
 static void print_ir_memcpy(const IR_Instruction *instr) {
     printf("    MEMCPY ");
     print_ir_value(&instr->ops[1]);
@@ -361,7 +356,8 @@ static void print_ir_param(const IR_Instruction *instr) {
 #ifdef _WIN64
     printf(" p%d\n", instr->param.param_index);
 #else
-    printf(" %s%d\n", instr->param.type->kind == T_FLOAT ? "FP" : "GP", instr->param.param_index);
+    if (instr->param.param_index < 0) printf("S%d\n", -instr->param.param_index);
+    else printf(" %s%d\n", instr->param.type->kind == T_FLOAT ? "FP" : "GP", instr->param.param_index);
 #endif
 }
 static void print_ir_builtin_va_start(const IR_Instruction *instr) {
@@ -382,8 +378,7 @@ static void print_ir_builtin_va_arg(const IR_Instruction *instr) {
 }
 
 static void print_ir_move(const IR_Instruction *instr) {
-    printf("    ");
-    printf("MOVE ");
+    printf("    MOVE ");
     print_ir_value(&instr->ops[1]);
     printf(" -> ");
     print_ir_value(&instr->ops[0]);
@@ -450,6 +445,9 @@ void print_ir_instruction(const IR_Context *ctx, const IR_Instruction *instr) {
         break;
     case IR_MOVE:
         print_ir_move(instr);
+        break;
+    case IR_MEMSET:
+        print_ir_memset(instr);
         break;
     }
 }

@@ -5,7 +5,6 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
 #include <compiler_c/analyse/const_expr.h>
-#include <inttypes.h>
 
 ConstLiteral evaluate_const_unary(const Node *node) {
     ConstLiteral e = evaluate_const_expression(node->unary.expr);
@@ -50,10 +49,7 @@ ConstLiteral evaluate_const_unary(const Node *node) {
         }
         break;
     default:
-        log_start(LOG_ERROR);
-        printf("Invalid const unary type");
-        print_type(node->type);
-        printf("\n");
+        PANIC("Invalid const unary type %t\n", node->type);
     }
     return e;
 }
@@ -169,10 +165,7 @@ ConstLiteral evaluate_const_binary(const Node *node) {
         e.ref.offset += d->i * ptr->type->base->size;
         break;
     default:
-        log_start(LOG_ERROR);
-        printf("Invalid const binary type");
-        print_type(node->type);
-        printf("\n");
+        PANIC("Invalid const binary type %t\n", node->type);
     }
     return e;
 }
@@ -181,40 +174,58 @@ ConstLiteral evaluate_const_cast(const Node *node) {
     e.type = node->type;
     switch (node->type->kind) {
     case T_INT:
-        if (node->cast.from->kind == T_INT) break;
-        e.i = (int)e.f;
+        if (node->cast.from->kind == T_INT || node->cast.from->kind == T_POINTER) break;
+        e.i = (int64_t)e.f;
         e.kind = CONST_INTEGER;
         break;
     case T_FLOAT:
-        e.f = (int)e.i;
+        e.f = (double)e.i;
         e.kind = CONST_FLOAT;
         break;
     case T_POINTER:
         if (node->cast.from->kind == T_ARRAY && node->cast.from->base == type_i8) break;
+        if (node->cast.from->kind == T_INT || node->cast.from->kind == T_POINTER) break;
     default:
-        log_start(LOG_ERROR);
-        printf("Unsupported const expr cast from ");
-        print_type(node->cast.from);
-        printf(" to ");
-        print_type(node->type);
-        printf("\n");
+        PANIC("Unsupported const expr cast from %t to %t\n", node->cast.from, node->type);
     }
     return e;
 }
 ConstLiteral evaluate_const_init_list(const Node *node) {
     ASSERT(node->kind == N_INIT_LIST, "Expected N_INIT_LIST node.\n");
-    ConstLiteral l = {.type = node->type, .kind = CONST_ARRAY};
-    array_init(&l.arr, node->type->_array.array_len, sizeof(ConstLiteral));
-    // Fill with zeros
-    for (int i = 0; i < l.arr.capacity; i++) append(&l.arr, &(ConstLiteral){.type = l.type->base, .kind = CONST_INTEGER, .i = 0});
-    // TODO dont forget to free this shi
-    ConstLiteral *arr = l.arr.data;
-    for (int i = 0; i < node->init_list.elements_array.count; i++) {
-        Node *designated_initializer = get_node(&node->init_list.elements_array, i);
-        ConstLiteral e = evaluate_const_expression(designated_initializer->designated_init.value);
-        set(&l.arr, &e, designated_initializer->designated_init._array.index);
+    if (node->type->kind == T_ARRAY) {
+        ConstLiteral l = {.type = node->type, .kind = CONST_ARRAY};
+        array_init(&l.arr, node->type->_array.array_len, sizeof(ConstLiteral));
+        // Fill with zeros
+        for (int i = 0; i < l.arr.capacity; i++)
+            append(&l.arr, &(ConstLiteral){.type = type_i64, .kind = CONST_ZERO, .zero_bytes = l.type->base->size});
+        // TODO dont forget to free this shi
+        for (int i = 0; i < node->init_list.elements_array.count; i++) {
+            Node *designator = get_node(&node->init_list.elements_array, i);
+            ASSERT(designator->kind == N_DESIGNATOR, "Expected designator\n");
+            ConstLiteral e = evaluate_const_expression(designator->designator.value);
+            set(&l.arr, &e, designator->designator._array.index);
+        }
+        return l;
+    } else if (node->type->kind == T_STRUCT) {
+        ConstLiteral l = {.type = node->type, .kind = CONST_ARRAY};
+        array_init(&l.arr, node->type->_struct.members_array.count, sizeof(ConstLiteral));
+        // Fill with zeros
+        for (int i = 0; i < l.arr.capacity; i++) {
+            StructMember *m = get_struct_member(node->type, i);
+            append(&l.arr, &(ConstLiteral){.type = m->type, .kind = CONST_ZERO, .zero_bytes = m->type->size});
+        }
+        for (int i = 0; i < node->init_list.elements_array.count; i++) {
+            Node *designator = get_node(&node->init_list.elements_array, i);
+            int index = 0;
+            StructMember *member = get_member(node->type, designator->designator._struct.name, true, 0, &index);
+            if (member) {
+                ConstLiteral e = evaluate_const_expression(designator->designator.value);
+                set(&l.arr, &e, index);
+            }
+        }
+        return l;
     }
-    return l;
+    PANIC("Invalid init_list node given to ConstLiteral evaluation\n");
 }
 
 ConstLiteral evaluate_const_literal(const Node *node) {
@@ -222,9 +233,10 @@ ConstLiteral evaluate_const_literal(const Node *node) {
     ConstLiteral l = {};
     l.type = node->type;
     switch (node->type->kind) {
-    case T_INT:
         // Enums are not decayed to integer until after sema, so we must allow them here
     case T_ENUM:
+        l.type = type_i32;
+    case T_INT:
         l.i = node->literal.i;
         l.kind = CONST_INTEGER;
         break;
@@ -242,11 +254,7 @@ ConstLiteral evaluate_const_literal(const Node *node) {
             break;
         }
     default:
-        log_start(LOG_ERROR);
-        printf("Tried to convert literal with an invalid type ");
-        print_type(node->type);
-        printf(" to ConstExpr.\n");
-        exit(1);
+        PANIC("Tried to convert literal with invalid type %t to ConstExpr\n", node->type);
     }
     return l;
 }
@@ -266,7 +274,15 @@ ConstLiteral evaluate_const_expression(const Node *node) {
     case N_INIT_LIST:
         return evaluate_const_init_list(node);
     case N_IDENTIFIER:
-        return (ConstLiteral){.ref = {.symbol = node->identifier.symbol}, .kind = CONST_REFERENCE};
+#ifdef __COMPILER_C__
+        ConstLiteral i;
+        i.kind = CONST_REFERENCE;
+        i.ref.symbol = node->identifier.symbol;
+        i.ref.offset = 0;
+        return i;
+#else
+        return (ConstLiteral){.ref = {.symbol = node->identifier.symbol, .offset = 0}, .kind = CONST_REFERENCE};
+#endif
     case N_INDEX:
         PANIC("Indexing not handled in const expr yet\n");
     case N_MEMBER_ACCESS:
@@ -305,6 +321,11 @@ void print_const_literal(const ConstLiteral *l) {
         printf("&%s", l->ref.symbol->name);
         if (l->ref.offset) printf(" + %d", l->ref.offset);
         break;
+    case CONST_ZERO:
+        printf("%d zerobytes\n", l->zero_bytes);
+        break;
+    default:
+        PANIC("Tried to print invalid const literal\n");
     }
 }
 
@@ -312,12 +333,14 @@ void free_const_literal(ConstLiteral *l) {
     if (!l) return;
     switch (l->kind) {
     case CONST_ARRAY:
-        array_free(&l->arr);
+        // todo investigate double free on l->arr
+        // array_free(&l->arr);
     case CONST_LABEL:
     case CONST_REFERENCE:
     case CONST_INTEGER:
     case CONST_FLOAT:
     case CONST_STRING:
+    case CONST_ZERO:
         free(l);
         break;
     }

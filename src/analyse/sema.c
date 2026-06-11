@@ -7,7 +7,7 @@
 #include "compiler_c/parse/parser.h"
 #include "compiler_c/tokenize/tokenizer.h"
 
-#include <stdbool.h>
+#include "../libc/stdbool.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +27,7 @@ Type *check_unary_op(NodeManager *nm, Node *unary_op) {
         break;
     // [Int, Float] => Int
     case TK_L_NOT:
-        if (kind == T_INT || kind == T_FLOAT) return type_i32;
+        if (kind == T_INT || kind == T_FLOAT || kind == T_POINTER) return type_i32;
         break;
     // Int => Int
     case TK_BW_NOT:
@@ -55,7 +55,7 @@ Type *check_unary_op(NodeManager *nm, Node *unary_op) {
     }
     printf("Invalid operand type ");
     print_type(expr->type);
-    printf("for the given unary operator ");
+    printf(" for the given unary operator ");
     print_token_type(unary_op->unary.op);
     printf("\n");
 
@@ -65,8 +65,9 @@ Type *check_unary_op(NodeManager *nm, Node *unary_op) {
 bool is_valid_binary_op(TokenType op, const Node *lhs, const Node *rhs) {
     if (op == TK_EQ) return true;
     if (is_assignment_op(op)) op = get_underlying_op(op);
-    bool is_lhs_ptr = lhs->type->kind == T_POINTER || lhs->type->kind == T_ARRAY;
-    bool is_rhs_ptr = rhs->type->kind == T_POINTER || rhs->type->kind == T_ARRAY;
+    if (op == TK_AND_AND || op == TK_OR_OR) return is_scalar_type(lhs->type) && is_scalar_type(rhs->type);
+    const bool is_lhs_ptr = lhs->type->kind == T_POINTER || lhs->type->kind == T_ARRAY;
+    const bool is_rhs_ptr = rhs->type->kind == T_POINTER || rhs->type->kind == T_ARRAY;
     if ((is_lhs_ptr || is_rhs_ptr) && is_bitwise_op(op)) return false;
     if (is_lhs_ptr && !is_rhs_ptr) return op == TK_PLUS || op == TK_MINUS || op == TK_EQ_EQ || op == TK_NEQ;
     if (!is_lhs_ptr && is_rhs_ptr) return op == TK_PLUS || op == TK_EQ_EQ || op == TK_NEQ;
@@ -85,17 +86,10 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
         PANIC("Invalid arithmetic operands\n");
     }
     if (is_assignment_op(op)) {
-        if (!is_lvalue(lhs)) {
-            PANIC("Analysis: Binary op lhs is not assignable\n");
-        }
-        const TokenType underlying = get_underlying_op(op);
-        if (is_arithmetic_op(underlying) || is_bitwise_op(underlying)) {
-            promote_binary_operands(nm, binop);
-        }
+        ASSERT(is_lvalue(lhs), "Binary op lhs is not assignable\n");
 
-        if (lhs->type->kind != rhs->type->kind) {
-            binop->binary.rhs = cast_node(nm, rhs, lhs->type);
-        }
+        if (lhs->type != rhs->type) binop->binary.rhs = cast_node(nm, rhs, lhs->type);
+
         return lhs->type;
     }
 
@@ -110,7 +104,7 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
 
     // Review this to ensure correctness
     if (is_bitwise_op(op)) {
-        if (lhs->type->kind != T_INT || rhs->type->kind != T_INT) {
+        if (!(lhs->type->kind == T_INT || lhs->type->kind == T_ENUM) || !(rhs->type->kind == T_INT || rhs->type->kind == T_ENUM)) {
             PANIC("Bitwise operation requires integers\n");
         }
         return type_i32;
@@ -123,7 +117,7 @@ Type *check_binary_op(NodeManager *nm, const TokenType op, Node *binop) {
 }
 
 Type *promote_binary_operands(NodeManager *nm, Node *binop) {
-    Type *common = type_invalid;
+    Type *common;
     Node **lhs = &binop->binary.lhs;
     Node **rhs = &binop->binary.rhs;
     if ((*lhs)->type->kind == T_ENUM) {
@@ -169,26 +163,29 @@ Type *promote_binary_operands(NodeManager *nm, Node *binop) {
     return common;
 }
 
-void lower_compound_literal(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
+#include <inttypes.h>
+void lower_compound_literal(const SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Node *node) {
     Node *ident = new_node(nm, N_IDENTIFIER);
     // TODO track compound literals and name accordingly.
-    ident->identifier.name = "__tmp_cl";
-    ident->identifier.len = 9;
+    char *name = malloc(sizeof(char) * 32);
+    ASSERT(name, "Failed to malloc _sret name\n");
+    snprintf(name, 32, "_cl_%" PRIu64, (uint64_t)node);
+    ident->identifier.name = name;
+    ident->identifier.len = strlen(name);
+    ident->type = node->type;
     Node *d = new_node(nm, N_VAR_DECL);
-    d->var_decl.identifier = ident;
     d->type = node->type;
-
     d->var_decl.expr = node->compound_literal.value;
     d->var_decl.is_defined = true;
     d->var_decl.storage_class = STATIC;
     d->var_decl.is_global = false;
-    d->var_decl.symbol = NULL;
+    d->var_decl.identifier = ident;
+    ident->identifier.symbol = p_append_var_decl_symbol(p, d);
+    d->var_decl.symbol = ident->identifier.symbol;
 
-    node->kind = N_IDENTIFIER;
-    node->identifier.name = ident->identifier.name;
-    node->identifier.len = ident->identifier.len;
+    *node = *ident;
 
-    insert_node(&sema_ctx->compound->compound.items_array, &d, *get_i(sema_ctx));
+    insert_node(&sema_current_compound(sema_ctx)->compound.items_array, &d, *get_i(sema_ctx));
     // Insert shifted all nodes over by one, so increment tracker too.
     (*get_i(sema_ctx))++;
 }
@@ -202,37 +199,69 @@ void handle_builtin_call(BuiltinKind kind, Node *node) {
 }
 
 Type *resolve_type(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, Type *t) {
+    if (t->is_resolved) return t;
+    t->is_resolved = true;
     switch (t->kind) {
     case T_POINTER:
-        return get_pointer_type(resolve_type(sema_ctx, p, nm, t->base));
+        // Todo make function that does not create a new type to remove useless types
+        Type *new_pt = get_pointer_type(resolve_type(sema_ctx, p, nm, t->base));
+        new_pt->is_resolved = true;
+        return new_pt;
     case T_ARRAY:
         Type *base = resolve_type(sema_ctx, p, nm, t->base);
-        if (t->_array.is_complete) return get_array_type(base, t->_array.array_len);
-        else {
-            t->_array.is_complete = true;
-            semantic_analysis(sema_ctx, p, nm, t->_array.const_expr);
-            *t = *get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
-            return t;
+        semantic_analysis(sema_ctx, p, nm, t->_array.const_expr);
+        Type *new_at = get_array_type(base, t->_array.const_expr ? evaluate_const_expression(t->_array.const_expr).i : -1);
+        new_at->is_resolved = true;
+        return new_at;
+    case T_UNION:
+        t->size = 0;
+        t->align = 0;
+        for (int i = 0; i < t->_union.members_array.count; i++) {
+            UnionMember *m = get_union_member(t, i);
+            m->type = resolve_type(sema_ctx, p, nm, m->type);
+            m->offset = 0;
+            if (m->type->size > t->size) {
+                t->size = m->type->size;
+                t->align = m->type->align;
+            }
         }
+        ASSERT(t->size > 0, "Union size resolve failed\n");
+        return t;
     case T_STRUCT:
+        t->size = 0;
+        t->align = 0;
         for (int i = 0; i < t->_struct.members_array.count; i++) {
             StructMember *m = get_struct_member(t, i);
             m->type = resolve_type(sema_ctx, p, nm, m->type);
+            if (m->type->align > t->align) t->align = m->type->align;
+            t->size = align(t->size, m->type->align);
+            m->offset = t->size;
+            t->size += m->type->size;
         }
-        return t;
-    case T_UNION:
-        for (int i = 0; i < t->_union.members_array.count; i++) {
-            UnionMember *u = get_union_member(t, i);
-            u->type = resolve_type(sema_ctx, p, nm, u->type);
-        }
+        t->size = align(t->size, t->align);
         return t;
     case T_ENUM:
+        int value = 0;
+        for (int i = 0; i < t->_enum.fields_array.count; i++) {
+            EnumField *f = get_enum_field(t, i);
+            if (f->const_expr) {
+                semantic_analysis(sema_ctx, p, nm, f->const_expr);
+                value = evaluate_const_expression(f->const_expr).i;
+            }
+            f->value = value++;
+            p_append_enum_const(p, f);
+        }
+        t->is_resolved = true;
+        return t;
     case T_FUNCTION:
+        // WARN("Functions not resolved yet, params might be cooked\n");
     case T_VOID:
     case T_INT:
     case T_FLOAT:
-    case T_INVALID:
+        t->is_resolved = true;
         return t;
+    case T_INVALID:
+        PANIC("Trying to resolve invalid type\n");
     }
 }
 
@@ -248,26 +277,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_FUNCTION:
         ASSERT(!(node->func.is_defined && node->func.storage_class == EXTERN), "External Function cannot have a definition\n");
         // Simulate a function params in symbol table
-        if (node->func.is_defined) {
-            p_push_scope(p);
-            sema_ctx->func = node;
-            for (int i = 0; i < node->type->_func.params.count; i++) {
-                ParamDecl *param = (ParamDecl *)get(&node->type->_func.params, i);
-                if (node->func.is_defined) {
-                    ASSERT(param->name, "All Defined Function Paramaters must be named\n");
-                    Node *param_decl = new_node(nm, N_VAR_DECL);
-                    Node *ident = new_node(nm, N_IDENTIFIER);
-                    ident->identifier.name = param->name;
-                    param_decl->var_decl.identifier = ident;
-                    param->symbol = p_append_var_decl_symbol(p, param_decl);
-                    param_decl->var_decl.symbol = param->symbol;
-                    param_decl->type = param->type;
-                }
-            }
-
-            semantic_analysis(sema_ctx, p, nm, node->func.body);
-            p_pop_scope(p);
-        }
 
         Symbol *func_symbol = p_get_symbol(p, node->func.name, FUNC, false);
         if (func_symbol) {
@@ -284,31 +293,54 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
             node->func.symbol = func_symbol;
         } else node->func.symbol = p_append_func_def(p, node);
+
+        if (node->func.is_defined) {
+            p_push_scope(p);
+            sema_ctx->func = node;
+            for (int i = 0; i < node->type->_func.params.count; i++) {
+                ParamDecl *param = get(&node->type->_func.params, i);
+                if (node->func.is_defined) {
+                    ASSERT(param->name, "All Defined Function Parameters must be named\n");
+                    Node *param_decl = new_node(nm, N_VAR_DECL);
+                    Node *ident = new_node(nm, N_IDENTIFIER);
+                    ident->identifier.name = param->name;
+                    param_decl->var_decl.identifier = ident;
+                    param->symbol = p_append_var_decl_symbol(p, param_decl);
+                    param_decl->var_decl.symbol = param->symbol;
+                    param_decl->type = param->type;
+                }
+            }
+
+            semantic_analysis(sema_ctx, p, nm, node->func.body);
+            p_pop_scope(p);
+        }
+
         break;
     case N_COMPOUND:
         push_sema_scope(sema_ctx, p, node);
-        int n_nodes = node->compound.items_array.count;
-        for (int i = 0; i < n_nodes; i++, (*get_i(sema_ctx))++) {
+        /* items_array.count may increase during semantic analysis, but we do not want to analyze extra nodes
+         * So use n_nodes constant value, and get_i instead of i;
+         */
+        const int n_nodes = node->compound.items_array.count;
+        for (int _ = 0; _ < n_nodes; _++) {
             semantic_analysis(sema_ctx, p, nm, get_node(&node->compound.items_array, *get_i(sema_ctx)));
+            (*get_i(sema_ctx))++;
         }
         pop_sema_scope(sema_ctx, p);
         break;
     case N_VAR_DECL:
         // Skip extern nodes
         // Resolve const expr array bounds for array types
-        if (node->type->kind == T_ARRAY && !node->type->_array.is_complete) {
-            semantic_analysis(sema_ctx, p, nm, node->type->_array.const_expr);
-            node->type = resolve_type(sema_ctx, p, nm, node->type);
-        }
+        if (!node->type->is_resolved) node->type = resolve_type(sema_ctx, p, nm, node->type);
         if (node->var_decl.storage_class == EXTERN) {
-            if (node->var_decl.is_defined) {
-                PANIC("External variable cannot be initialized in the same statement\n");
-            }
+            ASSERT(!node->var_decl.is_defined, "External variable cannot be initialized in the same statement\n");
         }
         Symbol *var_symbol = p_get_symbol(p, node->var_decl.identifier->identifier.name, VAR, true);
         // TODO consider if symbol management can happen after symantic analysis
         if (var_symbol) {
-            // If we are within a function and var_symbol is a also a local variable
+
+            if (node->var_decl.is_defined && var_symbol->linkage == LINK_EXTERNAL) update_linkage_storage(var_symbol, node);
+            // If we are within a function and var_symbol is also a local variable
             if (p->scopes_array.count > 1) {
                 if (var_symbol->scope_depth == p->current_scope_depth) {
                     PANIC("Redeclaration of local variable %s\n", node->var_decl.identifier->identifier.name);
@@ -328,28 +360,14 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         node->var_decl.identifier->identifier.symbol = var_symbol;
 
         if (!node->var_decl.expr) break;
-        if (node->var_decl.expr->kind == N_INIT_LIST) {
-            node->var_decl.expr->type = node->type;
-            semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
-            if (node->var_decl.is_global) {
-                ConstLiteral init_list = evaluate_const_expression(node->var_decl.expr);
-                node->var_decl.const_expr = malloc(sizeof(ConstLiteral));
-                ASSERT(node->var_decl.const_expr, "Failed to allocate for const expr");
-                *node->var_decl.const_expr = init_list;
-            }
-            Node *init_list = node->var_decl.expr;
-            break;
-        }
+        if (node->var_decl.expr->kind == N_INIT_LIST) node->var_decl.expr->type = node->type;
+
         semantic_analysis(sema_ctx, p, nm, node->var_decl.expr);
         if (node->var_decl.expr->kind == N_LITERAL && node->var_decl.expr->literal.kind == L_STRING) {
             if (node->var_decl.expr->literal.kind == L_STRING) {
                 // TODO allow char* str = ""
                 if (!(node->type->kind == T_ARRAY || node->type->kind == T_POINTER) && node->type->base == type_i8) {
-                    log_start(LOG_ERROR);
-                    printf("Cannot initialize ");
-                    print_type(node->type);
-                    printf(" with String Literal\n");
-                    exit(1);
+                    PANIC("Cannot initialize %t with String Literal\n", node->type);
                 }
                 // Infer array length
                 if (node->type->kind == T_ARRAY && node->type->_array.array_len == -1) {
@@ -363,7 +381,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
 
         if (node->var_decl.is_global) {
-            ConstLiteral val = evaluate_const_expression(node->var_decl.expr);
+            const ConstLiteral val = evaluate_const_expression(node->var_decl.expr);
             // TODO move this into a assign const_expr function:
             node->var_decl.const_expr = malloc(sizeof(ConstLiteral));
             ASSERT(node->var_decl.const_expr, "Failed to allocate for const expr");
@@ -373,6 +391,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_UNARY:
         semantic_analysis(sema_ctx, p, nm, node->unary.expr);
         node->type = check_unary_op(nm, node);
+        if (node->unary.op == TK_L_NOT && node->unary.expr->type->kind == T_INT && node->unary.expr->type->size < 4) {
+            node->unary.expr = cast_node(nm, node->unary.expr, type_i32);
+        }
         break;
     case N_BINARY:
         semantic_analysis(sema_ctx, p, nm, node->binary.lhs);
@@ -393,16 +414,10 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->type = node->cast.to;
             break;
         }
-        log_start(LOG_ERROR);
-        printf("Invalid cast from ");
-        print_type(node->cast.expr->type);
-        printf(" to ");
-        print_type(node->cast.to);
-        printf("\n");
-        exit(1);
+        PANIC("Semantically invalid cast from %t to %t\n", node->cast.expr->type, node->cast.to);
     case N_FUNCTION_CALL:
         const char *fn_name = node->func_call.callee->kind == N_IDENTIFIER ? node->func_call.callee->identifier.name : "";
-        BuiltinKind builtin = get_builtin_kind(fn_name);
+        const BuiltinKind builtin = get_builtin_kind(fn_name);
         if (builtin != BUILTIN_NONE) {
             handle_builtin_call(builtin, node);
             return semantic_analysis(sema_ctx, p, nm, node);
@@ -411,10 +426,6 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         semantic_analysis(sema_ctx, p, nm, node->func_call.callee);
         Type *callee_type = node->func_call.callee->type;
 
-        // if (callee_type->kind == T_FUNCTION) {
-        //     callee_type = get_pointer_type(callee_type);
-        //     node->func_call.callee->type = callee_type;
-        // }
         ASSERT(callee_type->kind == T_FUNCTION || (callee_type->kind == T_POINTER && callee_type->base->kind == T_FUNCTION),
                "Cannot call non function type\n");
 
@@ -425,7 +436,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             PANIC("Argument count mismatch: Function %s expects %d found %d\n", fn_name, fn_type->_func.params.count,
                   node->func_call.params_array.count);
         }
-        // TODO handle variadic with no named paramter here instead of parser.
+        // TODO handle variadic with no named parameter here instead of parser.
         node->type = fn_type->_func.return_type;
         for (int i = 0; i < node->func_call.params_array.count; i++) {
             Node *fn_call_param = get_node(&node->func_call.params_array, i);
@@ -438,7 +449,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
                 set_node(&node->func_call.params_array, &casted_node, i);
             }
             if (i < fn_type->_func.params.count) {
-                ParamDecl *fn_param = get(&fn_type->_func.params, i);
+                const ParamDecl *fn_param = get(&fn_type->_func.params, i);
                 if (fn_param->type != fn_call_param->type) {
                     Node *casted_node = cast_node(nm, fn_call_param, fn_param->type);
                     set_node(&node->func_call.params_array, &casted_node, i);
@@ -458,9 +469,10 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_IDENTIFIER:
         Symbol *ident_symbol = p_get_symbol(p, node->identifier.name, ANY, false);
         if (!ident_symbol) {
-            PANIC("Failed to find symbol %s\n", node->identifier.name);
+            PANIC("Failed to find symbol \"%s\"\n", node->identifier.name);
         }
         node->identifier.symbol = ident_symbol;
+
         switch (ident_symbol->kind) {
         case ENUM:
             node->kind = N_LITERAL;
@@ -485,26 +497,24 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_IF:
         p_push_scope(p);
         semantic_analysis(sema_ctx, p, nm, node->_if.cond);
-        if (node->_if.cond->type != type_i32) {
-            node->_if.cond = cast_node(nm, node->_if.cond, type_i32);
-        }
         semantic_analysis(sema_ctx, p, nm, node->_if.if_true);
         semantic_analysis(sema_ctx, p, nm, node->_if.if_false);
         p_pop_scope(p);
         break;
     case N_WHILE:
         p_push_scope(p);
-        sema_ctx->loop = node;
+        push_sema_loop(sema_ctx, node);
         semantic_analysis(sema_ctx, p, nm, node->_while.cond);
         if (node->_while.cond->type != type_i32) {
             node->_while.cond = cast_node(nm, node->_while.cond, type_i32);
         }
         semantic_analysis(sema_ctx, p, nm, node->_while.block);
+        pop_sema_loop(sema_ctx);
         p_pop_scope(p);
         break;
     case N_FOR:
         p_push_scope(p);
-        sema_ctx->loop = node;
+        push_sema_loop(sema_ctx, node);
         semantic_analysis(sema_ctx, p, nm, node->_for.init);
         semantic_analysis(sema_ctx, p, nm, node->_for.cond);
         if (node->_for.cond && node->_for.cond->type != type_i32) {
@@ -512,6 +522,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         }
         semantic_analysis(sema_ctx, p, nm, node->_for.iter);
         semantic_analysis(sema_ctx, p, nm, node->_for.block);
+        pop_sema_loop(sema_ctx);
         p_pop_scope(p);
         break;
     case N_RETURN:
@@ -525,10 +536,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
 
         if (node->_return.expr) {
             semantic_analysis(sema_ctx, p, nm, node->_return.expr);
-            Type *return_type = node->_return.expr->type;
-            if (node->_return.expr->type != expected_type) {
-                node->_return.expr = cast_node(nm, node->_return.expr, expected_type);
-            }
+            if (node->_return.expr->type != expected_type) node->_return.expr = cast_node(nm, node->_return.expr, expected_type);
         }
         node->type = expected_type;
         break;
@@ -576,20 +584,16 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         node->type = node->index.identifier->type->base;
         break;
     case N_CONTINUE:
-        if (!sema_ctx->loop) {
-            PANIC("Cannot call continue outside of a loop\n");
-        }
-        node->_continue.loop = sema_ctx->loop;
+        ASSERT(sema_ctx->loop_stack.count > 0, "Cannot call continue outside of loop scope\n");
+        node->_continue.loop = sema_current_loop(sema_ctx);
         break;
     case N_BREAK:
-        if (!sema_ctx->loop) {
-            PANIC("Cannot call break outside of a loop or switch statement\n");
-        }
-        node->_break.loop = sema_ctx->loop;
+        ASSERT(sema_ctx->loop_stack.count > 0, "Cannot call break outside of loop scope\n");
+        node->_break.loop = sema_current_loop(sema_ctx);
         break;
     case N_INIT_LIST:
         if (node->type == type_invalid) {
-            PANIC("Semantic Analysis recieved an untyped initializer list\n");
+            PANIC("Semantic Analysis received an untyped initializer list\n");
         }
         switch (node->type->kind) {
         case T_INT:
@@ -597,30 +601,18 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         case T_POINTER:
         case T_UNION:
             if (node->init_list.elements_array.count == 0) break;
-            if (node->init_list.elements_array.count > 1) {
-                log_start(LOG_ERROR);
-                printf("Excess elements in initializer list for ");
-                print_type(node->type);
-                printf("\n");
-                exit(1);
-            }
+            ASSERT(node->init_list.elements_array.count <= 1, "Excess elements in initializer list for %t\n", node->type);
 
             Node *e = get_node(&node->init_list.elements_array, 0);
             Type *target_type = node->type->kind == T_UNION ? get_union_member(node->type, 0)->type : node->type;
             Node *value = e;
-            if (e->kind == N_DESIGNATED_INITIALIZER) {
-                if (node->type->kind != T_UNION) {
-                    log_start(LOG_ERROR);
-                    printf("Cannot use designated initializers for type ");
-                    print_type(node->type);
-                    printf("\n");
-                    exit(1);
-                }
-                UnionMember *member = get_union_member_named(node->type, e->designated_init._union.name);
+            if (e->kind == N_DESIGNATOR) {
+                ASSERT(node->type->kind == T_UNION, "Cannot use designated initializers for type %t\n", node->type);
+                UnionMember *member = get_union_member_named(node->type, e->designator._union.name);
                 target_type = member->type;
                 e->type = target_type;
-                e->designated_init._union.member = member;
-                value = e->designated_init.value;
+                e->designator._union.member = member;
+                value = e->designator.value;
             }
             semantic_analysis(sema_ctx, p, nm, value);
 
@@ -630,74 +622,70 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             }
             break;
         case T_ARRAY:
-            // Infer the size from the initializer list
-            if (node->type->_array.array_len == -1) {
-                if (!node || node->init_list.elements_array.count < 1) {
-                    PANIC("Inferred array must be initialized, and cannot be empty.\n");
-                }
-                node->type = infer_array_length(node->type, node->init_list.elements_array.count);
-            }
-            // Intentional passthrough in switch to handle T_ARRAY and T_STRUCT similarily
         case T_STRUCT:
             int index = 0;
-            bool is_array = node->type->kind == T_ARRAY;
-            int count = is_array ? node->type->_array.array_len : node->type->_struct.members_array.count;
+            const bool is_array = node->type->kind == T_ARRAY;
+            int max_count = 0;
+            int inferred_length = 0;
+            if (is_array) {
+                if (node->type->_array.array_len == -1) {
+                    ASSERT(node->init_list.elements_array.count >= 1, "Inferred array must be initialized, and cannot be empty.\n");
+                } else max_count = node->type->_array.array_len;
+            } else max_count = node->type->_struct.members_array.count;
+
             for (int i = 0; i < node->init_list.elements_array.count; i++) {
                 Node *e = get_node(&node->init_list.elements_array, i);
-                bool is_designator = e->kind == N_DESIGNATED_INITIALIZER;
-                if (index >= count && !is_designator) {
-                    log_start(LOG_ERROR);
-                    printf("Too many initializers for ");
-                    print_type(node->type);
-                    printf("\n");
-                    exit(1);
-                }
+                const bool is_designator = e->kind == N_DESIGNATOR;
+                if (max_count && index >= max_count && !is_designator) PANIC("Too many initializers for %d\n", node->type);
 
                 StructMember *member = NULL;
                 if (is_array) {
                     if (is_designator) {
-                        if (!e->designated_init._array.is_complete) {
-                            semantic_analysis(sema_ctx, p, nm, e->designated_init._array.const_expr);
-                            e->designated_init._array.index = evaluate_const_expression(e->designated_init._array.const_expr).i;
+                        if (!e->designator._array.is_complete) {
+                            semantic_analysis(sema_ctx, p, nm, e->designator._array.const_expr);
+                            e->designator._array.index = evaluate_const_expression(e->designator._array.const_expr).i;
                         }
-                        index = e->designated_init._array.index;
+                        index = e->designator._array.index;
+                        if (node->type->_array.array_len == -1) {
+                            inferred_length = inferred_length > index + 1 ? inferred_length : index + 1;
+                        }
                     }
                 } else
-                    member = is_designator ? get_struct_member_named(node->type, e->designated_init._struct.name, &index)
+                    member = is_designator ? get_struct_member_named(node->type, e->designator._struct.name, &index)
                                            : get_struct_member(node->type, index);
 
                 Type *target_type = is_array ? node->type->base : member->type;
-                Node *value = is_designator ? e->designated_init.value : e;
+                Node *value = is_designator ? e->designator.value : e;
 
                 if (value->kind == N_INIT_LIST) value->type = target_type;
 
                 semantic_analysis(sema_ctx, p, nm, value);
                 if (!is_designator) {
-                    Node *de = new_node(nm, N_DESIGNATED_INITIALIZER);
+                    Node *de = new_node(nm, N_DESIGNATOR);
 
-                    if (is_array) de->designated_init._array.index = index;
-                    else de->designated_init._struct.name = member->name;
+                    if (is_array) {
+                        de->designator._array.index = index;
+                    } else de->designator._struct.name = member->name;
 
-                    de->designated_init.value = e;
+                    de->designator.value = e;
                     set_node(&node->init_list.elements_array, &de, i);
                     e = de;
                 }
-                e->designated_init.kind = is_array ? T_ARRAY : T_STRUCT;
+                e->designator.kind = is_array ? T_ARRAY : T_STRUCT;
                 e->type = target_type;
 
-                if (is_array) e->designated_init._array.index = index;
-                else e->designated_init._struct.member = member;
-                if (value->type != target_type) e->designated_init.value = cast_node(nm, value, target_type);
+                if (is_array) e->designator._array.index = index;
+                else e->designator._struct.member = member;
+                if (value->type != target_type) e->designator.value = cast_node(nm, value, target_type);
 
                 index++;
             }
+            if (is_array && node->type->_array.array_len == -1)
+                node->type = infer_array_length(node->type, inferred_length ? inferred_length : node->init_list.elements_array.count);
+
             break;
         default:
-            log_start(LOG_ERROR);
-            printf("Tried to assign initializer list to unsupported type ");
-            print_type(node->type);
-            printf("\n");
-            exit(1);
+            PANIC("Tried to assign initializer list to unsupported type %t\n", node->type);
         }
         break;
     case N_MEMBER_ACCESS:
@@ -716,19 +704,21 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             node->member_access.identifier = deref;
             node->member_access.op = TK_DOT;
         }
-        AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, true);
+        int offset = 0;
+        const AggrMember *member_f = get_member(lhs_t, node->member_access.member->identifier.name, true, &offset, &(int){0});
         node->member_access.member->type = member_f->type;
-        node->member_access.offset = lhs_t->kind == T_UNION ? 0 : member_f->offset;
+        node->member_access.offset = offset;
         node->type = member_f->type;
 
         break;
     case N_SWITCH:
         p_push_scope(p);
-        sema_ctx->loop = node;
+        push_sema_loop(sema_ctx, node);
         semantic_analysis(sema_ctx, p, nm, node->_switch.test);
         if (node->_switch.test->type != type_i32) node->_switch.test = cast_node(nm, node->_switch.test, type_i32);
         semantic_analysis(sema_ctx, p, nm, node->_switch.block);
         node->type = node->_switch.test->type;
+        pop_sema_loop(sema_ctx);
         p_pop_scope(p);
         break;
     case N_CASE:
@@ -747,18 +737,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
     case N_TYPEDEF:
     case N_TYPE:
         // Add enum consts to symbol table
-        if (node->type->kind == T_ENUM) {
-            int64_t value = 0;
-            for (int i = 0; i < node->type->_enum.fields_array.count; i++) {
-                EnumField *f = get_enum_field(node->type, i);
-                if (f->const_expr) {
-                    semantic_analysis(sema_ctx, p, nm, f->const_expr);
-                    value = evaluate_const_expression(f->const_expr).i;
-                }
-                f->value = value++;
-                p_append_enum_const(p, f);
-            }
-        }
+        if (!node->type->is_resolved) node->type = resolve_type(sema_ctx, p, nm, node->type);
         break;
     case N_BUILTIN:
         switch (node->_builtin.kind) {
@@ -778,6 +757,9 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             Node *type_info = get_node(&node->_builtin.params, 1);
             semantic_analysis(sema_ctx, p, nm, dst_ap);
             semantic_analysis(sema_ctx, p, nm, type_info);
+            if (dst_ap->type->kind == T_ARRAY) {
+                dst_ap = cast_node(nm, dst_ap, get_pointer_type(dst_ap->type->base));
+            }
             ASSERT(is_va_list_type(dst_ap->type), "%s expects va_list as first arg.\n", builtin_names[node->_builtin.kind]);
             ASSERT(type_info->kind == N_TYPE && type_info->type != type_invalid, "%s expects a type as second arg.",
                    builtin_names[node->_builtin.kind]);
@@ -811,23 +793,35 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         break;
     case N_GOTO:
     case N_LABEL:
-    case N_DESIGNATED_INITIALIZER:
+    case N_DESIGNATOR:
         PANIC("Unreachable\n");
     }
 }
+
+void push_sema_loop(SemanticContext *sema_ctx, const Node *loop) { append(&sema_ctx->loop_stack, &loop); }
+void pop_sema_loop(SemanticContext *sema_ctx) { pop(&sema_ctx->loop_stack); }
+
+Node *sema_current_loop(const SemanticContext *sema_ctx) {
+    ASSERT(sema_ctx->loop_stack.count > 0, "Tried to retrieve current loop outside of loop scope\n");
+    return *(Node **)get(&sema_ctx->loop_stack, sema_ctx->loop_stack.count - 1);
+}
+Node *sema_current_compound(const SemanticContext *sema_ctx) {
+    ASSERT(sema_ctx->compound_stack.count > 0, "Tried to retrieve current compound outside of compound scope\n");
+    return *(Node **)get(&sema_ctx->compound_stack, sema_ctx->compound_stack.count - 1);
+}
+
 void push_sema_scope(SemanticContext *sema_ctx, Parser *p, Node *n) {
     p_push_scope(p);
-    sema_ctx->compound = n;
-    int tmp = 0;
-    append(&sema_ctx->i_array, &tmp);
+    append(&sema_ctx->compound_stack, &n);
+    append(&sema_ctx->i_array, &(int){0});
 }
 void pop_sema_scope(SemanticContext *sema_ctx, Parser *p) {
     pop(&sema_ctx->i_array);
-    sema_ctx->compound = NULL;
+    pop(&sema_ctx->compound_stack);
     p_pop_scope(p);
 }
 
-void lower_nodes(NodeManager *nm) {
+void lower_nodes(const NodeManager *nm) {
     for (int i = 0; i < nm->count; i++) {
         Node *n = arena_get(nm, i);
         if (n->type->kind == T_ENUM) {
