@@ -11,7 +11,7 @@ An unoptimised self-compiling C compiler written in C for C89 following Win64 & 
 * [Specifications](#specifications)
 * [Grammar](#grammar)
 * [Architecture](#architecture)
-  * [The Compiler] (#the-compiler)
+  * [The Compiler](#the-compiler)
   * [The Tokenizer](#the-tokenizer)
   * [The Parser](#the-parser)
   * [Semantic Analysis Pass](#semantic-analysis-pass)
@@ -33,17 +33,21 @@ An unoptimised self-compiling C compiler written in C for C89 following Win64 & 
 # Usage
 
 The compiler uses the GNU interface where the most common flags are implemented. Any flags not mentioned here are passed to gcc in the preprocessor stage.
+
 * `-h` Lists help information
 * `-o <output>` Sets a specified output file path
 * `-S` Stop after compiler, outputs a `.s` file.
 * `-c` Stop after assembler, outputs a `.o` file.
+
 Note flags like `-I<include/path>` and `-D<macro>` are not implemented by the compiler however are passed through to preprocessor and therefore are fully functional.
 
 ## CMake
 The compiler is designed to be seemlessly compatible with existing build systems, specifically CMake. In order to use Compiler_C the following flags must be set accordingly.
+
 * `-DCMAKE_C_COMPILER=<path/to/compiler_c>`
 * `-DCMAKE_C_COMPILER_WORKS=true`
 * `-DCMAKE_C_COMPILER_ID=compiler_c`
+
 The `CMAKE_C_COMPILER_WORKS=true` flag is needed to skip the Identification test run by CMake, I believe to pass this test I would have to pass my compiler off as a GNU based compiler. It passes the other generic CompilerCTest.c given by CMake.
 
 # Specifications
@@ -85,7 +89,7 @@ The structure of the compiler will be explained in detail later, for now it take
 
 Finally when all source files have been compiled to objects, the driver has `gcc` link them together. It is important that we link with both libc `-lc` and math `-lm` which allows for the use of functions like `printf`. ( `-lc` is generally on by default, `-lm` is on by default on Win64 )
 
-### The Compiler
+### The Compiler.
 The compiler itself is comprised of 6 major sections. Each one has a clear task. 
 The compiler manages all sections and hands the work of one onto the next. It also handles loading the file from disc into memory and parsing compile flags given at runtime which change the compiler`s behaviour.
 

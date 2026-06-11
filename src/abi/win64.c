@@ -68,7 +68,7 @@ void abi_lower_store(IR_Instruction *instr) {
         instr->store.type = get_integer_type(instr->store.type->size);
     }
 }
-IR_Value abi_lower_param_register(Type *type, int i) {
+IR_Value abi_lower_param_register(const Type *type, int i) {
     ASSERT(i >= 0 && i < PARAM_REGISTERS, "Win64 ABI Invalid param arg index %d\n", i);
     // TODO investigate if below is still needed after rework
 #ifdef __COMPILER_C__
@@ -235,7 +235,7 @@ void abi_func_type_gen(Type *type) {
     type->abi.type = abi_type;
 }
 
-bool is_va_list_type(Type *type) { return type->kind == T_POINTER && type->base == type_i8; }
+bool is_va_list_type(const Type *type) { return type->kind == T_POINTER && type->base == type_i8; }
 
 Type *to_arg_type(Type *t, ABI_Result *res) {
     switch (t->kind) {
