@@ -313,7 +313,7 @@ static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
         *length = 0;
         const int64_t res = parse_hex(hexel.data, hexel.count);
         array_free(&hexel);
-        return (char) res;
+        return (char)res;
     default:
         if (is_oct(t_peek(tk))) {
             char octal[3] = {};
@@ -326,7 +326,7 @@ static char t_parse_escape_sequence(Tokenizer *tk, int *length) {
                 } else break;
             }
             *length = 0;
-            return (char) parse_oct(octal, o_i);
+            return (char)parse_oct(octal, o_i);
         }
         PANIC("Invalid escape sequence\n");
     }
@@ -637,10 +637,7 @@ TokenType get_underlying_op(const TokenType type) {
     case TK_EQ:
         return TK_EQ;
     default:
-        log_start(LOG_ERROR);
-        printf("Tried to get the underlying operator of a non-eq operator\n");
-        print_token_type(type);
-        exit(1);
+        PANIC("get_underlying_op: Unsupported Token %tk", type);
     }
 }
 
@@ -729,10 +726,7 @@ int op_precedence(const TokenType type) {
     case TK_MOD:
         return 12;
     default:
-        log_start(LOG_ERROR);
-        printf("Tried to get the precedence of a token which is not a binary operator");
-        print_token_type(type);
-        exit(1);
+        PANIC("op_precedence: Unsupported Token %tk\n", type);
     }
 }
 

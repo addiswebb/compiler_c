@@ -209,11 +209,7 @@ IR_Value ir_gen_rvalue(IR_Context *ctx, const Node *expr) {
     default:
         break;
     }
-    log_start(LOG_ERROR);
-    printf("Failed to gen expr for ");
-    print_node_type(expr->kind);
-    printf("\n");
-    exit(1);
+    PANIC("Failed to gen rvalue for %nk\n", expr->kind);
 }
 
 static void ir_gen_block_item(IR_Context *ctx, const Node *item) {
@@ -589,11 +585,7 @@ static void ir_gen_statement(IR_Context *ctx, const Node *stmt) {
         return;
     default:
         // given invalid statement? probably an expression
-        log_start(LOG_ERROR);
-        printf("Dont know what to do with the given statement: ir_gen_statement: ");
-        print_node_type(stmt->kind);
-        printf("\n");
-        exit(1);
+        PANIC("ir_gen_statement: Not sure what to do with %nk\n", stmt->kind);
     }
 }
 

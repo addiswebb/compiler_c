@@ -28,11 +28,7 @@ IR_CMP_OP ir_cmp_op(const TokenType type) {
     case TK_GE:
         return GE;
     default:
-        log_start(LOG_ERROR);
-        printf("Given an unsupported token to convert to IR cmp op: ");
-        print_token_type(type);
-        printf("\n");
-        exit(1);
+        PANIC("ir_cmp_op: Unsupported token %tk\n", type);
     }
 }
 IR_UNARY_OP ir_unary_op(const TokenType type) {
@@ -76,11 +72,7 @@ IR_BINOP_OP ir_binary_op(const TokenType type) {
     case TK_OR_OR:
         return L_OR;
     default:
-        log_start(LOG_ERROR);
-        printf("Given an unsupported token to convert to IR Binary op: ");
-        print_token_type(type);
-        printf("\n");
-        exit(1);
+        PANIC("ir_binary_op: Unsupported token %tk\n", type);
     }
 }
 static void print_unary_op(const IR_UNARY_OP op) {
@@ -187,13 +179,8 @@ static char ir_type_suffix(Type *type) {
         return '#';
     case T_ENUM:
         return 'e';
-    // PANIC("Tried to print invalid type\n");
     default:
-        log_start(LOG_ERROR);
-        printf("Not handling this type ir_type_suffix: ");
-        print_type(type);
-        printf("\n");
-        exit(1);
+        PANIC("ir_type_suffix: Unsupported type %t\n", type);
     }
 }
 

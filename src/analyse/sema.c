@@ -367,11 +367,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
             if (node->var_decl.expr->literal.kind == L_STRING) {
                 // TODO allow char* str = ""
                 if (!(node->type->kind == T_ARRAY || node->type->kind == T_POINTER) && node->type->base == type_i8) {
-                    log_start(LOG_ERROR);
-                    printf("Cannot initialize ");
-                    print_type(node->type);
-                    printf(" with String Literal\n");
-                    exit(1);
+                    PANIC("Cannot initialize %t with String Literal\n", node->type);
                 }
                 // Infer array length
                 if (node->type->kind == T_ARRAY && node->type->_array.array_len == -1) {
@@ -605,25 +601,13 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
         case T_POINTER:
         case T_UNION:
             if (node->init_list.elements_array.count == 0) break;
-            if (node->init_list.elements_array.count > 1) {
-                log_start(LOG_ERROR);
-                printf("Excess elements in initializer list for ");
-                print_type(node->type);
-                printf("\n");
-                exit(1);
-            }
+            ASSERT(node->init_list.elements_array.count <= 1, "Excess elements in initializer list for %t\n", node->type);
 
             Node *e = get_node(&node->init_list.elements_array, 0);
             Type *target_type = node->type->kind == T_UNION ? get_union_member(node->type, 0)->type : node->type;
             Node *value = e;
             if (e->kind == N_DESIGNATOR) {
-                if (node->type->kind != T_UNION) {
-                    log_start(LOG_ERROR);
-                    printf("Cannot use designated initializers for type ");
-                    print_type(node->type);
-                    printf("\n");
-                    exit(1);
-                }
+                ASSERT(node->type->kind == T_UNION, "Cannot use designated initializers for type %t\n", node->type);
                 UnionMember *member = get_union_member_named(node->type, e->designator._union.name);
                 target_type = member->type;
                 e->type = target_type;
@@ -701,11 +685,7 @@ void semantic_analysis(SemanticContext *sema_ctx, Parser *p, NodeManager *nm, No
 
             break;
         default:
-            log_start(LOG_ERROR);
-            printf("Tried to assign initializer list to unsupported type ");
-            print_type(node->type);
-            printf("\n");
-            exit(1);
+            PANIC("Tried to assign initializer list to unsupported type %t\n", node->type);
         }
         break;
     case N_MEMBER_ACCESS:

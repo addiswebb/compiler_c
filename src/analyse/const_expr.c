@@ -49,10 +49,7 @@ ConstLiteral evaluate_const_unary(const Node *node) {
         }
         break;
     default:
-        log_start(LOG_ERROR);
-        printf("Invalid const unary type");
-        print_type(node->type);
-        printf("\n");
+        PANIC("Invalid const unary type %t\n", node->type);
     }
     return e;
 }
@@ -168,10 +165,7 @@ ConstLiteral evaluate_const_binary(const Node *node) {
         e.ref.offset += d->i * ptr->type->base->size;
         break;
     default:
-        log_start(LOG_ERROR);
-        printf("Invalid const binary type");
-        print_type(node->type);
-        printf("\n");
+        PANIC("Invalid const binary type %t\n", node->type);
     }
     return e;
 }

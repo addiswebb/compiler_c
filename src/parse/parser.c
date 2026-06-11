@@ -162,12 +162,7 @@ Node *p_parse_postfix_expression(Parser *p, NodeManager *nm) {
             break;
         case TK_OPEN_SQUARE:
             p_consume(p); // '['
-            if (!is_lvalue(expr)) {
-                log_start(LOG_ERROR);
-                print_node_type(expr->kind);
-                printf(" is not a an lvalue, needed for indexing\n");
-                exit(1);
-            }
+            ASSERT(is_lvalue(expr), "%nt is not an lvalue which is needed for indexing\n", expr->kind);
             Node *node = new_node(nm, N_INDEX);
             node->index.index = p_parse_expression(p, nm, MIN_BINARY_OP_PRECEDENCE);
             node->index.identifier = expr;
@@ -593,7 +588,7 @@ void p_append_block_item(Node *root, Node *item) {
 }
 
 void p_append_param(const Node *func, Node *param) {
-    if (param != NULL)  append(&func->type->_func.params, &param);
+    if (param != NULL) append(&func->type->_func.params, &param);
     else PANIC("Received a NULL param node to append\n");
 }
 
@@ -625,12 +620,12 @@ Symbol *p_new_symbol(Parser *p, const Symbol *s) { return arena_append(&p->symbo
 
 void p_append_typedef(Parser *p, const Typedef *t) {
     const Symbol s = (Symbol){.name = t->new_def,
-                        .kind = TYPEDEF,
-                        .linkage = LINK_NONE,
-                        .storage = STORAGE_NONE,
-                        ._typedef = *t,
-                        .type = t->type,
-                        .scope_depth = p->current_scope_depth};
+                              .kind = TYPEDEF,
+                              .linkage = LINK_NONE,
+                              .storage = STORAGE_NONE,
+                              ._typedef = *t,
+                              .type = t->type,
+                              .scope_depth = p->current_scope_depth};
     p_append_symbol(get_current_symbol_table(p), p_new_symbol(p, &s));
 }
 Symbol *p_append_func_def(Parser *p, Node *f) {
@@ -1209,7 +1204,7 @@ int64_t parse_binary(const char *raw, const int len) {
     const char *start = raw;
     while (raw < start + len) {
         const int value = (*raw - '0');
-        ASSERT(value == 0 || value == 1, "Parse Binary Failed: Non binary digit '%c'\n",*raw);
+        ASSERT(value == 0 || value == 1, "Parse Binary Failed: Non binary digit '%c'\n", *raw);
         res = res * 2 + value;
         raw++;
     }
@@ -1262,7 +1257,7 @@ double parse_float(const char *raw, const int len) {
             continue;
         }
         const int digit = *raw - '0';
-        ASSERT(digit >= 0 && digit <= 9,"Parse Float Failed: Non decimal digit '%c'\n", *raw);
+        ASSERT(digit >= 0 && digit <= 9, "Parse Float Failed: Non decimal digit '%c'\n", *raw);
         if (m) {
             res += digit * m;
             m *= 0.1;

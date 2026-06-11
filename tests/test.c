@@ -659,7 +659,7 @@ Node *cast_node_unchecked(NodeManager *nm, Node *node, Type *type);
 Node *cast_node(NodeManager *nm, Node *node, Type *type);
 int is_valid_cast(const Type *from, const Type *to);
 LiteralKind literal_kind(TokenType type);
-void print_node_type(NodeKind type);
+void print_node_kind(NodeKind type);
 void print_indent(int depth);
 void print_node(const Node *node, int depth);
 void print_ast(const NodeManager *nm);

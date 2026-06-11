@@ -410,10 +410,7 @@ void verify_completion(const IR_Function *f) {
                 if (instr->op == IR_RET && instr->ret.type == type_void) continue;
                 if (instr->op == IR_CALL && instr->call.type->_func.return_type == type_void) continue;
                 // Otherwise throw error
-                log_start(LOG_ERROR);
-                print_ir_value(a);
-                printf(" was not converted to stack offset\n");
-                exit(1);
+                PANIC("%ir was not converted to stack offset\n", a);
             }
         }
     }

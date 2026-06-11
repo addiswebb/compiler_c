@@ -279,7 +279,7 @@ bool is_valid_cast(const Type *from, const Type *to);
 
 LiteralKind literal_kind(TokenType type);
 
-void print_node_type(NodeKind type);
+void print_node_kind(NodeKind kind);
 void print_indent(int depth);
 void print_node(const Node *node, int depth);
 /* Recursively prints the parse tree starting with the translation unit */

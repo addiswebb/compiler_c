@@ -99,8 +99,8 @@ LiteralKind literal_kind(const TokenType type) {
         PANIC("Given a non literal token\n");
     }
 }
-void print_node_type(const NodeKind type) {
-    switch (type) {
+void print_node_kind(const NodeKind kind) {
+    switch (kind) {
     case N_TRANSLATION_UNIT:
         printf("Translation Unit");
         break;
@@ -206,7 +206,7 @@ void print_node(const Node *node, const int depth) {
         printf("-\n");
         return;
     }
-    print_node_type(node->kind);
+    print_node_kind(node->kind);
     printf(" |");
     print_type(node->type);
     printf("| ");

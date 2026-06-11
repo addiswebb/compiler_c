@@ -62,7 +62,7 @@ ABI_Result abi_classify(Type *type) {
                         .memory = type->size > HIDDEN_PTR_SIZE};
 }
 
-void abi_lower_store(IR_Instruction *instr){
+void abi_lower_store(IR_Instruction *instr) {
     if (instr->store.type->kind == T_STRUCT) {
         ASSERT(instr->store.type->size <= 8, "[SysV] IR_STORE only for 8 bytes or less given %d", instr->store.type->size);
         instr->store.type = get_integer_type(instr->store.type->size);
@@ -304,11 +304,7 @@ void abi_emit_call(FILE *fp, IR_Context *ctx, const IR_Instruction *instr) {
             }
             break;
         default:
-            log_start(LOG_ERROR);
-            printf("Tried to emit call arg for unsupported type ");
-            print_type(arg_type);
-            printf("\n");
-            exit(1);
+            PANIC("abi_emit_call: Unsupported type %t\n", arg_type);
         }
     }
 

@@ -1,6 +1,9 @@
 #include "compiler_c/log/logger.h"
 #include "compiler_c/analyse/const_expr.h"
+#include "compiler_c/core/node.h"
 #include "compiler_c/core/type.h"
+#include "compiler_c/ir/ir_module.h"
+#include "compiler_c/ir/ir_util.h"
 #include "compiler_c/tokenize/tokenizer.h"
 #include <stdio.h>
 
@@ -46,8 +49,26 @@ void vprint(const char *fmt, va_list ap) {
                 ConstLiteral *cl = va_arg(ap, ConstLiteral *);
                 print_const_literal(cl);
                 break;
+            case 'i':
+                if (*(fmt + 1) == 'r') {
+                    fmt++;
+                    IR_Value *value = va_arg(ap, IR_Value *);
+                    print_ir_value(value);
+                    break;
+                }
+                break;
+            case 'n':
+                if (*(fmt + 1) == 'k') {
+                    fmt++;
+                    NodeKind kind = va_arg(ap, NodeKind);
+                    print_node_kind(kind);
+                    break;
+                }
+                Node *node = va_arg(ap, Node *);
+                print_node(node, 0);
+                break;
             default:
-                WARN("Logger print doesnt handle '%c' in '%s'\n", *fmt, fmt);
+                WARN("Print doesnt handle '%c' in '%s'\n", *fmt, fmt);
                 break;
             }
             fmt++;
