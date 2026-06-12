@@ -32,14 +32,14 @@ An unoptimised self-compiling C compiler written in C for C89 following Win64 & 
 
 # Usage
 
-The compiler uses the GNU interface where the most common flags are implemented. Any flags not mentioned here are passed to gcc in the preprocessor stage.
+The compiler partialy implements the GNU interface. Any flags not implemented here passed through to `gcc` in the preprocessor stage.
 
 * `-h` Lists help information
 * `-o <output>` Sets a specified output file path
 * `-S` Stop after compiler, outputs a `.s` file.
 * `-c` Stop after assembler, outputs a `.o` file.
 
-Note flags like `-I<include/path>` and `-D<macro>` are not implemented by the compiler however are passed through to preprocessor and therefore are fully functional.
+Flags like `-I<include/path>` and `-D<macro>` are not implemented by the compiler however, they are passed through to preprocessor and therefore are fully functional.
 
 ## CMake
 The compiler is designed to be seemlessly compatible with existing build systems, specifically CMake. In order to use Compiler_C the following flags must be set accordingly.
@@ -54,6 +54,7 @@ The `CMAKE_C_COMPILER_WORKS=true` flag is needed to skip the Identification test
 * Emits `x86-64` `AT&T` Syntax Assembly
 * Supports both `Win64` and `SysV` ABI specifications
 * Uses virtual registers placed on the stack.
+* IR uses `Static Single Assignment (SSA)` 
 
 # Grammar
 The grammar supported by the compiler is as defined in the [GNU C Language Manual](gnu-c-language-manual.pdf). 
@@ -66,7 +67,7 @@ int x[] = { [1] = 5, 4, 5, [5] = 6 };
 struct Point { int x; int y; };
 struct Point p = { .x = 10, .y=10 };
 ```
-Or compound literals
+And compound literals
 ```c
 void foo(int *a);
 foo(&(int){1});
@@ -81,23 +82,23 @@ A good way to understand what is supported is as follows,
 > "Every language feature used in developing the compiler will be implemented, such that the compiler can compiler itself." 
 
 # Architecture
-Any C compiler has 4 main stages. The Preprocessor, Compiler, Assembler and Linker. Compiler_c implents the compiler stage and outsources the 3 other stages to `gcc`. For ease of use, the compiler complies with the GNU interface, allowing things like `-o <output>`, any unknown flags are passed to `gcc` and ignored by the compiler. This allows Compiler_c to be a drop-in replacement of `gcc` in build systems like CMake with no extra work.
+Any C compiler has 4 main stages. The Preprocessor, Compiler, Assembler, and Linker. Compiler_c implents the compiler stage and outsources the other 3 stages to `gcc`. For ease of use, the compiler complies with the GNU interface, allowing things like `-o <output>`, any unknown flags are passed to `gcc` and ignored by the compiler. This allows Compiler_c to be a drop-in replacement of `gcc` in build systems like CMake with no extra work.
 
-The compiler uses a driver function to handle moving between the 4 major stages. For every source file passed, it is given to `gcc` for preprocessing. Here we define `-D__COMPILER_C__` so header files know which compiler is being used. We also direct `gcc` to use our own libc headers with `-nostdlib` and `-I./libc/`. Once the source file has been preprocessed, the driver passes it on to the compiler.
+The compiler uses a driver function to handle moving between the 4 major stages. Every source file passed in is given to `gcc` for preprocessing. Here we define `-D__COMPILER_C__` so header files know which compiler is being used. We also direct `gcc` to use our own libc headers with `-nostdlib` and `-I./libc/`. Once the source file has been preprocessed, the driver passes it on to the compiler.
 
-The structure of the compiler will be explained in detail later, for now it takes a `.c` source file and emits a correponding `.s` x86-64 assembly file. Once finished the driver passes it to the assembler which goes from `.s` to a `.o` object file. Every source file is compiled to an object file and collected by the driver before moving onto the last stage.
+The structure of the compiler will be explained in detail later, for now it effectively takes a `.c` source file and emits a correponding `.s` x86-64 assembly file. Once finished the driver passes it to the assembler which goes from `.s` to a `.o` object file. Every source file is compiled to an object file and collected by the driver before moving onto the last stage.
 
 Finally when all source files have been compiled to objects, the driver has `gcc` link them together. It is important that we link with both libc `-lc` and math `-lm` which allows for the use of functions like `printf`. ( `-lc` is generally on by default, `-lm` is on by default on Win64 )
 
 ### The Compiler.
 The compiler itself is comprised of 6 major sections. Each one has a clear task. 
-The compiler manages all sections and hands the work of one onto the next. It also handles loading the file from disc into memory and parsing compile flags given at runtime which change the compiler`s behaviour.
+The compiler manages all sections and hands the work of one onto the next. It also handles loading the file into memory and parsing compile flags given at runtime which change the compiler`s behaviour.
 
 ### The Tokenizer. 
-Its job is to take in the loaded file (called a translation unit), as a string of characters and convert it into an array of tokens. These tokens represent core parts of the grammar defined below, e.g. **TK_INT_LITERAL** is simply a raw number "1234", or **TK_RETURN** represents the the `return` keyword. It performs this by loading tokens sequentially into a buffer until it finds a whitespace character. It then parses the buffer into a token. Essentially looking at each word and deciding what kind of token it is. There is more hidden complexity to this in skipping comments, or handling special characters but this is a good overview. Once it reaches the EOF (end of the file) it stops and returns the Token Array back to the compiler.
+Its job is to take in the loaded file (called a translation unit), as a string of characters and convert it to an array of tokens. These tokens represent core parts of the grammar defined below, e.g. **TK_INT_LITERAL** is simply an integer number "1234", or **TK_RETURN** represents the the `return` keyword. It performs this by loading tokens sequentially into a buffer until it finds a whitespace character. It then parses the buffer into a token. Essentially looking at each word and deciding what kind of token it is. There is more hidden complexity to this in skipping comments, or handling special characters but this is a good overview. Once it reaches the EOF (end of the file) it stops and returns the Token Array back to the compiler.
 
 ### The Parser
-The parser recieves the linear array of tokens and is tasked with converting it into a AST (abstract syntax tree). The tree is structured as follows:
+The parser recieves the linear array of tokens and is tasked with converting it into an AST (abstract syntax tree). The tree is structured as follows:
 
 * **N_TRANSLATION_UNIT**: Array of declarations of either a function or variable
 * **N_FUNCTION**: Name, Params, and an **N_COMPOUND** block.
@@ -105,7 +106,7 @@ The parser recieves the linear array of tokens and is tasked with converting it 
 
 With more fundamental nodes like **N_BINARY** and **N_UNARY** representing the most basic C constructs.
 
-The parser, starting from the very first token, uses context and grammar to decide what node is next. It also naturally handles syntax errors. E.g., if the current token is a **TK_RETURN**, given the grammar below, we can expect an `expr` to follow. The parser then tries to parse an `expr` and if it succeeds, we combine the **TK_RETURN** token and parsed `expr` into a single Node, **N_RETURN**. This node is then appended to the **N_COMPOUND** parent node. Another example, if the current token is **TK_OPEN_CURLY**, given the grammar, this can only be the start of a **N_COMPOUND**. The parser knows to parse the following tokens as an array of statements and append them to the compound nodes list, and only stops when **TK_CLOSE_CURLY** is found. Same as the **Tokenizer**, when we reach the end of the token array, we return the parsed **AST** to the compiler.
+The parser, starting from the very first token, uses context and grammar to decide what node is next. It also naturally handles syntax errors. E.g., if the current token is a **TK_RETURN**, given the grammar below, we can expect an `expr` to follow. The parser then tries to parse an `expr` and if it succeeds, we combine the **TK_RETURN** token and parsed `expr` into a single Node, **N_RETURN**. This node is then appended to the **N_COMPOUND** parent node. Another example, if the current token is **TK_OPEN_CURLY**, given the grammar and context, this can only be the start of a **N_COMPOUND**. The parser knows to parse the following tokens as an array of statements and append them to the compound nodes list, and only stops when **TK_CLOSE_CURLY** is found. Same as the **Tokenizer**, when we reach the end of the token array, we return the parsed **AST** to the compiler.
 Whilst parsing, a typedef token might be parsed, this happens the typedef entry is added to the symbol pool. This is later used by the parser to parse types.
 
 ### Semantic Analysis Pass
@@ -152,9 +153,13 @@ As both platforms use different registers for different things and in different 
 
 Below is a list of features implemented to enable easier implentation and maintainance of other comiler features, while preventing code duplication and increasing memory safety.
 
+#### Print
+A custom print formatting function which can print most important Compiler_C structs and enums. 
+Logger macros also use this over printf which allows for `DEBUG("Type is %t/n", type_u32);`
+
 #### Array
-A generic dynamic Array struct which is used throught the code base where variable sized lists of objects must be stored.
-Works by reallocating memory with `capacity * 2` size when full.
+A generic dynamic Array struct which is used throughout the code base where dynamically sized lists of objects must be stored.
+Works by reallocating whole buffer with `capacity * 2` size when full.
 
 #### Arena
 A large scale allocator used in place of an Array for instances where the memory cannot be moved/reallocated, but must also support dynamic sizing. Works by allocating blocks of a set size one by one as needed. Appending elements into each until it is full before appending another block. Insertions are not allowed only append and set operations.
@@ -205,7 +210,7 @@ When a block is full, instead of reallocating the whole block somewhere else at 
   * Literal Suffixes `f`, `F`, `l`, `L`
 * Character Literals
   * Single character `'a'`
-  * Multi-character literals `'abcd'` (implementation-defined)
+  * Multi-character literals `'abcd'`
   * Escape sequences: `\n`, `\t`, etc.
 * String Literals
   * `"..."`  
@@ -251,7 +256,7 @@ When a block is full, instead of reallocating the whole block somewhere else at 
   * `break`, `continue`
   * `goto` & labels
 * Nested loops/branches
-* Early jumping for `a && b` and `a || b` conditions.
+* Early out optimization for `a && b` and `a || b` conditions.
 
 ## 6. Functions
 
@@ -299,32 +304,16 @@ When a block is full, instead of reallocating the whole block somewhere else at 
       int a = 1+2*3;
       double b = 7.5*2;
       char[2*2] c= { 1, 2, 3, 2+2 };
-      iny * d = &a;
+      int* d = &a;
     ```
 
-## Todo
-- [x] Add tests for `||` and `&&` to ensure early returns
-- [x] Allow `{.x = {}}` where `x` is a union;
-- [x] Self-compile `sysv.c`, `analysis.c`, `sema.c`, `ir_builder.c`, `ir_module.c`, `ir_gen.c`, `parser.c`,
-
 ## To be Implemented (Ordered from next to never...)
-* Self Compile
-* Custom printf implementation
-  * `print("type is %t", type_u8);` Support printing types
 * Multi variable declaration
   * `int a, b;`
-* String concatination
-  * `"hello" " world"`
 * Use physical registers
     * Overflow to stack
+    * Caller/Callee save registers
 * Create IR index instruction 
     * `leaq 8(%rax), dst` instead of adding 8 to %rax and then `(%rax)`
-* Support a standard library 
-    * ~~Support [musl-libc](https://github.com/runtimejs/musl-libc/) (~~Support a standard library~~). (~~Create a standard library~~)~~
-* ~~Function ABI Calling Conventions~~
-    * Caller/Callee save registers
 * ~~Bitfield in structs~~
     * `unsigned int flag : 1; // 1 bit`
-* ~~Inline functions~~
-* ~~Volatile/Atomic memory~~
-* ~~Labels as values? (part of GCC, not standard C)~~
