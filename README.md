@@ -4,8 +4,21 @@
 
 An unoptimised self-compiling C compiler written in C for C89 following Win64 & SysV ABI Conventions.
 
+## Self-Compilation
+
+| Stage | Compiler Used | Output | SHA-256 | Matches Previous |
+|-------:|---------------|--------|----------|------------------|
+| 1 | `clang` | `cc1` | `edbc17a8d57844d235422ef13e7ca4cf84680193e9d2e05262fe2a121ff9794c` | `N/A` |
+| 2 | `cc1` | `cc2` | `f0b9fae46021a17114da8a40524a5673ab15a8ba68cdae1fea32974e87bbd2fc` | ❌ |
+| 3 | `cc2` | `cc3` | `68efaf90231ffd752ee2e171c6d707bce7584b45ce95519890f05d4597210f79` | ❌ |
+| 4 | `cc3` | `cc4` | `68efaf90231ffd752ee2e171c6d707bce7584b45ce95519890f05d4597210f79` | ✅ |
+| 5+ | `ccN` | `ccN+1` | `68efaf90231ffd752ee2e171c6d707bce7584b45ce95519890f05d4597210f79` | ✅ |
+
+From this you can see that any self-compiled `compiler_c` will compile itself into an byte for byte identical executable. It also shows that `cc1` compiled by `clang` does not produce an identical `.exe` which exposes some potential hidden issues with `compiler_c`.
+
 ## Table of Contents
 * [Compiler C](#compiler-c)
+* [Self-Compilation](#self-compilation)
 * [Usage](#usage)
   * [CMake](#cmake)
 * [Specifications](#specifications)
